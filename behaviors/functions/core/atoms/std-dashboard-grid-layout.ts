@@ -25,12 +25,15 @@ const BEHAVIOR_PATH = 'std/behaviors/std-dashboard-grid-layout';
 const ALIAS = 'DashboardGridLayout';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
  */
-export type StdDashboardGridLayoutEventKey = 'INIT';
+export interface StdDashboardGridLayoutConfig {
+  /** Default: `"box"` */
+  type?: unknown;
+}
 
 /**
  * Params for the std-dashboard-grid-layout descriptor helpers.
@@ -45,18 +48,48 @@ export interface StdDashboardGridLayoutParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdDashboardGridLayoutEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
+  /** Typed call-site config block — see the per-field interface. */
+  config?: StdDashboardGridLayoutConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
+}
+
+/** Trait descriptor: `DashboardGridLayout.traits.Box1`. */
+export function stdDashboardGridLayoutBox1Trait(params: StdDashboardGridLayoutParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Box1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `DashboardGridLayout.traits.SimpleGrid1`. */
+export function stdDashboardGridLayoutSimpleGrid1Trait(params: StdDashboardGridLayoutParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.SimpleGrid1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
 }
 
 /** Trait descriptor: `DashboardGridLayout.traits.EmptyTile`. */
@@ -111,6 +144,8 @@ export function stdDashboardGridLayout(params: StdDashboardGridLayoutParams): Or
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
+      stdDashboardGridLayoutBox1Trait(params),
+      stdDashboardGridLayoutSimpleGrid1Trait(params),
       stdDashboardGridLayoutEmptyTileTrait(params),
       stdDashboardGridLayoutDashboardGridLayoutTrait(params),
     ],

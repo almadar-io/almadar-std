@@ -1,6 +1,15 @@
 app std-rate-limiter "1.0.0"
 "std-rate-limiter as a Function"
 orbital RateBucketOrbital {
+    uses Icon from "std/behaviors/ui-icon"
+    uses Typography from "std/behaviors/ui-typography"
+    uses StatusDot from "std/behaviors/ui-status-dot"
+    uses Alert from "std/behaviors/ui-alert"
+    uses StatDisplay from "std/behaviors/ui-stat-display"
+    uses Meter from "std/behaviors/ui-meter"
+    uses ProgressBar from "std/behaviors/ui-progress-bar"
+    uses Button from "std/behaviors/ui-button"
+
   entity RateBucket [runtime] {
     id : string
     name : string @description "A user-defined identifier for the rate limiting bucket." @synonyms "label, identifier, alias"
@@ -10,6 +19,101 @@ orbital RateBucketOrbital {
     count : number @description "The current value of a counter." @synonyms "value, amount, total" = 0
     window : number @description "The duration of the rate limiting window, in seconds." @synonyms "duration, time, interval, period" = 0
     limiterStatus : string @description "Current operational state of the rate limiter." @synonyms "state, condition, mode" = open
+  }
+
+  trait Icon_Shield = Icon.traits.IconRender -> RateBucket {
+    config {
+      name: shield
+    }
+  }
+
+  trait Typography_RateBucketRateLimiter = Typography.traits.TypographyRender -> RateBucket {
+    config {
+      content: "RateBucket Rate Limiter"
+      variant: h2
+    }
+  }
+
+  trait StatusDot_Open = StatusDot.traits.StatusDotRender -> RateBucket {
+    config {
+      label: Open
+      pulse: false
+      status: online
+    }
+  }
+
+  trait StatusDot_Throttled = StatusDot.traits.StatusDotRender -> RateBucket {
+    config {
+      label: Throttled
+      pulse: true
+      status: critical
+    }
+  }
+
+  trait Alert_RateLimitExceeded = Alert.traits.AlertRender -> RateBucket {
+    config {
+      message: "Rate limit exceeded. Requests are being throttled."
+      variant: error
+    }
+  }
+
+  trait StatDisplay_Requests = StatDisplay.traits.StatDisplayRender -> RateBucket {
+    config {
+      label: Requests
+      look: @config.statLook
+      value: @entity.count
+    }
+  }
+
+  trait StatDisplay_Window = StatDisplay.traits.StatDisplayRender -> RateBucket {
+    config {
+      label: Window
+      look: @config.statLook
+      value: @entity.window
+    }
+  }
+
+  trait Meter_Count = Meter.traits.MeterRender -> RateBucket {
+    config {
+      max: 100
+      min: 0
+      value: @entity.count
+    }
+  }
+
+  trait ProgressBar_Count = ProgressBar.traits.ProgressBarRender -> RateBucket {
+    config {
+      max: 100
+      showPercentage: true
+      value: @entity.count
+    }
+  }
+
+  trait Button_Request = Button.traits.ButtonRender -> RateBucket {
+    config {
+      action: REQUEST
+      icon: send
+      label: Request
+      variant: primary
+    }
+  }
+
+  trait Button_Reset = Button.traits.ButtonRender -> RateBucket {
+    config {
+      action: RESET
+      icon: rotate-ccw
+      label: Reset
+      variant: ghost
+    }
+  }
+
+  trait Button_Reset_Primary = Button.traits.ButtonRender -> RateBucket {
+    config {
+      action: RESET
+      icon: rotate-ccw
+      label: Reset
+      variant: primary
+    }
   }
 
   trait RateBucketRateLimiter -> RateBucket [interaction, collection, rate-limit] {
@@ -25,62 +129,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: "RateBucket Rate Limiter"
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: Open
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Open]
             direction: horizontal
             gap: md
             justify: between
             type: stack
           }, { type: divider }, {
-            children: [{
-              label: Requests
-              look: @config.statLook
-              type: stat-display
-              value: @entity.count
-            }, {
-              label: Window
-              look: @config.statLook
-              type: stat-display
-              value: @entity.window
-            }]
+            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
             cols: 2
             type: simple-grid
-          }, {
-            max: 100
-            min: 0
-            type: meter
-            value: @entity.count
-          }, {
-            max: 100
-            showPercentage: true
-            type: progress-bar
-            value: @entity.count
-          }, {
-            children: [{
-              action: REQUEST
-              icon: send
-              label: Request
-              type: button
-              variant: primary
-            }, {
-              action: RESET
-              icon: rotate-ccw
-              label: Reset
-              type: button
-              variant: ghost
-            }]
+          }, @trait.Meter_Count, @trait.ProgressBar_Count, {
+            children: [@trait.Button_Request, @trait.Button_Reset]
             direction: horizontal
             gap: sm
             justify: center
@@ -96,62 +159,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: "RateBucket Rate Limiter"
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: Open
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Open]
             direction: horizontal
             gap: md
             justify: between
             type: stack
           }, { type: divider }, {
-            children: [{
-              label: Requests
-              look: @config.statLook
-              type: stat-display
-              value: @entity.count
-            }, {
-              label: Window
-              look: @config.statLook
-              type: stat-display
-              value: @entity.window
-            }]
+            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
             cols: 2
             type: simple-grid
-          }, {
-            max: 100
-            min: 0
-            type: meter
-            value: @entity.count
-          }, {
-            max: 100
-            showPercentage: true
-            type: progress-bar
-            value: @entity.count
-          }, {
-            children: [{
-              action: REQUEST
-              icon: send
-              label: Request
-              type: button
-              variant: primary
-            }, {
-              action: RESET
-              icon: rotate-ccw
-              label: Reset
-              type: button
-              variant: ghost
-            }]
+          }, @trait.Meter_Count, @trait.ProgressBar_Count, {
+            children: [@trait.Button_Request, @trait.Button_Reset]
             direction: horizontal
             gap: sm
             justify: center
@@ -168,55 +190,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: "RateBucket Rate Limiter"
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: Throttled
-              pulse: true
-              status: critical
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Throttled]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Rate limit exceeded. Requests are being throttled."
-            type: alert
-            variant: error
-          }, {
-            children: [{
-              label: Requests
-              look: @config.statLook
-              type: stat-display
-              value: @entity.count
-            }, {
-              label: Window
-              look: @config.statLook
-              type: stat-display
-              value: @entity.window
-            }]
+          }, { type: divider }, @trait.Alert_RateLimitExceeded, {
+            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
             cols: 2
             type: simple-grid
-          }, {
-            max: 100
-            min: 0
-            type: meter
-            value: @entity.count
-          }, {
-            children: [{
-              action: RESET
-              icon: rotate-ccw
-              label: Reset
-              type: button
-              variant: primary
-            }]
+          }, @trait.Meter_Count, {
+            children: [@trait.Button_Reset_Primary]
             direction: horizontal
             gap: sm
             justify: center
@@ -234,62 +222,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: "RateBucket Rate Limiter"
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: Open
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Open]
             direction: horizontal
             gap: md
             justify: between
             type: stack
           }, { type: divider }, {
-            children: [{
-              label: Requests
-              look: @config.statLook
-              type: stat-display
-              value: @entity.count
-            }, {
-              label: Window
-              look: @config.statLook
-              type: stat-display
-              value: @entity.window
-            }]
+            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
             cols: 2
             type: simple-grid
-          }, {
-            max: 100
-            min: 0
-            type: meter
-            value: @entity.count
-          }, {
-            max: 100
-            showPercentage: true
-            type: progress-bar
-            value: @entity.count
-          }, {
-            children: [{
-              action: REQUEST
-              icon: send
-              label: Request
-              type: button
-              variant: primary
-            }, {
-              action: RESET
-              icon: rotate-ccw
-              label: Reset
-              type: button
-              variant: ghost
-            }]
+          }, @trait.Meter_Count, @trait.ProgressBar_Count, {
+            children: [@trait.Button_Request, @trait.Button_Reset]
             direction: horizontal
             gap: sm
             justify: center
@@ -310,62 +257,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: "RateBucket Rate Limiter"
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: Open
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Open]
             direction: horizontal
             gap: md
             justify: between
             type: stack
           }, { type: divider }, {
-            children: [{
-              label: Requests
-              look: @config.statLook
-              type: stat-display
-              value: @entity.count
-            }, {
-              label: Window
-              look: @config.statLook
-              type: stat-display
-              value: @entity.window
-            }]
+            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
             cols: 2
             type: simple-grid
-          }, {
-            max: 100
-            min: 0
-            type: meter
-            value: @entity.count
-          }, {
-            max: 100
-            showPercentage: true
-            type: progress-bar
-            value: @entity.count
-          }, {
-            children: [{
-              action: REQUEST
-              icon: send
-              label: Request
-              type: button
-              variant: primary
-            }, {
-              action: RESET
-              icon: rotate-ccw
-              label: Reset
-              type: button
-              variant: ghost
-            }]
+          }, @trait.Meter_Count, @trait.ProgressBar_Count, {
+            children: [@trait.Button_Request, @trait.Button_Reset]
             direction: horizontal
             gap: sm
             justify: center
@@ -381,55 +287,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: "RateBucket Rate Limiter"
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: Throttled
-              pulse: true
-              status: critical
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Throttled]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Rate limit exceeded. Requests are being throttled."
-            type: alert
-            variant: error
-          }, {
-            children: [{
-              label: Requests
-              look: @config.statLook
-              type: stat-display
-              value: @entity.count
-            }, {
-              label: Window
-              look: @config.statLook
-              type: stat-display
-              value: @entity.window
-            }]
+          }, { type: divider }, @trait.Alert_RateLimitExceeded, {
+            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
             cols: 2
             type: simple-grid
-          }, {
-            max: 100
-            min: 0
-            type: meter
-            value: @entity.count
-          }, {
-            children: [{
-              action: RESET
-              icon: rotate-ccw
-              label: Reset
-              type: button
-              variant: primary
-            }]
+          }, @trait.Meter_Count, {
+            children: [@trait.Button_Reset_Primary]
             direction: horizontal
             gap: sm
             justify: center

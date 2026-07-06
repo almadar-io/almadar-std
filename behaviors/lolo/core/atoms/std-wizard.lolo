@@ -3,6 +3,16 @@ app std-wizard "3.0.1"
 type ObjectSpec = { id : string, label : string, value : string }
 type StepSpec = { label : string!, key : string, icon : string, description : string, fields : [string], allowedRoles : [string] }
 orbital WizardOrbital {
+    uses Icon from "std/behaviors/ui-icon"
+    uses Typography from "std/behaviors/ui-typography"
+    uses Button from "std/behaviors/ui-button"
+    uses Card from "std/behaviors/ui-card"
+    uses LoadingState from "std/behaviors/ui-loading-state"
+    uses ErrorState from "std/behaviors/ui-error-state"
+    uses WizardProgress from "std/behaviors/ui-wizard-progress"
+    uses FormSection from "std/behaviors/ui-form-section"
+    uses WizardNavigation from "std/behaviors/ui-wizard-navigation"
+
     type WizardStep = { id : string!, title : string!, description : string }
 
     type WizardLoaded = Event { data : [ObjectSpec] } "Fired when wizard context finishes loading"
@@ -34,6 +44,241 @@ orbital WizardOrbital {
     completionMessage : string @description "Text displayed upon successful completion of the wizard." @synonyms "success message, confirmation text, final message" = ""
     cancelReason : string @description "The reason provided for cancelling the wizard process." @synonyms "cancellation reason, cancel explanation, dismissal reason" = ""
     errorMessage : string @description "Error message displayed when a process fails." @synonyms "error, fault, problem" = ""
+  }
+
+  trait Icon_ListChecks = Icon.traits.IconRender -> WizardView {
+    config {
+      name: list-checks
+    }
+  }
+
+  trait Icon_CheckCircle = Icon.traits.IconRender -> WizardView {
+    config {
+      name: check-circle
+    }
+  }
+
+  trait Icon_XCircle = Icon.traits.IconRender -> WizardView {
+    config {
+      name: x-circle
+    }
+  }
+
+  trait Icon_CurrentStep = Icon.traits.IconRender -> WizardView {
+    config {
+      name: @entity.currentStepIcon
+      size: lg
+    }
+  }
+
+  trait Icon_ChevronLeft = Icon.traits.IconRender -> WizardView {
+    config {
+      name: chevron-left
+    }
+  }
+
+  trait Icon_X = Icon.traits.IconRender -> WizardView {
+    config {
+      name: x
+    }
+  }
+
+  trait Icon_ChevronRight = Icon.traits.IconRender -> WizardView {
+    config {
+      name: chevron-right
+    }
+  }
+
+  trait Icon_RotateCcw = Icon.traits.IconRender -> WizardView {
+    config {
+      name: rotate-ccw
+    }
+  }
+
+  trait Typography_Title = Typography.traits.TypographyRender -> WizardView {
+    config {
+      content: @config.title
+      variant: h3
+    }
+  }
+
+  trait Typography_CurrentStepLabel = Typography.traits.TypographyRender -> WizardView {
+    config {
+      content: @entity.currentStepLabel
+      variant: h2
+    }
+  }
+
+  trait Typography_CurrentStepDescription = Typography.traits.TypographyRender -> WizardView {
+    config {
+      color: muted
+      content: @entity.currentStepDescription
+      variant: body
+    }
+  }
+
+  trait Typography_Complete = Typography.traits.TypographyRender -> WizardView {
+    config {
+      align: center
+      content: Complete
+      variant: h2
+    }
+  }
+
+  trait Typography_CompleteMessage = Typography.traits.TypographyRender -> WizardView {
+    config {
+      align: center
+      color: muted
+      content: @entity.completionMessage
+      variant: body
+    }
+  }
+
+  trait Typography_Cancelled = Typography.traits.TypographyRender -> WizardView {
+    config {
+      align: center
+      content: Cancelled
+      variant: h2
+    }
+  }
+
+  trait Typography_CancelledMessage = Typography.traits.TypographyRender -> WizardView {
+    config {
+      align: center
+      color: muted
+      content: "The wizard was cancelled. No data was submitted."
+      variant: body
+    }
+  }
+
+  trait Typography_SignUp = Typography.traits.TypographyRender -> WizardView {
+    config {
+      content: Sign-up
+      variant: h3
+    }
+  }
+
+  trait Button_Back = Button.traits.ButtonRender -> WizardView {
+    config {
+      action: RETREAT
+      disabled: @entity.isFirstStep
+      icon: chevron-left
+      label: Back
+      variant: ghost
+    }
+  }
+
+  trait Button_CancelWizard = Button.traits.ButtonRender -> WizardView {
+    config {
+      action: CANCEL
+      icon: x
+      label: "Cancel wizard"
+      variant: ghost
+    }
+  }
+
+  trait Button_Advance = Button.traits.ButtonRender -> WizardView {
+    config {
+      action: ADVANCE
+      icon: @entity.primaryActionIcon
+      label: @entity.primaryActionLabel
+      variant: primary
+    }
+  }
+
+  trait Button_Restart = Button.traits.ButtonRender -> WizardView {
+    config {
+      action: RESTART
+      icon: rotate-ccw
+      label: "Start a new wizard"
+      variant: secondary
+    }
+  }
+
+  trait Button_RestartGhost = Button.traits.ButtonRender -> WizardView {
+    config {
+      action: RESTART
+      icon: rotate-ccw
+      label: "Start a new wizard"
+      variant: ghost
+    }
+  }
+
+  trait WizardProgress_Main = WizardProgress.traits.WizardProgressRender -> WizardView {
+    config {
+      allowNavigation: false
+      currentStep: @entity.currentStepIndex
+      steps: @entity.wizardSteps
+    }
+  }
+
+  trait WizardProgress_TotalSteps = WizardProgress.traits.WizardProgressRender -> WizardView {
+    config {
+      allowNavigation: false
+      currentStep: @entity.totalSteps
+      steps: @entity.wizardSteps
+    }
+  }
+
+  trait FormSection_Main = FormSection.traits.FormSectionRender -> WizardView {
+    config {
+      cancelEvent: CANCEL
+      entity: @entity
+      fields: @entity.currentFields
+      mode: edit
+      showCancel: false
+      showSubmit: false
+      submitEvent: ADVANCE
+    }
+  }
+
+  trait WizardNavigation_Main = WizardNavigation.traits.WizardNavigationRender -> WizardView {
+    config {
+      currentStep: 0
+      onNext: NEXT
+      showBack: false
+      showComplete: false
+      showNext: true
+      totalSteps: 3
+    }
+  }
+
+  trait LoadingState_Loading = LoadingState.traits.LoadingStateRender -> WizardView {
+    config {
+      title: "Loading wizard…"
+    }
+  }
+
+  trait LoadingState_Refreshing = LoadingState.traits.LoadingStateRender -> WizardView {
+    config {
+      title: "Refreshing…"
+    }
+  }
+
+  trait LoadingState_Restarting = LoadingState.traits.LoadingStateRender -> WizardView {
+    config {
+      title: "Restarting…"
+    }
+  }
+
+  trait LoadingState_Retrying = LoadingState.traits.LoadingStateRender -> WizardView {
+    config {
+      title: "Retrying…"
+    }
+  }
+
+  trait ErrorState_LoadFailed = ErrorState.traits.ErrorStateRender -> WizardView {
+    config {
+      message: @entity.errorMessage
+      title: "Failed to load"
+    }
+  }
+
+  trait ErrorState_SaveFailed = ErrorState.traits.ErrorStateRender -> WizardView {
+    config {
+      message: @entity.errorMessage
+      title: "Save failed"
+    }
   }
 
   trait WizardForm -> @rebindable WizardView [interaction, instance] {

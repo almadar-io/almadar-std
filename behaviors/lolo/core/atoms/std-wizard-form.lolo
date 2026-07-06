@@ -1,6 +1,15 @@
 app std-wizard-form "1.0.0"
 "std-wizard-form — canonical molecule-level wizard example (3-step sign-up flow). Wizards own their state machine at molecule tier."
 orbital WizardFormOrbital {
+    uses Icon from "std/behaviors/ui-icon"
+    uses Typography from "std/behaviors/ui-typography"
+    uses Button from "std/behaviors/ui-button"
+    uses Alert from "std/behaviors/ui-alert"
+    uses Spinner from "std/behaviors/ui-spinner"
+    uses WizardProgress from "std/behaviors/ui-wizard-progress"
+    uses FormSection from "std/behaviors/ui-form-section"
+    uses WizardNavigation from "std/behaviors/ui-wizard-navigation"
+
     type WizardFormSaved = Event { id : string } "Fired when wizard flow completes successfully"
 
     type WizardFormSaveFailed = Event { error : string, code : string } "Fired when the final persist fails"
@@ -14,6 +23,236 @@ orbital WizardFormOrbital {
     name : string @description "User-provided text identifying the entry." @synonyms "label, title, identifier"
     email : string @description "User-provided email address." @synonyms "email address, email, user email"
     theme : string @description "Visual style or appearance applied to the entry." @synonyms "style, appearance, look, design"
+  }
+
+  trait Icon_UserPlus = Icon.traits.IconRender -> WizardFormEntry {
+    config {
+      name: user-plus
+    }
+  }
+
+  trait Icon_CheckCircle = Icon.traits.IconRender -> WizardFormEntry {
+    config {
+      name: check-circle
+    }
+  }
+
+  trait Icon_AlertTriangle = Icon.traits.IconRender -> WizardFormEntry {
+    config {
+      color: error
+      name: alert-triangle
+    }
+  }
+
+  trait Icon_RefreshCw = Icon.traits.IconRender -> WizardFormEntry {
+    config {
+      name: refresh-cw
+    }
+  }
+
+  trait Typography_SignUp = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      content: Sign-up
+      variant: h3
+    }
+  }
+
+  trait Typography_Welcome = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      content: "Welcome!"
+      variant: h3
+    }
+  }
+
+  trait Typography_AccountCreated = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      color: muted
+      content: "Your account has been created."
+      variant: body
+    }
+  }
+
+  trait Typography_SignUpFailed = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      content: "Sign-up Failed"
+      variant: h3
+    }
+  }
+
+  trait Typography_CaptionName = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      color: muted
+      content: Name
+      variant: caption
+    }
+  }
+
+  trait Typography_BodyName = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      content: @entity.name
+      variant: body
+    }
+  }
+
+  trait Typography_CaptionEmail = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      color: muted
+      content: Email
+      variant: caption
+    }
+  }
+
+  trait Typography_BodyEmail = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      content: @entity.email
+      variant: body
+    }
+  }
+
+  trait Typography_CaptionTheme = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      color: muted
+      content: Theme
+      variant: caption
+    }
+  }
+
+  trait Typography_BodyTheme = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      content: @entity.theme
+      variant: body
+    }
+  }
+
+  trait Typography_Completing = Typography.traits.TypographyRender -> WizardFormEntry {
+    config {
+      color: muted
+      content: "Completing sign-up…"
+      variant: caption
+    }
+  }
+
+  trait WizardProgress_Personal = WizardProgress.traits.WizardProgressRender -> WizardFormEntry {
+    config {
+      currentStep: 0
+      steps: (Personal Preferences Review)
+    }
+  }
+
+  trait WizardProgress_Preferences = WizardProgress.traits.WizardProgressRender -> WizardFormEntry {
+    config {
+      currentStep: 1
+      steps: (Personal Preferences Review)
+    }
+  }
+
+  trait WizardProgress_Review = WizardProgress.traits.WizardProgressRender -> WizardFormEntry {
+    config {
+      currentStep: 2
+      steps: (Personal Preferences Review)
+    }
+  }
+
+  trait FormSection_Personal = FormSection.traits.FormSectionRender -> WizardFormEntry {
+    config {
+      cancelEvent: INIT
+      fields: (name email)
+      mode: create
+      submitEvent: NEXT
+    }
+  }
+
+  trait FormSection_PersonalEdit = FormSection.traits.FormSectionRender -> WizardFormEntry {
+    config {
+      cancelEvent: INIT
+      entity: @entity
+      fields: (name email)
+      mode: edit
+      submitEvent: NEXT
+    }
+  }
+
+  trait FormSection_PreferencesEdit = FormSection.traits.FormSectionRender -> WizardFormEntry {
+    config {
+      cancelEvent: PREV
+      entity: @entity
+      fields: (theme)
+      mode: edit
+      submitEvent: NEXT
+    }
+  }
+
+  trait WizardNavigation_Personal = WizardNavigation.traits.WizardNavigationRender -> WizardFormEntry {
+    config {
+      currentStep: 0
+      onNext: NEXT
+      showBack: false
+      showComplete: false
+      showNext: true
+      totalSteps: 3
+    }
+  }
+
+  trait WizardNavigation_Preferences = WizardNavigation.traits.WizardNavigationRender -> WizardFormEntry {
+    config {
+      currentStep: 1
+      onBack: PREV
+      onNext: NEXT
+      showBack: true
+      showComplete: false
+      showNext: true
+      totalSteps: 3
+    }
+  }
+
+  trait WizardNavigation_Review = WizardNavigation.traits.WizardNavigationRender -> WizardFormEntry {
+    config {
+      currentStep: 2
+      onBack: PREV
+      onComplete: COMPLETE
+      showBack: true
+      showComplete: true
+      showNext: false
+      totalSteps: 3
+    }
+  }
+
+  trait Alert_Error = Alert.traits.AlertRender -> WizardFormEntry {
+    config {
+      message: ?error
+      variant: error
+    }
+  }
+
+  trait Spinner_Default = Spinner.traits.SpinnerRender -> WizardFormEntry {
+    config {}
+  }
+
+  trait Button_StartOver = Button.traits.ButtonRender -> WizardFormEntry {
+    config {
+      action: RESTART
+      icon: rotate-ccw
+      label: "Start Over"
+      variant: ghost
+    }
+  }
+
+  trait Button_Retry = Button.traits.ButtonRender -> WizardFormEntry {
+    config {
+      action: COMPLETE
+      icon: refresh-cw
+      label: Retry
+      variant: primary
+    }
+  }
+
+  trait Button_StartNewWizard = Button.traits.ButtonRender -> WizardFormEntry {
+    config {
+      action: RESTART
+      icon: rotate-ccw
+      label: "Start a new wizard"
+      variant: secondary
+    }
   }
 
   trait WizardFormFlow -> WizardFormEntry [interaction, instance] {

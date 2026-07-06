@@ -100,6 +100,100 @@
       ],
       "traits": [
         {
+          "config": {
+            "content": {
+              "default": "@config.title",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "h3",
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "ESignRequest",
+          "name": "Typography1",
+          "ref": "Typography.traits.TypographyRender"
+        },
+        {
+          "config": {
+            "entity": {
+              "default": "@payload.data",
+              "type": "unknown"
+            },
+            "fields": {
+              "default": [
+                {
+                  "label": "Document",
+                  "name": "documentName",
+                  "variant": "h4"
+                },
+                {
+                  "label": "Recipient",
+                  "name": "recipientName",
+                  "variant": "body"
+                },
+                {
+                  "label": "Email",
+                  "name": "recipientEmail",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Status",
+                  "name": "status",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Sent",
+                  "name": "sentAt",
+                  "variant": "caption"
+                }
+              ],
+              "type": "unknown"
+            },
+            "itemActions": {
+              "default": [
+                {
+                  "event": "SEND_REQUEST",
+                  "label": "Send",
+                  "variant": "primary"
+                },
+                {
+                  "event": "REVOKE_REQUEST",
+                  "label": "Revoke",
+                  "variant": "danger"
+                }
+              ],
+              "type": "unknown"
+            },
+            "look": {
+              "default": "@config.tableLook",
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "ESignRequest",
+          "name": "DataGrid1",
+          "ref": "DataGrid.traits.DataGridRender"
+        },
+        {
+          "config": {
+            "message": {
+              "default": "@payload.error",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Failed to load signature requests",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "error",
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "ESignRequest",
+          "name": "Alert1",
+          "ref": "Alert.traits.AlertRender"
+        },
+        {
           "category": "interaction",
           "config": {
             "tableLook": {
@@ -293,55 +387,8 @@
                     "main",
                     {
                       "children": [
-                        {
-                          "content": "@config.title",
-                          "type": "typography",
-                          "variant": "h3"
-                        },
-                        {
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "label": "Document",
-                              "name": "documentName",
-                              "variant": "h4"
-                            },
-                            {
-                              "label": "Recipient",
-                              "name": "recipientName",
-                              "variant": "body"
-                            },
-                            {
-                              "label": "Email",
-                              "name": "recipientEmail",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Status",
-                              "name": "status",
-                              "variant": "badge"
-                            },
-                            {
-                              "label": "Sent",
-                              "name": "sentAt",
-                              "variant": "caption"
-                            }
-                          ],
-                          "itemActions": [
-                            {
-                              "event": "SEND_REQUEST",
-                              "label": "Send",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "REVOKE_REQUEST",
-                              "label": "Revoke",
-                              "variant": "danger"
-                            }
-                          ],
-                          "look": "@config.tableLook",
-                          "type": "data-grid"
-                        }
+                        "@trait.Typography1",
+                        "@trait.DataGrid1"
                       ],
                       "direction": "vertical",
                       "gap": "md",
@@ -358,12 +405,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "message": "@payload.error",
-                      "title": "Failed to load signature requests",
-                      "type": "alert",
-                      "variant": "error"
-                    }
+                    "@trait.Alert1"
                   ]
                 ],
                 "event": "ESignRequestLoadFailed",
@@ -431,6 +473,20 @@
               }
             ]
           }
+        }
+      ],
+      "uses": [
+        {
+          "as": "Typography",
+          "from": "std/behaviors/ui-typography"
+        },
+        {
+          "as": "DataGrid",
+          "from": "std/behaviors/ui-data-grid"
+        },
+        {
+          "as": "Alert",
+          "from": "std/behaviors/ui-alert"
         }
       ]
     }

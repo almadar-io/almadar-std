@@ -5,6 +5,32 @@ orbital DrawerContentOrbital {
     id : string!
   }
 
+  uses Typography from "std/behaviors/ui-typography"
+  uses Button from "std/behaviors/ui-button"
+
+  trait Typography1 = Typography.traits.TypographyRender -> DrawerContent {
+    config {
+      content: ?name
+      variant: h4
+    }
+  }
+
+  trait Typography2 = Typography.traits.TypographyRender -> DrawerContent {
+    config {
+      color: muted
+      content: ?description
+      variant: body
+    }
+  }
+
+  trait Button1 = Button.traits.ButtonRender -> DrawerContent {
+    config {
+      action: CLOSE
+      label: Close
+      variant: ghost
+    }
+  }
+
   trait DrawerContentDrawer -> @rebindable DrawerContent [interaction, instance] {
     initial: closed
 
@@ -12,22 +38,8 @@ orbital DrawerContentOrbital {
       INIT -> closed
       OPEN -> open
         (render-ui drawer {
-          children: [{
-            content: ?name
-            type: typography
-            variant: h4
-          }, {
-            color: muted
-            content: ?description
-            type: typography
-            variant: body
-          }, {
-            children: [{
-              action: CLOSE
-              label: Close
-              type: button
-              variant: ghost
-            }]
+          children: [@trait.Typography1, @trait.Typography2, {
+            children: [@trait.Button1]
             direction: horizontal
             gap: sm
             justify: end

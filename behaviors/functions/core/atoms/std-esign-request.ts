@@ -25,53 +25,16 @@ const BEHAVIOR_PATH = 'std/behaviors/std-esign-request';
 const ALIAS = 'EsignRequest';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdEsignRequestEventKey = 'ESignRequestLoadFailed' | 'ESignRequestLoaded' | 'INIT' | 'REVOKE_REQUEST' | 'SEND_REQUEST';
-
-/**
- * Payload shape for the `SEND_REQUEST` event.
- */
-export interface StdEsignRequestSendRequestPayload {
-  id: string;
-}
-
-/**
- * Payload shape for the `REVOKE_REQUEST` event.
- */
-export interface StdEsignRequestRevokeRequestPayload {
-  id: string;
-}
-
-/**
- * Payload shape for the `ESignRequestLoaded` event.
- */
-export interface StdEsignRequestEsignrequestloadedPayload {
-  data?: EntityRow[];
-}
-
-/**
- * Payload shape for the `ESignRequestLoadFailed` event.
- */
-export interface StdEsignRequestEsignrequestloadfailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdEsignRequestConfig {
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Signature Requests"` */
-  title?: string;
+  /** Default: `"@config.title"` */
+  content?: unknown;
+  /** Default: `"h3"` */
+  variant?: unknown;
 }
 
 /**
@@ -90,8 +53,8 @@ export interface StdEsignRequestParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdEsignRequestEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -104,8 +67,53 @@ export interface StdEsignRequestParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `EsignRequest.traits.Typography1`. */
+export function stdEsignRequestTypography1Trait(params: StdEsignRequestParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `EsignRequest.traits.DataGrid1`. */
+export function stdEsignRequestDataGrid1Trait(params: StdEsignRequestParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.DataGrid1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `EsignRequest.traits.Alert1`. */
+export function stdEsignRequestAlert1Trait(params: StdEsignRequestParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Alert1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `EsignRequest.traits.ESignRequestSigning`. */
-export function stdEsignRequestTrait(params: StdEsignRequestParams): TraitReference {
+export function stdEsignRequestESignRequestSigningTrait(params: StdEsignRequestParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ESignRequestSigning`,
@@ -141,7 +149,10 @@ export function stdEsignRequest(params: StdEsignRequestParams): OrbitalDefinitio
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdEsignRequestTrait(params),
+      stdEsignRequestTypography1Trait(params),
+      stdEsignRequestDataGrid1Trait(params),
+      stdEsignRequestAlert1Trait(params),
+      stdEsignRequestESignRequestSigningTrait(params),
     ],
     pages: [
       stdEsignRequestPage(params),

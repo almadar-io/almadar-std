@@ -49,11 +49,105 @@
           "traits": [
             {
               "ref": "ExportMenu"
+            },
+            {
+              "ref": "Button1"
+            },
+            {
+              "ref": "DataList1"
+            },
+            {
+              "ref": "Popover1"
             }
           ]
         }
       ],
       "traits": [
+        {
+          "config": {
+            "action": {
+              "default": "OPEN_EXPORT",
+              "type": "unknown"
+            },
+            "icon": {
+              "default": "download",
+              "type": "unknown"
+            },
+            "label": {
+              "default": "@config.buttonLabel",
+              "type": "unknown"
+            },
+            "size": {
+              "default": "sm",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "ghost",
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "ExportPanel",
+          "name": "Button1",
+          "ref": "Button.traits.ButtonRender"
+        },
+        {
+          "config": {
+            "entity": {
+              "default": "@entity.options",
+              "type": "unknown"
+            },
+            "fields": {
+              "default": [],
+              "type": "unknown"
+            },
+            "look": {
+              "default": "@config.tableLook",
+              "type": "unknown"
+            },
+            "renderItem": {
+              "default": [
+                "fn",
+                "fmt",
+                {
+                  "action": "@config.event",
+                  "actionPayload": {
+                    "format": "@fmt.format",
+                    "tileId": "@config.tileId"
+                  },
+                  "icon": "file-down",
+                  "label": "@fmt.label",
+                  "size": "sm",
+                  "variant": "ghost"
+                }
+              ],
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "ExportPanel",
+          "name": "DataList1",
+          "ref": "DataList.traits.DataListRender"
+        },
+        {
+          "config": {
+            "children": {
+              "default": [
+                "@trait.Button1"
+              ],
+              "type": "unknown"
+            },
+            "content": {
+              "default": "@trait.DataList1",
+              "type": "unknown"
+            },
+            "position": {
+              "default": "bottom",
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "ExportPanel",
+          "name": "Popover1",
+          "ref": "Popover.traits.PopoverRender"
+        },
         {
           "category": "interaction",
           "config": {
@@ -209,40 +303,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "children": {
-                        "action": "OPEN_EXPORT",
-                        "icon": "download",
-                        "label": "@config.buttonLabel",
-                        "size": "sm",
-                        "type": "button",
-                        "variant": "ghost"
-                      },
-                      "content": {
-                        "entity": "@entity.options",
-                        "fields": [],
-                        "look": "@config.tableLook",
-                        "renderItem": [
-                          "fn",
-                          "fmt",
-                          {
-                            "action": "@config.event",
-                            "actionPayload": {
-                              "format": "@fmt.format",
-                              "tileId": "@config.tileId"
-                            },
-                            "icon": "file-down",
-                            "label": "@fmt.label",
-                            "size": "sm",
-                            "type": "button",
-                            "variant": "ghost"
-                          }
-                        ],
-                        "type": "data-list"
-                      },
-                      "position": "bottom",
-                      "type": "popover"
-                    }
+                    "@trait.Popover1"
                   ]
                 ],
                 "event": "INIT",
@@ -275,6 +336,20 @@
               }
             ]
           }
+        }
+      ],
+      "uses": [
+        {
+          "as": "Button",
+          "from": "std/behaviors/ui-button"
+        },
+        {
+          "as": "DataList",
+          "from": "std/behaviors/ui-data-list"
+        },
+        {
+          "as": "Popover",
+          "from": "std/behaviors/ui-popover"
         }
       ]
     }

@@ -127,12 +127,6 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait ServiceNodeCircuitBreakerRender -> ServiceNode {
-    config {
-      state: @entity.limiterStatus
-    }
-  }
-
   trait ServiceNodeCircuitBreaker -> ServiceNode [interaction, collection] {
     initial: closed
 
@@ -275,48 +269,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: ServiceNode
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: "Circuit Closed"
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Closed]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Service is healthy. All requests are being processed."
-            type: alert
-            variant: success
-          }, {
-            children: [{
-              label: Failures
-              look: @config.statLook
-              type: stat-display
-              value: @entity.failureCount
-            }, {
-              label: Successes
-              look: @config.statLook
-              type: stat-display
-              value: @entity.successCount
-            }]
+          }, { type: divider }, @trait.Alert_Success, {
+            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
             cols: 2
             type: simple-grid
-          }, {
-            max: @entity.threshold
-            min: 0
-            type: meter
-            value: @entity.failureCount
-          }]
+          }, @trait.Meter_Failures]
           direction: vertical
           gap: lg
           type: stack
@@ -327,54 +293,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: alert-triangle, type: icon }, {
-                content: ServiceNode
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_AlertTriangle, @trait.Typography_ServiceNode]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: "Circuit Open"
-              pulse: true
-              status: critical
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Open]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Circuit is open. Requests are being rejected to prevent cascading failures."
-            type: alert
-            variant: error
-          }, {
-            children: [{
-              label: Failures
-              look: @config.statLook
-              type: stat-display
-              value: @entity.failureCount
-            }, {
-              label: Successes
-              look: @config.statLook
-              type: stat-display
-              value: @entity.successCount
-            }]
+          }, { type: divider }, @trait.Alert_Error, {
+            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
             cols: 2
             type: simple-grid
-          }, {
-            max: @entity.threshold
-            min: 0
-            type: meter
-            value: @entity.failureCount
-          }, {
-            action: RESET
-            icon: rotate-ccw
-            label: Reset
-            type: button
-            variant: ghost
-          }]
+          }, @trait.Meter_Failures, @trait.Button_Reset]
           direction: vertical
           gap: lg
           type: stack
@@ -385,48 +317,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: ServiceNode
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: "Circuit Closed"
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Closed]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Service is healthy. All requests are being processed."
-            type: alert
-            variant: success
-          }, {
-            children: [{
-              label: Failures
-              look: @config.statLook
-              type: stat-display
-              value: @entity.failureCount
-            }, {
-              label: Successes
-              look: @config.statLook
-              type: stat-display
-              value: @entity.successCount
-            }]
+          }, { type: divider }, @trait.Alert_Success, {
+            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
             cols: 2
             type: simple-grid
-          }, {
-            max: @entity.threshold
-            min: 0
-            type: meter
-            value: @entity.failureCount
-          }]
+          }, @trait.Meter_Failures]
           direction: vertical
           gap: lg
           type: stack

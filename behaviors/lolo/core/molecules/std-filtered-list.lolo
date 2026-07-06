@@ -18,6 +18,10 @@ orbital FilteredListItemOrbital {
 
   uses Pagination from "std/behaviors/std-pagination"
 
+  uses Icon from "std/behaviors/ui-icon"
+  uses Typography from "std/behaviors/ui-typography"
+  uses Divider from "std/behaviors/ui-divider"
+
     type FilteredListItemLoaded = Event { data : [FilteredListItem] }
 
     type FilteredListItemLoadFailed = Event { error : string, code : string }
@@ -100,6 +104,23 @@ orbital FilteredListItemOrbital {
     }
   }
 
+  trait Icon1 = Icon.traits.IconRender -> FilteredListItem {
+    config {
+      name: list
+    }
+  }
+
+  trait Typography1 = Typography.traits.TypographyRender -> FilteredListItem {
+    config {
+      content: "Filtered List"
+      variant: h2
+    }
+  }
+
+  trait Divider1 = Divider.traits.DividerRender -> FilteredListItem {
+    config {}
+  }
+
   trait FilteredListLayout -> FilteredListItem [interaction, collection] {
     state composing {
       INIT -> composing
@@ -109,15 +130,11 @@ orbital FilteredListItemOrbital {
         (render-ui main {
           children: [{
             align: center
-            children: [{ name: list, type: icon }, {
-              content: "Filtered List"
-              type: typography
-              variant: h2
-            }]
+            children: [@trait.Icon1, @trait.Typography1]
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, {
+          }, @trait.Divider1, {
             children: [@trait.FilteredItemSearch, @trait.FilteredItemFilter]
             direction: horizontal
             gap: sm
@@ -148,5 +165,5 @@ orbital FilteredListItemOrbital {
   ;; success events (BrowseItemLoaded, FilterTargetLoaded, ...) that
   ;; come back from the server in `emittedEvents[]`. See
   ;; docs/Almadar_Std_Verification.md gap #19.B.
-  page "/filtered-list" as FilteredList -> FilteredListLayout, FilteredItemSearch, FilteredItemFilter, FilteredItemBrowse, FilteredItemPagination
+  page "/filtered-list" as FilteredList -> FilteredListLayout, FilteredItemSearch, FilteredItemFilter, FilteredItemBrowse, FilteredItemPagination, Icon1, Typography1, Divider1
 }

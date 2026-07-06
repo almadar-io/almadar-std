@@ -25,31 +25,16 @@ const BEHAVIOR_PATH = 'std/behaviors/std-search';
 const ALIAS = 'Search';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdSearchEventKey = 'INIT' | 'SEARCH';
-
-/**
- * Payload shape for the `SEARCH` event.
- */
-export interface StdSearchSearchPayload {
-  searchTerm: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdSearchConfig {
-  /** Default: `"SEARCH"` */
-  event?: string;
-  /** Default: `"Search…"` */
-  placeholder?: string;
+  /** Default: `"@config.event"` */
+  event?: unknown;
+  /** Default: `"@config.placeholder"` */
+  placeholder?: unknown;
 }
 
 /**
@@ -65,8 +50,8 @@ export interface StdSearchParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdSearchEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -79,11 +64,26 @@ export interface StdSearchParams {
   pagePath?: string;
 }
 
-/** Trait descriptor: `Search.traits.SearchResultSearch`. */
-export function stdSearchTrait(params: StdSearchParams): TraitReference {
+/** Trait descriptor: `Search.traits.SearchResultSearchRender`. */
+export function stdSearchSearchResultSearchRenderTrait(params: StdSearchParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SearchResultSearch`,
+    ref: `${ALIAS}.traits.SearchResultSearchRender`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `Search.traits.SearchResultSearchEvents`. */
+export function stdSearchSearchResultSearchEventsTrait(params: StdSearchParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.SearchResultSearchEvents`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -116,7 +116,8 @@ export function stdSearch(params: StdSearchParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdSearchTrait(params),
+      stdSearchSearchResultSearchRenderTrait(params),
+      stdSearchSearchResultSearchEventsTrait(params),
     ],
     pages: [
       stdSearchPage(params),

@@ -7,6 +7,11 @@ orbital DashboardItemOrbital {
 
   uses Browse from "std/behaviors/std-browse"
 
+  uses Icon from "std/behaviors/ui-icon"
+  uses Typography from "std/behaviors/ui-typography"
+  uses Divider from "std/behaviors/ui-divider"
+  uses SimpleGrid from "std/behaviors/ui-simple-grid"
+
     type DashboardItemLoaded = Event { data : [DashboardItem] }
 
     type DashboardItemLoadFailed = Event { error : string, code : string }
@@ -115,6 +120,38 @@ orbital DashboardItemOrbital {
     }
   }
 
+  trait Icon1 = Icon.traits.IconRender -> DashboardItem {
+    config {
+      name: bar-chart-2
+    }
+  }
+
+  trait Typography1 = Typography.traits.TypographyRender -> DashboardItem {
+    config {
+      content: Dashboard
+      variant: h2
+    }
+  }
+
+  trait Divider1 = Divider.traits.DividerRender -> DashboardItem {
+    config {}
+  }
+
+  trait SimpleGrid1 = SimpleGrid.traits.SimpleGridRender -> DashboardItem {
+    config {
+      children: [@trait.DashboardCategoryChart, @trait.DashboardStatusChart]
+      cols: 2
+      gap: md
+    }
+  }
+
+  trait Typography2 = Typography.traits.TypographyRender -> DashboardItem {
+    config {
+      content: "Recent Items"
+      variant: h3
+    }
+  }
+
   trait DashboardLayout -> DashboardItem [interaction, collection] {
     state composing {
       INIT -> composing
@@ -124,24 +161,11 @@ orbital DashboardItemOrbital {
         (render-ui main {
           children: [{
             align: center
-            children: [{ name: bar-chart-2, type: icon }, {
-              content: Dashboard
-              type: typography
-              variant: h2
-            }]
+            children: [@trait.Icon1, @trait.Typography1]
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, @trait.DashboardSummary, {
-            children: [@trait.DashboardCategoryChart, @trait.DashboardStatusChart]
-            cols: 2
-            gap: md
-            type: simple-grid
-          }, { type: divider }, {
-            content: "Recent Items"
-            type: typography
-            variant: h3
-          }, @trait.DashboardItemBrowse]
+          }, @trait.Divider1, @trait.DashboardSummary, @trait.SimpleGrid1, @trait.Divider1, @trait.Typography2, @trait.DashboardItemBrowse]
           className: "max-w-6xl mx-auto w-full p-4"
           direction: vertical
           gap: lg
@@ -161,5 +185,5 @@ orbital DashboardItemOrbital {
     }
   }
 
-  page "/dashboard" as Dashboard -> DashboardLayout, DashboardSummary, DashboardCategoryChart, DashboardStatusChart, DashboardItemBrowse
+  page "/dashboard" as Dashboard -> DashboardLayout, DashboardSummary, DashboardCategoryChart, DashboardStatusChart, DashboardItemBrowse, Icon1, Typography1, Divider1, SimpleGrid1, Typography2
 }

@@ -1,6 +1,14 @@
 app std-gallery "1.0.0"
 "std-gallery — image gallery primitive. Browses GalleryItems in a media-gallery grid; opens a lightbox modal for full-size viewing."
 orbital GalleryItemOrbital {
+  uses Spinner from "std/behaviors/ui-spinner"
+  uses Typography from "std/behaviors/ui-typography"
+  uses Icon from "std/behaviors/ui-icon"
+  uses Divider from "std/behaviors/ui-divider"
+  uses MediaGallery from "std/behaviors/ui-media-gallery"
+  uses Alert from "std/behaviors/ui-alert"
+  uses Lightbox from "std/behaviors/ui-lightbox"
+
     type GalleryItemLoaded = Event { data : [GalleryItem] } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
 
     type GalleryItemLoadFailed = Event { error : string, code : string } "Fired when GalleryItem fails to load"
@@ -14,6 +22,82 @@ orbital GalleryItemOrbital {
     imageUrl : string @description "The URL pointing to the image resource." @synonyms "image, src, path" = "https://picsum.photos/seed/gallery/800/600"
   }
 
+  trait Spinner1 = Spinner.traits.SpinnerRender -> GalleryItem {
+    config {}
+  }
+
+  trait Typography1 = Typography.traits.TypographyRender -> GalleryItem {
+    config {
+      color: muted
+      content: "Loading gallery…"
+      variant: caption
+    }
+  }
+
+  trait Icon1 = Icon.traits.IconRender -> GalleryItem {
+    config {
+      name: image
+    }
+  }
+
+  trait Typography2 = Typography.traits.TypographyRender -> GalleryItem {
+    config {
+      content: @config.title
+      variant: h3
+    }
+  }
+
+  trait Divider1 = Divider.traits.DividerRender -> GalleryItem {
+    config {}
+  }
+
+  trait MediaGallery1 = MediaGallery.traits.MediaGalleryRender -> GalleryItem {
+    config {
+      entity: ?data
+    }
+  }
+
+  trait Alert1 = Alert.traits.AlertRender -> GalleryItem {
+    config {
+      message: ?error
+      variant: error
+    }
+  }
+
+  trait Lightbox1 = Lightbox.traits.LightboxRender -> GalleryItem {
+    config {
+      closeAction: CLOSE
+      currentIndex: 0
+      images: [{
+        alt: @entity.name
+        caption: @entity.name
+        src: @entity.imageUrl
+      }]
+      isOpen: true
+      showCounter: true
+    }
+  }
+
+  trait Spinner2 = Spinner.traits.SpinnerRender -> GalleryItem {
+    config {
+      size: sm
+    }
+  }
+
+  trait Typography3 = Typography.traits.TypographyRender -> GalleryItem {
+    config {
+      color: muted
+      content: "Loading gallery…"
+      variant: caption
+    }
+  }
+
+  trait Spinner3 = Spinner.traits.SpinnerRender -> GalleryItem {
+    config {
+      size: sm
+    }
+  }
+
   trait GalleryItemGallery -> @rebindable GalleryItem [interaction, collection] {
     initial: loading
 
@@ -24,12 +108,7 @@ orbital GalleryItemOrbital {
         })
         (render-ui main {
           align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading gallery…"
-            type: typography
-            variant: caption
-          }]
+          children: [@trait.Spinner1, @trait.Typography1]
           className: py-12
           direction: vertical
           gap: md
@@ -39,25 +118,17 @@ orbital GalleryItemOrbital {
         (render-ui main {
           children: [{
             align: center
-            children: [{ name: image, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h3
-            }]
+            children: [@trait.Icon1, @trait.Typography2]
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, { entity: ?data, type: media-gallery }]
+          }, @trait.Divider1, @trait.MediaGallery1]
           direction: vertical
           gap: md
           type: stack
         })
       GalleryItemLoadFailed -> error
-        (render-ui main {
-          message: ?error
-          type: alert
-          variant: error
-        })
+        (render-ui main @trait.Alert1)
     }
 
     state browsing {
@@ -66,18 +137,7 @@ orbital GalleryItemOrbital {
         (set @entity.name ?row.name)
         (set @entity.description ?row.description)
         (set @entity.imageUrl ?row.imageUrl)
-        (render-ui modal {
-          closeAction: CLOSE
-          currentIndex: 0
-          images: [{
-            alt: @entity.name
-            caption: @entity.name
-            src: @entity.imageUrl
-          }]
-          isOpen: true
-          showCounter: true
-          type: lightbox
-        })
+        (render-ui modal @trait.Lightbox1)
     }
 
     state viewing {
@@ -88,12 +148,7 @@ orbital GalleryItemOrbital {
         })
         (render-ui main {
           align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading gallery…"
-            type: typography
-            variant: caption
-          }]
+          children: [@trait.Spinner2, @trait.Typography3]
           className: py-12
           direction: vertical
           gap: md
@@ -106,7 +161,7 @@ orbital GalleryItemOrbital {
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main @trait.Spinner3)
     }
 
     emits {
@@ -167,5 +222,5 @@ orbital GalleryItemOrbital {
     }
   }
 
-  page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery
+  page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery, Spinner1, Typography1, Icon1, Typography2, Divider1, MediaGallery1, Alert1, Lightbox1, Spinner2, Typography3, Spinner3
 }

@@ -25,104 +25,18 @@ const BEHAVIOR_PATH = 'std/behaviors/std-browse';
 const ALIAS = 'Browse';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdBrowseEventKey = 'BrowseItemLoadFailed' | 'BrowseItemLoaded' | 'DELETE' | 'EDIT' | 'INIT' | 'REFETCH_FILTER' | 'REFETCH_PAGE' | 'REFETCH_QUERY' | 'VIEW';
-
-/**
- * Payload shape for the `BrowseItemLoaded` event.
- */
-export interface StdBrowseBrowseItemLoadedPayload {
-  data?: EntityRow[];
-  totalCount?: number;
-}
-
-/**
- * Payload shape for the `BrowseItemLoadFailed` event.
- */
-export interface StdBrowseBrowseItemLoadFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Payload shape for the `VIEW` event.
- */
-export interface StdBrowseViewPayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `EDIT` event.
- */
-export interface StdBrowseEditPayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `DELETE` event.
- */
-export interface StdBrowseDeletePayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `"@item.assignee"` */
-  assigneeBinding?: string;
-  /** Default: `"@item.status"` */
-  badgeBinding?: string;
-  /** Default: `{"children":[{"cols":"@config.cols","entity":"@payload.data","fields":"@config.fields","gap":"@config.gap","imageField":"@config.imageField","itemActions":"@config.itemActions","pageSize":"@config.displayPageSize","type":"data-grid"}],"direction":"vertical","type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `"@item.category"` */
-  categoryBinding?: string;
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `[{"align":"left","field":"name","header":"Name","key":"name","weight":"medium"},{"align":"left","field":"description","header":"Detail","key":"description"},{"align":"center","field":"status","format":"badge","header":"Status","key":"status"}]` */
-  columns?: EntityRow[];
-  /** Default: `"@item.description"` */
-  descriptionBinding?: string;
-  /** Default: `10` */
-  displayPageSize?: number;
-  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Description","name":"description","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  filters?: EntityRow[];
-  /** Default: `"md"` */
-  gap?: string;
-  /** Default: `""` */
-  imageField?: string;
-  /** Default: `"@item.thumbnailLabel"` */
-  imageLabelBinding?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `99` */
-  maxInlineActions?: number;
-  /** Default: `"@item.createdAt"` */
-  metaBinding?: string;
-  /** Default: `10` */
-  pageSize?: number;
-  /** Default: `"@item.price"` */
-  priceBinding?: string;
-  /** Default: `"@item.priority"` */
-  priorityBinding?: string;
-  /** Default: `"Search…"` */
-  searchPlaceholder?: string;
-  /** Default: `"@item.name"` */
-  titleBinding?: string;
-  /** Default: `"data-grid"` */
-  viewPattern?: unknown;
+  /** Default: `"error"` */
+  color?: unknown;
+  /** Default: `"@payload.error"` */
+  content?: unknown;
+  /** Default: `"caption"` */
+  variant?: unknown;
 }
 
 /**
@@ -138,8 +52,8 @@ export interface StdBrowseParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdBrowseEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -152,8 +66,38 @@ export interface StdBrowseParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `Browse.traits.Typography1`. */
+export function stdBrowseTypography1Trait(params: StdBrowseParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `Browse.traits.DataGrid1`. */
+export function stdBrowseDataGrid1Trait(params: StdBrowseParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.DataGrid1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `Browse.traits.BrowseItemBrowse`. */
-export function stdBrowseTrait(params: StdBrowseParams): TraitReference {
+export function stdBrowseBrowseItemBrowseTrait(params: StdBrowseParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.BrowseItemBrowse`,
@@ -189,7 +133,9 @@ export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdBrowseTrait(params),
+      stdBrowseTypography1Trait(params),
+      stdBrowseDataGrid1Trait(params),
+      stdBrowseBrowseItemBrowseTrait(params),
     ],
     pages: [
       stdBrowsePage(params),

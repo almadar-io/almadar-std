@@ -31,10 +31,10 @@ const ALIAS = 'ThreadChatBubbles';
  * without modifying its state-machine topology.
  */
 export interface StdThreadChatBubblesConfig {
-  /** Default: `{"children":[{"align":"center","children":[{"name":"@config.recipientName","size":"md","type":"avatar"},{"children":[{"content":"@config.recipientName","type":"typography","variant":"body","weight":"medium"},{"color":"muted","content":"Active now","type":"typography","variant":"caption"}],"className":"flex-1","direction":"vertical","gap":"xs","type":"stack"}],"className":"pb-md border-b border-[var(--color-border)]","direction":"horizontal","gap":"sm","type":"stack"},{"className":"flex-1 overflow-y-auto py-md","currentUser":"me","entity":"@payload.data","fields":[{"name":"content","variant":"body"},{"format":"date","name":"createdAt"}],"gap":"sm","senderField":"authorId","type":"data-list","variant":"message"},{"children":[{"entity":"@entity","fields":["content"],"mode":"edit","submitEvent":"REPLY","submitLabel":"Send","type":"form-section"}],"className":"mt-md border-t border-[var(--color-border)] pt-md","direction":"vertical","gap":"sm","type":"stack"}],"className":"w-full px-card-md py-section h-full","direction":"vertical","gap":"none","type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `"Alex Rivera"` */
-  recipientName?: unknown;
+  /** Default: `"@config.recipientName"` */
+  name?: unknown;
+  /** Default: `"md"` */
+  size?: unknown;
 }
 
 /**
@@ -67,8 +67,83 @@ export interface StdThreadChatBubblesParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `ThreadChatBubbles.traits.Avatar1`. */
+export function stdThreadChatBubblesAvatar1Trait(params: StdThreadChatBubblesParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Avatar1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ThreadChatBubbles.traits.Typography1`. */
+export function stdThreadChatBubblesTypography1Trait(params: StdThreadChatBubblesParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ThreadChatBubbles.traits.Typography2`. */
+export function stdThreadChatBubblesTypography2Trait(params: StdThreadChatBubblesParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography2`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ThreadChatBubbles.traits.DataList1`. */
+export function stdThreadChatBubblesDataList1Trait(params: StdThreadChatBubblesParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.DataList1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ThreadChatBubbles.traits.FormSection1`. */
+export function stdThreadChatBubblesFormSection1Trait(params: StdThreadChatBubblesParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.FormSection1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `ThreadChatBubbles.traits.ChatBubblesThread`. */
-export function stdThreadChatBubblesTrait(params: StdThreadChatBubblesParams): TraitReference {
+export function stdThreadChatBubblesChatBubblesThreadTrait(params: StdThreadChatBubblesParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ChatBubblesThread`,
@@ -104,7 +179,12 @@ export function stdThreadChatBubbles(params: StdThreadChatBubblesParams): Orbita
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdThreadChatBubblesTrait(params),
+      stdThreadChatBubblesAvatar1Trait(params),
+      stdThreadChatBubblesTypography1Trait(params),
+      stdThreadChatBubblesTypography2Trait(params),
+      stdThreadChatBubblesDataList1Trait(params),
+      stdThreadChatBubblesFormSection1Trait(params),
+      stdThreadChatBubblesChatBubblesThreadTrait(params),
     ],
     pages: [
       stdThreadChatBubblesPage(params),

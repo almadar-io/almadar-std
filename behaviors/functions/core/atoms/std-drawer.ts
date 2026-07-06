@@ -25,12 +25,17 @@ const BEHAVIOR_PATH = 'std/behaviors/std-drawer';
 const ALIAS = 'Drawer';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
  */
-export type StdDrawerEventKey = 'CLOSE' | 'INIT' | 'OPEN';
+export interface StdDrawerConfig {
+  /** Default: `"@payload.name"` */
+  content?: unknown;
+  /** Default: `"h4"` */
+  variant?: unknown;
+}
 
 /**
  * Params for the std-drawer descriptor helpers.
@@ -45,22 +50,67 @@ export interface StdDrawerParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdDrawerEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
+  /** Typed call-site config block — see the per-field interface. */
+  config?: StdDrawerConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }
 
+/** Trait descriptor: `Drawer.traits.Typography1`. */
+export function stdDrawerTypography1Trait(params: StdDrawerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `Drawer.traits.Typography2`. */
+export function stdDrawerTypography2Trait(params: StdDrawerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography2`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `Drawer.traits.Button1`. */
+export function stdDrawerButton1Trait(params: StdDrawerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Button1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `Drawer.traits.DrawerContentDrawer`. */
-export function stdDrawerTrait(params: StdDrawerParams): TraitReference {
+export function stdDrawerDrawerContentDrawerTrait(params: StdDrawerParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.DrawerContentDrawer`,
@@ -96,7 +146,10 @@ export function stdDrawer(params: StdDrawerParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdDrawerTrait(params),
+      stdDrawerTypography1Trait(params),
+      stdDrawerTypography2Trait(params),
+      stdDrawerButton1Trait(params),
+      stdDrawerDrawerContentDrawerTrait(params),
     ],
     pages: [
       stdDrawerPage(params),

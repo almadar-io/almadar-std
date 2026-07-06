@@ -5,6 +5,33 @@ orbital DashboardGridEmbeddedOrbital {
     id : string!
   }
 
+  uses Icon from "std/behaviors/ui-icon"
+  uses Typography from "std/behaviors/ui-typography"
+  uses SimpleGrid from "std/behaviors/ui-simple-grid"
+
+  trait Icon1 = Icon.traits.IconRender -> DashboardGridEmbeddedData {
+    config {
+      color: muted
+      name: plus
+      size: sm
+    }
+  }
+
+  trait Typography1 = Typography.traits.TypographyRender -> DashboardGridEmbeddedData {
+    config {
+      color: muted
+      content: Tile
+      variant: caption
+    }
+  }
+
+  trait SimpleGrid1 = SimpleGrid.traits.SimpleGridRender -> DashboardGridEmbeddedData {
+    config {
+      children: [@config.tile1Trait, @config.tile2Trait, @config.tile3Trait, @config.tile4Trait, @config.tile5Trait, @config.tile6Trait, @config.tile7Trait, @config.tile8Trait, @config.tile9Trait, @config.tile10Trait, @config.tile11Trait, @config.tile12Trait]
+      minChildWidth: @config.minTileWidth
+    }
+  }
+
   trait EmptyTile -> DashboardGridEmbeddedData [interaction, instance] {
     initial: idle
 
@@ -12,17 +39,7 @@ orbital DashboardGridEmbeddedOrbital {
       INIT -> idle
         (render-ui main {
           align: center
-          children: [{
-            color: muted
-            name: plus
-            size: sm
-            type: icon
-          }, {
-            color: muted
-            content: Tile
-            type: typography
-            variant: caption
-          }]
+          children: [@trait.Icon1, @trait.Typography1]
           className: "min-h-[96px] h-full rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text-muted)]"
           direction: vertical
           gap: xs
@@ -59,11 +76,7 @@ orbital DashboardGridEmbeddedOrbital {
             justify: between
             type: stack
             wrap: true
-          }, { type: divider }, {
-            children: [@config.tile1Trait, @config.tile2Trait, @config.tile3Trait, @config.tile4Trait, @config.tile5Trait, @config.tile6Trait, @config.tile7Trait, @config.tile8Trait, @config.tile9Trait, @config.tile10Trait, @config.tile11Trait, @config.tile12Trait]
-            minChildWidth: @config.minTileWidth
-            type: simple-grid
-          }]
+          }, { type: divider }, @trait.SimpleGrid1]
           direction: vertical
           gap: md
           type: stack

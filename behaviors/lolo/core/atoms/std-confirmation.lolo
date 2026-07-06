@@ -7,9 +7,15 @@ app std-confirmation "1.0.0"
 ;; notify, etc.) belong in a sibling coordinator trait that
 ;; `listens { ConfirmTrait CONFIRM -> DO_DELETE }`.
 orbital ConfirmActionOrbital {
-    type ConfirmActionLoaded = Event { data : [ConfirmAction] }
+  uses UiIcon from "std/behaviors/ui-icon"
+  uses UiTypography from "std/behaviors/ui-typography"
+  uses UiStack from "std/behaviors/ui-stack"
+  uses UiDivider from "std/behaviors/ui-divider"
+  uses UiAlert from "std/behaviors/ui-alert"
+  uses UiButton from "std/behaviors/ui-button"
+  type ConfirmActionLoaded = Event { data : [ConfirmAction] }
 
-    type ConfirmActionLoadFailed = Event { error : string, code : string }
+  type ConfirmActionLoadFailed = Event { error : string, code : string }
 
   entity ConfirmAction [runtime] {
     id : string
@@ -18,6 +24,89 @@ orbital ConfirmActionOrbital {
     status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the action." @synonyms "state, condition, enabled" = active
     createdAt : string
     pendingId : string @description "Unique identifier for the pending confirmation request." @synonyms "requestId, referenceId, confirmationId" = ""
+  }
+
+  trait UiIconRender1 = UiIcon.traits.UiIconRender -> ConfirmAction {
+    config {
+      name: @config.icon
+    }
+  }
+
+  trait UiTypographyRender1 = UiTypography.traits.UiTypographyRender -> ConfirmAction {
+    config {
+      content: @config.title
+      variant: h3
+    }
+  }
+
+  trait UiStackRender1 = UiStack.traits.UiStackRender -> ConfirmAction {
+    config {
+      direction: horizontal
+      gap: sm
+      align: center
+      children: [@trait.UiIconRender1, @trait.UiTypographyRender1]
+    }
+  }
+
+  trait UiDividerRender1 = UiDivider.traits.UiDividerRender -> ConfirmAction {
+    config {}
+  }
+
+  trait UiAlertRender1 = UiAlert.traits.UiAlertRender -> ConfirmAction {
+    config {
+      message: @config.alertMessage
+      variant: error
+    }
+  }
+
+  trait UiTypographyRender2 = UiTypography.traits.UiTypographyRender -> ConfirmAction {
+    config {
+      content: @entity.name
+      variant: h4
+    }
+  }
+
+  trait UiTypographyRender3 = UiTypography.traits.UiTypographyRender -> ConfirmAction {
+    config {
+      content: @entity.pendingId
+      variant: caption
+      color: muted
+    }
+  }
+
+  trait UiButtonRender1 = UiButton.traits.UiButtonRender -> ConfirmAction {
+    config {
+      action: CANCEL
+      label: Cancel
+      variant: ghost
+    }
+  }
+
+  trait UiButtonRender2 = UiButton.traits.UiButtonRender -> ConfirmAction {
+    config {
+      action: CONFIRM
+      actionPayload: { id: ?id }
+      icon: check
+      label: @config.confirmLabel
+      variant: danger
+    }
+  }
+
+  trait UiStackRender2 = UiStack.traits.UiStackRender -> ConfirmAction {
+    config {
+      direction: horizontal
+      gap: sm
+      justify: end
+      children: [@trait.UiButtonRender1, @trait.UiButtonRender2]
+    }
+  }
+
+  trait UiStackRender3 = UiStack.traits.UiStackRender -> ConfirmAction {
+    config {
+      direction: vertical
+      gap: md
+      children: [@trait.UiStackRender1, @trait.UiDividerRender1, @trait.UiAlertRender1, @trait.UiTypographyRender2, @trait.UiTypographyRender3, @trait.UiStackRender2]
+    }
   }
 
   trait ConfirmActionConfirmation -> @rebindable ConfirmAction [interaction, instance] {
@@ -39,53 +128,7 @@ orbital ConfirmActionOrbital {
       REQUEST -> confirming when ?row
         (set @entity.pendingId ?id)
         (set @entity.name ?row.name)
-        (render-ui modal {
-          children: [{
-            align: center
-            children: [{ name: @config.icon, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h3
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }, { type: divider }, {
-            message: @config.alertMessage
-            type: alert
-            variant: error
-          }, {
-            content: @entity.name
-            type: typography
-            variant: h4
-          }, {
-            color: muted
-            content: @entity.pendingId
-            type: typography
-            variant: caption
-          }, {
-            children: [{
-              action: CANCEL
-              label: Cancel
-              type: button
-              variant: ghost
-            }, {
-              action: CONFIRM
-              actionPayload: { id: ?id }
-              icon: check
-              label: @config.confirmLabel
-              type: button
-              variant: danger
-            }]
-            direction: horizontal
-            gap: sm
-            justify: end
-            type: stack
-          }]
-          direction: vertical
-          gap: md
-          type: stack
-        })
+        (render-ui modal @trait.UiStackRender3)
     }
 
     state confirming {

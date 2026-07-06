@@ -25,54 +25,14 @@ const BEHAVIOR_PATH = 'std/behaviors/std-modal';
 const ALIAS = 'Modal';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdModalEventKey = 'CLOSE' | 'INIT' | 'ModalRecordLoadFailed' | 'ModalRecordLoaded' | 'OPEN' | 'SAVE';
-
-/**
- * Payload shape for the `SAVE` event.
- */
-export interface StdModalSavePayload {
-  data: EntityRow;
-}
-
-/**
- * Payload shape for the `ModalRecordLoadFailed` event.
- */
-export interface StdModalModalRecordLoadFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Payload shape for the `ModalRecordLoaded` event.
- */
-export interface StdModalModalRecordLoadedPayload {
-  data?: EntityRow[];
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdModalConfig {
-  /** Default: `"stack"` */
-  detailPattern?: unknown;
-  /** Default: `"modal"` */
-  detailSlot?: unknown;
-  /** Default: `[]` */
-  fields?: string[];
-  /** Default: `"layout-panel-top"` */
-  icon?: string;
-  /** Default: `"create"` */
-  mode?: string;
-  /** Default: `"Details"` */
-  title?: string;
+  /** Default: `"@config.icon"` */
+  name?: unknown;
 }
 
 /**
@@ -88,8 +48,8 @@ export interface StdModalParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdModalEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -102,8 +62,38 @@ export interface StdModalParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `Modal.traits.Icon1`. */
+export function stdModalIcon1Trait(params: StdModalParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Icon1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `Modal.traits.Typography1`. */
+export function stdModalTypography1Trait(params: StdModalParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `Modal.traits.ModalRecordModal`. */
-export function stdModalTrait(params: StdModalParams): TraitReference {
+export function stdModalModalRecordModalTrait(params: StdModalParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ModalRecordModal`,
@@ -139,7 +129,9 @@ export function stdModal(params: StdModalParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdModalTrait(params),
+      stdModalIcon1Trait(params),
+      stdModalTypography1Trait(params),
+      stdModalModalRecordModalTrait(params),
     ],
     pages: [
       stdModalPage(params),

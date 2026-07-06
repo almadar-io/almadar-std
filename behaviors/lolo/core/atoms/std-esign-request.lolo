@@ -18,6 +18,62 @@ orbital ESignRequestOrbital {
     notes : string @description "Free-text comments or additional information." @synonyms "comment, remark, description, details" = ""
   }
 
+  uses Typography from "std/behaviors/ui-typography"
+  uses DataGrid from "std/behaviors/ui-data-grid"
+  uses Alert from "std/behaviors/ui-alert"
+
+  trait Typography1 = Typography.traits.TypographyRender -> ESignRequest {
+    config {
+      content: @config.title
+      variant: h3
+    }
+  }
+
+  trait DataGrid1 = DataGrid.traits.DataGridRender -> ESignRequest {
+    config {
+      entity: ?data
+      fields: [{
+        label: Document
+        name: documentName
+        variant: h4
+      }, {
+        label: Recipient
+        name: recipientName
+        variant: body
+      }, {
+        label: Email
+        name: recipientEmail
+        variant: caption
+      }, {
+        label: Status
+        name: status
+        variant: badge
+      }, {
+        label: Sent
+        name: sentAt
+        variant: caption
+      }]
+      itemActions: [{
+        event: SEND_REQUEST
+        label: Send
+        variant: primary
+      }, {
+        event: REVOKE_REQUEST
+        label: Revoke
+        variant: danger
+      }]
+      look: @config.tableLook
+    }
+  }
+
+  trait Alert1 = Alert.traits.AlertRender -> ESignRequest {
+    config {
+      message: ?error
+      title: "Failed to load signature requests"
+      variant: error
+    }
+  }
+
   trait ESignRequestSigning -> ESignRequest [interaction, collection] {
     initial: loading
 
@@ -29,56 +85,13 @@ orbital ESignRequestOrbital {
         (render-ui main { size: md, type: spinner })
       ESignRequestLoaded -> browsing
         (render-ui main {
-          children: [{
-            content: @config.title
-            type: typography
-            variant: h3
-          }, {
-            entity: ?data
-            fields: [{
-              label: Document
-              name: documentName
-              variant: h4
-            }, {
-              label: Recipient
-              name: recipientName
-              variant: body
-            }, {
-              label: Email
-              name: recipientEmail
-              variant: caption
-            }, {
-              label: Status
-              name: status
-              variant: badge
-            }, {
-              label: Sent
-              name: sentAt
-              variant: caption
-            }]
-            itemActions: [{
-              event: SEND_REQUEST
-              label: Send
-              variant: primary
-            }, {
-              event: REVOKE_REQUEST
-              label: Revoke
-              variant: danger
-            }]
-            look: @config.tableLook
-            type: data-grid
-          }]
+          children: [@trait.Typography1, @trait.DataGrid1]
           direction: vertical
           gap: md
           type: stack
         })
       ESignRequestLoadFailed -> error
-        (render-ui main {
-          message: ?error
-          title: "Failed to load signature requests"
-          type: alert
-          variant: error
-        })
+        (render-ui main @trait.Alert1)
     }
 
     state browsing {

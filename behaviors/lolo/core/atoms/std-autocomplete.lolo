@@ -2,6 +2,10 @@ app std-autocomplete "1.0.0"
 "std-autocomplete — reusable inline typeahead: as the user types (AUTO_QUERY), fetches the linked entity filtered by @config.searchField and shows a compact suggestions list; picking one emits AUTO_SELECTED { id } for the consumer to open the record or fill a field. Rebind to any entity; configure searchField + the label field shown per suggestion."
 type AutoSuggestSpec = { name : string!, label : string, variant : string, icon : string }
 orbital AutocompleteOrbital {
+  uses UiSearchInput from "std/behaviors/ui-search-input"
+  uses UiSpinner from "std/behaviors/ui-spinner"
+  uses UiDataList from "std/behaviors/ui-data-list"
+  uses UiStack from "std/behaviors/ui-stack"
   type AutoLoaded = Event { data : [AutoTarget] } "Suggestion matches loaded"
   type AutoFailed = Event { error : string } "Suggestion fetch failed"
 
@@ -11,67 +15,105 @@ orbital AutocompleteOrbital {
     searchTerm : string @intrinsic @description "The current typed query." @synonyms "query, term, q" = ""
   }
 
+  trait UiSearchInputRender1 = UiSearchInput.traits.UiSearchInputRender -> AutoTarget {
+    config {
+      event: AUTO_QUERY
+      placeholder: @config.placeholder
+      query: @entity.searchTerm
+    }
+  }
+
+  trait UiSearchInputRender2 = UiSearchInput.traits.UiSearchInputRender -> AutoTarget {
+    config {
+      event: AUTO_QUERY
+      placeholder: @config.placeholder
+      query: @entity.searchTerm
+    }
+  }
+
+  trait UiSpinnerRender1 = UiSpinner.traits.UiSpinnerRender -> AutoTarget {
+    config {
+      size: sm
+    }
+  }
+
+  trait UiSearchInputRender3 = UiSearchInput.traits.UiSearchInputRender -> AutoTarget {
+    config {
+      event: AUTO_QUERY
+      placeholder: @config.placeholder
+      query: @entity.searchTerm
+    }
+  }
+
+  trait UiDataListRender1 = UiDataList.traits.UiDataListRender -> AutoTarget {
+    config {
+      entity: @payload.data
+      fields: @config.suggestionFields
+      itemActions: [{ label: Open, event: AUTO_SELECT, variant: ghost }]
+    }
+  }
+
+  trait UiStackRender1 = UiStack.traits.UiStackRender -> AutoTarget {
+    config {
+      direction: vertical
+      gap: xs
+      children: [@trait.UiSearchInputRender1]
+    }
+  }
+
+  trait UiStackRender2 = UiStack.traits.UiStackRender -> AutoTarget {
+    config {
+      direction: vertical
+      gap: xs
+      children: [@trait.UiSearchInputRender2, @trait.UiSpinnerRender1]
+    }
+  }
+
+  trait UiStackRender3 = UiStack.traits.UiStackRender -> AutoTarget {
+    config {
+      direction: vertical
+      gap: xs
+      children: [@trait.UiSearchInputRender3, @trait.UiDataListRender1]
+    }
+  }
+
+  trait UiSearchInputRender4 = UiSearchInput.traits.UiSearchInputRender -> AutoTarget {
+    config {
+      event: AUTO_QUERY
+      placeholder: @config.placeholder
+      query: @entity.searchTerm
+    }
+  }
+
+  trait UiSearchInputRender5 = UiSearchInput.traits.UiSearchInputRender -> AutoTarget {
+    config {
+      event: AUTO_QUERY
+      placeholder: @config.placeholder
+      query: @entity.searchTerm
+    }
+  }
+
   trait Autocomplete -> @rebindable AutoTarget [interaction, collection] {
     initial: idle
 
     state idle {
       INIT -> idle
         (fetch AutoTarget {})
-        (render-ui main {
-          type: search-input
-          event: AUTO_QUERY
-          placeholder: @config.placeholder
-          query: @entity.searchTerm
-        })
+        (render-ui main @trait.UiSearchInputRender1)
       AUTO_QUERY -> idle
         (set @entity.searchTerm ?value)
         (fetch AutoTarget {
           filter: (or ["=", ?value, ""] (str/includes (object/get @entity @config.searchField) ?value))
           emit: { success: AutoLoaded, failure: AutoFailed }
         })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: xs
-          children: [{
-            type: search-input
-            event: AUTO_QUERY
-            placeholder: @config.placeholder
-            query: @entity.searchTerm
-          }, { type: spinner, size: sm }]
-        })
+        (render-ui main @trait.UiStackRender2)
       AutoLoaded -> idle
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: xs
-          children: [{
-            type: search-input
-            event: AUTO_QUERY
-            placeholder: @config.placeholder
-            query: @entity.searchTerm
-          }, {
-            type: data-list
-            entity: @payload.data
-            fields: @config.suggestionFields
-            itemActions: [{ label: Open, event: AUTO_SELECT, variant: ghost }]
-          }]
-        })
+        (render-ui main @trait.UiStackRender3)
       AUTO_SELECT -> idle
         (emit AUTO_SELECTED { id: "@payload.id" })
-        (render-ui main {
-          type: search-input
-          event: AUTO_QUERY
-          placeholder: @config.placeholder
-          query: @entity.searchTerm
-        })
+        (render-ui main @trait.UiSearchInputRender4)
       AutoFailed -> idle
-        (render-ui main {
-          type: search-input
-          event: AUTO_QUERY
-          placeholder: @config.placeholder
-          query: @entity.searchTerm
-        })
+        (render-ui main @trait.UiSearchInputRender5)
     }
 
     emits {

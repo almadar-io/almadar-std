@@ -1,11 +1,49 @@
 app std-export "3.0.0"
 "std-export — a row of export-format buttons. Predefined CSV/XLSX/PDF defaults; caller can override via config.formats. Emits EXPORT_REQUESTED { format, tileId } on the bus; host or sibling orbital generates the file."
 orbital ExportOrbital {
+    uses Button from "std/behaviors/ui-button"
+    uses DataList from "std/behaviors/ui-data-list"
+    uses Popover from "std/behaviors/ui-popover"
+
     type FormatOption = { id : string!, format : string!, label : string! }
 
   entity ExportPanel [runtime] {
     id : string!
     options : [FormatOption] @description "Configuration settings for available export formats." @synonyms "format, export-types, configurations" = []
+  }
+
+  trait Button1 = Button.traits.ButtonRender -> ExportPanel {
+    config {
+      action: OPEN_EXPORT
+      icon: download
+      label: @config.buttonLabel
+      size: sm
+      variant: ghost
+    }
+  }
+
+  trait DataList1 = DataList.traits.DataListRender -> ExportPanel {
+    config {
+      entity: @entity.options
+      fields: []
+      look: @config.tableLook
+      renderItem: (fn fmt {
+        action: @config.event
+        actionPayload: { format: @fmt.format, tileId: @config.tileId }
+        icon: file-down
+        label: @fmt.label
+        size: sm
+        variant: ghost
+      })
+    }
+  }
+
+  trait Popover1 = Popover.traits.PopoverRender -> ExportPanel {
+    config {
+      children: [@trait.Button1]
+      content: @trait.DataList1
+      position: bottom
+    }
   }
 
   trait ExportMenu -> ExportPanel [interaction, instance] {
@@ -14,33 +52,7 @@ orbital ExportOrbital {
     state idle {
       INIT -> idle
         (set @entity.options @config.formats)
-        (render-ui main {
-          children: {
-            action: OPEN_EXPORT
-            icon: download
-            label: @config.buttonLabel
-            size: sm
-            type: button
-            variant: ghost
-          }
-          content: {
-            entity: @entity.options
-            fields: []
-            look: @config.tableLook
-            renderItem: (fn fmt {
-              action: @config.event
-              actionPayload: { format: @fmt.format, tileId: @config.tileId }
-              icon: file-down
-              label: @fmt.label
-              size: sm
-              type: button
-              variant: ghost
-            })
-            type: data-list
-          }
-          position: bottom
-          type: popover
-        })
+        (render-ui main @trait.Popover1)
       OPEN_EXPORT -> idle
         (set @entity.options @entity.options)
       EXPORT_REQUESTED -> idle
@@ -107,5 +119,5 @@ orbital ExportOrbital {
     }
   }
 
-  page "/exports/menu" as ExportMenuPage -> ExportMenu
+  page "/exports/menu" as ExportMenuPage -> ExportMenu, Button1, DataList1, Popover1
 }

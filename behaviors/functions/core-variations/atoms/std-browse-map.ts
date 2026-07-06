@@ -31,12 +31,10 @@ const ALIAS = 'BrowseMap';
  * without modifying its state-machine topology.
  */
 export interface StdBrowseMapConfig {
-  /** Default: `{"children":[{"align":"center","children":[{"className":"text-muted-foreground","name":"search","type":"icon"},{"action":"REFETCH_QUERY","className":"flex-1","inputType":"search","placeholder":"@config.searchPlaceholder","type":"input"}],"className":"w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm","direction":"horizontal","gap":"sm","type":"stack"},{"className":"w-full rounded-lg overflow-hidden border border-[var(--color-border)]","height":"440px","markers":"@payload.data","type":"map-view"},{"entity":"@payload.data","fields":"@config.fields","gap":"sm","itemActions":"@config.itemActions","look":"@config.tableLook","type":"data-list"}],"className":"p-card-md","direction":"vertical","gap":"md","type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Address","name":"address","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}]` */
-  fields?: unknown;
-  /** Default: `"spacious"` */
-  tableLook?: unknown;
+  /** Default: `"text-muted-foreground"` */
+  className?: unknown;
+  /** Default: `"search"` */
+  name?: unknown;
 }
 
 /**
@@ -66,8 +64,68 @@ export interface StdBrowseMapParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `BrowseMap.traits.Icon1`. */
+export function stdBrowseMapIcon1Trait(params: StdBrowseMapParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Icon1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `BrowseMap.traits.Input1`. */
+export function stdBrowseMapInput1Trait(params: StdBrowseMapParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Input1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `BrowseMap.traits.MapView1`. */
+export function stdBrowseMapMapView1Trait(params: StdBrowseMapParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.MapView1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `BrowseMap.traits.DataList1`. */
+export function stdBrowseMapDataList1Trait(params: StdBrowseMapParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.DataList1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `BrowseMap.traits.MapBrowse`. */
-export function stdBrowseMapTrait(params: StdBrowseMapParams): TraitReference {
+export function stdBrowseMapMapBrowseTrait(params: StdBrowseMapParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.MapBrowse`,
@@ -103,7 +161,11 @@ export function stdBrowseMap(params: StdBrowseMapParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdBrowseMapTrait(params),
+      stdBrowseMapIcon1Trait(params),
+      stdBrowseMapInput1Trait(params),
+      stdBrowseMapMapView1Trait(params),
+      stdBrowseMapDataList1Trait(params),
+      stdBrowseMapMapBrowseTrait(params),
     ],
     pages: [
       stdBrowseMapPage(params),

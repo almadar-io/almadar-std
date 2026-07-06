@@ -25,51 +25,14 @@ const BEHAVIOR_PATH = 'std/behaviors/std-circuit-breaker';
 const ALIAS = 'CircuitBreaker';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdCircuitBreakerEventKey = 'FAILURE' | 'INIT' | 'RESET' | 'SUCCESS' | 'ServiceNodeLoadFailed' | 'ServiceNodeLoaded' | 'TIMEOUT';
-
-/**
- * Payload shape for the `ServiceNodeLoaded` event.
- */
-export interface StdCircuitBreakerServiceNodeLoadedPayload {
-  id?: string;
-  name?: string;
-  description?: string;
-  status?: string;
-  createdAt?: string;
-  failureCount?: number;
-  successCount?: number;
-  threshold?: number;
-}
-
-/**
- * Payload shape for the `ServiceNodeLoadFailed` event.
- */
-export interface StdCircuitBreakerServiceNodeLoadFailedPayload {
-  message?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdCircuitBreakerConfig {
-  /** Default: `30` */
-  cooldownSeconds?: number;
-  /** Default: `5` */
-  failureThreshold?: number;
-  /** Default: `"reject"` */
-  fallbackBehavior?: 'reject' | 'cached-response' | 'queue' | 'static-default';
-  /** Default: `1` */
-  halfOpenRequests?: number;
-  /** Default: `"elevated"` */
-  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"shield"` */
+  name?: unknown;
 }
 
 /**
@@ -85,8 +48,8 @@ export interface StdCircuitBreakerParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdCircuitBreakerEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -99,8 +62,218 @@ export interface StdCircuitBreakerParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `CircuitBreaker.traits.Icon_Shield`. */
+export function stdCircuitBreakerIcon_ShieldTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Icon_Shield`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.Icon_AlertTriangle`. */
+export function stdCircuitBreakerIcon_AlertTriangleTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Icon_AlertTriangle`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.Icon_Activity`. */
+export function stdCircuitBreakerIcon_ActivityTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Icon_Activity`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.Typography_ServiceNode`. */
+export function stdCircuitBreakerTypography_ServiceNodeTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography_ServiceNode`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.StatusDot_Closed`. */
+export function stdCircuitBreakerStatusDot_ClosedTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.StatusDot_Closed`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.StatusDot_Open`. */
+export function stdCircuitBreakerStatusDot_OpenTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.StatusDot_Open`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.StatusDot_HalfOpen`. */
+export function stdCircuitBreakerStatusDot_HalfOpenTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.StatusDot_HalfOpen`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.Alert_Success`. */
+export function stdCircuitBreakerAlert_SuccessTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Alert_Success`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.Alert_Error`. */
+export function stdCircuitBreakerAlert_ErrorTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Alert_Error`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.Alert_Warning`. */
+export function stdCircuitBreakerAlert_WarningTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Alert_Warning`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.StatDisplay_Failures`. */
+export function stdCircuitBreakerStatDisplay_FailuresTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.StatDisplay_Failures`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.StatDisplay_Successes`. */
+export function stdCircuitBreakerStatDisplay_SuccessesTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.StatDisplay_Successes`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.Meter_Failures`. */
+export function stdCircuitBreakerMeter_FailuresTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Meter_Failures`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.Button_Reset`. */
+export function stdCircuitBreakerButton_ResetTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Button_Reset`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `CircuitBreaker.traits.ServiceNodeCircuitBreaker`. */
-export function stdCircuitBreakerTrait(params: StdCircuitBreakerParams): TraitReference {
+export function stdCircuitBreakerServiceNodeCircuitBreakerTrait(params: StdCircuitBreakerParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ServiceNodeCircuitBreaker`,
@@ -136,7 +309,21 @@ export function stdCircuitBreaker(params: StdCircuitBreakerParams): OrbitalDefin
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdCircuitBreakerTrait(params),
+      stdCircuitBreakerIcon_ShieldTrait(params),
+      stdCircuitBreakerIcon_AlertTriangleTrait(params),
+      stdCircuitBreakerIcon_ActivityTrait(params),
+      stdCircuitBreakerTypography_ServiceNodeTrait(params),
+      stdCircuitBreakerStatusDot_ClosedTrait(params),
+      stdCircuitBreakerStatusDot_OpenTrait(params),
+      stdCircuitBreakerStatusDot_HalfOpenTrait(params),
+      stdCircuitBreakerAlert_SuccessTrait(params),
+      stdCircuitBreakerAlert_ErrorTrait(params),
+      stdCircuitBreakerAlert_WarningTrait(params),
+      stdCircuitBreakerStatDisplay_FailuresTrait(params),
+      stdCircuitBreakerStatDisplay_SuccessesTrait(params),
+      stdCircuitBreakerMeter_FailuresTrait(params),
+      stdCircuitBreakerButton_ResetTrait(params),
+      stdCircuitBreakerServiceNodeCircuitBreakerTrait(params),
     ],
     pages: [
       stdCircuitBreakerPage(params),

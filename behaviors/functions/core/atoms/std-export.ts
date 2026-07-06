@@ -25,38 +25,22 @@ const BEHAVIOR_PATH = 'std/behaviors/std-export';
 const ALIAS = 'Export';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdExportEventKey = 'EXPORT_REQUESTED' | 'INIT' | 'OPEN_EXPORT';
-
-/**
- * Payload shape for the `EXPORT_REQUESTED` event.
- */
-export interface StdExportExportRequestedPayload {
-  format: string;
-  tileId?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdExportConfig {
-  /** Default: `"Export"` */
-  buttonLabel?: string;
-  /** Default: `"EXPORT_REQUESTED"` */
-  event?: string;
-  /** Default: `[{"format":"csv","id":"csv","label":"CSV"},{"format":"xlsx","id":"xlsx","label":"XLSX"},{"format":"pdf","id":"pdf","label":"PDF"}]` */
-  formats?: EntityRow[];
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `""` */
-  tileId?: string;
+  /** Default: `"OPEN_EXPORT"` */
+  action?: unknown;
+  /** Default: `"download"` */
+  icon?: unknown;
+  /** Default: `"@config.buttonLabel"` */
+  label?: unknown;
+  /** Default: `"sm"` */
+  size?: unknown;
+  /** Default: `"ghost"` */
+  variant?: unknown;
 }
 
 /**
@@ -72,8 +56,8 @@ export interface StdExportParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdExportEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -86,8 +70,53 @@ export interface StdExportParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `Export.traits.Button1`. */
+export function stdExportButton1Trait(params: StdExportParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Button1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `Export.traits.DataList1`. */
+export function stdExportDataList1Trait(params: StdExportParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.DataList1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `Export.traits.Popover1`. */
+export function stdExportPopover1Trait(params: StdExportParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Popover1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `Export.traits.ExportMenu`. */
-export function stdExportTrait(params: StdExportParams): TraitReference {
+export function stdExportExportMenuTrait(params: StdExportParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ExportMenu`,
@@ -123,7 +152,10 @@ export function stdExport(params: StdExportParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdExportTrait(params),
+      stdExportButton1Trait(params),
+      stdExportDataList1Trait(params),
+      stdExportPopover1Trait(params),
+      stdExportExportMenuTrait(params),
     ],
     pages: [
       stdExportPage(params),

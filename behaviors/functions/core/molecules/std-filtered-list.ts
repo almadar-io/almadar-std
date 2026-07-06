@@ -127,6 +127,51 @@ export function stdFilteredListFilteredItemPaginationTrait(params: StdFilteredLi
   });
 }
 
+/** Trait descriptor: `FilteredList.traits.Icon1`. */
+export function stdFilteredListIcon1Trait(params: StdFilteredListParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Icon1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `FilteredList.traits.Typography1`. */
+export function stdFilteredListTypography1Trait(params: StdFilteredListParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Typography1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `FilteredList.traits.Divider1`. */
+export function stdFilteredListDivider1Trait(params: StdFilteredListParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Divider1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `FilteredList.traits.FilteredListLayout`. */
 export function stdFilteredListFilteredListLayoutTrait(params: StdFilteredListParams): TraitReference {
   return makeTraitRef({
@@ -168,6 +213,9 @@ export function stdFilteredList(params: StdFilteredListParams): OrbitalDefinitio
       stdFilteredListFilteredItemFilterTrait(params),
       stdFilteredListFilteredItemBrowseTrait(params),
       stdFilteredListFilteredItemPaginationTrait(params),
+      stdFilteredListIcon1Trait(params),
+      stdFilteredListTypography1Trait(params),
+      stdFilteredListDivider1Trait(params),
       stdFilteredListFilteredListLayoutTrait(params),
     ],
     pages: [
