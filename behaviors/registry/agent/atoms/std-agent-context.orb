@@ -1,0 +1,474 @@
+{
+  "description": "Wraps llm/token-count + llm/compact — context window management.",
+  "name": "std-agent-context",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": 0.0,
+            "name": "tokenCount",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "beforeTokens",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "afterTokens",
+            "type": "number"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "counted",
+              "compacted"
+            ]
+          }
+        ],
+        "name": "ContextWindow",
+        "persistence": "runtime"
+      },
+      "name": "AgentContextOrbital",
+      "pages": [
+        {
+          "name": "AgentContextPage",
+          "path": "/agent-context",
+          "traits": [
+            {
+              "ref": "ContextCounter"
+            },
+            {
+              "ref": "ContextCompactor"
+            },
+            {
+              "ref": "ContextListener"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "COUNTED",
+              "payloadSchema": [
+                {
+                  "name": "tokenCount",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "ContextWindow",
+          "name": "ContextCounter",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COUNT",
+                "name": "Count"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "COUNTED",
+                "name": "Counted",
+                "payloadSchema": [
+                  {
+                    "name": "tokenCount",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "counted"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    [
+                      "llm/token-count"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "counted"
+                  ],
+                  [
+                    "emit",
+                    "COUNTED",
+                    {
+                      "tokenCount": "@entity.tokenCount"
+                    }
+                  ]
+                ],
+                "event": "COUNT",
+                "from": "idle",
+                "to": "counted"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "counted"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "counted",
+                "to": "counted"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "counted",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "COMPACTED",
+              "payloadSchema": [
+                {
+                  "name": "before",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "after",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "ContextWindow",
+          "name": "ContextCompactor",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COMPACT",
+                "name": "Compact"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "COMPACTED",
+                "name": "Compacted",
+                "payloadSchema": [
+                  {
+                    "name": "before",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "after",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "compacted"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.beforeTokens",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.afterTokens",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.beforeTokens",
+                    [
+                      "llm/token-count"
+                    ]
+                  ],
+                  [
+                    "llm/compact"
+                  ],
+                  [
+                    "set",
+                    "@entity.afterTokens",
+                    [
+                      "llm/token-count"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "compacted"
+                  ],
+                  [
+                    "emit",
+                    "COMPACTED",
+                    {
+                      "after": "@entity.afterTokens",
+                      "before": "@entity.beforeTokens"
+                    }
+                  ]
+                ],
+                "event": "COMPACT",
+                "from": "idle",
+                "to": "compacted"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "compacted"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "compacted",
+                "to": "compacted"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.beforeTokens",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.afterTokens",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "compacted",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "ContextWindow",
+          "listens": [
+            {
+              "event": "COUNTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ContextCounter"
+              },
+              "triggers": "COUNTED"
+            },
+            {
+              "event": "COMPACTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ContextCompactor"
+              },
+              "triggers": "COMPACTED"
+            }
+          ],
+          "name": "ContextListener",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COUNTED",
+                "name": "Counted"
+              },
+              {
+                "key": "COMPACTED",
+                "name": "Compacted"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "counted"
+                  ]
+                ],
+                "event": "COUNTED",
+                "from": "waiting",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "compacted"
+                  ]
+                ],
+                "event": "COMPACTED",
+                "from": "waiting",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "active",
+                "to": "waiting"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

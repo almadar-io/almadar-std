@@ -1,0 +1,293 @@
+{
+  "description": "Wraps llm/generate — takes a prompt, returns generated text.",
+  "name": "std-agent-completion",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "name": "prompt",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "response",
+            "type": "string"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "done"
+            ]
+          }
+        ],
+        "name": "Completion",
+        "persistence": "runtime"
+      },
+      "name": "AgentCompletionOrbital",
+      "pages": [
+        {
+          "name": "AgentCompletionPage",
+          "path": "/agent-completion",
+          "traits": [
+            {
+              "ref": "CompletionGeneration"
+            },
+            {
+              "ref": "CompletionReady"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "COMPLETED",
+              "payloadSchema": [
+                {
+                  "name": "response",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "Completion",
+          "name": "CompletionGeneration",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE",
+                "name": "Generate",
+                "payloadSchema": [
+                  {
+                    "name": "prompt",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "COMPLETED",
+                "name": "Completed",
+                "payloadSchema": [
+                  {
+                    "name": "response",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "done"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.prompt",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.prompt",
+                    "@payload.prompt"
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    [
+                      "llm/generate",
+                      "@entity.prompt"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ],
+                  [
+                    "emit",
+                    "COMPLETED",
+                    {
+                      "response": "@entity.response"
+                    }
+                  ]
+                ],
+                "event": "GENERATE",
+                "from": "idle",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "done",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.prompt",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "done",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "Completion",
+          "listens": [
+            {
+              "event": "COMPLETED",
+              "source": {
+                "kind": "trait",
+                "trait": "CompletionGeneration"
+              },
+              "triggers": "COMPLETED"
+            }
+          ],
+          "name": "CompletionReady",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COMPLETED",
+                "name": "Completed"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "COMPLETED",
+                "from": "waiting",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "ready",
+                "to": "waiting"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

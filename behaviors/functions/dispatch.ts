@@ -201,6 +201,11 @@ import {
   isStdLearningProbabilityLabProbabilityLabOrbitalParams,
 } from './ui/learning/organisms/learning-probability-lab.js';
 import {
+  stdAgentBuilderAgentBuilderOrbital,
+  StdAgentBuilderAgentBuilderOrbitalManifest,
+  isStdAgentBuilderAgentBuilderOrbitalParams,
+} from './agent/organisms/std-agent-builder.js';
+import {
   stdGenericAppContactOrbital,
   StdGenericAppContactOrbitalManifest,
   isStdGenericAppContactOrbitalParams,
@@ -1200,6 +1205,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLearningProbabilityLabProbabilityLabOrbital(p);
     },
     manifest: StdLearningProbabilityLabProbabilityLabOrbitalManifest,
+  }],
+  ['std-agent-builder::AgentBuilderOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentBuilderAgentBuilderOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-builder::AgentBuilderOrbital');
+      }
+      return stdAgentBuilderAgentBuilderOrbital(p);
+    },
+    manifest: StdAgentBuilderAgentBuilderOrbitalManifest,
   }],
   ['std-generic-app::ContactOrbital', {
     factory: (p: object): OrbitalDefinition => {

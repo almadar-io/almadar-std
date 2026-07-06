@@ -1,0 +1,329 @@
+{
+  "description": "Agent fix-loop molecule — validate an orbital, generate a repair prompt if errors, apply fix.",
+  "name": "std-agent-fix-loop",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "name": "orbitalName",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "orbitalName": {
+                  "name": "orbitalName",
+                  "required": false,
+                  "type": "string"
+                },
+                "severity": {
+                  "name": "severity",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "errors",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "fixPrompt",
+            "type": "string"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "validating",
+              "fixing",
+              "fixed",
+              "valid"
+            ]
+          }
+        ],
+        "name": "FixLoop",
+        "persistence": "runtime"
+      },
+      "name": "AgentFixLoopOrbital",
+      "pages": [
+        {
+          "name": "AgentFixLoopPage",
+          "path": "/agent-fix-loop",
+          "traits": [
+            {
+              "ref": "FixLoopExecution"
+            },
+            {
+              "ref": "FixLoopListener"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "FIX_APPLIED",
+              "payloadSchema": [
+                {
+                  "name": "orbitalName",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "fixPrompt",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "FixLoop",
+          "name": "FixLoopExecution",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VALIDATE_ORBITAL",
+                "name": "Validate Orbital",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "FIX_APPLIED",
+                "name": "Fix Applied",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "fixPrompt",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "fixed"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.errors",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.fixPrompt",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    "@payload.orbitalName"
+                  ],
+                  [
+                    "validate/validate",
+                    "@entity.orbitalName"
+                  ],
+                  [
+                    "set",
+                    "@entity.fixPrompt",
+                    [
+                      "llm/generate",
+                      "@entity.orbitalName"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "fixed"
+                  ],
+                  [
+                    "emit",
+                    "FIX_APPLIED",
+                    {
+                      "fixPrompt": "@entity.fixPrompt",
+                      "orbitalName": "@entity.orbitalName"
+                    }
+                  ]
+                ],
+                "event": "VALIDATE_ORBITAL",
+                "from": "idle",
+                "to": "fixed"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "fixed"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "fixed",
+                "to": "fixed"
+              },
+              {
+                "event": "RESET",
+                "from": "fixed",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "FixLoop",
+          "listens": [
+            {
+              "event": "FIX_APPLIED",
+              "source": {
+                "kind": "trait",
+                "trait": "FixLoopExecution"
+              },
+              "triggers": "FIX_APPLIED"
+            }
+          ],
+          "name": "FixLoopListener",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FIX_APPLIED",
+                "name": "Fix Applied"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "resolved"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "fixed"
+                  ]
+                ],
+                "event": "FIX_APPLIED",
+                "from": "waiting",
+                "to": "resolved"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "fixed"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "resolved",
+                "to": "resolved"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "resolved",
+                "to": "waiting"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

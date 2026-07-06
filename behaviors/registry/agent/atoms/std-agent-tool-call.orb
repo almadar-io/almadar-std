@@ -1,0 +1,367 @@
+{
+  "description": "Wraps llm/call-tools — takes messages + tools, returns tool-call result.",
+  "name": "std-agent-tool-call",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "content": {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": true,
+                  "type": "string"
+                },
+                "toolCallId": {
+                  "name": "toolCallId",
+                  "required": false,
+                  "type": "string"
+                },
+                "toolCalls": {
+                  "items": {
+                    "type": "object"
+                  },
+                  "name": "toolCalls",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "messages",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "description": {
+                  "name": "description",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "schema": {
+                  "name": "schema",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "name": "tools",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "response",
+            "type": "string"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "done"
+            ]
+          }
+        ],
+        "name": "ToolCall",
+        "persistence": "runtime"
+      },
+      "name": "AgentToolCallOrbital",
+      "pages": [
+        {
+          "name": "AgentToolCallPage",
+          "path": "/agent-tool-call",
+          "traits": [
+            {
+              "ref": "ToolCallExecution"
+            },
+            {
+              "ref": "ToolCallReady"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "TOOLS_CALLED",
+              "payloadSchema": [
+                {
+                  "name": "response",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "ToolCall",
+          "name": "ToolCallExecution",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CALL_TOOLS",
+                "name": "Call Tools",
+                "payloadSchema": [
+                  {
+                    "name": "messages",
+                    "required": true,
+                    "type": "[LlmMessage]"
+                  },
+                  {
+                    "name": "tools",
+                    "required": true,
+                    "type": "[LlmToolDef]"
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "TOOLS_CALLED",
+                "name": "Tools Called",
+                "payloadSchema": [
+                  {
+                    "name": "response",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "done"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.tools",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    "@payload.messages"
+                  ],
+                  [
+                    "set",
+                    "@entity.tools",
+                    "@payload.tools"
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    [
+                      "llm/call-tools",
+                      "@entity.messages",
+                      "@entity.tools"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ],
+                  [
+                    "emit",
+                    "TOOLS_CALLED",
+                    {
+                      "response": "@entity.response"
+                    }
+                  ]
+                ],
+                "event": "CALL_TOOLS",
+                "from": "idle",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "done",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.messages",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.tools",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "done",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "ToolCall",
+          "listens": [
+            {
+              "event": "TOOLS_CALLED",
+              "source": {
+                "kind": "trait",
+                "trait": "ToolCallExecution"
+              },
+              "triggers": "TOOLS_CALLED"
+            }
+          ],
+          "name": "ToolCallReady",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TOOLS_CALLED",
+                "name": "Tools Called"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "TOOLS_CALLED",
+                "from": "waiting",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "ready",
+                "to": "waiting"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

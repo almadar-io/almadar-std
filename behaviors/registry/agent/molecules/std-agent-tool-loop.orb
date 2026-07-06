@@ -1,0 +1,445 @@
+{
+  "description": "Agent tool-loop molecule — call-tools, check response, emit result for iteration.",
+  "name": "std-agent-tool-loop",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "content": {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": true,
+                  "type": "string"
+                },
+                "toolCallId": {
+                  "name": "toolCallId",
+                  "required": false,
+                  "type": "string"
+                },
+                "toolCalls": {
+                  "items": {
+                    "type": "object"
+                  },
+                  "name": "toolCalls",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "messages",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "description": {
+                  "name": "description",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "schema": {
+                  "name": "schema",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "name": "tools",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "response",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "iterations",
+            "type": "number"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "calling",
+              "done"
+            ]
+          }
+        ],
+        "name": "ToolLoop",
+        "persistence": "runtime"
+      },
+      "name": "AgentToolLoopOrbital",
+      "pages": [
+        {
+          "name": "AgentToolLoopPage",
+          "path": "/agent-tool-loop",
+          "traits": [
+            {
+              "ref": "ToolLoopExecution"
+            },
+            {
+              "ref": "ToolLoopListener"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "LOOP_STEP",
+              "payloadSchema": [
+                {
+                  "name": "response",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "iteration",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "ToolLoop",
+          "name": "ToolLoopExecution",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EXECUTE",
+                "name": "Execute",
+                "payloadSchema": [
+                  {
+                    "name": "messages",
+                    "required": true,
+                    "type": "[LlmMessage]"
+                  },
+                  {
+                    "name": "tools",
+                    "required": true,
+                    "type": "[LlmToolDef]"
+                  }
+                ]
+              },
+              {
+                "key": "CONTINUE",
+                "name": "Continue"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "LOOP_STEP",
+                "name": "Loop Step",
+                "payloadSchema": [
+                  {
+                    "name": "response",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "iteration",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "done"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.tools",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    "@payload.messages"
+                  ],
+                  [
+                    "set",
+                    "@entity.tools",
+                    "@payload.tools"
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    [
+                      "llm/call-tools",
+                      "@entity.messages",
+                      "@entity.tools"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    [
+                      "+",
+                      "@entity.iterations",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ],
+                  [
+                    "emit",
+                    "LOOP_STEP",
+                    {
+                      "iteration": "@entity.iterations",
+                      "response": "@entity.response"
+                    }
+                  ]
+                ],
+                "event": "EXECUTE",
+                "from": "idle",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "done",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    [
+                      "llm/call-tools",
+                      "@entity.messages",
+                      "@entity.tools"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    [
+                      "+",
+                      "@entity.iterations",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ],
+                  [
+                    "emit",
+                    "LOOP_STEP",
+                    {
+                      "iteration": "@entity.iterations",
+                      "response": "@entity.response"
+                    }
+                  ]
+                ],
+                "event": "CONTINUE",
+                "from": "done",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.tools",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "done",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "ToolLoop",
+          "listens": [
+            {
+              "event": "LOOP_STEP",
+              "source": {
+                "kind": "trait",
+                "trait": "ToolLoopExecution"
+              },
+              "triggers": "LOOP_STEP"
+            }
+          ],
+          "name": "ToolLoopListener",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LOOP_STEP",
+                "name": "Loop Step"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "LOOP_STEP",
+                "from": "waiting",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "active",
+                "to": "waiting"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

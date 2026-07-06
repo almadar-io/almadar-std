@@ -1,0 +1,599 @@
+{
+  "description": "Wraps session/read-spec + session/write-spec + session/read-history — orbital session data.",
+  "name": "std-agent-session",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "name": "orbitalName",
+            "type": "string"
+          },
+          {
+            "default": {},
+            "name": "spec",
+            "properties": {
+              "deltaPrompt": {
+                "name": "deltaPrompt",
+                "required": true,
+                "type": "string"
+              },
+              "method": {
+                "name": "method",
+                "required": true,
+                "type": "string"
+              },
+              "orbitalName": {
+                "name": "orbitalName",
+                "required": false,
+                "type": "string"
+              },
+              "organism": {
+                "name": "organism",
+                "required": true,
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "content": {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": true,
+                  "type": "string"
+                },
+                "timestamp": {
+                  "name": "timestamp",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "history",
+            "type": "array"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "read",
+              "written"
+            ]
+          }
+        ],
+        "name": "AgentSession",
+        "persistence": "runtime"
+      },
+      "name": "AgentSessionOrbital",
+      "pages": [
+        {
+          "name": "AgentSessionPage",
+          "path": "/agent-session",
+          "traits": [
+            {
+              "ref": "SessionReader"
+            },
+            {
+              "ref": "SessionWriter"
+            },
+            {
+              "ref": "SessionListener"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "SPEC_READ",
+              "payloadSchema": [
+                {
+                  "name": "spec",
+                  "properties": [
+                    {
+                      "name": "orbitalName",
+                      "type": "string"
+                    },
+                    {
+                      "name": "organism",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "method",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "deltaPrompt",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "required": true,
+                  "type": "object"
+                },
+                {
+                  "name": "history",
+                  "required": true,
+                  "type": "[HistoryEntry]"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "AgentSession",
+          "name": "SessionReader",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "READ_SPEC",
+                "name": "Read Spec",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "SPEC_READ",
+                "name": "Spec Read",
+                "payloadSchema": [
+                  {
+                    "name": "spec",
+                    "properties": [
+                      {
+                        "name": "orbitalName",
+                        "type": "string"
+                      },
+                      {
+                        "name": "organism",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "method",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "deltaPrompt",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "object"
+                  },
+                  {
+                    "name": "history",
+                    "required": true,
+                    "type": "[HistoryEntry]"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "read"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.spec",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.history",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    "@payload.orbitalName"
+                  ],
+                  [
+                    "set",
+                    "@entity.spec",
+                    [
+                      "session/read-spec",
+                      "@entity.orbitalName"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.history",
+                    [
+                      "session/read-history",
+                      "@entity.orbitalName"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "read"
+                  ],
+                  [
+                    "emit",
+                    "SPEC_READ",
+                    {
+                      "history": "@entity.history",
+                      "spec": "@entity.spec"
+                    }
+                  ]
+                ],
+                "event": "READ_SPEC",
+                "from": "idle",
+                "to": "read"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "read"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "read",
+                "to": "read"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.spec",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.history",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "read",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "SPEC_WRITTEN",
+              "payloadSchema": [
+                {
+                  "name": "orbitalName",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "AgentSession",
+          "name": "SessionWriter",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "WRITE_SPEC",
+                "name": "Write Spec",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "spec",
+                    "required": true,
+                    "type": "OrbitalSpec"
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "SPEC_WRITTEN",
+                "name": "Spec Written",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "written"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.spec",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    "@payload.orbitalName"
+                  ],
+                  [
+                    "set",
+                    "@entity.spec",
+                    "@payload.spec"
+                  ],
+                  [
+                    "session/write-spec",
+                    "@entity.orbitalName",
+                    "@entity.spec"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "written"
+                  ],
+                  [
+                    "emit",
+                    "SPEC_WRITTEN",
+                    {
+                      "orbitalName": "@entity.orbitalName"
+                    }
+                  ]
+                ],
+                "event": "WRITE_SPEC",
+                "from": "idle",
+                "to": "written"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "written"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "written",
+                "to": "written"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.spec",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "written",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "AgentSession",
+          "listens": [
+            {
+              "event": "SPEC_READ",
+              "source": {
+                "kind": "trait",
+                "trait": "SessionReader"
+              },
+              "triggers": "SPEC_READ"
+            },
+            {
+              "event": "SPEC_WRITTEN",
+              "source": {
+                "kind": "trait",
+                "trait": "SessionWriter"
+              },
+              "triggers": "SPEC_WRITTEN"
+            }
+          ],
+          "name": "SessionListener",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SPEC_READ",
+                "name": "Spec Read"
+              },
+              {
+                "key": "SPEC_WRITTEN",
+                "name": "Spec Written"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "read"
+                  ]
+                ],
+                "event": "SPEC_READ",
+                "from": "waiting",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "written"
+                  ]
+                ],
+                "event": "SPEC_WRITTEN",
+                "from": "waiting",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "active",
+                "to": "waiting"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

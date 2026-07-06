@@ -1,0 +1,248 @@
+{
+  "description": "Wraps trace/emit + trace/log — observability for agent loops.",
+  "name": "std-agent-trace",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "name": "event",
+            "type": "string"
+          },
+          {
+            "default": "info",
+            "name": "level",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "message",
+            "type": "string"
+          }
+        ],
+        "name": "AgentTrace",
+        "persistence": "runtime"
+      },
+      "name": "AgentTraceOrbital",
+      "pages": [
+        {
+          "name": "AgentTracePage",
+          "path": "/agent-trace",
+          "traits": [
+            {
+              "ref": "TraceEmitter"
+            },
+            {
+              "ref": "TraceListener"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "TRACED"
+            }
+          ],
+          "linkedEntity": "AgentTrace",
+          "name": "TraceEmitter",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EMIT_TRACE",
+                "name": "Emit Trace",
+                "payloadSchema": [
+                  {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LOG_TRACE",
+                "name": "Log Trace",
+                "payloadSchema": [
+                  {
+                    "name": "level",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TRACED",
+                "name": "Traced"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.event",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.level",
+                    "info"
+                  ],
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.event",
+                    "@payload.event"
+                  ],
+                  [
+                    "trace/emit",
+                    "@entity.event"
+                  ],
+                  [
+                    "emit",
+                    "TRACED"
+                  ]
+                ],
+                "event": "EMIT_TRACE",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.level",
+                    "@payload.level"
+                  ],
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "trace/log",
+                    "@entity.level",
+                    "@entity.message"
+                  ],
+                  [
+                    "emit",
+                    "TRACED"
+                  ]
+                ],
+                "event": "LOG_TRACE",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "AgentTrace",
+          "listens": [
+            {
+              "event": "TRACED",
+              "source": {
+                "kind": "trait",
+                "trait": "TraceEmitter"
+              },
+              "triggers": "TRACED"
+            }
+          ],
+          "name": "TraceListener",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TRACED",
+                "name": "Traced"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.event",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.level",
+                    "info"
+                  ],
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ],
+                "event": "INIT",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.event",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ],
+                "event": "TRACED",
+                "from": "ready",
+                "to": "ready"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

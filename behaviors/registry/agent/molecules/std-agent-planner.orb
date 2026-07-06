@@ -1,0 +1,353 @@
+{
+  "description": "Agent planner molecule — recall memories, then generate a plan from the prompt + recalled context.",
+  "name": "std-agent-planner",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "name": "prompt",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": true,
+                  "type": "string"
+                },
+                "content": {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "strength": {
+                  "name": "strength",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "memories",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "plan",
+            "type": "string"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "planning",
+              "planned"
+            ]
+          }
+        ],
+        "name": "PlannerPlan",
+        "persistence": "runtime"
+      },
+      "name": "AgentPlannerOrbital",
+      "pages": [
+        {
+          "name": "AgentPlannerPage",
+          "path": "/agent-planner",
+          "traits": [
+            {
+              "ref": "PlannerExecution"
+            },
+            {
+              "ref": "PlannerListener"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "PLANNED",
+              "payloadSchema": [
+                {
+                  "name": "plan",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "memoryCount",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "PlannerPlan",
+          "name": "PlannerExecution",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PLAN",
+                "name": "Plan",
+                "payloadSchema": [
+                  {
+                    "name": "prompt",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "PLANNED",
+                "name": "Planned",
+                "payloadSchema": [
+                  {
+                    "name": "plan",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "memoryCount",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "planned"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.prompt",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.memories",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.plan",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.prompt",
+                    "@payload.prompt"
+                  ],
+                  [
+                    "set",
+                    "@entity.memories",
+                    [
+                      "memory/recall",
+                      "@entity.prompt"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.plan",
+                    [
+                      "llm/generate",
+                      "@entity.prompt"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "planned"
+                  ],
+                  [
+                    "emit",
+                    "PLANNED",
+                    {
+                      "memoryCount": "@entity.memories",
+                      "plan": "@entity.plan"
+                    }
+                  ]
+                ],
+                "event": "PLAN",
+                "from": "idle",
+                "to": "planned"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "planned"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "planned",
+                "to": "planned"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.plan",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.memories",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.prompt",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "planned",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "PlannerPlan",
+          "listens": [
+            {
+              "event": "PLANNED",
+              "source": {
+                "kind": "trait",
+                "trait": "PlannerExecution"
+              },
+              "triggers": "PLANNED"
+            }
+          ],
+          "name": "PlannerListener",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PLANNED",
+                "name": "Planned"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "planned"
+                  ]
+                ],
+                "event": "PLANNED",
+                "from": "waiting",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "planned"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "ready",
+                "to": "waiting"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

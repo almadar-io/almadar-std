@@ -980,9 +980,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -1277,9 +1312,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -1516,9 +1586,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -1743,9 +1848,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -1970,9 +2110,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -2189,9 +2364,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -2436,9 +2646,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -2716,9 +2961,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -3059,9 +3339,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',
@@ -3424,9 +3739,44 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       {
                         'children': [
                           {
-                            'entityName': '@entity.entityName',
-                            'type': 'variable-panel',
-                            'variables': '@entity.variables',
+                            'children': [
+                              {
+                                'content': '@entity.entityName',
+                                'type': 'typography',
+                                'variant': 'label',
+                              },
+                              {
+                                'entity': '@entity.variables',
+                                'fields': [],
+                                'gap': 'xs',
+                                'renderItem': [
+                                  'fn',
+                                  'v',
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@v.name',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'content': '@v.value',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                           {
                             'initialState': '@entity.initialState',

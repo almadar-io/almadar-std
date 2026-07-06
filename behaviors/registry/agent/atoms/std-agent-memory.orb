@@ -1,0 +1,548 @@
+{
+  "description": "Wraps memory/recall + memory/store — semantic memory for agent loops.",
+  "name": "std-agent-memory",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "name": "query",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": true,
+                  "type": "string"
+                },
+                "content": {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "strength": {
+                  "name": "strength",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "results",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "content",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "memoryId",
+            "type": "string"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "recalled",
+              "stored"
+            ]
+          }
+        ],
+        "name": "AgentMemory",
+        "persistence": "runtime"
+      },
+      "name": "AgentMemoryOrbital",
+      "pages": [
+        {
+          "name": "AgentMemoryPage",
+          "path": "/agent-memory",
+          "traits": [
+            {
+              "ref": "MemoryRecall"
+            },
+            {
+              "ref": "MemoryStore"
+            },
+            {
+              "ref": "MemoryListener"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "RECALLED",
+              "payloadSchema": [
+                {
+                  "name": "results",
+                  "required": true,
+                  "type": "[MemoryRecord]"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "AgentMemory",
+          "name": "MemoryRecall",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RECALL",
+                "name": "Recall",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "RECALLED",
+                "name": "Recalled",
+                "payloadSchema": [
+                  {
+                    "name": "results",
+                    "required": true,
+                    "type": "[MemoryRecord]"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "recalled"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.results",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.content",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.memoryId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ],
+                  [
+                    "set",
+                    "@entity.results",
+                    [
+                      "memory/recall",
+                      "@entity.query"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "recalled"
+                  ],
+                  [
+                    "emit",
+                    "RECALLED",
+                    {
+                      "results": "@entity.results"
+                    }
+                  ]
+                ],
+                "event": "RECALL",
+                "from": "idle",
+                "to": "recalled"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "recalled"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "recalled",
+                "to": "recalled"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.results",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.query",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "recalled",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "STORED",
+              "payloadSchema": [
+                {
+                  "name": "memoryId",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "AgentMemory",
+          "name": "MemoryStore",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "STORE",
+                "name": "Store",
+                "payloadSchema": [
+                  {
+                    "name": "content",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "category",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "STORED",
+                "name": "Stored",
+                "payloadSchema": [
+                  {
+                    "name": "memoryId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "stored"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.content",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.memoryId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.content",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.memoryId",
+                    [
+                      "memory/store",
+                      "@entity.content",
+                      "@entity.category"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "stored"
+                  ],
+                  [
+                    "emit",
+                    "STORED",
+                    {
+                      "memoryId": "@entity.memoryId"
+                    }
+                  ]
+                ],
+                "event": "STORE",
+                "from": "idle",
+                "to": "stored"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "stored"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "stored",
+                "to": "stored"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.content",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.memoryId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "stored",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "AgentMemory",
+          "listens": [
+            {
+              "event": "RECALLED",
+              "source": {
+                "kind": "trait",
+                "trait": "MemoryRecall"
+              },
+              "triggers": "RECALLED"
+            },
+            {
+              "event": "STORED",
+              "source": {
+                "kind": "trait",
+                "trait": "MemoryStore"
+              },
+              "triggers": "STORED"
+            }
+          ],
+          "name": "MemoryListener",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RECALLED",
+                "name": "Recalled"
+              },
+              {
+                "key": "STORED",
+                "name": "Stored"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "updated"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "recalled"
+                  ]
+                ],
+                "event": "RECALLED",
+                "from": "waiting",
+                "to": "updated"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "stored"
+                  ]
+                ],
+                "event": "STORED",
+                "from": "waiting",
+                "to": "updated"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "updated",
+                "to": "updated"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "from": "updated",
+                "to": "waiting"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
