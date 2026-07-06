@@ -36,9 +36,22 @@ async function loadRegistryData(): Promise<{ behaviors: Record<string, unknown> 
 export interface RegistryEntry {
   name: string;
   level: 'atom' | 'molecule' | 'organism';
+  /**
+   * Topic tier directory the behavior's `.orb` lives under (e.g. `core`,
+   * `agent`, `app`, `game`). Stamped by `tools/almadar-pattern-sync`
+   * (`behaviors` command) from the on-disk registry path; every generated
+   * entry in `behaviors-registry.json` carries it (G14).
+   */
+  topic: string;
   family: string;
   layer: string;
   description: string;
+  /**
+   * Default orbital class name (`^[A-Z][A-Za-z0-9]+Orbital$`) stamped by
+   * `tools/almadar-pattern-sync` (`behaviors` command); every generated
+   * entry in `behaviors-registry.json` carries it.
+   */
+  defaultOrbitalName: string;
   statePattern: string;
   complexity: { states: number; events: number; transitions: number };
   defaultEntity: {
@@ -54,6 +67,37 @@ export interface RegistryEntry {
   composableWith: string[];
   connectableEvents: string[];
   eventPayloads: Record<string, Array<{ name: string; type: string; required: boolean }>>;
+  /**
+   * Where the behavior may be dispatched: `app` (whole-app organisms),
+   * `palette` (composable primitives), `both`, or `internal` (never
+   * offered). Stamped by `tools/almadar-pattern-sync` (`behaviors`
+   * command) from `.lolo` `@exposure` tags + per-topic defaults.
+   *
+   * Optional: registries are not yet stamped (V3 Phase 2 rollout). A
+   * missing field means a pre-V3 registry — consumers fall back to their
+   * legacy filters.
+   *
+   * TODO(publish-gate): import `FactoryExposure` from `@almadar/core`
+   * once it lands there (unpublished as of this wave) instead of the
+   * inline literal union below.
+   */
+  exposure?: 'app' | 'palette' | 'both' | 'internal';
+  /**
+   * How the behavior entered the registry: `generated` (pattern-sync
+   * emitted wrapper), `authored` (hand-authored, blessed via
+   * `.hand-authored.json`), or `promoted` (curated from a verified
+   * cache miss). Stamped by `tools/almadar-pattern-sync` (`behaviors`
+   * command).
+   *
+   * Optional: registries are not yet stamped (V3 Phase 2 rollout). A
+   * missing field means a pre-V3 registry — consumers fall back to their
+   * legacy filters.
+   *
+   * TODO(publish-gate): import `FactoryProvenance` from `@almadar/core`
+   * once it lands there (unpublished as of this wave) instead of the
+   * inline literal union below.
+   */
+  provenance?: 'generated' | 'authored' | 'promoted';
 }
 
 export interface BehaviorSummary {
