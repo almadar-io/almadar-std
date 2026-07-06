@@ -1,28 +1,23 @@
 app std-search "1.0.0"
 "std-search — single primitive: search-input. Owns a SearchResult runtime entity; SEARCH persists @payload.searchTerm (matching SearchInput's emit shape) so cross-trait listeners can route it into data atoms (Browse REFETCH_QUERY)."
 orbital SearchResultOrbital {
+  uses SearchInputRender from "../../ui/core/molecules/ui-search-input"
   entity SearchResult [runtime] {
     id : string!
     searchTerm : string @description "The text entered by the user in the search field." @synonyms "query, search term, input, text"
   }
+
+  trait SearchInputWrapper = SearchInputRender -> SearchResult { config { event: @config.event, placeholder: @config.placeholder } }
 
   trait SearchResultSearch -> @rebindable SearchResult [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
-        (render-ui main {
-          event: @config.event
-          placeholder: @config.placeholder
-          type: search-input
-        })
+        (render-ui main @trait.SearchInputWrapper)
       SEARCH -> idle
         (set @entity.searchTerm ?searchTerm)
-        (render-ui main {
-          event: @config.event
-          placeholder: @config.placeholder
-          type: search-input
-        })
+        (render-ui main @trait.SearchInputWrapper)
     }
 
     emits {

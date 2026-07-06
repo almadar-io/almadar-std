@@ -4,13 +4,16 @@ type NavItem = { label : string!, href : string!, icon : string, badge : string,
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
 type NotificationSpec = { id : string, message : string, variant : string }
 orbital AppLayoutOrbital {
-    type AppLayoutStateLoaded = Event { data : [AppLayoutData] }
+  uses BoxRender from "std/behaviors/ui-box"
+  type AppLayoutStateLoaded = Event { data : [AppLayoutData] }
 
-    type AppLayoutStateLoadFailed = Event { error : string, code : string }
+  type AppLayoutStateLoadFailed = Event { error : string, code : string }
 
   entity AppLayoutData [runtime] {
     id : string!
   }
+
+  trait MainBox = BoxRender -> AppLayoutData { config { fullHeight: true, className: "min-h-screen w-full" } }
 
   trait AppLayout -> @rebindable AppLayoutData [interaction, instance] {
     initial: composing
@@ -20,29 +23,27 @@ orbital AppLayoutOrbital {
         (fetch AppLayoutData {
           emit: { failure: AppLayoutStateLoadFailed, success: AppLayoutStateLoaded }
         })
-        (render-ui main {
-          data-theme: @config.theme
-          className: "min-h-screen w-full"
-          fullHeight: true
-          type: box
-          children: [{
-            appName: @config.appName
+        (render-ui main @trait.MainBox {
+          config: {
             children: [{
-              children: [@config.contentTrait]
-              className: @config.contentClassName
-              direction: vertical
-              gap: lg
-              type: stack
+              appName: @config.appName
+              children: [{
+                children: [@config.contentTrait]
+                className: @config.contentClassName
+                direction: vertical
+                gap: lg
+                type: stack
+              }]
+              currentPath: @config.currentPath
+              layoutMode: @config.layoutMode
+              navItems: @config.navItems
+              notificationClickEvent: @config.notificationClickEvent
+              notifications: @config.notifications
+              searchEvent: @config.searchEvent
+              topBarActions: @config.topBarActions
+              type: @config.layoutPattern
             }]
-            currentPath: @config.currentPath
-            layoutMode: @config.layoutMode
-            navItems: @config.navItems
-            notificationClickEvent: @config.notificationClickEvent
-            notifications: @config.notifications
-            searchEvent: @config.searchEvent
-            topBarActions: @config.topBarActions
-            type: @config.layoutPattern
-          }]
+          }
         })
       AppLayoutStateLoaded -> composing
       AppLayoutStateLoadFailed -> composing

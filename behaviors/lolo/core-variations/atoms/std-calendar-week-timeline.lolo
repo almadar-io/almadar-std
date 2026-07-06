@@ -2,6 +2,9 @@ app std-calendar-week-timeline "1.2.0"
 "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week)."
 orbital WeekTimelineCalendarOrbital {
   uses Calendar from "std/behaviors/std-calendar"
+  uses Icon from "std/behaviors/ui-icon"
+  uses Typography from "std/behaviors/ui-typography"
+  uses DateRangeSelector from "std/behaviors/ui-date-range-selector"
 
   entity WeekTimelineEvent [runtime] {
     id : string!
@@ -16,6 +19,26 @@ orbital WeekTimelineCalendarOrbital {
     selectedRange : string @intrinsic = week
   }
 
+  trait CalendarIcon = Icon.traits.IconRender -> WeekTimelineEvent {
+    config {
+      name: calendar
+    }
+  }
+
+  trait WeekTypography = Typography.traits.TypographyRender -> WeekTimelineEvent {
+    config {
+      content: Week
+      variant: h2
+    }
+  }
+
+  trait WeekDateRangeSelector = DateRangeSelector.traits.DateRangeSelectorRender -> WeekTimelineEvent {
+    config {
+      onSelect: SELECT_DAY
+      selected: @entity.selectedRange
+    }
+  }
+
   trait WeekTimelineCalendar = Calendar.traits.CalendarEventCalendar -> WeekTimelineEvent {
     config {
       bodyContent: {
@@ -23,19 +46,11 @@ orbital WeekTimelineCalendarOrbital {
           align: center
           children: [{
             align: center
-            children: [{ name: calendar, type: icon }, {
-              content: Week
-              type: typography
-              variant: h2
-            }]
+            children: [@trait.CalendarIcon, @trait.WeekTypography]
             direction: horizontal
             gap: sm
             type: stack
-          }, {
-            onSelect: SELECT_DAY
-            selected: @entity.selectedRange
-            type: date-range-selector
-          }]
+          }, @trait.WeekDateRangeSelector]
           direction: horizontal
           gap: md
           justify: between

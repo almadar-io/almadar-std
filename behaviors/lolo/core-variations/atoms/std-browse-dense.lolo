@@ -2,6 +2,9 @@ app std-browse-dense "1.2.0"
 "Spreadsheet-style dense browse — column-row data-table molecule with sticky header, monospaced numerics, status badges, tight row padding."
 orbital DenseBrowseOrbital {
   uses Browse from "std/behaviors/std-browse"
+  uses Icon from "std/behaviors/ui-icon"
+  uses Input from "std/behaviors/ui-input"
+  uses TableView from "std/behaviors/ui-table-view"
 
   entity DenseRow [runtime] {
     id : string!
@@ -12,6 +15,35 @@ orbital DenseBrowseOrbital {
     volume : string @description "The quantity or amount represented." @synonyms "amount, quantity, size, measure"
     status : "ok" | "warn" | "error" @description "Indicates the current operational state." @synonyms "condition, state, flag" = ok
     createdAt : string
+  }
+
+  trait SearchIcon = Icon.traits.IconRender -> DenseRow {
+    config {
+      name: search
+      className: text-muted-foreground
+    }
+  }
+
+  trait SearchInput = Input.traits.InputRender -> DenseRow {
+    config {
+      action: REFETCH_QUERY
+      className: flex-1
+      inputType: search
+      placeholder: @config.searchPlaceholder
+    }
+  }
+
+  trait DenseTableView = TableView.traits.TableViewRender -> DenseRow {
+    config {
+      columns: @config.columns
+      emptyMessage: "No records"
+      entity: ?data
+      itemActions: @config.itemActions
+      look: dense
+      maxInlineActions: @config.maxInlineActions
+      pageSize: @config.displayPageSize
+      selectable: true
+    }
   }
 
   trait DenseBrowse = Browse.traits.BrowseItemBrowse -> DenseRow {
@@ -77,33 +109,13 @@ orbital DenseBrowseOrbital {
       bodyContent: {
         children: [{
           align: center
-          children: [{
-            className: text-muted-foreground
-            name: search
-            type: icon
-          }, {
-            action: REFETCH_QUERY
-            className: flex-1
-            inputType: search
-            placeholder: @config.searchPlaceholder
-            type: input
-          }]
+          children: [@trait.SearchIcon, @trait.SearchInput]
           className: "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
           direction: horizontal
           gap: sm
           type: stack
         }, {
-          children: [{
-            columns: @config.columns
-            emptyMessage: "No records"
-            entity: ?data
-            itemActions: @config.itemActions
-            look: dense
-            maxInlineActions: @config.maxInlineActions
-            pageSize: @config.displayPageSize
-            selectable: true
-            type: table-view
-          }]
+          children: [@trait.DenseTableView]
           className: "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm"
           direction: vertical
           gap: none

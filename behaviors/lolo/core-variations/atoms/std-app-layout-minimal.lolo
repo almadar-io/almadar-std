@@ -2,22 +2,17 @@ app std-app-layout-minimal "1.1.0"
 "Minimal chrome. Embeds std-app-layout with minimal layout pattern + a placeholder content trait so the main slot has visible content."
 orbital MinimalLayoutOrbital {
   uses AppLayout from "std/behaviors/std-app-layout"
+  uses EmptyState from "std/behaviors/ui-empty-state"
 
   entity MinimalLayoutData [runtime] {
     id : string!
   }
 
-  trait MinimalContent -> MinimalLayoutData [interaction, instance] {
-    initial: showing
-
-    state showing {
-      INIT -> showing
-        (render-ui main {
-          description: "Override the contentTrait config to fill this area with your own trait."
-          icon: layout
-          title: "Minimal Layout"
-          type: empty-state
-        })
+  trait MinimalEmptyState = EmptyState.traits.EmptyStateRender -> MinimalLayoutData {
+    config {
+      icon: layout
+      title: "Minimal Layout"
+      message: "Override the contentTrait config to fill this area with your own trait."
     }
   }
 
@@ -42,9 +37,9 @@ orbital MinimalLayoutOrbital {
         icon: settings
         label: Settings
       }]
-      contentTrait: @trait.MinimalContent
+      contentTrait: @trait.MinimalEmptyState
     }
   }
 
-  page "/minimal-layout" as MinimalLayoutPage -> MinimalLayout, MinimalContent
+  page "/minimal-layout" as MinimalLayoutPage -> MinimalLayout
 }
