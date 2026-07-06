@@ -1,0 +1,242 @@
+{
+  "description": "ScoreDisplay — UI factory (1:1 with the @almadar/ui score-display pattern).",
+  "name": "ui-score-display",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "ScoreDisplayItem",
+        "persistence": "runtime"
+      },
+      "name": "ScoreDisplayOrbital",
+      "pages": [
+        {
+          "name": "ScoreDisplayPage",
+          "path": "/score-display",
+          "traits": [
+            {
+              "ref": "ScoreDisplayRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "assetUrl": {
+              "default": {
+                "animations": [
+                  "idle",
+                  "walk",
+                  "attack",
+                  "hit",
+                  "death"
+                ],
+                "aspect": "1:1",
+                "category": "assetUrl",
+                "dimension": "2d",
+                "name": "assetUrl",
+                "role": "npc",
+                "style": "",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"
+              },
+              "description": "Sprite asset — takes precedence over icon when provided",
+              "label": "Asset Url",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "1:1",
+                    "16:9",
+                    "5:7",
+                    "8:1"
+                  ]
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "2d",
+                    "3d"
+                  ]
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "npc",
+                    "item",
+                    "tile",
+                    "projectile",
+                    "effect",
+                    "ui",
+                    "decoration",
+                    "vehicle"
+                  ]
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "pixel",
+                    "vector",
+                    "hd",
+                    "1-bit",
+                    "isometric"
+                  ]
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "ScoreDisplayAssetUrl"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Icon component or emoji",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Label to display before score",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "locale": {
+              "default": "en-US",
+              "description": "Number formatting locale",
+              "label": "Locale",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "score": {
+              "default": 0.0,
+              "description": "Alias for value — common schema binding name",
+              "label": "Score",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "value": {
+              "default": 1.0,
+              "description": "Current score value",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ScoreDisplayItem",
+          "name": "ScoreDisplayRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetUrl": "@config.assetUrl",
+                      "className": "@config.className",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "locale": "@config.locale",
+                      "score": "@config.score",
+                      "size": "@config.size",
+                      "type": "score-display",
+                      "value": "@config.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

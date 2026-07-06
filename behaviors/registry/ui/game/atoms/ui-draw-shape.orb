@@ -1,0 +1,219 @@
+{
+  "description": "DrawShape — UI factory (1:1 with the @almadar/ui draw-shape pattern).",
+  "name": "ui-draw-shape",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "DrawShapeItem",
+        "persistence": "runtime"
+      },
+      "name": "DrawShapeOrbital",
+      "pages": [
+        {
+          "name": "DrawShapePage",
+          "path": "/draw-shape",
+          "traits": [
+            {
+              "ref": "DrawShapeRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "anchor": {
+              "default": {},
+              "description": "How the shape aligns to its projected position. Default varies by `shape`.",
+              "label": "Anchor",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "fill": {
+              "default": "Fill",
+              "description": "fill prop",
+              "label": "Fill",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "height": {
+              "default": 0.0,
+              "description": "Rect height in px.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "offsetX": {
+              "default": 0.0,
+              "description": "Fine px nudge from the anchor point (e.g. a disc drawn at `groundY - 8*scale`).",
+              "label": "Offset X",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "offsetY": {
+              "default": 0.0,
+              "description": "offsetY prop",
+              "label": "Offset Y",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "opacity": {
+              "default": 0.0,
+              "description": "0..1 opacity.",
+              "label": "Opacity",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "points": {
+              "default": [],
+              "description": "Poly vertices as px offsets relative to the cell's projected top-left.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Points",
+              "tier": "presentation",
+              "type": "[json]"
+            },
+            "position": {
+              "default": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+              },
+              "description": "Logical scene position; the projector maps it to pixels / world.",
+              "label": "Position",
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "tier": "presentation",
+              "type": "DrawShapePosition"
+            },
+            "radiusX": {
+              "default": 0.0,
+              "description": "Ellipse horizontal radius in px.",
+              "label": "Radius X",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "radiusY": {
+              "default": 0.0,
+              "description": "Ellipse vertical radius in px; omitted → `radiusX` (a circle).",
+              "label": "Radius Y",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "shape": {
+              "default": "cell",
+              "description": "shape prop",
+              "label": "Shape",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "cell",
+                "rect",
+                "ellipse",
+                "poly"
+              ]
+            },
+            "stroke": {
+              "default": "Stroke",
+              "description": "stroke prop",
+              "label": "Stroke",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "strokeWidth": {
+              "default": 0.0,
+              "description": "strokeWidth prop",
+              "label": "Stroke Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 0.0,
+              "description": "Rect width in px.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DrawShapeItem",
+          "name": "DrawShapeRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "anchor": "@config.anchor",
+                      "fill": "@config.fill",
+                      "height": "@config.height",
+                      "offsetX": "@config.offsetX",
+                      "offsetY": "@config.offsetY",
+                      "opacity": "@config.opacity",
+                      "points": "@config.points",
+                      "position": "@config.position",
+                      "radiusX": "@config.radiusX",
+                      "radiusY": "@config.radiusY",
+                      "shape": "@config.shape",
+                      "stroke": "@config.stroke",
+                      "strokeWidth": "@config.strokeWidth",
+                      "type": "draw-shape",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

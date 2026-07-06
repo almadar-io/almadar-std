@@ -1,0 +1,273 @@
+{
+  "description": "DrawSprite — UI factory (1:1 with the @almadar/ui draw-sprite pattern).",
+  "name": "ui-draw-sprite",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "DrawSpriteItem",
+        "persistence": "runtime"
+      },
+      "name": "DrawSpriteOrbital",
+      "pages": [
+        {
+          "name": "DrawSpritePage",
+          "path": "/draw-sprite",
+          "traits": [
+            {
+              "ref": "DrawSpriteRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "anchor": {
+              "default": {},
+              "description": "How the sprite aligns to its projected position. Default `'top-left'`.",
+              "label": "Anchor",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "asset": {
+              "default": {
+                "animations": [
+                  "idle",
+                  "walk",
+                  "attack",
+                  "hit",
+                  "death"
+                ],
+                "aspect": "1:1",
+                "category": "asset",
+                "dimension": "2d",
+                "name": "asset",
+                "role": "npc",
+                "style": "",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"
+              },
+              "description": "The image / atlas reference to blit.",
+              "label": "Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "1:1",
+                    "16:9",
+                    "5:7",
+                    "8:1"
+                  ]
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "2d",
+                    "3d"
+                  ]
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "npc",
+                    "item",
+                    "tile",
+                    "projectile",
+                    "effect",
+                    "ui",
+                    "decoration",
+                    "vehicle"
+                  ]
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "pixel",
+                    "vector",
+                    "hd",
+                    "1-bit",
+                    "isometric"
+                  ]
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DrawSpriteAsset"
+            },
+            "flipX": {
+              "default": false,
+              "description": "Mirror horizontally (facing).",
+              "label": "Flip X",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "frame": {
+              "default": {},
+              "description": "Explicit atlas sub-rect override (px); omitted → resolved from `asset.atlas`/`asset.sprite`.",
+              "label": "Frame",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "height": {
+              "default": 0.0,
+              "description": "Draw height in px (2D) / world units (3D); omitted → resolved source height.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "opacity": {
+              "default": 0.0,
+              "description": "0..1 opacity.",
+              "label": "Opacity",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "position": {
+              "default": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+              },
+              "description": "Logical scene position; the projector maps it to pixels / world.",
+              "label": "Position",
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "tier": "presentation",
+              "type": "DrawSpritePosition"
+            },
+            "rotation": {
+              "default": 0.0,
+              "description": "Rotation in radians about the sprite's center.",
+              "label": "Rotation",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "shadow": {
+              "default": {},
+              "description": "Drop shadow (e.g. a team-colored glow).",
+              "label": "Shadow",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "width": {
+              "default": 0.0,
+              "description": "Draw width in px (2D) / world units (3D); omitted → resolved source width.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DrawSpriteItem",
+          "name": "DrawSpriteRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "anchor": "@config.anchor",
+                      "asset": "@config.asset",
+                      "flipX": "@config.flipX",
+                      "frame": "@config.frame",
+                      "height": "@config.height",
+                      "opacity": "@config.opacity",
+                      "position": "@config.position",
+                      "rotation": "@config.rotation",
+                      "shadow": "@config.shadow",
+                      "type": "draw-sprite",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

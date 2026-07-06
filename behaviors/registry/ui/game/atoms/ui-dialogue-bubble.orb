@@ -1,0 +1,238 @@
+{
+  "description": "DialogueBubble — UI factory (1:1 with the @almadar/ui dialogue-bubble pattern).",
+  "name": "ui-dialogue-bubble",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "DialogueBubbleItem",
+        "persistence": "runtime"
+      },
+      "name": "DialogueBubbleOrbital",
+      "pages": [
+        {
+          "name": "DialogueBubblePage",
+          "path": "/dialogue-bubble",
+          "traits": [
+            {
+              "ref": "DialogueBubbleRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "mood": {
+              "default": "neutral",
+              "description": "Speaker mood — drives a portrait-ring accent; LOLO sets this per dialogue node/transition.",
+              "label": "Mood",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "neutral",
+                "happy",
+                "concerned",
+                "angry"
+              ]
+            },
+            "portrait": {
+              "default": {
+                "animations": [
+                  "idle",
+                  "walk",
+                  "attack",
+                  "hit",
+                  "death"
+                ],
+                "aspect": "1:1",
+                "category": "portrait",
+                "dimension": "2d",
+                "name": "portrait",
+                "role": "npc",
+                "style": "",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png"
+              },
+              "description": "Speaker portrait asset",
+              "label": "Portrait",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "1:1",
+                    "16:9",
+                    "5:7",
+                    "8:1"
+                  ]
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "2d",
+                    "3d"
+                  ]
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "npc",
+                    "item",
+                    "tile",
+                    "projectile",
+                    "effect",
+                    "ui",
+                    "decoration",
+                    "vehicle"
+                  ]
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "pixel",
+                    "vector",
+                    "hd",
+                    "1-bit",
+                    "isometric"
+                  ]
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DialogueBubblePortrait"
+            },
+            "position": {
+              "default": "bottom",
+              "description": "Position of the bubble on screen",
+              "label": "Position",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "top",
+                "bottom"
+              ]
+            },
+            "revealedChars": {
+              "default": 0.0,
+              "description": "Number of `text` characters to reveal (typewriter effect). Omit to show the full string — LOLO drives this from `@entity.revealedChars` via a tick, incrementing it until it reaches `text.length`.",
+              "label": "Revealed Chars",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "speaker": {
+              "default": "Hero",
+              "description": "Speaker name displayed at the top",
+              "label": "Speaker",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "text": {
+              "default": "The dungeon awaits. Choose your path wisely.",
+              "description": "Dialogue text content",
+              "label": "Text",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DialogueBubbleItem",
+          "name": "DialogueBubbleRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "mood": "@config.mood",
+                      "portrait": "@config.portrait",
+                      "position": "@config.position",
+                      "revealedChars": "@config.revealedChars",
+                      "speaker": "@config.speaker",
+                      "text": "@config.text",
+                      "type": "dialogue-bubble"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

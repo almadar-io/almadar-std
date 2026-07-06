@@ -1,0 +1,388 @@
+{
+  "description": "Canvas2d — UI factory (1:1 with the @almadar/ui canvas-2d pattern).",
+  "name": "ui-canvas-2d",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "Canvas2dItem",
+        "persistence": "runtime"
+      },
+      "name": "Canvas2dOrbital",
+      "pages": [
+        {
+          "name": "Canvas2dPage",
+          "path": "/canvas-2d",
+          "traits": [
+            {
+              "ref": "Canvas2dRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundImage": {
+              "default": {
+                "animations": [
+                  "static"
+                ],
+                "aspect": "1:1",
+                "category": "backgroundImage",
+                "dimension": "2d",
+                "name": "backgroundImage",
+                "role": "decoration",
+                "style": "",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"
+              },
+              "description": "Background image (tiled behind iso/hex/flat/free; cover-scaled for atlas slices). A bare URL string is accepted as shorthand for a standalone backdrop.",
+              "label": "Background Image",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "bgColor": {
+              "default": "Bg Color",
+              "description": "Solid backdrop colour (drawn when no `backgroundImage`).",
+              "label": "Bg Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "camera": {
+              "default": "pan-zoom",
+              "description": "--- View config (pure render) ---",
+              "label": "Camera",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "pan-zoom",
+                "follow",
+                "fixed"
+              ]
+            },
+            "className": {
+              "default": "",
+              "description": "--- Closed-circuit ---",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "drawables": {
+              "default": [],
+              "description": "--- Scene ---",
+              "items": {
+                "type": "string"
+              },
+              "label": "Drawables",
+              "tier": "presentation",
+              "type": "[json]"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Canvas2dError"
+            },
+            "followTarget": {
+              "default": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+              },
+              "description": "Follow-camera target in scene space (the neutral core `Camera.target`). When `camera:'follow'` the host lerps to keep this point centered.",
+              "label": "Follow Target",
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "tier": "presentation",
+              "type": "Canvas2dFollowTarget"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "keyMap": {
+              "default": {
+                "item": "Item"
+              },
+              "description": "Maps a keydown `e.code` → the board's SEMANTIC event (device-agnostic input).",
+              "items": {
+                "type": "string"
+              },
+              "label": "Key Map",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
+            "keyUpMap": {
+              "default": {
+                "item": "Item"
+              },
+              "description": "Maps a keyup `e.code` → the board's SEMANTIC event.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Key Up Map",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
+            "projection": {
+              "default": "isometric",
+              "description": "--- Projection ---",
+              "label": "Projection",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "isometric",
+                "hex",
+                "flat",
+                "free",
+                "side"
+              ]
+            },
+            "scale": {
+              "default": 0.4,
+              "description": "Render scale (0.4 = 40% zoom). Ignored by `free`/`side` (world-pixel-direct).",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "showMinimap": {
+              "default": true,
+              "description": "Toggle minimap overlay.",
+              "label": "Show Minimap",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "--- Declarative events back to LOLO ---",
+              "event": "TILE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Unit-click event. The neutral drawable host cannot resolve a click to a per-entity id (descriptors carry only a `ScenePos`, no id), so this prop is accepted but not yet emitted — the id-hit-test is a tracked fork (docs/Almadar_Std_Game_V2_PLAN.md).",
+              "event": "UNIT_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{tileHoverEvent} with the unprojected scene { x, y } on hover.",
+              "event": "TILE_HOVER",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{tileLeaveEvent} with {} on pointer leave.",
+              "event": "TILE_LEAVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "Canvas2dItem",
+          "name": "Canvas2dRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "--- Declarative events back to LOLO ---",
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Unit-click event. The neutral drawable host cannot resolve a click to a per-entity id (descriptors carry only a `ScenePos`, no id), so this prop is accepted but not yet emitted — the id-hit-test is a tracked fork (docs/Almadar_Std_Game_V2_PLAN.md).",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{tileHoverEvent} with the unprojected scene { x, y } on hover.",
+                "key": "TILE_HOVER",
+                "name": "Tile Hover",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{tileLeaveEvent} with {} on pointer leave.",
+                "key": "TILE_LEAVE",
+                "name": "Tile Leave",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundImage": "@config.backgroundImage",
+                      "bgColor": "@config.bgColor",
+                      "camera": "@config.camera",
+                      "className": "@config.className",
+                      "drawables": "@config.drawables",
+                      "error": "@config.error",
+                      "followTarget": "@config.followTarget",
+                      "isLoading": "@config.isLoading",
+                      "keyMap": "@config.keyMap",
+                      "keyUpMap": "@config.keyUpMap",
+                      "projection": "@config.projection",
+                      "scale": "@config.scale",
+                      "showMinimap": "@config.showMinimap",
+                      "tileClickEvent": "TILE_CLICK",
+                      "tileHoverEvent": "TILE_HOVER",
+                      "tileLeaveEvent": "TILE_LEAVE",
+                      "type": "canvas-2d",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
