@@ -1,0 +1,110 @@
+app std-agent-context "1.0.0"
+"Wraps llm/token-count + llm/compact — context window management."
+orbital AgentContextOrbital {
+
+  entity ContextWindow [runtime] {
+    tokenCount : number = 0
+    beforeTokens : number = 0
+    afterTokens : number = 0
+    status : "idle" | "counted" | "compacted" = idle
+  }
+
+  trait ContextCounter -> ContextWindow [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.tokenCount 0)
+        (set @entity.status idle)
+      COUNT -> counted
+        (set @entity.tokenCount (llm/token-count))
+        (set @entity.status counted)
+        (emit COUNTED { tokenCount: @entity.tokenCount })
+    }
+
+    state counted {
+      INIT -> counted
+        (set @entity.status counted)
+      RESET -> idle
+        (set @entity.tokenCount 0)
+        (set @entity.status idle)
+    }
+
+    emits {
+      COUNTED {
+        tokenCount : number!
+      }
+    }
+
+    listens {
+      COUNT
+    }
+  }
+
+  trait ContextCompactor -> ContextWindow [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.beforeTokens 0)
+        (set @entity.afterTokens 0)
+        (set @entity.status idle)
+      COMPACT -> compacted
+        (set @entity.beforeTokens (llm/token-count))
+        (llm/compact)
+        (set @entity.afterTokens (llm/token-count))
+        (set @entity.status compacted)
+        (emit COMPACTED { before: @entity.beforeTokens, after: @entity.afterTokens })
+    }
+
+    state compacted {
+      INIT -> compacted
+        (set @entity.status compacted)
+      RESET -> idle
+        (set @entity.beforeTokens 0)
+        (set @entity.afterTokens 0)
+        (set @entity.status idle)
+    }
+
+    emits {
+      COMPACTED {
+        before : number!
+        after : number!
+      }
+    }
+
+    listens {
+      COMPACT
+    }
+  }
+
+  trait ContextListener -> ContextWindow [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      COUNTED -> active
+        (set @entity.status counted)
+      COMPACTED -> active
+        (set @entity.status compacted)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    state active {
+      INIT -> active
+        (set @entity.status idle)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      ContextCounter.COUNTED -> COUNTED
+      ContextCompactor.COMPACTED -> COMPACTED
+      RESET
+    }
+  }
+
+  page "/agent-context" as AgentContextPage -> ContextCounter, ContextCompactor, ContextListener
+}

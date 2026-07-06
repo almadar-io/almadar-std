@@ -1,0 +1,64 @@
+app std-agent-trace "1.0.0"
+"Wraps trace/emit + trace/log — observability for agent loops."
+orbital AgentTraceOrbital {
+
+  entity AgentTrace [runtime] {
+    event : string = ""
+    level : string = "info"
+    message : string = ""
+  }
+
+  trait TraceEmitter -> AgentTrace [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.event "")
+        (set @entity.level "info")
+        (set @entity.message "")
+      EMIT_TRACE -> idle
+        (set @entity.event ?event)
+        (trace/emit @entity.event)
+        (emit TRACED)
+      LOG_TRACE -> idle
+        (set @entity.level ?level)
+        (set @entity.message ?message)
+        (trace/log @entity.level @entity.message)
+        (emit TRACED)
+    }
+
+    emits {
+      TRACED
+    }
+
+    listens {
+      EMIT_TRACE {
+        event : string!
+      }
+      LOG_TRACE {
+        level : string!
+        message : string!
+      }
+    }
+  }
+
+  trait TraceListener -> AgentTrace [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.event "")
+        (set @entity.level "info")
+        (set @entity.message "")
+      TRACED -> ready
+        (set @entity.event "")
+        (set @entity.message "")
+    }
+
+    listens {
+      TraceEmitter.TRACED -> TRACED
+    }
+  }
+
+  page "/agent-trace" as AgentTracePage -> TraceEmitter, TraceListener
+}

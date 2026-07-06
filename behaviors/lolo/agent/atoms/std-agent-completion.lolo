@@ -5,7 +5,7 @@ orbital AgentCompletionOrbital {
   entity Completion [runtime] {
     prompt : string = ""
     response : string = ""
-    status : "idle" | "generating" | "done" | "error" = idle
+    status : "idle" | "done" = idle
   }
 
   trait CompletionGeneration -> Completion [lifecycle, instance] {
@@ -13,24 +13,22 @@ orbital AgentCompletionOrbital {
 
     state idle {
       INIT -> idle
-        (set @entity.status idle)
         (set @entity.prompt "")
         (set @entity.response "")
-      GENERATE -> generating
+        (set @entity.status idle)
+      GENERATE -> done
         (set @entity.prompt ?prompt)
-        (set @entity.status generating)
         (set @entity.response (llm/generate @entity.prompt))
         (set @entity.status done)
         (emit COMPLETED { response: @entity.response })
     }
 
-    state generating {
-      INIT -> generating
-    }
-
     state done {
+      INIT -> done
+        (set @entity.status done)
       RESET -> idle
         (set @entity.response "")
+        (set @entity.prompt "")
         (set @entity.status idle)
     }
 
@@ -38,7 +36,6 @@ orbital AgentCompletionOrbital {
       COMPLETED {
         response : string!
       }
-        @description "Fired when generation completes, carrying the response."
     }
 
     listens {
@@ -48,5 +45,28 @@ orbital AgentCompletionOrbital {
     }
   }
 
-  page "/agent-completion" as AgentCompletionPage -> CompletionGeneration
+  trait CompletionReady -> Completion [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      COMPLETED -> ready
+        (set @entity.status done)
+    }
+
+    state ready {
+      INIT -> ready
+        (set @entity.status done)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      CompletionGeneration.COMPLETED -> COMPLETED
+      RESET
+    }
+  }
+
+  page "/agent-completion" as AgentCompletionPage -> CompletionGeneration, CompletionReady
 }

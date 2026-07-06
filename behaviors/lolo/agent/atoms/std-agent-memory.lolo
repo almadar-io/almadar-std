@@ -1,0 +1,125 @@
+app std-agent-memory "1.0.0"
+"Wraps memory/recall + memory/store — semantic memory for agent loops."
+
+type MemoryRecord = { id: string!, content: string!, category: string!, strength: number }
+
+orbital AgentMemoryOrbital {
+
+  entity AgentMemory [runtime] {
+    query : string = ""
+    results : [MemoryRecord] = []
+    content : string = ""
+    category : string = ""
+    memoryId : string = ""
+    status : "idle" | "recalled" | "stored" = idle
+  }
+
+  trait MemoryRecall -> AgentMemory [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.query "")
+        (set @entity.results [])
+        (set @entity.content "")
+        (set @entity.category "")
+        (set @entity.memoryId "")
+        (set @entity.status idle)
+      RECALL -> recalled
+        (set @entity.query ?query)
+        (set @entity.results (memory/recall @entity.query))
+        (set @entity.status recalled)
+        (emit RECALLED { results: @entity.results })
+    }
+
+    state recalled {
+      INIT -> recalled
+        (set @entity.status recalled)
+      RESET -> idle
+        (set @entity.results [])
+        (set @entity.query "")
+        (set @entity.status idle)
+    }
+
+    emits {
+      RECALLED {
+        results : [MemoryRecord]!
+      }
+    }
+
+    listens {
+      RECALL {
+        query : string!
+      }
+    }
+  }
+
+  trait MemoryStore -> AgentMemory [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.content "")
+        (set @entity.category "")
+        (set @entity.memoryId "")
+        (set @entity.status idle)
+      STORE -> stored
+        (set @entity.content ?content)
+        (set @entity.category ?category)
+        (set @entity.memoryId (memory/store @entity.content @entity.category))
+        (set @entity.status stored)
+        (emit STORED { memoryId: @entity.memoryId })
+    }
+
+    state stored {
+      INIT -> stored
+        (set @entity.status stored)
+      RESET -> idle
+        (set @entity.content "")
+        (set @entity.category "")
+        (set @entity.memoryId "")
+        (set @entity.status idle)
+    }
+
+    emits {
+      STORED {
+        memoryId : string!
+      }
+    }
+
+    listens {
+      STORE {
+        content : string!
+        category : string!
+      }
+    }
+  }
+
+  trait MemoryListener -> AgentMemory [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      RECALLED -> updated
+        (set @entity.status recalled)
+      STORED -> updated
+        (set @entity.status stored)
+    }
+
+    state updated {
+      INIT -> updated
+        (set @entity.status idle)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      MemoryRecall.RECALLED -> RECALLED
+      MemoryStore.STORED -> STORED
+      RESET
+    }
+  }
+
+  page "/agent-memory" as AgentMemoryPage -> MemoryRecall, MemoryStore, MemoryListener
+}

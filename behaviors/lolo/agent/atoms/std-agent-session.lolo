@@ -1,0 +1,123 @@
+app std-agent-session "1.0.0"
+"Wraps session/read-spec + session/write-spec + session/read-history — orbital session data."
+
+type OrbitalSpec = { orbitalName: string, organism: string!, method: string!, deltaPrompt: string! }
+type HistoryEntry = { role: string!, content: string!, timestamp: number }
+
+orbital AgentSessionOrbital {
+
+  entity AgentSession [runtime] {
+    orbitalName : string = ""
+    spec : OrbitalSpec = {}
+    history : [HistoryEntry] = []
+    status : "idle" | "read" | "written" = idle
+  }
+
+  trait SessionReader -> AgentSession [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.orbitalName "")
+        (set @entity.spec {})
+        (set @entity.history [])
+        (set @entity.status idle)
+      READ_SPEC -> read
+        (set @entity.orbitalName ?orbitalName)
+        (set @entity.spec (session/read-spec @entity.orbitalName))
+        (set @entity.history (session/read-history @entity.orbitalName))
+        (set @entity.status read)
+        (emit SPEC_READ { spec: @entity.spec, history: @entity.history })
+    }
+
+    state read {
+      INIT -> read
+        (set @entity.status read)
+      RESET -> idle
+        (set @entity.spec {})
+        (set @entity.history [])
+        (set @entity.status idle)
+    }
+
+    emits {
+      SPEC_READ {
+        spec : OrbitalSpec!
+        history : [HistoryEntry]!
+      }
+    }
+
+    listens {
+      READ_SPEC {
+        orbitalName : string!
+      }
+    }
+  }
+
+  trait SessionWriter -> AgentSession [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.orbitalName "")
+        (set @entity.spec {})
+        (set @entity.status idle)
+      WRITE_SPEC -> written
+        (set @entity.orbitalName ?orbitalName)
+        (set @entity.spec ?spec)
+        (session/write-spec @entity.orbitalName @entity.spec)
+        (set @entity.status written)
+        (emit SPEC_WRITTEN { orbitalName: @entity.orbitalName })
+    }
+
+    state written {
+      INIT -> written
+        (set @entity.status written)
+      RESET -> idle
+        (set @entity.spec {})
+        (set @entity.status idle)
+    }
+
+    emits {
+      SPEC_WRITTEN {
+        orbitalName : string!
+      }
+    }
+
+    listens {
+      WRITE_SPEC {
+        orbitalName : string!
+        spec : OrbitalSpec!
+      }
+    }
+  }
+
+  trait SessionListener -> AgentSession [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      SPEC_READ -> active
+        (set @entity.status read)
+      SPEC_WRITTEN -> active
+        (set @entity.status written)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    state active {
+      INIT -> active
+        (set @entity.status idle)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      SessionReader.SPEC_READ -> SPEC_READ
+      SessionWriter.SPEC_WRITTEN -> SPEC_WRITTEN
+      RESET
+    }
+  }
+
+  page "/agent-session" as AgentSessionPage -> SessionReader, SessionWriter, SessionListener
+}

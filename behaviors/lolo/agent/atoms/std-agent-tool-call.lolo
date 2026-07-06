@@ -1,0 +1,81 @@
+app std-agent-tool-call "1.0.0"
+"Wraps llm/call-tools — takes messages + tools, returns tool-call result."
+
+type LlmMessage = { role: string!, content: string!, toolCalls: [object], toolCallId: string }
+type LlmToolDef = { name: string!, description: string!, schema: object }
+
+orbital AgentToolCallOrbital {
+
+  entity ToolCall [runtime] {
+    messages : [LlmMessage] = []
+    tools : [LlmToolDef] = []
+    response : string = ""
+    status : "idle" | "done" = idle
+  }
+
+  trait ToolCallExecution -> ToolCall [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.messages [])
+        (set @entity.tools [])
+        (set @entity.response "")
+        (set @entity.status idle)
+      CALL_TOOLS -> done
+        (set @entity.messages ?messages)
+        (set @entity.tools ?tools)
+        (set @entity.response (llm/call-tools @entity.messages @entity.tools))
+        (set @entity.status done)
+        (emit TOOLS_CALLED { response: @entity.response })
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.status done)
+      RESET -> idle
+        (set @entity.response "")
+        (set @entity.messages [])
+        (set @entity.tools [])
+        (set @entity.status idle)
+    }
+
+    emits {
+      TOOLS_CALLED {
+        response : string!
+      }
+    }
+
+    listens {
+      CALL_TOOLS {
+        messages : [LlmMessage]!
+        tools : [LlmToolDef]!
+      }
+    }
+  }
+
+  trait ToolCallReady -> ToolCall [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      TOOLS_CALLED -> ready
+        (set @entity.status done)
+    }
+
+    state ready {
+      INIT -> ready
+        (set @entity.status done)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      ToolCallExecution.TOOLS_CALLED -> TOOLS_CALLED
+      RESET
+    }
+  }
+
+  page "/agent-tool-call" as AgentToolCallPage -> ToolCallExecution, ToolCallReady
+}
