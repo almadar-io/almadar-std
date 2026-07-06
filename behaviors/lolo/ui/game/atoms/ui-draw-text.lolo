@@ -1,0 +1,79 @@
+app ui-draw-text "1.0.0"
+"DrawText — UI factory (1:1 with the @almadar/ui draw-text pattern)."
+orbital DrawTextOrbital {
+  type DrawTextPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+
+  entity DrawTextItem [runtime] {
+    id : string!
+  }
+
+  trait DrawTextRender -> @rebindable DrawTextItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          text: @config.text
+          position: @config.position
+          anchor: @config.anchor
+          offsetX: @config.offsetX
+          offsetY: @config.offsetY
+          color: @config.color
+          font: @config.font
+          align: @config.align
+          baseline: @config.baseline
+          opacity: @config.opacity
+          type: draw-text
+        })
+    }
+
+    config {
+      text : string = "Text"
+        @label "Text"
+        @description "text prop"
+        @tier "presentation"
+      position : DrawTextPosition = { x: 1, y: 1, z: 1 }
+        @label "Position"
+        @description "Logical scene position; the projector maps it to pixels / world."
+        @tier "presentation"
+      anchor : json = {}
+        @label "Anchor"
+        @description "anchor prop"
+        @tier "presentation"
+      offsetX : number = 0
+        @label "Offset X"
+        @description "offsetX prop"
+        @tier "presentation"
+      offsetY : number = 0
+        @label "Offset Y"
+        @description "offsetY prop"
+        @tier "presentation"
+      color : string = "Color"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      font : string = "Font"
+        @label "Font"
+        @description "font prop"
+        @tier "presentation"
+      align : json = {}
+        @label "Align"
+        @description "align prop"
+        @tier "presentation"
+      baseline : json = {}
+        @label "Baseline"
+        @description "baseline prop"
+        @tier "presentation"
+      opacity : number = 0
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-text" as DrawTextPage -> DrawTextRender
+}

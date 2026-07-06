@@ -1,0 +1,97 @@
+app ui-control-button "1.0.0"
+"ControlButton — UI factory (1:1 with the @almadar/ui control-button pattern)."
+orbital ControlButtonOrbital {
+  type ControlButtonAssetUrl = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity ControlButtonItem [runtime] {
+    id : string!
+  }
+
+  trait ControlButtonRender -> @rebindable ControlButtonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          assetUrl: @config.assetUrl
+          label: @config.label
+          icon: @config.icon
+          size: @config.size
+          shape: @config.shape
+          variant: @config.variant
+          onPress: PRESS
+          onRelease: RELEASE
+          pressEvent: PRESS
+          releaseEvent: RELEASE
+          pressed: @config.pressed
+          disabled: @config.disabled
+          className: @config.className
+          type: control-button
+        })
+    }
+
+    emits {
+      PRESS -> external {
+        id : string
+      }
+        @description "Called when button is pressed"
+        @tier "essential"
+      RELEASE -> external {
+        id : string
+      }
+        @description "Called when button is released"
+        @tier "essential"
+    }
+
+    config {
+      assetUrl : ControlButtonAssetUrl = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "assetUrl", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "assetUrl", thumbnailUrl: "" }
+        @label "Asset Url"
+        @description "Sprite asset — takes precedence over icon when provided"
+        @tier "presentation"
+      label : string = "Label"
+        @label "Label"
+        @description "Button label text"
+        @tier "presentation"
+      icon : icon = "circle"
+        @label "Icon"
+        @description "Icon component or emoji"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" | "xl" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      shape : "circle" | "rounded" | "square" = circle
+        @label "Shape"
+        @description "Shape variant"
+        @tier "presentation"
+      variant : "primary" | "secondary" | "ghost" = secondary
+        @label "Variant"
+        @description "Visual variant"
+        @tier "presentation"
+      pressed : boolean = false
+        @label "Pressed"
+        @description "Whether the button is currently pressed"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether the button is disabled"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/control-button" as ControlButtonPage -> ControlButtonRender
+}

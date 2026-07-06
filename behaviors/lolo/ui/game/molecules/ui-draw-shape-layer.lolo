@@ -1,0 +1,51 @@
+app ui-draw-shape-layer "1.0.0"
+"DrawShapeLayer — UI factory (1:1 with the @almadar/ui draw-shape-layer pattern)."
+orbital DrawShapeLayerOrbital {
+  type DrawShapeLayerItemsItem = {
+    type : json!
+    shape : "cell" | "rect" | "ellipse" | "poly"!
+    position : DrawShapeLayerItemsItemPosition!
+    anchor : json
+    width : number
+    height : number
+    radiusX : number
+    radiusY : number
+    offsetX : number
+    offsetY : number
+    points : [json]
+    fill : string
+    stroke : string
+    strokeWidth : number
+    opacity : number
+  }
+  type DrawShapeLayerItemsItemPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+
+  entity DrawShapeLayerItem [runtime] {
+    id : string!
+  }
+
+  trait DrawShapeLayerRender -> @rebindable DrawShapeLayerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          type: draw-shape-layer
+        })
+    }
+
+    config {
+      items : [DrawShapeLayerItemsItem] = [{ type: "Type", shape: cell, position: { x: 1, y: 1, z: 1 }, width: 1, height: 1, radiusX: 1, radiusY: 1, offsetX: 1, offsetY: 1, points: [], fill: "Fill", stroke: "Stroke", strokeWidth: 1, opacity: 1 }, { type: "Type 2", shape: rect, position: { x: 2, y: 2, z: 2 }, width: 2, height: 2, radiusX: 2, radiusY: 2, offsetX: 2, offsetY: 2, points: [], fill: "Fill 2", stroke: "Stroke 2", strokeWidth: 2, opacity: 2 }]
+        @label "Items"
+        @description "items prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-shape-layer" as DrawShapeLayerPage -> DrawShapeLayerRender
+}

@@ -1,0 +1,58 @@
+app ui-draw-sprite-layer "1.0.0"
+"DrawSpriteLayer — UI factory (1:1 with the @almadar/ui draw-sprite-layer pattern)."
+orbital DrawSpriteLayerOrbital {
+  type DrawSpriteLayerItemsItem = {
+    type : json!
+    position : DrawSpriteLayerItemsItemPosition!
+    asset : DrawSpriteLayerItemsItemAsset!
+    anchor : json
+    width : number
+    height : number
+    frame : json
+    flipX : boolean
+    rotation : number
+    opacity : number
+    shadow : json
+  }
+  type DrawSpriteLayerItemsItemPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+  type DrawSpriteLayerItemsItemAsset = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity DrawSpriteLayerItem [runtime] {
+    id : string!
+  }
+
+  trait DrawSpriteLayerRender -> @rebindable DrawSpriteLayerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          type: draw-sprite-layer
+        })
+    }
+
+    config {
+      items : [DrawSpriteLayerItemsItem] = [{ type: "Type", position: { x: 1, y: 1, z: 1 }, asset: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "asset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }, width: 1, height: 1, flipX: false, rotation: 1, opacity: 1 }, { type: "Type 2", position: { x: 2, y: 2, z: 2 }, asset: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "asset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }, width: 2, height: 2, flipX: true, rotation: 2, opacity: 2 }]
+        @label "Items"
+        @description "Sprites painted in array order; z-ordering is the caller's responsibility."
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-sprite-layer" as DrawSpriteLayerPage -> DrawSpriteLayerRender
+}

@@ -1,0 +1,64 @@
+app ui-state-json-view "1.0.0"
+"StateJsonView — UI factory (1:1 with the @almadar/ui state-json-view pattern)."
+orbital StateJsonViewOrbital {
+  type StateJsonViewTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+  }
+
+  entity StateJsonViewItem [runtime] {
+    id : string!
+  }
+
+  trait StateJsonViewRender -> @rebindable StateJsonViewItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          name: @config.name
+          initialState: @config.initialState
+          states: @config.states
+          transitions: @config.transitions
+          label: @config.label
+          defaultExpanded: @config.defaultExpanded
+          className: @config.className
+          type: state-json-view
+        })
+    }
+
+    config {
+      name : string = "Name"
+        @label "Name"
+        @description "Machine name"
+        @tier "presentation"
+      initialState : string = "Initial State"
+        @label "Initial State"
+        @description "Initial state"
+        @tier "presentation"
+      states : [string] = ["Item", "Item 2"]
+        @label "States"
+        @description "All state names"
+        @tier "presentation"
+      transitions : [StateJsonViewTransitionsItem] = [{ from: "From", to: "To", event: "Event" }, { from: "From 2", to: "To 2", event: "Event 2" }]
+        @label "Transitions"
+        @description "The player's wired transitions"
+        @tier "presentation"
+      label : string = "Label"
+        @label "Label"
+        @description "Header label"
+        @tier "presentation"
+      defaultExpanded : boolean = false
+        @label "Default Expanded"
+        @description "Whether the code block is expanded by default"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/state-json-view" as StateJsonViewPage -> StateJsonViewRender
+}

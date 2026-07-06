@@ -1,0 +1,159 @@
+app ui-canvas "1.0.0"
+"Canvas — UI factory (1:1 with the @almadar/ui canvas pattern)."
+orbital CanvasOrbital {
+  entity CanvasItem [runtime] {
+    id : string!
+  }
+
+  trait CanvasRender -> @rebindable CanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          mode: @config.mode
+          drawables: @config.drawables
+          camera: @config.camera
+          projection: @config.projection
+          className: @config.className
+          isLoading: @config.isLoading
+          unitScale: @config.unitScale
+          showMinimap: @config.showMinimap
+          backgroundImage: @config.backgroundImage
+          backgroundColor: @config.backgroundColor
+          worldWidth: @config.worldWidth
+          worldHeight: @config.worldHeight
+          pixelsPerUnit: @config.pixelsPerUnit
+          showGrid: @config.showGrid
+          shadows: @config.shadows
+          showCoordinates: @config.showCoordinates
+          showTileInfo: @config.showTileInfo
+          fogOfWar: @config.fogOfWar
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileHoverEvent: TILE_HOVER
+          tileLeaveEvent: TILE_LEAVE
+          featureClickEvent: FEATURE_CLICK
+          keyMap: @config.keyMap
+          keyUpMap: @config.keyUpMap
+          type: canvas
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        _payload : object
+      }
+        @description "--- Shared interaction (LOLO-owned). The painter emitted at runtime depends on"
+        @tier "essential"
+      UNIT_CLICK -> external {
+        _payload : object
+      }
+        @description "unitClickEvent prop"
+        @tier "essential"
+      TILE_HOVER -> external {
+        _payload : object
+      }
+        @description "tileHoverEvent prop"
+        @tier "essential"
+      TILE_LEAVE -> external {
+        id : string
+      }
+        @description "tileLeaveEvent prop"
+        @tier "essential"
+      FEATURE_CLICK -> external {
+        featureId : string!
+        x : number!
+        z : number!
+        elevation : number
+      }
+        @description "Feature-click event (3D only)."
+        @tier "essential"
+    }
+
+    config {
+      mode : "2d" | "3d" = "2d"
+        @label "Mode"
+        @description "Painter: 2D sprite/shape/text raster, or 3D mesh. Default '2d'."
+        @tier "presentation"
+      drawables : [json] = []
+        @label "Drawables"
+        @description "Neutral drawable descriptors — the `draw-*` children. Routed to the host's painter."
+        @tier "presentation"
+      camera : json = {}
+        @label "Camera"
+        @description "Neutral camera pose. Mapped to the underlying host's framing + zoom."
+        @tier "presentation"
+      projection : "isometric" | "hex" | "flat" | "free" | "side" = isometric
+        @label "Projection"
+        @description "2D grid layout (2D mode only): isometric / hex / flat / free / side."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "--- Shared view config ---"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "isLoading prop"
+        @tier "presentation"
+      unitScale : number = 0
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier (both painters)."
+        @tier "presentation"
+      showMinimap : boolean = false
+        @label "Show Minimap"
+        @description "Minimap overlay (2D)."
+        @tier "presentation"
+      backgroundImage : asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "backgroundImage", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "backgroundImage", thumbnailUrl: "" }
+        @label "Background Image"
+        @description "Backdrop image (2D iso/hex/flat/free/side)."
+        @tier "presentation"
+      backgroundColor : string = "Background Color"
+        @label "Background Color"
+        @description "Solid backdrop colour — 2D `side` fill and 3D scene clear colour."
+        @tier "presentation"
+      worldWidth : number = 0
+        @label "World Width"
+        @description "Side/free world bounds (2D `side`) and 3D world extent."
+        @tier "presentation"
+      worldHeight : number = 0
+        @label "World Height"
+        @description "worldHeight prop"
+        @tier "presentation"
+      pixelsPerUnit : number = 0
+        @label "Pixels Per Unit"
+        @description "3D world-unit → pixel scale (perspective/side depth). 3D only."
+        @tier "presentation"
+      showGrid : boolean = false
+        @label "Show Grid"
+        @description "3D-only presentation."
+        @tier "presentation"
+      shadows : boolean = false
+        @label "Shadows"
+        @description "shadows prop"
+        @tier "presentation"
+      showCoordinates : boolean = false
+        @label "Show Coordinates"
+        @description "showCoordinates prop"
+        @tier "presentation"
+      showTileInfo : boolean = false
+        @label "Show Tile Info"
+        @description "showTileInfo prop"
+        @tier "presentation"
+      fogOfWar : [[boolean]] = []
+        @label "Fog Of War"
+        @description "fogOfWar prop"
+        @tier "presentation"
+      keyMap : Map string string = { item: "Item" }
+        @label "Key Map"
+        @description "keyMap prop"
+        @tier "presentation"
+      keyUpMap : Map string string = { item: "Item" }
+        @label "Key Up Map"
+        @description "keyUpMap prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/canvas" as CanvasPage -> CanvasRender
+}

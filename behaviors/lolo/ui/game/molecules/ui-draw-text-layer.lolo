@@ -1,0 +1,47 @@
+app ui-draw-text-layer "1.0.0"
+"DrawTextLayer — UI factory (1:1 with the @almadar/ui draw-text-layer pattern)."
+orbital DrawTextLayerOrbital {
+  type DrawTextLayerItemsItem = {
+    type : json!
+    text : string!
+    position : DrawTextLayerItemsItemPosition!
+    anchor : json
+    offsetX : number
+    offsetY : number
+    color : string!
+    font : string
+    align : json
+    baseline : json
+    opacity : number
+  }
+  type DrawTextLayerItemsItemPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+
+  entity DrawTextLayerItem [runtime] {
+    id : string!
+  }
+
+  trait DrawTextLayerRender -> @rebindable DrawTextLayerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          type: draw-text-layer
+        })
+    }
+
+    config {
+      items : [DrawTextLayerItemsItem] = [{ type: "Type", text: "Text", position: { x: 1, y: 1, z: 1 }, offsetX: 1, offsetY: 1, color: "Color", font: "Font", opacity: 1 }, { type: "Type 2", text: "Text 2", position: { x: 2, y: 2, z: 2 }, offsetX: 2, offsetY: 2, color: "Color 2", font: "Font 2", opacity: 2 }]
+        @label "Items"
+        @description "items prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-text-layer" as DrawTextLayerPage -> DrawTextLayerRender
+}

@@ -1,0 +1,90 @@
+app ui-choice-button "1.0.0"
+"ChoiceButton — UI factory (1:1 with the @almadar/ui choice-button pattern)."
+orbital ChoiceButtonOrbital {
+  type ChoiceButtonAssetUrl = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity ChoiceButtonItem [runtime] {
+    id : string!
+  }
+
+  trait ChoiceButtonRender -> @rebindable ChoiceButtonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          text: @config.text
+          index: @config.index
+          assetUrl: @config.assetUrl
+          icon: @config.icon
+          disabled: @config.disabled
+          selected: @config.selected
+          onClick: CLICK
+          action: ACTION
+          payload: @config.payload
+          className: @config.className
+          type: choice-button
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler"
+        @tier "essential"
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "essential"
+    }
+
+    config {
+      text : string = "Charge forward into the fray"
+        @label "Text"
+        @description "Choice text content"
+        @tier "presentation"
+      index : number = 0
+        @label "Index"
+        @description "Choice index number (displayed as prefix)"
+        @tier "presentation"
+      assetUrl : ChoiceButtonAssetUrl = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "assetUrl", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "assetUrl", thumbnailUrl: "" }
+        @label "Asset Url"
+        @description "Sprite asset — takes precedence over icon when provided"
+        @tier "presentation"
+      icon : icon = "circle"
+        @label "Icon"
+        @description "Icon displayed before the text"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether the choice is disabled"
+        @tier "presentation"
+      selected : boolean = false
+        @label "Selected"
+        @description "Whether the choice is currently selected"
+        @tier "presentation"
+      payload : Map string string = { item: "Item" }
+        @label "Payload"
+        @description "Semantic payload emitted with the action (e.g. `{ nextId, choiceIndex }` for a branching choice)."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/choice-button" as ChoiceButtonPage -> ChoiceButtonRender
+}

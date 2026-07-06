@@ -1,0 +1,106 @@
+app ui-stat-badge "1.0.0"
+"StatBadge — UI factory (1:1 with the @almadar/ui stat-badge pattern)."
+orbital StatBadgeOrbital {
+  type StatBadgeAssetUrl = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+  type StatBadgeIconUrl = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity StatBadgeItem [runtime] {
+    id : string!
+  }
+
+  trait StatBadgeRender -> @rebindable StatBadgeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          assetUrl: @config.assetUrl
+          iconUrl: @config.iconUrl
+          label: @config.label
+          value: @config.value
+          max: @config.max
+          source: @config.source
+          field: @config.field
+          format: @config.format
+          icon: @config.icon
+          size: @config.size
+          variant: @config.variant
+          className: @config.className
+          type: stat-badge
+        })
+    }
+
+    config {
+      assetUrl : StatBadgeAssetUrl = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "assetUrl", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "assetUrl", thumbnailUrl: "" }
+        @label "Asset Url"
+        @description "Sprite asset — takes precedence over icon when provided"
+        @tier "presentation"
+      iconUrl : StatBadgeIconUrl = { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png", role: "ui", category: "iconUrl", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "iconUrl", thumbnailUrl: "" }
+        @label "Icon Url"
+        @description "Asset image (board ui/ PNG); takes precedence over the Lucide icon."
+        @tier "presentation"
+      label : string = "Label"
+        @label "Label"
+        @description "Stat label"
+        @tier "presentation"
+      value : string = "Value"
+        @label "Value"
+        @description "Current value (defaults to 0 if not provided)"
+        @tier "presentation"
+      max : number = 0
+        @label "Max"
+        @description "Maximum value (for bar/hearts format)"
+        @tier "presentation"
+      source : string = "Source"
+        @label "Source"
+        @description "Data source entity name (for schema config)"
+        @tier "presentation"
+      field : string = "Field"
+        @label "Field"
+        @description "Field name in the source (for schema config)"
+        @tier "presentation"
+      format : "number" | "hearts" | "bar" | "text" = number
+        @label "Format"
+        @description "Display format"
+        @tier "presentation"
+      icon : icon = "circle"
+        @label "Icon"
+        @description "Icon component or emoji"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      variant : "default" | "primary" | "success" | "warning" | "danger" = default
+        @label "Variant"
+        @description "Visual variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/stat-badge" as StatBadgePage -> StatBadgeRender
+}

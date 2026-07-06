@@ -1,0 +1,70 @@
+app ui-dialogue-bubble "1.0.0"
+"DialogueBubble — UI factory (1:1 with the @almadar/ui dialogue-bubble pattern)."
+orbital DialogueBubbleOrbital {
+  type DialogueBubblePortrait = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity DialogueBubbleItem [runtime] {
+    id : string!
+  }
+
+  trait DialogueBubbleRender -> @rebindable DialogueBubbleItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          speaker: @config.speaker
+          text: @config.text
+          portrait: @config.portrait
+          position: @config.position
+          mood: @config.mood
+          revealedChars: @config.revealedChars
+          className: @config.className
+          type: dialogue-bubble
+        })
+    }
+
+    config {
+      speaker : string = Hero
+        @label "Speaker"
+        @description "Speaker name displayed at the top"
+        @tier "presentation"
+      text : string = "The dungeon awaits. Choose your path wisely."
+        @label "Text"
+        @description "Dialogue text content"
+        @tier "presentation"
+      portrait : DialogueBubblePortrait = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png", role: "npc", category: "portrait", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "portrait", thumbnailUrl: "" }
+        @label "Portrait"
+        @description "Speaker portrait asset"
+        @tier "presentation"
+      position : "top" | "bottom" = bottom
+        @label "Position"
+        @description "Position of the bubble on screen"
+        @tier "presentation"
+      mood : "neutral" | "happy" | "concerned" | "angry" = neutral
+        @label "Mood"
+        @description "Speaker mood — drives a portrait-ring accent; LOLO sets this per dialogue node/transition."
+        @tier "presentation"
+      revealedChars : number = 0
+        @label "Revealed Chars"
+        @description "Number of `text` characters to reveal (typewriter effect). Omit to show the full string — LOLO drives this from `@entity.revealedChars` via a tick, incrementing it until it reaches `text.length`."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/dialogue-bubble" as DialogueBubblePage -> DialogueBubbleRender
+}

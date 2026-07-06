@@ -1,0 +1,82 @@
+app ui-game-audio-toggle "1.0.0"
+"GameAudioToggle — UI factory (1:1 with the @almadar/ui game-audio-toggle pattern)."
+orbital GameAudioToggleOrbital {
+  type GameAudioToggleError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type GameAudioToggleOnAsset = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+  type GameAudioToggleOffAsset = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity GameAudioToggleItem [runtime] {
+    id : string!
+  }
+
+  trait GameAudioToggleRender -> @rebindable GameAudioToggleItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          size: @config.size
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          onAsset: @config.onAsset
+          offAsset: @config.offAsset
+          type: game-audio-toggle
+        })
+    }
+
+    config {
+      size : "sm" | "md" | "lg" = sm
+        @label "Size"
+        @description "Button size"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state (passed through)"
+        @tier "presentation"
+      error : GameAudioToggleError
+        @label "Error"
+        @description "Error state (passed through)"
+        @tier "presentation"
+      onAsset : GameAudioToggleOnAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "onAsset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "onAsset", thumbnailUrl: "" }
+        @label "On Asset"
+        @description "Asset rendered when sound is ON. Falls back to 🔊 emoji."
+        @tier "presentation"
+      offAsset : GameAudioToggleOffAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "offAsset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "offAsset", thumbnailUrl: "" }
+        @label "Off Asset"
+        @description "Asset rendered when sound is OFF (muted). Falls back to 🔇 emoji."
+        @tier "presentation"
+    }
+  }
+
+  page "/game-audio-toggle" as GameAudioTogglePage -> GameAudioToggleRender
+}

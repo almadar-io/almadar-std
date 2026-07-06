@@ -1,0 +1,130 @@
+app ui-action-tile "1.0.0"
+"ActionTile — UI factory (1:1 with the @almadar/ui action-tile pattern)."
+orbital ActionTileOrbital {
+  type ActionTileError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type ActionTileAction = {
+    id : string!
+    name : string!
+    category : string!
+    description : string
+    iconEmoji : string
+    iconUrl : ActionTileActionIconUrl
+    stateMachine : json
+  }
+  type ActionTileActionIconUrl = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+  type ActionTileCategoryColorsValue = {
+    bg : string!
+    border : string!
+  }
+
+  entity ActionTileItem [runtime] {
+    id : string!
+  }
+
+  trait ActionTileRender -> @rebindable ActionTileItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          action: @config.action
+          size: @config.size
+          disabled: @config.disabled
+          categoryColors: @config.categoryColors
+          type: action-tile
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : ActionTileError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      action : ActionTileAction = { id: "Id", name: "Name", category: "Category", description: "Description", iconEmoji: "Icon Emoji", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png", role: "ui", category: "iconUrl", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "iconUrl", thumbnailUrl: "" } }
+        @label "Action"
+        @description "The action data"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether the tile is disabled / already used"
+        @tier "presentation"
+      categoryColors : Map string ActionTileCategoryColorsValue = {}
+        @label "Category Colors"
+        @description "Category → color mapping"
+        @tier "presentation"
+    }
+  }
+
+  page "/action-tile" as ActionTilePage -> ActionTileRender
+}
