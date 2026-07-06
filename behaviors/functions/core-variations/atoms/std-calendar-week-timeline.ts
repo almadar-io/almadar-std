@@ -31,8 +31,8 @@ const ALIAS = 'CalendarWeekTimeline';
  * without modifying its state-machine topology.
  */
 export interface StdCalendarWeekTimelineConfig {
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"Week","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"className":"w-full","dayWindow":7,"events":"@payload.data","type":"calendar-grid"}],"direction":"vertical","gap":"md","type":"stack"}` */
-  bodyContent?: unknown;
+  /** Default: `"calendar"` */
+  name?: unknown;
 }
 
 /**
@@ -62,8 +62,53 @@ export interface StdCalendarWeekTimelineParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `CalendarWeekTimeline.traits.CalendarIcon`. */
+export function stdCalendarWeekTimelineCalendarIconTrait(params: StdCalendarWeekTimelineParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.CalendarIcon`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CalendarWeekTimeline.traits.WeekTypography`. */
+export function stdCalendarWeekTimelineWeekTypographyTrait(params: StdCalendarWeekTimelineParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.WeekTypography`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CalendarWeekTimeline.traits.WeekDateRangeSelector`. */
+export function stdCalendarWeekTimelineWeekDateRangeSelectorTrait(params: StdCalendarWeekTimelineParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.WeekDateRangeSelector`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `CalendarWeekTimeline.traits.WeekTimelineCalendar`. */
-export function stdCalendarWeekTimelineTrait(params: StdCalendarWeekTimelineParams): TraitReference {
+export function stdCalendarWeekTimelineWeekTimelineCalendarTrait(params: StdCalendarWeekTimelineParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.WeekTimelineCalendar`,
@@ -99,7 +144,10 @@ export function stdCalendarWeekTimeline(params: StdCalendarWeekTimelineParams): 
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdCalendarWeekTimelineTrait(params),
+      stdCalendarWeekTimelineCalendarIconTrait(params),
+      stdCalendarWeekTimelineWeekTypographyTrait(params),
+      stdCalendarWeekTimelineWeekDateRangeSelectorTrait(params),
+      stdCalendarWeekTimelineWeekTimelineCalendarTrait(params),
     ],
     pages: [
       stdCalendarWeekTimelinePage(params),

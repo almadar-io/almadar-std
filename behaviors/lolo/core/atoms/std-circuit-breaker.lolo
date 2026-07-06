@@ -1,6 +1,14 @@
 app std-circuit-breaker "1.0.0"
 "std-circuit-breaker as a Function"
 orbital ServiceNodeOrbital {
+    uses Icon from "std/behaviors/ui-icon"
+    uses Typography from "std/behaviors/ui-typography"
+    uses StatusDot from "std/behaviors/ui-status-dot"
+    uses Alert from "std/behaviors/ui-alert"
+    uses StatDisplay from "std/behaviors/ui-stat-display"
+    uses Meter from "std/behaviors/ui-meter"
+    uses Button from "std/behaviors/ui-button"
+
     type ServiceNodeLoaded = Event ServiceNode "Fired when ServiceNode finishes loading"
 
     type ServiceNodeLoadFailed = Event { message : string } "Fired when ServiceNode fails to load"
@@ -14,6 +22,115 @@ orbital ServiceNodeOrbital {
     failureCount : number @description "The number of times the circuit breaker has failed." @synonyms "error count, failures, error occurrences" = 0
     successCount : number @description "Number of successful operations." @synonyms "successes, hits, completions" = 0
     threshold : number @description "Maximum value before triggering an action." @synonyms "limit, cap, boundary" = 5
+  }
+
+  trait Icon_Shield = Icon.traits.IconRender -> ServiceNode {
+    config {
+      name: shield
+    }
+  }
+
+  trait Icon_AlertTriangle = Icon.traits.IconRender -> ServiceNode {
+    config {
+      name: alert-triangle
+    }
+  }
+
+  trait Icon_Activity = Icon.traits.IconRender -> ServiceNode {
+    config {
+      name: activity
+    }
+  }
+
+  trait Typography_ServiceNode = Typography.traits.TypographyRender -> ServiceNode {
+    config {
+      content: ServiceNode
+      variant: h2
+    }
+  }
+
+  trait StatusDot_Closed = StatusDot.traits.StatusDotRender -> ServiceNode {
+    config {
+      label: "Circuit Closed"
+      pulse: false
+      status: online
+    }
+  }
+
+  trait StatusDot_Open = StatusDot.traits.StatusDotRender -> ServiceNode {
+    config {
+      label: "Circuit Open"
+      pulse: true
+      status: critical
+    }
+  }
+
+  trait StatusDot_HalfOpen = StatusDot.traits.StatusDotRender -> ServiceNode {
+    config {
+      label: "Circuit Half-Open"
+      pulse: true
+      status: warning
+    }
+  }
+
+  trait Alert_Success = Alert.traits.AlertRender -> ServiceNode {
+    config {
+      message: "Service is healthy. All requests are being processed."
+      variant: success
+    }
+  }
+
+  trait Alert_Error = Alert.traits.AlertRender -> ServiceNode {
+    config {
+      message: "Circuit is open. Requests are being rejected to prevent cascading failures."
+      variant: error
+    }
+  }
+
+  trait Alert_Warning = Alert.traits.AlertRender -> ServiceNode {
+    config {
+      message: "Testing recovery. Limited requests are being allowed through."
+      variant: warning
+    }
+  }
+
+  trait StatDisplay_Failures = StatDisplay.traits.StatDisplayRender -> ServiceNode {
+    config {
+      label: Failures
+      look: @config.statLook
+      value: @entity.failureCount
+    }
+  }
+
+  trait StatDisplay_Successes = StatDisplay.traits.StatDisplayRender -> ServiceNode {
+    config {
+      label: Successes
+      look: @config.statLook
+      value: @entity.successCount
+    }
+  }
+
+  trait Meter_Failures = Meter.traits.MeterRender -> ServiceNode {
+    config {
+      max: @entity.threshold
+      min: 0
+      value: @entity.failureCount
+    }
+  }
+
+  trait Button_Reset = Button.traits.ButtonRender -> ServiceNode {
+    config {
+      action: RESET
+      icon: rotate-ccw
+      label: Reset
+      variant: ghost
+    }
+  }
+
+  trait ServiceNodeCircuitBreakerRender -> ServiceNode {
+    config {
+      state: @entity.limiterStatus
+    }
   }
 
   trait ServiceNodeCircuitBreaker -> ServiceNode [interaction, collection] {
@@ -32,48 +149,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: ServiceNode
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: "Circuit Closed"
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Closed]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Service is healthy. All requests are being processed."
-            type: alert
-            variant: success
-          }, {
-            children: [{
-              label: Failures
-              look: @config.statLook
-              type: stat-display
-              value: @entity.failureCount
-            }, {
-              label: Successes
-              look: @config.statLook
-              type: stat-display
-              value: @entity.successCount
-            }]
+          }, { type: divider }, @trait.Alert_Success, {
+            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
             cols: 2
             type: simple-grid
-          }, {
-            max: @entity.threshold
-            min: 0
-            type: meter
-            value: @entity.failureCount
-          }]
+          }, @trait.Meter_Failures]
           direction: vertical
           gap: lg
           type: stack
@@ -84,54 +173,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: alert-triangle, type: icon }, {
-                content: ServiceNode
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_AlertTriangle, @trait.Typography_ServiceNode]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: "Circuit Open"
-              pulse: true
-              status: critical
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Open]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Circuit is open. Requests are being rejected to prevent cascading failures."
-            type: alert
-            variant: error
-          }, {
-            children: [{
-              label: Failures
-              look: @config.statLook
-              type: stat-display
-              value: @entity.failureCount
-            }, {
-              label: Successes
-              look: @config.statLook
-              type: stat-display
-              value: @entity.successCount
-            }]
+          }, { type: divider }, @trait.Alert_Error, {
+            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
             cols: 2
             type: simple-grid
-          }, {
-            max: @entity.threshold
-            min: 0
-            type: meter
-            value: @entity.failureCount
-          }, {
-            action: RESET
-            icon: rotate-ccw
-            label: Reset
-            type: button
-            variant: ghost
-          }]
+          }, @trait.Meter_Failures, @trait.Button_Reset]
           direction: vertical
           gap: lg
           type: stack
@@ -142,48 +197,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: ServiceNode
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: "Circuit Closed"
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Closed]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Service is healthy. All requests are being processed."
-            type: alert
-            variant: success
-          }, {
-            children: [{
-              label: Failures
-              look: @config.statLook
-              type: stat-display
-              value: @entity.failureCount
-            }, {
-              label: Successes
-              look: @config.statLook
-              type: stat-display
-              value: @entity.successCount
-            }]
+          }, { type: divider }, @trait.Alert_Success, {
+            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
             cols: 2
             type: simple-grid
-          }, {
-            max: @entity.threshold
-            min: 0
-            type: meter
-            value: @entity.failureCount
-          }]
+          }, @trait.Meter_Failures]
           direction: vertical
           gap: lg
           type: stack
@@ -197,40 +224,17 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: activity, type: icon }, {
-                content: ServiceNode
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Activity, @trait.Typography_ServiceNode]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: "Circuit Half-Open"
-              pulse: true
-              status: warning
-              type: status-dot
-            }]
+            }, @trait.StatusDot_HalfOpen]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Testing recovery. Limited requests are being allowed through."
-            type: alert
-            variant: warning
-          }, {
-            children: [{
-              label: Failures
-              look: @config.statLook
-              type: stat-display
-              value: @entity.failureCount
-            }, {
-              label: Successes
-              look: @config.statLook
-              type: stat-display
-              value: @entity.successCount
-            }]
+          }, { type: divider }, @trait.Alert_Warning, {
+            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
             cols: 2
             type: simple-grid
           }]
@@ -244,48 +248,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: shield, type: icon }, {
-                content: ServiceNode
-                type: typography
-                variant: h2
-              }]
+              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              label: "Circuit Closed"
-              pulse: false
-              status: online
-              type: status-dot
-            }]
+            }, @trait.StatusDot_Closed]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Service is healthy. All requests are being processed."
-            type: alert
-            variant: success
-          }, {
-            children: [{
-              label: Failures
-              look: @config.statLook
-              type: stat-display
-              value: @entity.failureCount
-            }, {
-              label: Successes
-              look: @config.statLook
-              type: stat-display
-              value: @entity.successCount
-            }]
+          }, { type: divider }, @trait.Alert_Success, {
+            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
             cols: 2
             type: simple-grid
-          }, {
-            max: @entity.threshold
-            min: 0
-            type: meter
-            value: @entity.failureCount
-          }]
+          }, @trait.Meter_Failures]
           direction: vertical
           gap: lg
           type: stack

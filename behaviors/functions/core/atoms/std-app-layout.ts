@@ -73,6 +73,7 @@ export interface StdAppLayoutConfig {
   /** Default: `"max-w-5xl mx-auto w-full"` */
   contentClassName?: string;
   contentTrait?: TraitFieldRef;
+  /** Default: `""` */
   currentPath?: string;
   /** Default: `"modal"` */
   detailSlot?: unknown;
@@ -88,6 +89,7 @@ export interface StdAppLayoutConfig {
   notifications?: EntityRow[];
   /** Default: `"SEARCH"` */
   searchEvent?: string;
+  /** Default: `""` */
   theme?: string;
   /** Default: `[]` */
   topBarActions?: EntityRow[];

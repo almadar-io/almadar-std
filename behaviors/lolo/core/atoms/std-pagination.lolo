@@ -2,6 +2,8 @@ app std-pagination "1.0.0"
 "std-pagination — single primitive: pagination control. PAGE accepts the Pagination component's `{page}` emit; ITEMS_LOADED accepts an upstream `{data:[ObjectSpec]}` payload and derives totalPages = ceil(len/pageSize). Molecules wire `BrowseItemLoaded -> ITEMS_LOADED` to keep it in lockstep with the data hub."
 type ObjectSpec = { id : string, label : string, value : string }
 orbital PagedItemOrbital {
+  uses Pagination from "std/behaviors/ui-pagination"
+
     type PagedItemLoaded = Event { data : [PagedItem] } "Fired after the PagedItem entity is fetched on INIT; carries the seeded instance(s) so client-side @entity.currentPage / .totalPages bindings resolve before any user interaction."
 
   entity PagedItem [runtime] {
@@ -10,7 +12,16 @@ orbital PagedItemOrbital {
     totalPages : number @description "The total number of pages available." @synonyms "page count, total pages, number of pages" = 1
   }
 
-  trait PagedItemPagination -> PagedItem [interaction, instance] {
+  trait PagedItemPaginationRender = Pagination.traits.PaginationRender -> PagedItem {
+    config {
+      currentPage: @entity.currentPage
+      pageChangeEvent: @config.event
+      showPageSize: false
+      totalPages: @entity.totalPages
+    }
+  }
+
+  trait PagedItemPaginationEvents -> PagedItem [interaction, instance] {
     initial: idle
 
     state idle {
@@ -18,41 +29,13 @@ orbital PagedItemOrbital {
         (set @entity.currentPage 1)
         (set @entity.totalPages 1)
         (fetch PagedItem {
-          emit: { success: PagedItemLoaded }
-        })
-        (render-ui main {
-          currentPage: @entity.currentPage
-          pageChangeEvent: @config.event
-          showPageSize: false
-          totalPages: @entity.totalPages
-          type: pagination
+        emit: { success: PagedItemLoaded }
         })
       PagedItemLoaded -> idle
-        (render-ui main {
-          currentPage: @entity.currentPage
-          pageChangeEvent: @config.event
-          showPageSize: false
-          totalPages: @entity.totalPages
-          type: pagination
-        })
       PAGE -> idle
         (set @entity.currentPage ?page)
-        (render-ui main {
-          currentPage: @entity.currentPage
-          pageChangeEvent: @config.event
-          showPageSize: false
-          totalPages: @entity.totalPages
-          type: pagination
-        })
       ITEMS_LOADED -> idle
         (set @entity.totalPages (math/ceil ["/", ?totalCount, @config.pageSize]))
-        (render-ui main {
-          currentPage: @entity.currentPage
-          pageChangeEvent: @config.event
-          showPageSize: false
-          totalPages: @entity.totalPages
-          type: pagination
-        })
     }
 
     emits {
@@ -104,5 +87,5 @@ orbital PagedItemOrbital {
     }
   }
 
-  page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPagination
+  page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPaginationRender, PagedItemPaginationEvents
 }

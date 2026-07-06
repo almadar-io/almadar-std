@@ -155,15 +155,49 @@ async function main(): Promise<void> {
 
   const client = new EmbeddingClient({ provider: EMBEDDING_PROVIDER, model: EMBEDDING_MODEL });
   console.log(`[build-embeddings] Calling ${EMBEDDING_MODEL} via ${EMBEDDING_PROVIDER} for ${texts.length} entries...`);
-  const result = await client.embedBatch(texts);
+  // Chunked — a single full-catalog batch (500+ enriched entries) makes the
+  // provider return a 200 with no `data` array; 100-entry calls stay under
+  // that ceiling.
+  const BATCH = 100;
+  // Per-attempt char caps. bge-base-en-v1.5 holds 512 tokens; the client's
+  // own 2000-char trim assumes ~4 chars/token, but the enriched
+  // `Capabilities:`/`Synonyms:` keyword lists tokenize denser and a single
+  // over-limit entry 400s the whole batch. Attempt 1 sends the full text
+  // (client trims at 2000); later attempts tighten only if the provider
+  // proved it necessary — identifying content (name/description) leads
+  // each entry text, so a tail trim sheds keywords, not identity.
+  const ATTEMPT_CAPS = [Infinity, 1500, 1100];
+  const embeddings: number[][] = [];
+  let totalTokens = 0;
+  for (let start = 0; start < texts.length; start += BATCH) {
+    const chunk = texts.slice(start, start + BATCH);
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt < ATTEMPT_CAPS.length; attempt++) {
+      const cap = ATTEMPT_CAPS[attempt];
+      const trimmed = cap === Infinity ? chunk : chunk.map((t) => (t.length > cap ? t.slice(0, cap) : t));
+      try {
+        const result = await client.embedBatch(trimmed);
+        embeddings.push(...result.embeddings);
+        totalTokens += result.usage.totalTokens;
+        lastError = null;
+        break;
+      } catch (err) {
+        lastError = err;
+        console.warn(`[build-embeddings]   chunk @${start} attempt ${attempt + 1}/${ATTEMPT_CAPS.length} (cap ${cap}) failed: ${err instanceof Error ? err.message : String(err)}`);
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+      }
+    }
+    if (lastError !== null) throw lastError;
+    console.log(`[build-embeddings]   ${Math.min(start + BATCH, texts.length)}/${texts.length}`);
+  }
   console.log(
-    `[build-embeddings] Got ${result.embeddings.length} vectors; ` +
-      `tokens: ${result.usage.totalTokens} (≈ $${(result.usage.totalTokens / 1_000_000 * PRICE_PER_1M).toFixed(6)})`,
+    `[build-embeddings] Got ${embeddings.length} vectors; ` +
+      `tokens: ${totalTokens} (≈ $${(totalTokens / 1_000_000 * PRICE_PER_1M).toFixed(6)})`,
   );
 
   const vectors: Record<string, number[]> = {};
   for (let i = 0; i < names.length; i++) {
-    const embedding = result.embeddings[i];
+    const embedding = embeddings[i];
     if (!embedding || embedding.length !== EMBEDDING_DIMS) {
       throw new Error(
         `[build-embeddings] Vector for "${names[i]}" has dimension ${embedding?.length ?? 0}, expected ${EMBEDDING_DIMS}`,

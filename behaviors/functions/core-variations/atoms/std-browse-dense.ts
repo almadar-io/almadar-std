@@ -31,10 +31,10 @@ const ALIAS = 'BrowseDense';
  * without modifying its state-machine topology.
  */
 export interface StdBrowseDenseConfig {
-  /** Default: `{"children":[{"align":"center","children":[{"className":"text-muted-foreground","name":"search","type":"icon"},{"action":"REFETCH_QUERY","className":"flex-1","inputType":"search","placeholder":"@config.searchPlaceholder","type":"input"}],"className":"w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm","direction":"horizontal","gap":"sm","type":"stack"},{"children":[{"columns":"@config.columns","emptyMessage":"No records","entity":"@payload.data","itemActions":"@config.itemActions","look":"dense","maxInlineActions":"@config.maxInlineActions","pageSize":"@config.displayPageSize","selectable":true,"type":"table-view"}],"className":"rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm","direction":"vertical","gap":"none","type":"stack"}],"className":"p-card-md","direction":"vertical","gap":"sm","type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `[{"align":"left","className":" text-[var(--color-text-muted)]","field":"id","header":"ID","key":"id","width":"7rem"},{"align":"left","field":"name","header":"Name","key":"name","weight":"medium","width":"minmax(10rem, 1.5fr)"},{"align":"left","className":"text-[var(--color-text-muted)]","field":"description","header":"Detail","key":"description","width":"minmax(12rem, 2fr)"},{"align":"right","className":"","field":"value","header":"Value","key":"value","width":"6rem"},{"align":"right","className":"","field":"change","header":"Change","key":"change","width":"6rem"},{"align":"right","className":" text-[var(--color-text-muted)]","field":"volume","header":"Volume","key":"volume","width":"6rem"},{"align":"center","field":"status","format":"badge","header":"Status","key":"status","width":"6rem"},{"align":"right","className":" text-[var(--color-text-muted)]","field":"createdAt","format":"date","header":"Created","key":"createdAt","width":"9rem"}]` */
-  columns?: unknown;
+  /** Default: `"text-muted-foreground"` */
+  className?: unknown;
+  /** Default: `"search"` */
+  name?: unknown;
 }
 
 /**
@@ -64,8 +64,53 @@ export interface StdBrowseDenseParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `BrowseDense.traits.SearchIcon`. */
+export function stdBrowseDenseSearchIconTrait(params: StdBrowseDenseParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.SearchIcon`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `BrowseDense.traits.SearchInput`. */
+export function stdBrowseDenseSearchInputTrait(params: StdBrowseDenseParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.SearchInput`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `BrowseDense.traits.DenseTableView`. */
+export function stdBrowseDenseDenseTableViewTrait(params: StdBrowseDenseParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.DenseTableView`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `BrowseDense.traits.DenseBrowse`. */
-export function stdBrowseDenseTrait(params: StdBrowseDenseParams): TraitReference {
+export function stdBrowseDenseDenseBrowseTrait(params: StdBrowseDenseParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.DenseBrowse`,
@@ -101,7 +146,10 @@ export function stdBrowseDense(params: StdBrowseDenseParams): OrbitalDefinition 
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdBrowseDenseTrait(params),
+      stdBrowseDenseSearchIconTrait(params),
+      stdBrowseDenseSearchInputTrait(params),
+      stdBrowseDenseDenseTableViewTrait(params),
+      stdBrowseDenseDenseBrowseTrait(params),
     ],
     pages: [
       stdBrowseDensePage(params),

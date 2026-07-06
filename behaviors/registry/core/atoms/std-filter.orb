@@ -33,12 +33,34 @@
           "path": "/filtertargets",
           "traits": [
             {
-              "ref": "FilterTargetFilter"
+              "ref": "FilterTargetFilterRender"
+            },
+            {
+              "ref": "FilterTargetFilterEvents"
             }
           ]
         }
       ],
       "traits": [
+        {
+          "config": {
+            "entity": {
+              "default": "FilterTarget",
+              "type": "unknown"
+            },
+            "filters": {
+              "default": "@config.filters",
+              "type": "unknown"
+            },
+            "look": {
+              "default": "@config.filterBarLook",
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "FilterTarget",
+          "name": "FilterTargetFilterRender",
+          "ref": "FilterGroup.traits.FilterGroupRender"
+        },
         {
           "category": "interaction",
           "config": {
@@ -130,16 +152,8 @@
               "tier": "domain"
             }
           ],
-          "entityContract": {
-            "provides": [
-              "field",
-              "value"
-            ],
-            "requires": []
-          },
-          "entityRebindable": true,
           "linkedEntity": "FilterTarget",
-          "name": "FilterTargetFilter",
+          "name": "FilterTargetFilterEvents",
           "scope": "instance",
           "stateMachine": {
             "events": [
@@ -187,16 +201,6 @@
                     "fetch",
                     "FilterTarget",
                     {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "entity": "FilterTarget",
-                      "filters": "@config.filters",
-                      "look": "@config.filterBarLook",
-                      "type": "filter-group"
-                    }
                   ]
                 ],
                 "event": "INIT",
@@ -214,16 +218,6 @@
                     "set",
                     "@entity.value",
                     "@payload.value"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "entity": "FilterTarget",
-                      "filters": "@config.filters",
-                      "look": "@config.filterBarLook",
-                      "type": "filter-group"
-                    }
                   ]
                 ],
                 "event": "FILTER",
@@ -249,16 +243,6 @@
                       "field": "",
                       "value": ""
                     }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "entity": "FilterTarget",
-                      "filters": "@config.filters",
-                      "look": "@config.filterBarLook",
-                      "type": "filter-group"
-                    }
                   ]
                 ],
                 "event": "CLEAR_FILTERS",
@@ -267,6 +251,12 @@
               }
             ]
           }
+        }
+      ],
+      "uses": [
+        {
+          "as": "FilterGroup",
+          "from": "std/behaviors/ui-filter-group"
         }
       ]
     }

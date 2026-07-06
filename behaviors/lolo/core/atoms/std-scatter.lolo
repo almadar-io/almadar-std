@@ -2,6 +2,8 @@ app std-scatter "1.0.0"
 "std-scatter — embeddable scatter / bubble chart atom. ITEMS_LOADED maps @payload.data into {x,y,label,size,color} points using configured fields (no aggregation step — distinct from std-graphs). Drop into a dashboard alongside std-stats / std-graphs for two-numeric correlation views."
 type ObjectSpec = { id : string, label : string, value : string }
 orbital ScatterItemOrbital {
+  uses Chart from "std/behaviors/ui-chart"
+
     type ScatterPoint = { x : number!, y : number!, label : string, size : number, color : string }
 
   entity ScatterItem [runtime] {
@@ -9,70 +11,63 @@ orbital ScatterItemOrbital {
     points : [ScatterPoint] @description "An array of data points for the scatter chart." @synonyms "data, values, records" = []
   }
 
-  trait ScatterItemPlot -> ScatterItem [interaction, instance] {
+  trait ScatterItemPlotRender = Chart.traits.ChartRender -> ScatterItem {
+    config {
+      chartType: scatter
+      drillEvent: @config.drillEvent
+      height: @config.height
+      scatterData: @entity.points
+      subtitle: @config.subtitle
+      title: @config.title
+    }
+  }
+
+  trait ScatterItemPlotEvents -> ScatterItem [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
         (set @entity.points [{
-          color: ""
-          label: A
-          size: 8
-          x: 12
-          y: 24
+        color: ""
+        label: A
+        size: 8
+        x: 12
+        y: 24
         }, {
-          color: ""
-          label: B
-          size: 6
-          x: 28
-          y: 42
+        color: ""
+        label: B
+        size: 6
+        x: 28
+        y: 42
         }, {
-          color: ""
-          label: C
-          size: 10
-          x: 45
-          y: 18
+        color: ""
+        label: C
+        size: 10
+        x: 45
+        y: 18
         }, {
-          color: ""
-          label: D
-          size: 7
-          x: 60
-          y: 55
+        color: ""
+        label: D
+        size: 7
+        x: 60
+        y: 55
         }, {
-          color: ""
-          label: E
-          size: 9
-          x: 78
-          y: 38
+        color: ""
+        label: E
+        size: 9
+        x: 78
+        y: 38
         }])
-        (render-ui main {
-          chartType: scatter
-          drillEvent: @config.drillEvent
-          height: @config.height
-          scatterData: @entity.points
-          subtitle: @config.subtitle
-          title: @config.title
-          type: chart
-        })
-      ;; Pre-seed with a small sample so standalone previews render
-      ;; something visible. ITEMS_LOADED replaces this with real data.
+        ;; Pre-seed with a small sample so standalone previews render
+        ;; something visible. ITEMS_LOADED replaces this with real data.
       ITEMS_LOADED -> idle
         (set @entity.points (array/map ?data (fn row {
-          color: (object/get @row @config.colorField "")
-          label: (object/get @row @config.labelField "")
-          size: (object/get @row @config.sizeField 5)
-          x: (object/get @row @config.xField 0)
-          y: (object/get @row @config.yField 0)
+        color: (object/get @row @config.colorField "")
+        label: (object/get @row @config.labelField "")
+        size: (object/get @row @config.sizeField 5)
+        x: (object/get @row @config.xField 0)
+        y: (object/get @row @config.yField 0)
         })))
-        (render-ui main {
-          chartType: scatter
-          drillEvent: @config.drillEvent
-          height: @config.height
-          scatterData: @entity.points
-          subtitle: @config.subtitle
-          title: @config.title
-          type: chart
-        })
     }
 
     listens {
@@ -125,5 +120,5 @@ orbital ScatterItemOrbital {
     }
   }
 
-  page "/scatteritems" as ScatterItemPlotPage -> ScatterItemPlot
+  page "/scatteritems" as ScatterItemPlotPage -> ScatterItemPlotRender, ScatterItemPlotEvents
 }
