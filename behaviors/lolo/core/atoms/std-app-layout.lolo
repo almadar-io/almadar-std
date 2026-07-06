@@ -4,16 +4,13 @@ type NavItem = { label : string!, href : string!, icon : string, badge : string,
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
 type NotificationSpec = { id : string, message : string, variant : string }
 orbital AppLayoutOrbital {
-  uses BoxRender from "std/behaviors/ui-box"
-  type AppLayoutStateLoaded = Event { data : [AppLayoutData] }
+    type AppLayoutStateLoaded = Event { data : [AppLayoutData] }
 
-  type AppLayoutStateLoadFailed = Event { error : string, code : string }
+    type AppLayoutStateLoadFailed = Event { error : string, code : string }
 
   entity AppLayoutData [runtime] {
     id : string!
   }
-
-  trait MainBox = BoxRender -> AppLayoutData { config { fullHeight: true, className: "min-h-screen w-full" } }
 
   trait AppLayout -> @rebindable AppLayoutData [interaction, instance] {
     initial: composing
@@ -23,27 +20,29 @@ orbital AppLayoutOrbital {
         (fetch AppLayoutData {
           emit: { failure: AppLayoutStateLoadFailed, success: AppLayoutStateLoaded }
         })
-        (render-ui main @trait.MainBox {
-          config: {
+        (render-ui main {
+          data-theme: @config.theme
+          className: "min-h-screen w-full"
+          fullHeight: true
+          type: box
+          children: [{
+            appName: @config.appName
             children: [{
-              appName: @config.appName
-              children: [{
-                children: [@config.contentTrait]
-                className: @config.contentClassName
-                direction: vertical
-                gap: lg
-                type: stack
-              }]
-              currentPath: @config.currentPath
-              layoutMode: @config.layoutMode
-              navItems: @config.navItems
-              notificationClickEvent: @config.notificationClickEvent
-              notifications: @config.notifications
-              searchEvent: @config.searchEvent
-              topBarActions: @config.topBarActions
-              type: @config.layoutPattern
+              children: [@config.contentTrait]
+              className: @config.contentClassName
+              direction: vertical
+              gap: lg
+              type: stack
             }]
-          }
+            currentPath: @config.currentPath
+            layoutMode: @config.layoutMode
+            navItems: @config.navItems
+            notificationClickEvent: @config.notificationClickEvent
+            notifications: @config.notifications
+            searchEvent: @config.searchEvent
+            topBarActions: @config.topBarActions
+            type: @config.layoutPattern
+          }]
         })
       AppLayoutStateLoaded -> composing
       AppLayoutStateLoadFailed -> composing
@@ -130,7 +129,7 @@ orbital AppLayoutOrbital {
         @label "Detail slot"
         @description "Slot where detail/edit views render"
         @tier "internal"
-      currentPath : string = null
+      currentPath : string = ""
         @label "Current path"
         @description "Active path used to highlight the matching nav item. When omitted, the layout reads the current route."
         @tier "internal"
@@ -138,7 +137,7 @@ orbital AppLayoutOrbital {
         @label "Content wrapper class"
         @description "CSS class applied to the content area wrapper."
         @tier "internal"
-      theme : string = null
+      theme : string = ""
         @label "Theme"
         @description "Data-theme attribute applied to the layout root (e.g. almadar-website-dark)."
         @tier "presentation"

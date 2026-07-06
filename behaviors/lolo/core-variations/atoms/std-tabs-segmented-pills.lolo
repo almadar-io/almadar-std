@@ -3,7 +3,6 @@ app std-tabs-segmented-pills "1.0.0"
 type TabSpec = { id : string, label : string!, value : string, icon : string }
 orbital SegmentedPillsTabsOrbital {
   uses Tabs from "std/behaviors/std-tabs"
-  uses TabsUI from "std/behaviors/ui-tabs"
 
   entity SegmentedPillsTabsItem [runtime] {
     id : string!
@@ -11,31 +10,28 @@ orbital SegmentedPillsTabsOrbital {
     items : [TabSpec] @description "A collection of tab specifications defining the available options." @synonyms "tabs, options, choices, entries" = []
   }
 
-  trait SegmentedPillsTabsUI = TabsUI.traits.TabsRender -> SegmentedPillsTabsItem {
-    config {
-      activeTab: @entity.activeTab
-      className: gap-1
-      items: [{
-        id: tab1
-        label: "Tab 1"
-      }, {
-        id: tab2
-        label: "Tab 2"
-      }, {
-        id: tab3
-        label: "Tab 3"
-      }]
-      orientation: horizontal
-      tabChangeEvent: TAB_CHANGED
-      variant: pills
-    }
-  }
-
   trait SegmentedPillsTabs = Tabs.traits.TabsItemTabs -> SegmentedPillsTabsItem {
     config {
       bodyContent: {
         align: center
-        children: [@trait.SegmentedPillsTabsUI]
+        children: [{
+          activeTab: @entity.activeTab
+          className: gap-1
+          items: [{
+            id: tab1
+            label: "Tab 1"
+          }, {
+            id: tab2
+            label: "Tab 2"
+          }, {
+            id: tab3
+            label: "Tab 3"
+          }]
+          orientation: horizontal
+          tabChangeEvent: TAB_CHANGED
+          type: tabs
+          variant: pills
+        }]
         className: "inline-flex p-1 rounded-pill bg-muted"
         direction: horizontal
         gap: none
