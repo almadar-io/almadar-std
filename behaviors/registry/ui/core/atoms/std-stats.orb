@@ -1,5 +1,5 @@
 {
-  "description": "std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max|variance with optional filter, baselineFilter, format, icon, max, target, trend, trendPolarity, sparkline) and renders one stat-display per entry. Variance metrics compute actual - baseline using `filter` + `baselineFilter` lambdas and report the signed delta as trend. clickEvent emits UI:{clickEvent} { metricLabel } when a card is clicked. Drop into a dashboard alongside std-browse / std-search / std-filter.",
+  "description": "std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max|variance with optional filter, baselineFilter, format, icon, max, target, trend, trendPolarity, sparkline) and renders one stat-display per entry. Variance metrics compute actual - baseline using `filter` + `baselineFilter` lambdas and report the signed delta as trend. clickEvent emits UI:{clickEvent} { metricLabel } when a card is clicked. Drop into a dashboard alongside std-browse / std-search / std-filter. `config.statsLook` switches the whole body between the default per-metric card grid ('cards'), a Stripe-dashboard KPI tile row ('kpi-tiles'), a single hero metric card ('hero-metric'), and a chart-first sparkline tile grid ('sparkline-row').",
   "name": "std-stats",
   "orbitals": [
     {
@@ -115,6 +115,11 @@
             "name": "cards",
             "synonyms": "statistics, items, displays",
             "type": "array"
+          },
+          {
+            "intrinsic": true,
+            "name": "activeBody",
+            "type": "string"
           }
         ],
         "name": "StatsItem",
@@ -164,8 +169,211 @@
                 ],
                 "type": "@config.viewPattern"
               },
-              "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
+              "description": "Render-ui SExpr rendered after metrics aggregate for statsLook='cards' — the canonical data-grid call mapping @entity.cards through stat-display. Other statsLook values render kpiTilesBodyContent / heroMetricBodyContent / sparklineRowBodyContent instead; all four share this trait's state machine, aggregation pipeline, and listens.",
               "label": "Body content tree",
+              "tier": "internal",
+              "type": "render-ui"
+            },
+            "heroMetricBodyContent": {
+              "default": {
+                "entity": "@entity.cards",
+                "fields": [],
+                "gap": "none",
+                "renderItem": [
+                  "fn",
+                  "card",
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "align": "center",
+                            "children": [
+                              {
+                                "align": "center",
+                                "children": [
+                                  {
+                                    "color": "muted",
+                                    "name": "@card.icon",
+                                    "size": "md",
+                                    "type": "icon"
+                                  },
+                                  {
+                                    "className": "uppercase tracking-widest",
+                                    "color": "muted",
+                                    "content": "@card.label",
+                                    "type": "typography",
+                                    "variant": "overline",
+                                    "weight": "bold"
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "sm",
+                                "justify": "center",
+                                "type": "stack"
+                              },
+                              {
+                                "align": "baseline",
+                                "children": [
+                                  {
+                                    "color": "muted",
+                                    "content": "@card.prefix",
+                                    "type": "typography",
+                                    "variant": "h2",
+                                    "weight": "normal"
+                                  },
+                                  {
+                                    "className": "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]",
+                                    "type": "animated-counter",
+                                    "value": "@card.value"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": "@card.suffix",
+                                    "type": "typography",
+                                    "variant": "h2",
+                                    "weight": "normal"
+                                  }
+                                ],
+                                "className": "py-section",
+                                "direction": "horizontal",
+                                "gap": "xs",
+                                "justify": "center",
+                                "type": "stack"
+                              },
+                              {
+                                "showValue": true,
+                                "size": "md",
+                                "type": "trend-indicator",
+                                "value": "@card.trend"
+                              }
+                            ],
+                            "className": "relative z-10 w-full max-w-2xl mx-auto text-center",
+                            "direction": "vertical",
+                            "gap": "md",
+                            "type": "stack"
+                          },
+                          {
+                            "className": "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none",
+                            "color": "auto",
+                            "data": "@card.sparklineData",
+                            "fill": true,
+                            "height": 96.0,
+                            "strokeWidth": 1.0,
+                            "type": "sparkline"
+                          }
+                        ],
+                        "look": "elevated",
+                        "padding": "lg",
+                        "type": "card"
+                      }
+                    ],
+                    "className": "relative w-full rounded-xl shadow-lg overflow-hidden",
+                    "direction": "vertical",
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
+                "type": "data-list"
+              },
+              "description": "Render-ui SExpr for statsLook='hero-metric' — one elevated card, one oversize number, background sparkline.",
+              "label": "Hero metric body content tree",
+              "tier": "internal",
+              "type": "render-ui"
+            },
+            "kpiTilesBodyContent": {
+              "default": {
+                "className": "w-full",
+                "entity": "@entity.cards",
+                "fields": [],
+                "gap": "lg",
+                "minCardWidth": 220.0,
+                "renderItem": [
+                  "fn",
+                  "card",
+                  {
+                    "children": [
+                      {
+                        "align": "center",
+                        "children": [
+                          {
+                            "className": "uppercase tracking-wide",
+                            "color": "muted",
+                            "content": "@card.label",
+                            "type": "typography",
+                            "variant": "caption",
+                            "weight": "medium"
+                          },
+                          {
+                            "color": "muted",
+                            "name": "@card.icon",
+                            "size": "sm",
+                            "type": "icon"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "xs",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      {
+                        "align": "baseline",
+                        "children": [
+                          {
+                            "color": "muted",
+                            "content": "@card.prefix",
+                            "type": "typography",
+                            "variant": "caption"
+                          },
+                          {
+                            "className": "text-4xl font-bold tracking-tight",
+                            "type": "animated-counter",
+                            "value": "@card.value"
+                          },
+                          {
+                            "color": "muted",
+                            "content": "@card.suffix",
+                            "type": "typography",
+                            "variant": "caption"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "xs",
+                        "type": "stack"
+                      },
+                      {
+                        "align": "center",
+                        "children": [
+                          {
+                            "showValue": true,
+                            "size": "sm",
+                            "type": "trend-indicator",
+                            "value": "@card.trend"
+                          },
+                          {
+                            "className": "flex-1",
+                            "color": "auto",
+                            "data": "@card.sparklineData",
+                            "fill": true,
+                            "height": 24.0,
+                            "type": "sparkline"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
+                      }
+                    ],
+                    "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
+                    "direction": "vertical",
+                    "gap": "sm",
+                    "type": "stack"
+                  }
+                ],
+                "type": "data-grid"
+              },
+              "description": "Render-ui SExpr for statsLook='kpi-tiles' — Stripe-dashboard style tile grid: huge typography number, label, trend indicator, sparkline hint.",
+              "label": "KPI tiles body content tree",
               "tier": "internal",
               "type": "render-ui"
             },
@@ -317,6 +525,105 @@
               "tier": "presentation",
               "type": "[MetricSpec]"
             },
+            "sparklineRowBodyContent": {
+              "default": {
+                "className": "w-full",
+                "entity": "@entity.cards",
+                "fields": [],
+                "gap": "md",
+                "minCardWidth": 260.0,
+                "renderItem": [
+                  "fn",
+                  "card",
+                  {
+                    "children": [
+                      {
+                        "align": "center",
+                        "children": [
+                          {
+                            "color": "muted",
+                            "name": "@card.icon",
+                            "size": "xs",
+                            "type": "icon"
+                          },
+                          {
+                            "className": "uppercase tracking-wide truncate",
+                            "color": "muted",
+                            "content": "@card.label",
+                            "type": "typography",
+                            "variant": "overline",
+                            "weight": "semibold"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "xs",
+                        "type": "stack"
+                      },
+                      {
+                        "className": "w-full",
+                        "color": "auto",
+                        "data": "@card.sparklineData",
+                        "fill": true,
+                        "height": 64.0,
+                        "strokeWidth": 2.0,
+                        "type": "sparkline"
+                      },
+                      {
+                        "align": "baseline",
+                        "children": [
+                          {
+                            "align": "baseline",
+                            "children": [
+                              {
+                                "color": "muted",
+                                "content": "@card.prefix",
+                                "type": "typography",
+                                "variant": "caption"
+                              },
+                              {
+                                "className": "tabular-nums",
+                                "content": "@card.value",
+                                "type": "typography",
+                                "variant": "h3",
+                                "weight": "semibold"
+                              },
+                              {
+                                "color": "muted",
+                                "content": "@card.suffix",
+                                "type": "typography",
+                                "variant": "caption"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "xs",
+                            "type": "stack"
+                          },
+                          {
+                            "showValue": true,
+                            "size": "sm",
+                            "type": "trend-indicator",
+                            "value": "@card.trend"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "justify": "between",
+                        "type": "stack"
+                      }
+                    ],
+                    "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]",
+                    "direction": "vertical",
+                    "gap": "sm",
+                    "type": "stack"
+                  }
+                ],
+                "type": "data-grid"
+              },
+              "description": "Render-ui SExpr for statsLook='sparkline-row' — chart-first tiles where the mini trend line is the visual centerpiece, label above, value+delta footer.",
+              "label": "Sparkline row body content tree",
+              "tier": "internal",
+              "type": "render-ui"
+            },
             "statLook": {
               "default": "elevated",
               "description": "Layer 2 visual treatment for stat / KPI cards.",
@@ -329,6 +636,19 @@
                 "progress-backed",
                 "gauge",
                 "sparkline"
+              ]
+            },
+            "statsLook": {
+              "default": "cards",
+              "description": "Layer 3 body layout: default per-metric stat-card grid ('cards'), Stripe-dashboard KPI tile row ('kpi-tiles'), single oversize hero number ('hero-metric'), or chart-first sparkline tile grid ('sparkline-row').",
+              "label": "Stats look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "cards",
+                "kpi-tiles",
+                "hero-metric",
+                "sparkline-row"
               ]
             },
             "title": {
@@ -350,6 +670,7 @@
           },
           "entityContract": {
             "provides": [
+              "activeBody",
               "cards"
             ],
             "requires": []
@@ -489,9 +810,41 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.activeBody",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@config.statsLook",
+                        "kpi-tiles"
+                      ],
+                      "@config.kpiTilesBodyContent",
+                      [
+                        "if",
+                        [
+                          "=",
+                          "@config.statsLook",
+                          "hero-metric"
+                        ],
+                        "@config.heroMetricBodyContent",
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@config.statsLook",
+                            "sparkline-row"
+                          ],
+                          "@config.sparklineRowBodyContent",
+                          "@config.bodyContent"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
-                    "@config.bodyContent"
+                    "@entity.activeBody"
                   ]
                 ],
                 "event": "INIT",
@@ -819,9 +1172,41 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.activeBody",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@config.statsLook",
+                        "kpi-tiles"
+                      ],
+                      "@config.kpiTilesBodyContent",
+                      [
+                        "if",
+                        [
+                          "=",
+                          "@config.statsLook",
+                          "hero-metric"
+                        ],
+                        "@config.heroMetricBodyContent",
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@config.statsLook",
+                            "sparkline-row"
+                          ],
+                          "@config.sparklineRowBodyContent",
+                          "@config.bodyContent"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
-                    "@config.bodyContent"
+                    "@entity.activeBody"
                   ]
                 ],
                 "event": "ITEMS_LOADED",
@@ -834,5 +1219,5 @@
       ]
     }
   ],
-  "version": "3.1.0"
+  "version": "3.2.0"
 }

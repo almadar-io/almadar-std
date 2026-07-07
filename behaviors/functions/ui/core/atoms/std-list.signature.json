@@ -1,0 +1,298 @@
+[
+  {
+    "organism": "std-list",
+    "orbital": "ListItemOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-list.ts",
+    "entities": [
+      {
+        "name": "ListItem",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true,
+            "description": "The text displayed for this list item.",
+            "synonyms": "label, text, display"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "A brief explanation of the list item's content.",
+            "synonyms": "text, details, notes, explanation"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Current operational state of the item.",
+            "synonyms": "state, condition, flag"
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "required": false,
+            "description": "Identifier for a related, pending item.",
+            "synonyms": "reference, relatedId, linkId"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ListItemBrowse",
+        "emittedEvents": [
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "ListItemLoaded",
+          "ListItemLoadFailed"
+        ],
+        "listenedEvents": [
+          "ITEM_CREATED",
+          "ITEM_UPDATED",
+          "ITEM_DELETED"
+        ],
+        "events": [
+          {
+            "name": "CREATE",
+            "direction": "emit",
+            "description": "Signals a new item has been successfully created.",
+            "synonyms": "added, new, added, insert",
+            "tier": "domain"
+          },
+          {
+            "name": "EDIT",
+            "direction": "emit"
+          },
+          {
+            "name": "DELETE",
+            "direction": "emit"
+          },
+          {
+            "name": "ListItemLoaded",
+            "direction": "emit",
+            "description": "Signals a list item has been successfully loaded.",
+            "synonyms": "loaded, fetched, retrieved",
+            "tier": "domain"
+          },
+          {
+            "name": "ListItemLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load a list item.",
+            "synonyms": "error, failure, problem, unsuccessful",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "ListItemCreate",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "CREATE"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Create ListItem"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
+      },
+      {
+        "name": "ListItemEdit",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "EDIT"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit ListItem"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
+      },
+      {
+        "name": "ListItemDelete",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "DELETE"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete ListItem"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Confirmation.traits.ConfirmActionConfirmation"
+      },
+      {
+        "name": "ListItemPersistor",
+        "emittedEvents": [
+          "ITEM_CREATED",
+          "ITEM_UPDATED",
+          "ITEM_DELETED"
+        ],
+        "listenedEvents": [
+          "LIST_ITEM_CREATED",
+          "LIST_ITEM_UPDATED",
+          "CONFIRM_DELETE"
+        ],
+        "events": [
+          {
+            "name": "ITEM_CREATED",
+            "direction": "emit",
+            "description": "Signals a new item has been added to the list.",
+            "synonyms": "added, new, appended",
+            "tier": "domain"
+          },
+          {
+            "name": "ITEM_UPDATED",
+            "direction": "emit",
+            "description": "Signals a change in an item's data.",
+            "synonyms": "modified, changed, refreshed",
+            "tier": "presentation"
+          },
+          {
+            "name": "ITEM_DELETED",
+            "direction": "emit",
+            "description": "Signals that a list item has been removed.",
+            "synonyms": "removed, discarded, purged",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "DO_CREATE",
+            "direction": "listen",
+            "description": "Indicates a request to create a new item.",
+            "synonyms": "add, new, insert",
+            "tier": "domain"
+          },
+          {
+            "name": "DO_UPDATE",
+            "direction": "listen",
+            "description": "Indicates a data item has been modified.",
+            "synonyms": "modified, changed, refreshed",
+            "tier": "domain"
+          },
+          {
+            "name": "DO_DELETE",
+            "direction": "listen",
+            "description": "Indicates a request to remove an item from the list.",
+            "synonyms": "remove, discard, erase",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "ListItemPage",
+        "defaultPath": "/listitems",
+        "primaryEntity": "ListItem"
+      }
+    ],
+    "emittedEvents": [
+      "CREATE",
+      "DELETE",
+      "EDIT",
+      "ITEM_CREATED",
+      "ITEM_DELETED",
+      "ITEM_UPDATED",
+      "ListItemLoadFailed",
+      "ListItemLoaded"
+    ],
+    "listenedEvents": [
+      "CONFIRM_DELETE",
+      "CREATE",
+      "DELETE",
+      "EDIT",
+      "ITEM_CREATED",
+      "ITEM_DELETED",
+      "ITEM_UPDATED",
+      "LIST_ITEM_CREATED",
+      "LIST_ITEM_UPDATED"
+    ],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "5885fcc627374c40"
+  }
+]

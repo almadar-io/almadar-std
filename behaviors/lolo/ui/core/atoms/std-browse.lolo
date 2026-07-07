@@ -1,5 +1,5 @@
-app std-browse "2.2.0"
-"std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present)."
+app std-browse "2.3.0"
+"std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery) selects one of four render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B) and their consumers retarget by setting browseLook."
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
 type ColumnSpec = { key : string!, field : string, header : string, width : string, align : string, className : string, weight : string, format : string, icon : string }
@@ -19,6 +19,9 @@ orbital BrowseItemOrbital {
 
   uses Typography from "std/behaviors/ui-typography"
   uses DataGrid from "std/behaviors/ui-data-grid"
+  uses Icon from "std/behaviors/ui-icon"
+  uses Input from "std/behaviors/ui-input"
+  uses TableView from "std/behaviors/ui-table-view"
 
   trait Typography1 = Typography.traits.TypographyRender -> BrowseItem {
     config {
@@ -40,6 +43,37 @@ orbital BrowseItemOrbital {
     }
   }
 
+  ;; browseLook = dense sub-traits. Folded from std-browse-dense (Phase 5.B);
+  ;; composed by @trait ref from denseBodyContent below, same as DataGrid1.
+  trait SearchIcon = Icon.traits.IconRender -> BrowseItem {
+    config {
+      name: search
+      className: text-muted-foreground
+    }
+  }
+
+  trait SearchInput = Input.traits.InputRender -> BrowseItem {
+    config {
+      action: REFETCH_QUERY
+      className: flex-1
+      inputType: search
+      placeholder: @config.searchPlaceholder
+    }
+  }
+
+  trait DenseTableView = TableView.traits.TableViewRender -> BrowseItem {
+    config {
+      columns: @config.columns
+      emptyMessage: "No records"
+      entity: ?data
+      itemActions: @config.itemActions
+      look: dense
+      maxInlineActions: @config.maxInlineActions
+      pageSize: @config.displayPageSize
+      selectable: true
+    }
+  }
+
   trait BrowseItemBrowse -> @rebindable BrowseItem [interaction, collection] {
     initial: loading
 
@@ -52,7 +86,7 @@ orbital BrowseItemOrbital {
         })
         (render-ui main { size: sm, type: spinner })
       BrowseItemLoaded -> browsing
-        (render-ui main @config.bodyContent)
+        (render-ui main (if ["=", @config.browseLook, dense] @config.denseBodyContent (if ["=", @config.browseLook, feed] @config.feedBodyContent (if ["=", @config.browseLook, gallery] @config.galleryBodyContent @config.bodyContent))))
       BrowseItemLoadFailed -> error
         (render-ui main @trait.Typography1)
     }
@@ -92,7 +126,7 @@ orbital BrowseItemOrbital {
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
       BrowseItemLoaded -> browsing
-        (render-ui main @config.bodyContent)
+        (render-ui main (if ["=", @config.browseLook, dense] @config.denseBodyContent (if ["=", @config.browseLook, feed] @config.feedBodyContent (if ["=", @config.browseLook, gallery] @config.galleryBodyContent @config.bodyContent))))
     }
 
     state error {
@@ -290,13 +324,233 @@ orbital BrowseItemOrbital {
         @label "Render pattern"
         @description "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob."
         @tier "internal"
+      browseLook : "table" | "dense" | "feed" | "gallery" = table
+        @label "Browse look"
+        @description "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style sticky-header table with search bar (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any of the four bodies may still be overridden directly at the call site for a one-off layout."
+        @tier "presentation"
       bodyContent : render-ui = {
         children: [@trait.DataGrid1]
         direction: vertical
         type: stack
       }
         @label "Body content tree"
-        @description "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens."
+        @description "Render-ui SExpr rendered after rows load when browseLook = table (the default). Composes the canonical data-grid call wrapped in a stack. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens."
+        @tier "internal"
+      denseBodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [@trait.SearchIcon, @trait.SearchInput]
+          className: "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          children: [@trait.DenseTableView]
+          className: "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm"
+          direction: vertical
+          gap: none
+          type: stack
+        }]
+        className: p-card-md
+        direction: vertical
+        gap: sm
+        type: stack
+      }
+        @label "Dense look body"
+        @description "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B)."
+        @tier "internal"
+      feedBodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [{ name: search, type: icon }, {
+            action: REFETCH_QUERY
+            className: flex-1
+            inputType: search
+            placeholder: @config.searchPlaceholder
+            type: input
+          }]
+          className: "rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          entity: ?data
+          fields: []
+          gap: md
+          renderItem: (fn item {
+            children: [{
+              align: start
+              children: [{
+                className: "rounded-full flex-shrink-0"
+                fallback: @config.titleBinding
+                size: md
+                type: avatar
+              }, {
+                children: [{
+                  align: center
+                  children: [{
+                    className: truncate
+                    content: @config.titleBinding
+                    type: typography
+                    variant: body
+                    weight: medium
+                  }, {
+                    label: @config.categoryBinding
+                    size: sm
+                    type: badge
+                    variant: neutral
+                  }]
+                  className: flex-wrap
+                  direction: horizontal
+                  gap: xs
+                  type: stack
+                }, {
+                  className: "text-[var(--color-foreground)] whitespace-pre-wrap break-words leading-relaxed"
+                  content: @config.descriptionBinding
+                  type: typography
+                  variant: body
+                }, {
+                  align: center
+                  children: [{
+                    color: muted
+                    content: @config.metaBinding
+                    type: typography
+                    variant: caption
+                  }, {
+                    label: @config.badgeBinding
+                    size: sm
+                    type: badge
+                    variant: default
+                  }]
+                  className: pt-1
+                  direction: horizontal
+                  gap: sm
+                  justify: between
+                  type: stack
+                }]
+                className: "flex-1 min-w-0"
+                direction: vertical
+                gap: xs
+                type: stack
+              }]
+              className: p-card-md
+              direction: horizontal
+              gap: md
+              type: stack
+            }]
+            className: "rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px"
+            look: flat-bordered
+            type: card
+          })
+          type: data-list
+          variant: card
+        }]
+        className: "w-full p-card-md"
+        direction: vertical
+        gap: lg
+        type: stack
+      }
+        @label "Feed look body"
+        @description "Render-ui SExpr rendered after rows load when browseLook = feed. Chronological card-per-item stream with avatar, title, meta, body, timestamp; composes titleBinding/descriptionBinding/categoryBinding/badgeBinding/metaBinding/searchPlaceholder. Folded from std-browse-feed (Phase 5.B)."
+        @tier "internal"
+      galleryBodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [{
+            className: text-muted-foreground
+            name: search
+            type: icon
+          }, {
+            action: REFETCH_QUERY
+            className: flex-1
+            inputType: search
+            placeholder: @config.searchPlaceholder
+            type: input
+          }]
+          className: "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          className: w-full
+          entity: ?data
+          fields: []
+          gap: lg
+          minCardWidth: 260
+          renderItem: (fn item {
+            children: [{
+              align: center
+              children: [{
+                className: "text-muted-foreground opacity-50 transition-transform duration-normal group-hover:scale-105"
+                name: image
+                size: lg
+                type: icon
+              }, {
+                className: "px-2 text-center truncate max-w-full"
+                color: muted
+                content: @config.imageLabelBinding
+                type: typography
+                variant: caption
+              }, {
+                align: center
+                children: [{
+                  label: @config.priceBinding
+                  type: badge
+                  variant: primary
+                }]
+                className: "absolute top-2 right-2"
+                direction: horizontal
+                gap: xs
+                type: stack
+              }, {
+                align: center
+                children: [{
+                  label: @config.badgeBinding
+                  type: badge
+                  variant: neutral
+                }]
+                className: "absolute top-2 left-2"
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              className: "relative aspect-square w-full bg-muted overflow-hidden"
+              direction: vertical
+              gap: xs
+              justify: center
+              type: stack
+            }, {
+              children: [{
+                className: truncate
+                content: @config.titleBinding
+                type: typography
+                variant: h4
+              }, {
+                className: line-clamp-2
+                color: muted
+                content: @config.descriptionBinding
+                type: typography
+                variant: caption
+              }]
+              className: p-card-md
+              direction: vertical
+              gap: xs
+              type: stack
+            }]
+            className: "group rounded-lg overflow-hidden bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm hover:shadow-hover hover:-translate-y-0.5 transition-all duration-normal cursor-pointer"
+            direction: vertical
+            gap: sm
+            type: stack
+          })
+          type: data-grid
+        }]
+        className: "w-full px-card-md py-section"
+        direction: vertical
+        gap: lg
+        type: stack
+      }
+        @label "Gallery look body"
+        @description "Render-ui SExpr rendered after rows load when browseLook = gallery. Image-first responsive card grid with auto-fit minCardWidth; composes titleBinding/descriptionBinding/badgeBinding/imageLabelBinding/priceBinding/searchPlaceholder. Folded from std-browse-gallery (Phase 5.B)."
         @tier "internal"
     }
   }

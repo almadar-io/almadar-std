@@ -1,5 +1,5 @@
-app std-board "1.1.0"
-"std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity."
+app std-board "1.2.0"
+"std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity. `config.boardLook` switches the board body between the default N-column grid ('columns') and a Trello-style wide-column kanban ('kanban-classic')."
 type ObjectSpec = { id : string, label : string, value : string }
 type ColumnSpec = { key : string!, label : string!, icon : string, variant : string }
 orbital BoardOrbital {
@@ -29,6 +29,7 @@ orbital BoardOrbital {
     currentStage : string @intrinsic = ""
     currentNotes : string @intrinsic = ""
     errorMessage : string @intrinsic = ""
+    activeBody : render-ui @intrinsic
   }
 
   trait BoardItemBoard -> @rebindable BoardView [interaction, instance] {
@@ -52,7 +53,8 @@ orbital BoardOrbital {
           label: (object/get @col label)
           variant: (object/get @col variant default)
         })))
-        (render-ui main @config.bodyContent)
+        (set @entity.activeBody (if ["=", @config.boardLook, kanban-classic] @config.kanbanClassicBodyContent @config.bodyContent))
+        (render-ui main @entity.activeBody)
       BoardItemsLoadFailed -> error
         (set @entity.errorMessage ?error)
         (render-ui main {
@@ -488,6 +490,10 @@ orbital BoardOrbital {
         @label "Group-by field"
         @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
         @tier "presentation"
+      boardLook : "columns" | "kanban-classic" = columns
+        @label "Board look"
+        @description "Layer 3 body layout: default N-column data-grid ('columns'), or a Trello-style wide-column kanban with sticky column headers ('kanban-classic')."
+        @tier "presentation"
       bodyContent : render-ui = {
         children: [{
           align: center
@@ -585,7 +591,128 @@ orbital BoardOrbital {
         type: stack
       }
         @label "Body content tree"
-        @description "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens."
+        @description "Render-ui SExpr rendered after the board loads for boardLook='columns' — the canonical column data-grid with nested per-column data-lists. boardLook='kanban-classic' renders kanbanClassicBodyContent instead; both share this trait's state machine, emits, and listens."
+        @tier "internal"
+      kanbanClassicBodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [{ name: kanban-square, type: icon }, {
+            content: @config.title
+            type: typography
+            variant: h2
+          }]
+          className: px-card-md
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, { type: divider }, {
+          className: "w-full pb-2"
+          dndRoot: true
+          entity: @entity.boards
+          fields: []
+          gap: lg
+          minCardWidth: 300
+          renderItem: (fn col {
+            children: [{
+              children: [{
+                align: center
+                children: [{ name: @col.icon, type: icon }, {
+                  className: flex-1
+                  content: @col.label
+                  type: typography
+                  variant: h4
+                }, {
+                  label: @col.count
+                  size: sm
+                  type: badge
+                  variant: primary
+                }]
+                className: "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]"
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                accepts: "*"
+                className: "p-card-md min-h-[120px]"
+                dragGroup: @col.key
+                dropEvent: MOVE_CARD
+                entity: @col.items
+                fields: []
+                gap: sm
+                positionEvent: REORDER_POSITION
+                renderItem: (fn item {
+                  children: [{
+                    children: [{
+                      content: @config.cardTitleBinding
+                      type: typography
+                      variant: body
+                      weight: medium
+                    }, {
+                      className: line-clamp-2
+                      color: muted
+                      content: @config.cardDescriptionBinding
+                      type: typography
+                      variant: caption
+                    }, {
+                      align: center
+                      children: [{
+                        label: @config.cardStageBinding
+                        size: sm
+                        type: badge
+                        variant: primary
+                      }, {
+                        action: OPEN_CARD
+                        actionPayload: { id: @config.cardIdBinding, row: @item }
+                        className: ml-auto
+                        icon: arrow-right
+                        label: Open
+                        size: sm
+                        type: button
+                        variant: ghost
+                      }]
+                      className: pt-1
+                      direction: horizontal
+                      gap: xs
+                      type: stack
+                    }]
+                    direction: vertical
+                    gap: xs
+                    type: stack
+                  }]
+                  className: "cursor-grab hover:shadow-lg transition-shadow"
+                  look: elevated
+                  padding: sm
+                  type: card
+                })
+                reorderEvent: REORDER_CARD
+                sortable: true
+                type: data-list
+              }]
+              direction: vertical
+              gap: none
+              type: stack
+            }]
+            className: "w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden"
+            look: elevated
+            padding: none
+            type: card
+          })
+          scrollX: true
+          type: data-grid
+        }, {
+          action: ADD_CARD
+          icon: plus
+          label: "Add card"
+          type: floating-action-button
+          variant: primary
+        }]
+        className: h-full
+        direction: vertical
+        gap: md
+        type: stack
+      }
+        @label "Kanban classic body content tree"
+        @description "Render-ui SExpr for boardLook='kanban-classic' — Trello-style wide elevated columns with sticky headers, dense cards with a status badge, always-elevated card look."
         @tier "internal"
     }
   }

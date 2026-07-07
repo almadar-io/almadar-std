@@ -1,0 +1,728 @@
+[
+  {
+    "organism": "std-board",
+    "orbital": "BoardOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-board.ts",
+    "entities": [
+      {
+        "name": "BoardView",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": true,
+            "description": "The descriptive name of the board.",
+            "synonyms": "name, heading, label"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "A textual explanation or summary of the board.",
+            "synonyms": "summary, details, notes, explanation"
+          },
+          {
+            "name": "stage",
+            "type": "string",
+            "required": false,
+            "description": "The current status or lifecycle phase of the board.",
+            "synonyms": "status, lifecycle, progress, state"
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "required": false,
+            "description": "Free-form text providing additional information.",
+            "synonyms": "comments, remarks, details, annotations"
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "required": false,
+            "description": "The sequential order of this item within a collection.",
+            "synonyms": "order, sequence, index, rank"
+          },
+          {
+            "name": "boards",
+            "type": "array",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentId",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentTitle",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentDescription",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentStage",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentNotes",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "activeBody",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BoardItemBoard",
+        "emittedEvents": [
+          "OPEN_CARD",
+          "CLOSE_CARD",
+          "ADD_CARD",
+          "CANCEL_ADD",
+          "SAVE_CARD",
+          "MOVE_CARD",
+          "REORDER_CARD",
+          "DELETE_CARD",
+          "BoardItemsLoaded",
+          "BoardItemsLoadFailed",
+          "BoardItemsSaved",
+          "BoardItemsSaveFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "OPEN_CARD",
+            "direction": "emit",
+            "description": "Indicates a card within the board has been selected.",
+            "synonyms": "select, choose, activate, display",
+            "tier": "domain"
+          },
+          {
+            "name": "CLOSE_CARD",
+            "direction": "emit",
+            "description": "Signals a card is being dismissed or closed.",
+            "synonyms": "dismiss, hide, close, remove",
+            "tier": "domain"
+          },
+          {
+            "name": "ADD_CARD",
+            "direction": "emit",
+            "description": "Signals a new card is being added to the board.",
+            "synonyms": "create, new, append",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL_ADD",
+            "direction": "emit",
+            "description": "Aborts an in-progress addition operation.",
+            "synonyms": "discard, undo, reset",
+            "tier": "presentation"
+          },
+          {
+            "name": "SAVE_CARD",
+            "direction": "emit",
+            "description": "Signals that a card's data has been successfully saved.",
+            "synonyms": "persist, update, store",
+            "tier": "domain"
+          },
+          {
+            "name": "MOVE_CARD",
+            "direction": "emit",
+            "description": "Signals a card has been repositioned within a column.",
+            "synonyms": "reorder, drag, reposition",
+            "tier": "presentation"
+          },
+          {
+            "name": "REORDER_CARD",
+            "direction": "emit",
+            "description": "Signals a change in the order of cards within a column.",
+            "synonyms": "rearrange, sort, shuffle, reposition",
+            "tier": "presentation"
+          },
+          {
+            "name": "DELETE_CARD",
+            "direction": "emit",
+            "description": "Signals removal of a card from the board.",
+            "synonyms": "remove, delete, discard",
+            "tier": "presentation"
+          },
+          {
+            "name": "BoardItemsLoaded",
+            "direction": "emit",
+            "description": "Signals that board items have been successfully loaded.",
+            "synonyms": "loaded, fetched, retrieved, populated",
+            "tier": "domain"
+          },
+          {
+            "name": "BoardItemsLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load board items.",
+            "synonyms": "error, failed, problem, loading failure",
+            "tier": "internal"
+          },
+          {
+            "name": "BoardItemsSaved",
+            "direction": "emit",
+            "description": "Signals that board items have been successfully saved.",
+            "synonyms": "saved, persisted, updated",
+            "tier": "domain"
+          },
+          {
+            "name": "BoardItemsSaveFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to save board items.",
+            "synonyms": "error, failed, save error",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "REORDER_POSITION",
+            "direction": "listen",
+            "description": "Indicates a change in the order of items within a column.",
+            "synonyms": "sort, rearrange, reposition",
+            "tier": "presentation"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "boardLook",
+            "type": "string",
+            "default": "columns",
+            "label": "Board look",
+            "description": "Layer 3 body layout: default N-column data-grid ('columns'), or a Trello-style wide-column kanban with sticky column headers ('kanban-classic').",
+            "tier": "presentation",
+            "enumValues": [
+              "columns",
+              "kanban-classic"
+            ]
+          },
+          {
+            "key": "bodyContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "name": "kanban-square",
+                      "type": "icon"
+                    },
+                    {
+                      "content": "@config.title",
+                      "type": "typography",
+                      "variant": "h3"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "cols": "@config.gridCols",
+                  "dndRoot": true,
+                  "entity": "@entity.boards",
+                  "fields": [],
+                  "gap": "md",
+                  "renderItem": [
+                    "fn",
+                    "col",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "@col.icon",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "@col.label",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "label": "@col.count",
+                                  "type": "badge",
+                                  "variant": "@col.variant"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "accepts": "*",
+                              "dragGroup": "@col.key",
+                              "dropEvent": "MOVE_CARD",
+                              "entity": "@col.items",
+                              "fields": [],
+                              "gap": "sm",
+                              "positionEvent": "REORDER_POSITION",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "@config.cardTitleBinding",
+                                          "type": "typography",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.cardDescriptionBinding",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        },
+                                        {
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "action": "OPEN_CARD",
+                                              "actionPayload": {
+                                                "id": "@config.cardIdBinding",
+                                                "row": "@item"
+                                              },
+                                              "icon": "arrow-right",
+                                              "label": "Open",
+                                              "type": "button",
+                                              "variant": "ghost"
+                                            }
+                                          ],
+                                          "direction": "horizontal",
+                                          "gap": "xs",
+                                          "type": "stack"
+                                        }
+                                      ],
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack"
+                                    }
+                                  ],
+                                  "look": "@config.cardLook",
+                                  "type": "card"
+                                }
+                              ],
+                              "reorderEvent": "REORDER_CARD",
+                              "sortable": true,
+                              "type": "data-list"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "look": "@config.cardLook",
+                      "type": "card"
+                    }
+                  ],
+                  "type": "data-grid"
+                },
+                {
+                  "action": "ADD_CARD",
+                  "icon": "plus",
+                  "label": "Add item",
+                  "type": "floating-action-button",
+                  "variant": "primary"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            },
+            "label": "Body content tree",
+            "description": "Render-ui SExpr rendered after the board loads for boardLook='columns' — the canonical column data-grid with nested per-column data-lists. boardLook='kanban-classic' renders kanbanClassicBodyContent instead; both share this trait's state machine, emits, and listens.",
+            "tier": "internal"
+          },
+          {
+            "key": "cardDescriptionBinding",
+            "type": "string",
+            "default": "@item.description",
+            "label": "Card description binding",
+            "description": "Per-card binding for the description slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "cardIdBinding",
+            "type": "string",
+            "default": "@item.id",
+            "label": "Card id binding",
+            "description": "Per-card binding for the id used in action payloads.",
+            "tier": "presentation"
+          },
+          {
+            "key": "cardLook",
+            "type": "string",
+            "default": "elevated",
+            "label": "Card look",
+            "description": "Layer 2 visual treatment for cards rendered by this board.",
+            "tier": "presentation",
+            "enumValues": [
+              "elevated",
+              "flat-bordered",
+              "borderless-divider",
+              "ticket",
+              "invoice",
+              "chip",
+              "tile-image-first"
+            ]
+          },
+          {
+            "key": "cardStageBinding",
+            "type": "string",
+            "default": "@item.stage",
+            "label": "Card stage binding",
+            "description": "Per-card binding for the stage/status slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "cardTitleBinding",
+            "type": "string",
+            "default": "@item.title",
+            "label": "Card title binding",
+            "description": "Per-card binding for the title slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "columns",
+            "type": "[ColumnSpec]",
+            "default": [
+              {
+                "icon": "circle",
+                "key": "todo",
+                "label": "To Do",
+                "variant": "default"
+              },
+              {
+                "icon": "circle-dot",
+                "key": "doing",
+                "label": "In Progress",
+                "variant": "primary"
+              },
+              {
+                "icon": "check-circle",
+                "key": "done",
+                "label": "Done",
+                "variant": "success"
+              }
+            ],
+            "label": "Columns",
+            "description": "Board columns; each row's stage maps to a column key",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "formFields",
+            "type": "[string]",
+            "default": [
+              "title",
+              "description",
+              "stage",
+              "notes"
+            ],
+            "label": "New-card fields",
+            "description": "Fields shown in the add-card form",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "gridCols",
+            "type": "number",
+            "default": 3,
+            "label": "Grid columns",
+            "description": "Outer grid column count before the board wraps",
+            "tier": "presentation"
+          },
+          {
+            "key": "groupByField",
+            "type": "string",
+            "default": "stage",
+            "label": "Group-by field",
+            "description": "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name.",
+            "tier": "presentation"
+          },
+          {
+            "key": "kanbanClassicBodyContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "name": "kanban-square",
+                      "type": "icon"
+                    },
+                    {
+                      "content": "@config.title",
+                      "type": "typography",
+                      "variant": "h2"
+                    }
+                  ],
+                  "className": "px-card-md",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "className": "w-full pb-2",
+                  "dndRoot": true,
+                  "entity": "@entity.boards",
+                  "fields": [],
+                  "gap": "lg",
+                  "minCardWidth": 300,
+                  "renderItem": [
+                    "fn",
+                    "col",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "@col.icon",
+                                  "type": "icon"
+                                },
+                                {
+                                  "className": "flex-1",
+                                  "content": "@col.label",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "label": "@col.count",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "primary"
+                                }
+                              ],
+                              "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "accepts": "*",
+                              "className": "p-card-md min-h-[120px]",
+                              "dragGroup": "@col.key",
+                              "dropEvent": "MOVE_CARD",
+                              "entity": "@col.items",
+                              "fields": [],
+                              "gap": "sm",
+                              "positionEvent": "REORDER_POSITION",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "@config.cardTitleBinding",
+                                          "type": "typography",
+                                          "variant": "body",
+                                          "weight": "medium"
+                                        },
+                                        {
+                                          "className": "line-clamp-2",
+                                          "color": "muted",
+                                          "content": "@config.cardDescriptionBinding",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        },
+                                        {
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "label": "@config.cardStageBinding",
+                                              "size": "sm",
+                                              "type": "badge",
+                                              "variant": "primary"
+                                            },
+                                            {
+                                              "action": "OPEN_CARD",
+                                              "actionPayload": {
+                                                "id": "@config.cardIdBinding",
+                                                "row": "@item"
+                                              },
+                                              "className": "ml-auto",
+                                              "icon": "arrow-right",
+                                              "label": "Open",
+                                              "size": "sm",
+                                              "type": "button",
+                                              "variant": "ghost"
+                                            }
+                                          ],
+                                          "className": "pt-1",
+                                          "direction": "horizontal",
+                                          "gap": "xs",
+                                          "type": "stack"
+                                        }
+                                      ],
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack"
+                                    }
+                                  ],
+                                  "className": "cursor-grab hover:shadow-lg transition-shadow",
+                                  "look": "elevated",
+                                  "padding": "sm",
+                                  "type": "card"
+                                }
+                              ],
+                              "reorderEvent": "REORDER_CARD",
+                              "sortable": true,
+                              "type": "data-list"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "none",
+                          "type": "stack"
+                        }
+                      ],
+                      "className": "w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden",
+                      "look": "elevated",
+                      "padding": "none",
+                      "type": "card"
+                    }
+                  ],
+                  "scrollX": true,
+                  "type": "data-grid"
+                },
+                {
+                  "action": "ADD_CARD",
+                  "icon": "plus",
+                  "label": "Add card",
+                  "type": "floating-action-button",
+                  "variant": "primary"
+                }
+              ],
+              "className": "h-full",
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            },
+            "label": "Kanban classic body content tree",
+            "description": "Render-ui SExpr for boardLook='kanban-classic' — Trello-style wide elevated columns with sticky headers, dense cards with a status badge, always-elevated card look.",
+            "tier": "internal"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Board",
+            "label": "Board title",
+            "description": "Heading shown above the column board",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "activeBody",
+            "boards",
+            "currentDescription",
+            "currentId",
+            "currentNotes",
+            "currentStage",
+            "currentTitle",
+            "errorMessage"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "BoardPage",
+        "defaultPath": "/board",
+        "primaryEntity": "BoardView"
+      }
+    ],
+    "emittedEvents": [
+      "ADD_CARD",
+      "BoardItemsLoadFailed",
+      "BoardItemsLoaded",
+      "BoardItemsSaveFailed",
+      "BoardItemsSaved",
+      "CANCEL_ADD",
+      "CLOSE_CARD",
+      "DELETE_CARD",
+      "MOVE_CARD",
+      "OPEN_CARD",
+      "REORDER_CARD",
+      "SAVE_CARD"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]

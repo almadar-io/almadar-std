@@ -214,32 +214,6 @@ import {
   isStdAgentRabitOrbitalProcessOrbitalParams,
 } from './agent/organisms/std-agent-rabit.js';
 import {
-  stdGenericAppContactOrbital,
-  StdGenericAppContactOrbitalManifest,
-  isStdGenericAppContactOrbitalParams,
-  stdGenericAppItemOrbital,
-  StdGenericAppItemOrbitalManifest,
-  isStdGenericAppItemOrbitalParams,
-  stdGenericAppActivityOrbital,
-  StdGenericAppActivityOrbitalManifest,
-  isStdGenericAppActivityOrbitalParams,
-  stdGenericAppTaskOrbital,
-  StdGenericAppTaskOrbitalManifest,
-  isStdGenericAppTaskOrbitalParams,
-  stdGenericAppCalendarOrbital,
-  StdGenericAppCalendarOrbitalManifest,
-  isStdGenericAppCalendarOrbitalParams,
-  stdGenericAppWidgetOrbital,
-  StdGenericAppWidgetOrbitalManifest,
-  isStdGenericAppWidgetOrbitalParams,
-  stdGenericAppFeedOrbital,
-  StdGenericAppFeedOrbitalManifest,
-  isStdGenericAppFeedOrbitalParams,
-  stdGenericAppNoteOrbital,
-  StdGenericAppNoteOrbitalManifest,
-  isStdGenericAppNoteOrbitalParams,
-} from './core/organisms/std-generic-app.js';
-import {
   stdUiArcadeBoard3dArcadeBoard3DOrbital,
   StdUiArcadeBoard3dArcadeBoard3DOrbitalManifest,
   isStdUiArcadeBoard3dArcadeBoard3DOrbitalParams,
@@ -1240,78 +1214,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdAgentRabitOrbitalProcessOrbital(p);
     },
     manifest: StdAgentRabitOrbitalProcessOrbitalManifest,
-  }],
-  ['std-generic-app::ContactOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGenericAppContactOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-generic-app::ContactOrbital');
-      }
-      return stdGenericAppContactOrbital(p);
-    },
-    manifest: StdGenericAppContactOrbitalManifest,
-  }],
-  ['std-generic-app::ItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGenericAppItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-generic-app::ItemOrbital');
-      }
-      return stdGenericAppItemOrbital(p);
-    },
-    manifest: StdGenericAppItemOrbitalManifest,
-  }],
-  ['std-generic-app::ActivityOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGenericAppActivityOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-generic-app::ActivityOrbital');
-      }
-      return stdGenericAppActivityOrbital(p);
-    },
-    manifest: StdGenericAppActivityOrbitalManifest,
-  }],
-  ['std-generic-app::TaskOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGenericAppTaskOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-generic-app::TaskOrbital');
-      }
-      return stdGenericAppTaskOrbital(p);
-    },
-    manifest: StdGenericAppTaskOrbitalManifest,
-  }],
-  ['std-generic-app::CalendarOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGenericAppCalendarOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-generic-app::CalendarOrbital');
-      }
-      return stdGenericAppCalendarOrbital(p);
-    },
-    manifest: StdGenericAppCalendarOrbitalManifest,
-  }],
-  ['std-generic-app::WidgetOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGenericAppWidgetOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-generic-app::WidgetOrbital');
-      }
-      return stdGenericAppWidgetOrbital(p);
-    },
-    manifest: StdGenericAppWidgetOrbitalManifest,
-  }],
-  ['std-generic-app::FeedOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGenericAppFeedOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-generic-app::FeedOrbital');
-      }
-      return stdGenericAppFeedOrbital(p);
-    },
-    manifest: StdGenericAppFeedOrbitalManifest,
-  }],
-  ['std-generic-app::NoteOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGenericAppNoteOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-generic-app::NoteOrbital');
-      }
-      return stdGenericAppNoteOrbital(p);
-    },
-    manifest: StdGenericAppNoteOrbitalManifest,
   }],
   ['ui-arcade-board-3d::ArcadeBoard3DOrbital', {
     factory: (p: object): OrbitalDefinition => {

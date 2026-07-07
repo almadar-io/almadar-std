@@ -1,0 +1,442 @@
+[
+  {
+    "organism": "std-step-flow",
+    "orbital": "StepFlowOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-step-flow.ts",
+    "entities": [
+      {
+        "name": "StepFlowView",
+        "fields": [
+          {
+            "name": "wizardSteps",
+            "type": "array",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentStepIndex",
+            "type": "number",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "totalSteps",
+            "type": "number",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentStepLabel",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentStepDescription",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "currentStepIcon",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "isFirstStep",
+            "type": "boolean",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "isLastStep",
+            "type": "boolean",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "primaryActionLabel",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "primaryActionVariant",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "primaryActionIcon",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "finalStatus",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "rejectionReason",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "StepFlowReview",
+        "emittedEvents": [
+          "ADVANCE",
+          "BACK",
+          "REJECT",
+          "ESCALATE",
+          "RESTART",
+          "StepItemsLoaded",
+          "StepItemsLoadFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ADVANCE",
+            "direction": "emit",
+            "description": "Signals progression to the next step in the sequence.",
+            "synonyms": "next, proceed, continue, move forward",
+            "tier": "domain"
+          },
+          {
+            "name": "BACK",
+            "direction": "emit",
+            "description": "Indicates a request to navigate to the previous step.",
+            "synonyms": "previous, undo, return",
+            "tier": "domain"
+          },
+          {
+            "name": "REJECT",
+            "direction": "emit",
+            "description": "Indicates the user or system rejected the current step.",
+            "synonyms": "cancel, decline, dismiss",
+            "tier": "domain"
+          },
+          {
+            "name": "ESCALATE",
+            "direction": "emit",
+            "description": "Signals a request to elevate the process to a higher authority.",
+            "synonyms": "defer, transfer, handoff",
+            "tier": "presentation"
+          },
+          {
+            "name": "RESTART",
+            "direction": "emit",
+            "description": "Initiates a reset of the current workflow process.",
+            "synonyms": "reset, refresh, restart, reinitialize",
+            "tier": "internal"
+          },
+          {
+            "name": "StepItemsLoaded",
+            "direction": "emit",
+            "description": "Signals that the step items have been successfully loaded.",
+            "synonyms": "loaded, fetched, retrieved, populated",
+            "tier": "internal"
+          },
+          {
+            "name": "StepItemsLoadFailed",
+            "direction": "emit",
+            "description": "Indicates failure to load step configuration items.",
+            "synonyms": "load error, failed fetch, data problem",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "StepItemsSaved",
+            "direction": "listen",
+            "description": "Data for the current step has been successfully saved.",
+            "synonyms": "update, persist, store, commit",
+            "tier": "presentation"
+          },
+          {
+            "name": "StepItemsSaveFailed",
+            "direction": "listen",
+            "description": "Indicates a failure to save step item data.",
+            "synonyms": "save error, data failed, persistence error",
+            "tier": "internal"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "bodyContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "name": "shield-check",
+                      "type": "icon"
+                    },
+                    {
+                      "content": "@config.title",
+                      "type": "typography",
+                      "variant": "h3"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "allowNavigation": false,
+                  "currentStep": "@entity.currentStepIndex",
+                  "steps": "@entity.wizardSteps",
+                  "type": "wizard-progress"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "@entity.currentStepIcon",
+                              "size": "lg",
+                              "type": "icon"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "@entity.currentStepLabel",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@entity.currentStepDescription",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ],
+                  "look": "@config.cardLook",
+                  "type": "card"
+                },
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "action": "BACK",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "disabled": "@entity.isFirstStep",
+                      "icon": "chevron-left",
+                      "label": "Back",
+                      "type": "button",
+                      "variant": "ghost"
+                    },
+                    {
+                      "action": "REJECT",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "icon": "x",
+                      "label": "Reject",
+                      "type": "button",
+                      "variant": "ghost"
+                    },
+                    {
+                      "action": "ESCALATE",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "icon": "alert-triangle",
+                      "label": "Escalate",
+                      "type": "button",
+                      "variant": "ghost"
+                    },
+                    {
+                      "action": "ADVANCE",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "icon": "@entity.primaryActionIcon",
+                      "label": "@entity.primaryActionLabel",
+                      "type": "button",
+                      "variant": "primary"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Body content tree",
+            "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
+            "tier": "internal"
+          },
+          {
+            "key": "cardLook",
+            "type": "string",
+            "default": "elevated",
+            "label": "Card look",
+            "description": "Layer 2 visual treatment for cards rendered by this atom.",
+            "tier": "presentation",
+            "enumValues": [
+              "elevated",
+              "flat-bordered",
+              "borderless-divider",
+              "ticket",
+              "invoice",
+              "chip",
+              "tile-image-first"
+            ]
+          },
+          {
+            "key": "steps",
+            "type": "[StepSpec]",
+            "default": [
+              {
+                "description": "Initial review by direct manager",
+                "icon": "user",
+                "key": "manager",
+                "label": "Manager Review"
+              },
+              {
+                "description": "Department director sign-off",
+                "icon": "users",
+                "key": "director",
+                "label": "Director Approval"
+              },
+              {
+                "description": "Final executive approval",
+                "icon": "shield",
+                "key": "executive",
+                "label": "Executive Sign-off"
+              }
+            ],
+            "label": "Steps",
+            "description": "Ordered decision steps with label, icon, and optional role gates",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "allowedRoles": {
+                  "name": "allowedRoles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Review",
+            "label": "Flow title",
+            "description": "Heading shown above the step progress bar",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "currentStepDescription",
+            "currentStepIcon",
+            "currentStepIndex",
+            "currentStepLabel",
+            "errorMessage",
+            "finalStatus",
+            "isFirstStep",
+            "isLastStep",
+            "primaryActionIcon",
+            "primaryActionLabel",
+            "primaryActionVariant",
+            "rejectionReason",
+            "totalSteps",
+            "wizardSteps"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "StepFlowPage",
+        "defaultPath": "/step-flow",
+        "primaryEntity": "StepFlowView"
+      }
+    ],
+    "emittedEvents": [
+      "ADVANCE",
+      "BACK",
+      "ESCALATE",
+      "REJECT",
+      "RESTART",
+      "StepItemsLoadFailed",
+      "StepItemsLoaded"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]

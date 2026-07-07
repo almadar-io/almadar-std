@@ -1,0 +1,487 @@
+[
+  {
+    "organism": "std-calendar",
+    "orbital": "CalendarEventOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-calendar.ts",
+    "entities": [
+      {
+        "name": "CalendarEvent",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true,
+            "description": "event title shown on the calendar",
+            "synonyms": "title, label, summary, subject"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "event details or notes",
+            "synonyms": "details, notes, body, summary"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "event lifecycle status",
+            "synonyms": "state, stage, phase"
+          },
+          {
+            "name": "date",
+            "type": "datetime",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "time",
+            "type": "string",
+            "required": false,
+            "description": "event start time of day",
+            "synonyms": "start, scheduled time, begins, when, start time"
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "required": false,
+            "description": "event length in minutes",
+            "synonyms": "minutes, length, span, duration"
+          },
+          {
+            "name": "selectedRange",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "activeBody",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CalendarEventCalendar",
+        "emittedEvents": [
+          "CalendarEventLoaded",
+          "CalendarEventLoadFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CalendarEventLoaded",
+            "direction": "emit",
+            "description": "Indicates that calendar events have been successfully retrieved.",
+            "synonyms": "loaded, fetched, retrieved, populated",
+            "tier": "domain"
+          },
+          {
+            "name": "CalendarEventLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load calendar events.",
+            "synonyms": "error, failed, problem, loading issue",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SELECT_DAY",
+            "direction": "listen",
+            "description": "A day has been chosen within the calendar view.",
+            "synonyms": "choose, pick, set, highlight",
+            "tier": "domain"
+          },
+          {
+            "name": "SELECT_SLOT",
+            "direction": "listen",
+            "description": "A time slot has been chosen for an event.",
+            "synonyms": "choose, pick, schedule, book",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "agendaListBodyContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "list",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Agenda",
+                          "type": "typography",
+                          "variant": "h2"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "onSelect": "SELECT_DAY",
+                      "selected": "@entity.selectedRange",
+                      "type": "date-range-selector"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "justify": "between",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "entity": "@payload.data",
+                  "fields": [],
+                  "gap": "md",
+                  "groupBy": "date",
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "children": [
+                        {
+                          "align": "start",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "@config.timeBinding",
+                                  "type": "typography",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "color": "muted",
+                                  "name": "clock",
+                                  "size": "sm",
+                                  "type": "icon"
+                                }
+                              ],
+                              "className": "w-16 shrink-0",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "orientation": "vertical",
+                              "type": "divider"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "className": "truncate",
+                                      "content": "@config.titleBinding",
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "weight": "medium"
+                                    },
+                                    {
+                                      "label": "@config.badgeBinding",
+                                      "size": "sm",
+                                      "type": "badge",
+                                      "variant": "default"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "className": "truncate",
+                                  "color": "muted",
+                                  "content": "@config.descriptionBinding",
+                                  "type": "typography",
+                                  "variant": "body2"
+                                }
+                              ],
+                              "className": "flex-1 min-w-0",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "look": "flat-bordered",
+                      "padding": "md",
+                      "type": "card"
+                    }
+                  ],
+                  "type": "data-list",
+                  "variant": "default"
+                }
+              ],
+              "className": "w-full p-card-md",
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Agenda list body content tree",
+            "description": "Render-ui SExpr for calendarLook='agenda-list' — events grouped by day with overline day headers (Today, Tomorrow, …) and a time marker per event.",
+            "tier": "internal"
+          },
+          {
+            "key": "badgeBinding",
+            "type": "string",
+            "default": "@item.status",
+            "label": "Badge binding",
+            "description": "Per-row binding for the event status/badge slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "bodyContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "calendar",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "CalendarEvents Calendar",
+                          "type": "typography",
+                          "variant": "h2"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "onSelect": "SELECT_DAY",
+                      "selected": "@entity.selectedRange",
+                      "type": "date-range-selector"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "justify": "between",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "calendar-grid"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "content": "Upcoming Events",
+                  "type": "typography",
+                  "variant": "h4"
+                },
+                {
+                  "entity": "@payload.data",
+                  "fields": [
+                    {
+                      "icon": "calendar",
+                      "label": "Event",
+                      "name": "name",
+                      "variant": "h4"
+                    },
+                    {
+                      "label": "Time",
+                      "name": "time",
+                      "variant": "badge"
+                    },
+                    {
+                      "format": "date",
+                      "label": "Date",
+                      "name": "date",
+                      "variant": "caption"
+                    },
+                    {
+                      "label": "Status",
+                      "name": "status",
+                      "variant": "badge"
+                    }
+                  ],
+                  "itemActions": [
+                    {
+                      "event": "SELECT_DAY",
+                      "icon": "eye",
+                      "label": "View"
+                    }
+                  ],
+                  "look": "@config.tableLook",
+                  "type": "data-list"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Body content tree",
+            "description": "Render-ui SExpr rendered after events load for calendarLook='month' — the month-grid + upcoming-events list. calendarLook='agenda-list' / 'week-timeline' render agendaListBodyContent / weekTimelineBodyContent instead; all three share this trait's state machine, emits, and listens.",
+            "tier": "internal"
+          },
+          {
+            "key": "calendarLook",
+            "type": "string",
+            "default": "month",
+            "label": "Calendar look",
+            "description": "Layer 3 body layout: default month-grid + upcoming-events list ('month'), day-grouped agenda list ('agenda-list'), or 7-column week timeline ('week-timeline').",
+            "tier": "presentation",
+            "enumValues": [
+              "month",
+              "agenda-list",
+              "week-timeline"
+            ]
+          },
+          {
+            "key": "descriptionBinding",
+            "type": "string",
+            "default": "@item.description",
+            "label": "Description binding",
+            "description": "Per-row binding for the event description slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "tableLook",
+            "type": "string",
+            "default": "dense",
+            "label": "Table look",
+            "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+            "tier": "presentation",
+            "enumValues": [
+              "dense",
+              "spacious",
+              "striped",
+              "borderless",
+              "card-rows"
+            ]
+          },
+          {
+            "key": "timeBinding",
+            "type": "string",
+            "default": "@item.time",
+            "label": "Time binding",
+            "description": "Per-row binding for the event time slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "titleBinding",
+            "type": "string",
+            "default": "@item.name",
+            "label": "Title binding",
+            "description": "Per-row binding for the event title slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "weekTimelineBodyContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "calendar",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Week",
+                          "type": "typography",
+                          "variant": "h2"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "onSelect": "SELECT_DAY",
+                      "selected": "@entity.selectedRange",
+                      "type": "date-range-selector"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "justify": "between",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "className": "w-full",
+                  "dayWindow": 7,
+                  "events": "@payload.data",
+                  "type": "calendar-grid"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            },
+            "label": "Week timeline body content tree",
+            "description": "Render-ui SExpr for calendarLook='week-timeline' — events grouped by weekday in a 7-column timeline window.",
+            "tier": "internal"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "activeBody",
+            "date",
+            "selectedRange"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CalendarEventCalendarPage",
+        "defaultPath": "/calendarevents/calendar",
+        "primaryEntity": "CalendarEvent"
+      }
+    ],
+    "emittedEvents": [
+      "CalendarEventLoadFailed",
+      "CalendarEventLoaded"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]

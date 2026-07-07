@@ -1,0 +1,312 @@
+[
+  {
+    "organism": "std-form-advanced",
+    "orbital": "FormEntryOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-form-advanced.ts",
+    "entities": [
+      {
+        "name": "FormEntry",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "The identifier or title for the form entry.",
+            "synonyms": "title, label, identifier"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "A textual explanation or details about the entry.",
+            "synonyms": "details, explanation, notes, summary"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Indicates the current operational state of the entry.",
+            "synonyms": "state, condition, mode"
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "required": false,
+            "description": "Free-text comments or additional information.",
+            "synonyms": "comment, remark, details, memo"
+          },
+          {
+            "name": "age",
+            "type": "number",
+            "required": false,
+            "description": "Numerical value representing a person's age.",
+            "synonyms": "years, age, period"
+          },
+          {
+            "name": "isActive",
+            "type": "boolean",
+            "required": false,
+            "description": "Indicates whether the entry is currently active.",
+            "synonyms": "active, enabled, status"
+          },
+          {
+            "name": "birthDate",
+            "type": "datetime",
+            "required": false,
+            "description": "Date of birth.",
+            "synonyms": "dob, date of birth, birthday"
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "required": false,
+            "description": "Indicates the level of importance or urgency.",
+            "synonyms": "level, importance, urgency"
+          },
+          {
+            "name": "categoryId",
+            "type": "string",
+            "required": false,
+            "description": "Identifies the related category record.",
+            "synonyms": "category, type, group"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "FormEntryFormAdvanced",
+        "emittedEvents": [
+          "FormEntryLoaded",
+          "FormEntryLoadFailed",
+          "FormEntrySaved",
+          "FormEntrySaveFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "FormEntryLoaded",
+            "direction": "emit",
+            "description": "Signals successful loading of form entry data.",
+            "synonyms": "loaded, initialized, populated",
+            "tier": "domain"
+          },
+          {
+            "name": "FormEntryLoadFailed",
+            "direction": "emit",
+            "description": "Indicates failure to load form entry data.",
+            "synonyms": "load error, data fetch failed, failed to retrieve",
+            "tier": "internal"
+          },
+          {
+            "name": "FormEntrySaved",
+            "direction": "emit",
+            "description": "Signals successful saving of form entry data.",
+            "synonyms": "saved, persisted, submitted, confirmed",
+            "tier": "domain"
+          },
+          {
+            "name": "FormEntrySaveFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to save form entry data.",
+            "synonyms": "error, failure, rejected, invalid",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SUBMIT",
+            "direction": "listen",
+            "description": "Indicates the form has been submitted for processing.",
+            "synonyms": "submit, send, post",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fieldValidation",
+            "type": "[ValidationSpec]",
+            "default": [],
+            "label": "Field validation",
+            "description": "Per-field rules (format, regex, length) shown inline on submit",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "rule": {
+                  "name": "rule",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "label": "Name",
+                "name": "name"
+              },
+              {
+                "label": "Description",
+                "name": "description"
+              },
+              {
+                "label": "Status",
+                "name": "status",
+                "type": "enum",
+                "values": [
+                  "active",
+                  "inactive",
+                  "pending"
+                ]
+              },
+              {
+                "label": "Notes",
+                "name": "notes",
+                "type": "textarea"
+              },
+              {
+                "label": "Age",
+                "name": "age",
+                "type": "number"
+              },
+              {
+                "label": "Is Active",
+                "name": "isActive",
+                "type": "boolean"
+              },
+              {
+                "label": "Birth Date",
+                "name": "birthDate",
+                "type": "date"
+              },
+              {
+                "label": "Priority",
+                "name": "priority",
+                "type": "enum",
+                "values": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ]
+              },
+              {
+                "label": "Category ID",
+                "name": "categoryId",
+                "relation": {
+                  "cardinality": "one",
+                  "entity": "FormEntry"
+                },
+                "type": "relation"
+              }
+            ],
+            "label": "Form fields",
+            "description": "Inputs to render; each entry follows the form-section field schema",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "icon",
+            "type": "string",
+            "default": "file-text",
+            "label": "Header icon",
+            "description": "Icon shown beside the form title",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Form",
+            "label": "Form title",
+            "description": "Heading shown above the form",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "FormEntryFormPage",
+        "defaultPath": "/formentrys/form",
+        "primaryEntity": "FormEntry"
+      }
+    ],
+    "emittedEvents": [
+      "FormEntryLoadFailed",
+      "FormEntryLoaded",
+      "FormEntrySaveFailed",
+      "FormEntrySaved"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]

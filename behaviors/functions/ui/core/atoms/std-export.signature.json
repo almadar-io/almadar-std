@@ -1,0 +1,256 @@
+[
+  {
+    "organism": "std-export",
+    "orbital": "ExportOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-export.ts",
+    "entities": [
+      {
+        "name": "ExportPanel",
+        "fields": [
+          {
+            "name": "options",
+            "type": "array",
+            "required": false,
+            "description": "Configuration settings for available export formats.",
+            "synonyms": "format, export-types, configurations"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Button1",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "OPEN_EXPORT"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "download"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "@config.buttonLabel"
+          },
+          {
+            "key": "size",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "ghost"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender"
+      },
+      {
+        "name": "DataList1",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "entity",
+            "type": "unknown",
+            "default": "@entity.options"
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "look",
+            "type": "unknown",
+            "default": "@config.tableLook"
+          },
+          {
+            "key": "renderItem",
+            "type": "unknown",
+            "default": [
+              "fn",
+              "fmt",
+              {
+                "action": "@config.event",
+                "actionPayload": {
+                  "format": "@fmt.format",
+                  "tileId": "@config.tileId"
+                },
+                "icon": "file-down",
+                "label": "@fmt.label",
+                "size": "sm",
+                "variant": "ghost"
+              }
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "DataList.traits.DataListRender"
+      },
+      {
+        "name": "Popover1",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "children",
+            "type": "unknown",
+            "default": [
+              "@trait.Button1"
+            ]
+          },
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "@trait.DataList1"
+          },
+          {
+            "key": "position",
+            "type": "unknown",
+            "default": "bottom"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Popover.traits.PopoverRender"
+      },
+      {
+        "name": "ExportMenu",
+        "emittedEvents": [
+          "EXPORT_REQUESTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "EXPORT_REQUESTED",
+            "direction": "emit",
+            "description": "Requests export of data in a specified format.",
+            "synonyms": "export, save, download, generate",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "OPEN_EXPORT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "buttonLabel",
+            "type": "string",
+            "default": "Export",
+            "label": "Button label",
+            "description": "Text shown on the toolbar button that opens the export popover",
+            "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
+            "tier": "presentation"
+          },
+          {
+            "key": "event",
+            "type": "string",
+            "default": "EXPORT_REQUESTED",
+            "label": "Export event",
+            "description": "Event emitted when the user picks a format",
+            "synonyms": "bus event name. internal wiring; users rarely target directly",
+            "tier": "internal"
+          },
+          {
+            "key": "formats",
+            "type": "[FormatOption]",
+            "default": [
+              {
+                "format": "csv",
+                "id": "csv",
+                "label": "CSV"
+              },
+              {
+                "format": "xlsx",
+                "id": "xlsx",
+                "label": "XLSX"
+              },
+              {
+                "format": "pdf",
+                "id": "pdf",
+                "label": "PDF"
+              }
+            ],
+            "label": "Available formats",
+            "description": "Export formats shown to the user in the popover",
+            "synonyms": "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "format": {
+                  "name": "format",
+                  "required": true,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "tableLook",
+            "type": "string",
+            "default": "dense",
+            "label": "Table look",
+            "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+            "tier": "presentation",
+            "enumValues": [
+              "dense",
+              "spacious",
+              "striped",
+              "borderless",
+              "card-rows"
+            ]
+          },
+          {
+            "key": "tileId",
+            "type": "string",
+            "default": "",
+            "label": "Tile id",
+            "description": "Identifier of the dashboard tile being exported",
+            "synonyms": "internal identifier — host orbital wires this; users rarely set it directly",
+            "tier": "internal"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "ExportMenuPage",
+        "defaultPath": "/exports/menu",
+        "primaryEntity": "ExportPanel"
+      }
+    ],
+    "emittedEvents": [
+      "EXPORT_REQUESTED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "d44aaf56471a13de"
+  }
+]

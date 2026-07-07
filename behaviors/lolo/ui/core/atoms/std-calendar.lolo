@@ -1,5 +1,5 @@
-app std-calendar "1.3.0"
-"std-calendar as a Function — owns the fetch + SELECT_DAY state machine; default bodyContent renders the month-grid + upcoming-events tree. Layer 3 variants override bodyContent to deliver agenda, week-timeline, etc. while inheriting the same trait, state machine, emits, and listens."
+app std-calendar "1.4.0"
+"std-calendar as a Function — owns the fetch + SELECT_DAY state machine; default bodyContent renders the month-grid + upcoming-events tree. `config.calendarLook` switches the body between the default month-grid ('month'), a day-grouped agenda list ('agenda-list'), and a 7-column week timeline ('week-timeline') while inheriting the same trait, state machine, emits, and listens."
 orbital CalendarEventOrbital {
     type CalendarEventLoaded = Event { data : [CalendarEvent] } "Fired when CalendarEvent finishes loading; payload.data holds the events"
 
@@ -15,6 +15,7 @@ orbital CalendarEventOrbital {
     time : string @description "event start time of day" @synonyms "start, scheduled time, begins, when, start time" = ""
     duration : number @description "event length in minutes" @synonyms "minutes, length, span, duration" = 60
     selectedRange : string @intrinsic = month
+    activeBody : render-ui @intrinsic
   }
 
   trait CalendarEventCalendar -> @rebindable CalendarEvent [interaction, collection] {
@@ -39,7 +40,8 @@ orbital CalendarEventOrbital {
           type: stack
         })
       CalendarEventLoaded -> month-view
-        (render-ui main @config.bodyContent)
+        (set @entity.activeBody (if ["=", @config.calendarLook, agenda-list] @config.agendaListBodyContent (if ["=", @config.calendarLook, week-timeline] @config.weekTimelineBodyContent @config.bodyContent)))
+        (render-ui main @entity.activeBody)
       CalendarEventLoadFailed -> error
         (render-ui main {
           align: center
@@ -142,6 +144,10 @@ orbital CalendarEventOrbital {
         @label "Description binding"
         @description "Per-row binding for the event description slot."
         @tier "presentation"
+      calendarLook : "month" | "agenda-list" | "week-timeline" = month
+        @label "Calendar look"
+        @description "Layer 3 body layout: default month-grid + upcoming-events list ('month'), day-grouped agenda list ('agenda-list'), or 7-column week timeline ('week-timeline')."
+        @tier "presentation"
       bodyContent : render-ui = {
         children: [{
           align: center
@@ -202,7 +208,139 @@ orbital CalendarEventOrbital {
         type: stack
       }
         @label "Body content tree"
-        @description "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens."
+        @description "Render-ui SExpr rendered after events load for calendarLook='month' — the month-grid + upcoming-events list. calendarLook='agenda-list' / 'week-timeline' render agendaListBodyContent / weekTimelineBodyContent instead; all three share this trait's state machine, emits, and listens."
+        @tier "internal"
+      agendaListBodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [{
+            align: center
+            children: [{ name: list, type: icon }, {
+              content: Agenda
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            onSelect: SELECT_DAY
+            selected: @entity.selectedRange
+            type: date-range-selector
+          }]
+          direction: horizontal
+          gap: md
+          justify: between
+          type: stack
+        }, { type: divider }, {
+          entity: ?data
+          fields: []
+          gap: md
+          groupBy: date
+          renderItem: (fn item {
+            children: [{
+              align: start
+              children: [{
+                align: center
+                children: [{
+                  color: muted
+                  content: @config.timeBinding
+                  type: typography
+                  variant: overline
+                }, {
+                  color: muted
+                  name: clock
+                  size: sm
+                  type: icon
+                }]
+                className: "w-16 shrink-0"
+                direction: vertical
+                gap: xs
+                type: stack
+              }, { orientation: vertical, type: divider }, {
+                children: [{
+                  align: center
+                  children: [{
+                    className: truncate
+                    content: @config.titleBinding
+                    type: typography
+                    variant: h4
+                    weight: medium
+                  }, {
+                    label: @config.badgeBinding
+                    size: sm
+                    type: badge
+                    variant: default
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  justify: between
+                  type: stack
+                }, {
+                  className: truncate
+                  color: muted
+                  content: @config.descriptionBinding
+                  type: typography
+                  variant: body2
+                }]
+                className: "flex-1 min-w-0"
+                direction: vertical
+                gap: xs
+                type: stack
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }]
+            look: flat-bordered
+            padding: md
+            type: card
+          })
+          type: data-list
+          variant: default
+        }]
+        className: "w-full p-card-md"
+        direction: vertical
+        gap: lg
+        type: stack
+      }
+        @label "Agenda list body content tree"
+        @description "Render-ui SExpr for calendarLook='agenda-list' — events grouped by day with overline day headers (Today, Tomorrow, …) and a time marker per event."
+        @tier "internal"
+      weekTimelineBodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [{
+            align: center
+            children: [{ name: calendar, type: icon }, {
+              content: Week
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            onSelect: SELECT_DAY
+            selected: @entity.selectedRange
+            type: date-range-selector
+          }]
+          direction: horizontal
+          gap: md
+          justify: between
+          type: stack
+        }, { type: divider }, {
+          className: w-full
+          dayWindow: 7
+          events: ?data
+          type: calendar-grid
+        }]
+        direction: vertical
+        gap: md
+        type: stack
+      }
+        @label "Week timeline body content tree"
+        @description "Render-ui SExpr for calendarLook='week-timeline' — events grouped by weekday in a 7-column timeline window."
         @tier "internal"
     }
   }

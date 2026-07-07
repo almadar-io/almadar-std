@@ -1,0 +1,343 @@
+[
+  {
+    "organism": "std-event-log",
+    "orbital": "EventLogOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-event-log.ts",
+    "entities": [
+      {
+        "name": "EventLogView",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": false,
+            "description": "The descriptive name or heading for the event log.",
+            "synonyms": "heading, label, name"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "A human-readable explanation of the event.",
+            "synonyms": "text, details, explanation, summary"
+          },
+          {
+            "name": "kind",
+            "type": "string",
+            "required": false,
+            "description": "The type of event being logged.",
+            "synonyms": "event type, event category, kind, status"
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "required": false,
+            "description": "The timestamp associated with the event.",
+            "synonyms": "timestamp, time, occurred"
+          },
+          {
+            "name": "allEntries",
+            "type": "array",
+            "required": false,
+            "description": "An array of log entry objects.",
+            "synonyms": "entries, records, items, data"
+          },
+          {
+            "name": "entries",
+            "type": "array",
+            "required": false,
+            "description": "A list of log entries, each with associated data.",
+            "synonyms": "records, items, data, events"
+          },
+          {
+            "name": "filterChips",
+            "type": "array",
+            "required": false,
+            "description": "Represents selectable filter options for event categories.",
+            "synonyms": "filters, categories, types, selections"
+          },
+          {
+            "name": "filterKind",
+            "type": "string",
+            "required": false,
+            "description": "The type of filter currently applied to the event log.",
+            "synonyms": "filter, category, type"
+          },
+          {
+            "name": "backfillTitle",
+            "type": "string",
+            "required": false,
+            "description": "A descriptive title for a manually added event.",
+            "synonyms": "manual title, user-provided title, custom title"
+          },
+          {
+            "name": "backfillDescription",
+            "type": "string",
+            "required": false,
+            "description": "A textual explanation for the event backfill process.",
+            "synonyms": "explanation, details, notes, information"
+          },
+          {
+            "name": "backfillDate",
+            "type": "string",
+            "required": false,
+            "description": "The date and time when the event was manually added.",
+            "synonyms": "timestamp, entered date, manual date"
+          },
+          {
+            "name": "backfillKind",
+            "type": "string",
+            "required": false,
+            "description": "Specifies the category or type of the manually added event.",
+            "synonyms": "event type, category, kind"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "description": "A human-readable message indicating an error condition.",
+            "synonyms": "error, error message, problem, issue"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "EventLogTimeline",
+        "emittedEvents": [
+          "APPLY_FILTER",
+          "OPEN_BACKFILL",
+          "SAVE_BACKFILL",
+          "CANCEL_BACKFILL",
+          "EventLogLoaded",
+          "EventLogLoadFailed",
+          "EventLogSaved",
+          "EventLogSaveFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "APPLY_FILTER",
+            "direction": "emit",
+            "description": "Signals a filter has been applied to the event log.",
+            "synonyms": "filter, refine, narrow, update",
+            "tier": "presentation"
+          },
+          {
+            "name": "OPEN_BACKFILL",
+            "direction": "emit",
+            "description": "Initiates a backfill operation to retrieve historical events.",
+            "synonyms": "refresh, retrieve, load history",
+            "tier": "internal"
+          },
+          {
+            "name": "SAVE_BACKFILL",
+            "direction": "emit",
+            "description": "Indicates successful completion of backfill data saving.",
+            "synonyms": "saved, persisted, committed",
+            "tier": "presentation"
+          },
+          {
+            "name": "CANCEL_BACKFILL",
+            "direction": "emit",
+            "description": "Aborts the backfill process.",
+            "synonyms": "abort, stop, dismiss, undo",
+            "tier": "presentation"
+          },
+          {
+            "name": "EventLogLoaded",
+            "direction": "emit",
+            "description": "Signals the event log has finished loading.",
+            "synonyms": "loaded, ready, initialized",
+            "tier": "domain"
+          },
+          {
+            "name": "EventLogLoadFailed",
+            "direction": "emit",
+            "description": "Indicates that loading the event log failed.",
+            "synonyms": "error, failure, failed, problem",
+            "tier": "internal"
+          },
+          {
+            "name": "EventLogSaved",
+            "direction": "emit",
+            "description": "Indicates a new event has been successfully logged.",
+            "synonyms": "saved, added, created, recorded",
+            "tier": "domain"
+          },
+          {
+            "name": "EventLogSaveFailed",
+            "direction": "emit",
+            "description": "Indicates that saving an event failed.",
+            "synonyms": "error, failure, failed, problem",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "cardLook",
+            "type": "string",
+            "default": "elevated",
+            "label": "Card look",
+            "description": "Layer 2 visual treatment for cards rendered by this atom.",
+            "tier": "presentation",
+            "enumValues": [
+              "elevated",
+              "flat-bordered",
+              "borderless-divider",
+              "ticket",
+              "invoice",
+              "chip",
+              "tile-image-first"
+            ]
+          },
+          {
+            "key": "formFields",
+            "type": "[string]",
+            "default": [
+              "backfillTitle",
+              "backfillDescription",
+              "backfillKind",
+              "backfillDate"
+            ],
+            "label": "Backfill fields",
+            "description": "Inputs shown in the form for manually logging missed events",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "kindOptions",
+            "type": "[KindOption]",
+            "default": [
+              {
+                "icon": "plus-circle",
+                "key": "created",
+                "label": "Created",
+                "status": "active"
+              },
+              {
+                "icon": "edit-3",
+                "key": "updated",
+                "label": "Updated",
+                "status": "pending"
+              },
+              {
+                "icon": "check-circle",
+                "key": "approved",
+                "label": "Approved",
+                "status": "complete"
+              },
+              {
+                "icon": "x-circle",
+                "key": "rejected",
+                "label": "Rejected",
+                "status": "error"
+              }
+            ],
+            "label": "Event kinds",
+            "description": "Maps each event kind to its label, icon, and status color",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "status": {
+                  "name": "status",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "complete",
+                    "active",
+                    "pending",
+                    "error"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "timelineLook",
+            "type": "string",
+            "default": "vertical-spacious",
+            "label": "Timeline look",
+            "description": "Layer 2 visual treatment for the timeline.",
+            "tier": "presentation",
+            "enumValues": [
+              "vertical-compact",
+              "vertical-spacious",
+              "horizontal",
+              "swimlane"
+            ]
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Activity",
+            "label": "Section title",
+            "description": "Heading shown above the activity timeline",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "allEntries",
+            "backfillDate",
+            "backfillDescription",
+            "backfillKind",
+            "backfillTitle",
+            "entries",
+            "errorMessage",
+            "filterChips",
+            "filterKind"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "EventLogPage",
+        "defaultPath": "/event-log",
+        "primaryEntity": "EventLogView"
+      }
+    ],
+    "emittedEvents": [
+      "APPLY_FILTER",
+      "CANCEL_BACKFILL",
+      "EventLogLoadFailed",
+      "EventLogLoaded",
+      "EventLogSaveFailed",
+      "EventLogSaved",
+      "OPEN_BACKFILL",
+      "SAVE_BACKFILL"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]

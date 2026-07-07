@@ -1,0 +1,304 @@
+[
+  {
+    "organism": "std-esign-flow",
+    "orbital": "SignatureSessionOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-esign-flow.ts",
+    "entities": [
+      {
+        "name": "SignatureSession",
+        "fields": [
+          {
+            "name": "documentId",
+            "type": "string",
+            "required": true,
+            "description": "Unique identifier for the associated document.",
+            "synonyms": "fileID, docID, documentReference"
+          },
+          {
+            "name": "documentName",
+            "type": "string",
+            "required": false,
+            "description": "The name of the document associated with the signature request.",
+            "synonyms": "filename, document, file"
+          },
+          {
+            "name": "recipientName",
+            "type": "string",
+            "required": true,
+            "description": "The name of the recipient for the signature request.",
+            "synonyms": "recipient, name, user"
+          },
+          {
+            "name": "recipientEmail",
+            "type": "string",
+            "required": true,
+            "description": "The email address of the recipient.",
+            "synonyms": "email, address, contact"
+          },
+          {
+            "name": "requesterName",
+            "type": "string",
+            "required": false,
+            "description": "The name of the user initiating the signature request.",
+            "synonyms": "initiator, sender, originator"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Current state of the signature request.",
+            "synonyms": "state, condition, stage"
+          },
+          {
+            "name": "sentAt",
+            "type": "string",
+            "required": false,
+            "description": "Timestamp indicating when the request was sent.",
+            "synonyms": "sent date, submission time, dispatched"
+          },
+          {
+            "name": "signedAt",
+            "type": "string",
+            "required": false,
+            "description": "The date and time the signature was applied.",
+            "synonyms": "signed date, completion date, signature time"
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "required": false,
+            "description": "Unique identifier for a pending action or task.",
+            "synonyms": "taskId, pendingKey, referenceId"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SignatureSessionBrowse",
+        "emittedEvents": [
+          "CREATE",
+          "RESEND_REQUEST",
+          "REQUEST_DELETE",
+          "SignatureSessionLoaded",
+          "SignatureSessionLoadFailed"
+        ],
+        "listenedEvents": [
+          "SESSION_CREATED",
+          "SESSION_RESENT",
+          "SESSION_DELETED"
+        ],
+        "events": [
+          {
+            "name": "CREATE",
+            "direction": "emit",
+            "description": "Indicates a new signature request has been initiated.",
+            "synonyms": "new, initiate, start, begin",
+            "tier": "domain"
+          },
+          {
+            "name": "RESEND_REQUEST",
+            "direction": "emit",
+            "description": "Indicates a signature request has been resent.",
+            "synonyms": "resend, retransmit, repeat",
+            "tier": "presentation"
+          },
+          {
+            "name": "REQUEST_DELETE",
+            "direction": "emit",
+            "description": "Signals a signature request has been removed.",
+            "synonyms": "remove, purge, discard",
+            "tier": "presentation"
+          },
+          {
+            "name": "SignatureSessionLoaded",
+            "direction": "emit",
+            "description": "Signals that a signature session has been successfully loaded.",
+            "synonyms": "loaded, initialized, ready",
+            "tier": "domain"
+          },
+          {
+            "name": "SignatureSessionLoadFailed",
+            "direction": "emit",
+            "description": "Indicates failure to load a signature session.",
+            "synonyms": "error, failure, problem, unsuccessful",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": []
+      },
+      {
+        "name": "SignatureSessionCreate",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "CREATE"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "documentId",
+              "recipientName",
+              "recipientEmail",
+              "requesterName"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "file-signature"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "openButtonLabel",
+            "type": "unknown",
+            "default": "New Signature Request"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Signature Request"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
+      },
+      {
+        "name": "SignatureSessionDelete",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "REQUEST_DELETE"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "Are you sure you want to cancel this signature request?"
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Cancel Request"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Cancel Signature Request"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Confirmation.traits.ConfirmActionConfirmation"
+      },
+      {
+        "name": "SignatureSessionPersistor",
+        "emittedEvents": [
+          "SESSION_CREATED",
+          "SESSION_RESENT",
+          "SESSION_DELETED"
+        ],
+        "listenedEvents": [
+          "SAVE",
+          "RESEND_REQUEST",
+          "CONFIRM_DELETE"
+        ],
+        "events": [
+          {
+            "name": "SESSION_CREATED",
+            "direction": "emit",
+            "description": "A new signature session has been initialized.",
+            "synonyms": "start, begin, initialize",
+            "tier": "domain"
+          },
+          {
+            "name": "SESSION_RESENT",
+            "direction": "emit",
+            "description": "Indicates a signature request has been resent.",
+            "synonyms": "resend, retransmit, send again",
+            "tier": "presentation"
+          },
+          {
+            "name": "SESSION_DELETED",
+            "direction": "emit",
+            "description": "Indicates a signature session has been removed or invalidated.",
+            "synonyms": "removed, cleared, expired, terminated",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "DO_CREATE",
+            "direction": "listen",
+            "description": "Initiates the creation of a new signature request.",
+            "synonyms": "new, add, generate, start",
+            "tier": "domain"
+          },
+          {
+            "name": "DO_RESEND",
+            "direction": "listen",
+            "description": "A request to resend a signature request.",
+            "synonyms": "retry, repeat, send again",
+            "tier": "presentation"
+          },
+          {
+            "name": "DO_DELETE",
+            "direction": "listen",
+            "description": "A request to remove an item from the current view.",
+            "synonyms": "remove, discard, clear, erase",
+            "tier": "presentation"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "SignatureSessionPage",
+        "defaultPath": "/esign-flow",
+        "primaryEntity": "SignatureSession"
+      }
+    ],
+    "emittedEvents": [
+      "CREATE",
+      "REQUEST_DELETE",
+      "RESEND_REQUEST",
+      "SESSION_CREATED",
+      "SESSION_DELETED",
+      "SESSION_RESENT",
+      "SignatureSessionLoadFailed",
+      "SignatureSessionLoaded"
+    ],
+    "listenedEvents": [
+      "CONFIRM_DELETE",
+      "CREATE",
+      "REQUEST_DELETE",
+      "RESEND_REQUEST",
+      "SAVE",
+      "SESSION_CREATED",
+      "SESSION_DELETED",
+      "SESSION_RESENT"
+    ],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "6af0a845c2b9f72f"
+  }
+]

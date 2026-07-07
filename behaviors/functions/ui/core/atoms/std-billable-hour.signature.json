@@ -1,0 +1,208 @@
+[
+  {
+    "organism": "std-billable-hour",
+    "orbital": "BillableHourOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-billable-hour.ts",
+    "entities": [
+      {
+        "name": "BillableHour",
+        "fields": [
+          {
+            "name": "workerId",
+            "type": "string",
+            "required": true,
+            "description": "Unique identifier for the worker.",
+            "synonyms": "employeeId, staffId, userId"
+          },
+          {
+            "name": "workerName",
+            "type": "string",
+            "required": false,
+            "description": "The name of the worker associated with the time entry.",
+            "synonyms": "employee, staff, personnel"
+          },
+          {
+            "name": "matterId",
+            "type": "string",
+            "required": false,
+            "description": "Unique identifier for the associated case or project.",
+            "synonyms": "caseId, projectID, reference"
+          },
+          {
+            "name": "projectId",
+            "type": "string",
+            "required": false,
+            "description": "Identifier for the project associated with the time entry.",
+            "synonyms": "project, task, reference"
+          },
+          {
+            "name": "workDate",
+            "type": "string",
+            "required": true,
+            "description": "The date on which the work was performed.",
+            "synonyms": "date, transaction date, service date"
+          },
+          {
+            "name": "hours",
+            "type": "number",
+            "required": false,
+            "description": "The quantity of time recorded.",
+            "synonyms": "duration, time, amount"
+          },
+          {
+            "name": "rate",
+            "type": "number",
+            "required": false,
+            "description": "The hourly charge for the work performed.",
+            "synonyms": "price, cost, amount"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "A textual explanation of the hour entry.",
+            "synonyms": "explanation, notes, details, comment"
+          },
+          {
+            "name": "isBillable",
+            "type": "boolean",
+            "required": false,
+            "description": "Indicates whether the hour is eligible for billing.",
+            "synonyms": "billable flag, billing status, billable indicator"
+          },
+          {
+            "name": "invoiceStatus",
+            "type": "string",
+            "required": false,
+            "description": "The current billing status of the hour entry.",
+            "synonyms": "status, billing status, payment status"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BillableHourTimesheet",
+        "emittedEvents": [
+          "OPEN_HOURS",
+          "CLOSE_VIEW",
+          "INVOICE_HOURS",
+          "WRITE_OFF_HOURS",
+          "BillableHourLoaded",
+          "BillableHourLoadFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "OPEN_HOURS",
+            "direction": "emit",
+            "description": "Signals the display of the hours list.",
+            "synonyms": "show, display, list",
+            "tier": "domain"
+          },
+          {
+            "name": "CLOSE_VIEW",
+            "direction": "emit",
+            "description": "Indicates the detail view has been dismissed.",
+            "synonyms": "dismiss, close, hide",
+            "tier": "domain"
+          },
+          {
+            "name": "INVOICE_HOURS",
+            "direction": "emit",
+            "description": "Signals that billable hours have been invoiced.",
+            "synonyms": "invoice, charge, bill",
+            "tier": "presentation"
+          },
+          {
+            "name": "WRITE_OFF_HOURS",
+            "direction": "emit",
+            "description": "Indicates billable hours have been written off.",
+            "synonyms": "deduct, remove, cancel",
+            "tier": "presentation"
+          },
+          {
+            "name": "BillableHourLoaded",
+            "direction": "emit",
+            "description": "Signals that a billable hour data set has been successfully retrieved.",
+            "synonyms": "loaded, fetched, retrieved, populated",
+            "tier": "domain"
+          },
+          {
+            "name": "BillableHourLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load billable hour data.",
+            "synonyms": "error, failed, problem, unsuccessful",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "statLook",
+            "type": "string",
+            "default": "elevated",
+            "label": "Stat display look",
+            "description": "Layer 2 visual treatment for stat / KPI cards.",
+            "tier": "presentation",
+            "enumValues": [
+              "elevated",
+              "flat",
+              "progress-backed",
+              "gauge",
+              "sparkline"
+            ]
+          },
+          {
+            "key": "tableLook",
+            "type": "string",
+            "default": "dense",
+            "label": "Table look",
+            "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+            "tier": "presentation",
+            "enumValues": [
+              "dense",
+              "spacious",
+              "striped",
+              "borderless",
+              "card-rows"
+            ]
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Time Entries",
+            "label": "Section title",
+            "description": "Heading shown above the time-entries list",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "BillableHourPage",
+        "defaultPath": "/timesheet",
+        "primaryEntity": "BillableHour"
+      }
+    ],
+    "emittedEvents": [
+      "BillableHourLoadFailed",
+      "BillableHourLoaded",
+      "CLOSE_VIEW",
+      "INVOICE_HOURS",
+      "OPEN_HOURS",
+      "WRITE_OFF_HOURS"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]
