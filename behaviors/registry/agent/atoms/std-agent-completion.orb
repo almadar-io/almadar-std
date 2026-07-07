@@ -56,6 +56,16 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "GENERATED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
             }
           ],
           "linkedEntity": "Completion",
@@ -79,6 +89,21 @@
                 ]
               },
               {
+                "key": "GENERATED",
+                "name": "Generated",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "GENERATION_FAILED",
+                "name": "Generation Failed"
+              },
+              {
                 "key": "RESET",
                 "name": "Reset"
               },
@@ -98,6 +123,9 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "generating"
               },
               {
                 "name": "done"
@@ -134,12 +162,26 @@
                     "@payload.prompt"
                   ],
                   [
+                    "llm/generate",
+                    "@entity.prompt",
+                    {
+                      "emit": {
+                        "failure": "GENERATION_FAILED",
+                        "success": "GENERATED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "GENERATE",
+                "from": "idle",
+                "to": "generating"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.response",
-                    [
-                      "llm/generate",
-                      "@entity.prompt"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -154,8 +196,25 @@
                     }
                   ]
                 ],
-                "event": "GENERATE",
-                "from": "idle",
+                "event": "GENERATED",
+                "from": "generating",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "GENERATION_FAILED",
+                "from": "generating",
                 "to": "done"
               },
               {

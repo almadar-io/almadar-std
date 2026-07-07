@@ -30,13 +30,20 @@ const ALIAS = 'AgentContext';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentContextEventKey = 'COUNT' | 'COUNTED' | 'INIT' | 'RESET';
+export type StdAgentContextEventKey = 'COUNT' | 'COUNTED' | 'COUNT_FAILED' | 'INIT' | 'RESET' | 'TOKEN_COUNTED';
 
 /**
  * Payload shape for the `COUNTED` event.
  */
 export interface StdAgentContextCountedPayload {
   tokenCount: number;
+}
+
+/**
+ * Payload shape for the `TOKEN_COUNTED` event.
+ */
+export interface StdAgentContextTokenCountedPayload {
+  result: number;
 }
 
 /**

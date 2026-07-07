@@ -26,10 +26,21 @@ orbital AgentBuilderOrbital {
         (set @entity.validationResult "")
         (set @entity.fixPrompt "")
         (set @entity.status idle)
-      START -> done
+      START -> planning
         (set @entity.request ?request)
         (set @entity.orbitalName ?orbitalName)
-        (set @entity.plan (llm/generate @entity.request))
+        (llm/generate @entity.request { emit: { success: PLANNED, failure: PLAN_FAILED } })
+    }
+
+    state planning {
+      PLANNED -> done
+        (set @entity.plan ?result)
+        (behavior/instantiate @entity.orbitalName @entity.plan)
+        (validate/validate @entity.orbitalName)
+        (set @entity.status done)
+        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, plan: @entity.plan })
+      PLAN_FAILED -> done
+        (set @entity.plan "")
         (behavior/instantiate @entity.orbitalName @entity.plan)
         (validate/validate @entity.orbitalName)
         (set @entity.status done)
@@ -52,6 +63,9 @@ orbital AgentBuilderOrbital {
       BUILD_COMPLETE {
         orbitalName : string!
         plan : string!
+      }
+      PLANNED {
+        result : string!
       }
     }
 

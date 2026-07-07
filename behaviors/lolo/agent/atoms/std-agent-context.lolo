@@ -16,10 +16,19 @@ orbital AgentContextOrbital {
       INIT -> idle
         (set @entity.tokenCount 0)
         (set @entity.status idle)
-      COUNT -> counted
-        (set @entity.tokenCount (llm/token-count))
+      COUNT -> counting
+        (set @entity.status idle)
+        (llm/token-count { emit: { success: TOKEN_COUNTED, failure: COUNT_FAILED } })
+    }
+
+    state counting {
+      TOKEN_COUNTED -> counted
+        (set @entity.tokenCount ?result)
         (set @entity.status counted)
         (emit COUNTED { tokenCount: @entity.tokenCount })
+      COUNT_FAILED -> idle
+        (set @entity.tokenCount 0)
+        (set @entity.status idle)
     }
 
     state counted {
@@ -33,6 +42,9 @@ orbital AgentContextOrbital {
     emits {
       COUNTED {
         tokenCount : number!
+      }
+      TOKEN_COUNTED {
+        result : number!
       }
     }
 
@@ -49,12 +61,39 @@ orbital AgentContextOrbital {
         (set @entity.beforeTokens 0)
         (set @entity.afterTokens 0)
         (set @entity.status idle)
-      COMPACT -> compacted
-        (set @entity.beforeTokens (llm/token-count))
-        (llm/compact)
-        (set @entity.afterTokens (llm/token-count))
+      COMPACT -> counting_before
+        (set @entity.status idle)
+        (llm/token-count { emit: { success: BEFORE_COUNTED, failure: COMPACT_COUNT_FAILED } })
+    }
+
+    state counting_before {
+      BEFORE_COUNTED -> compacting
+        (set @entity.beforeTokens ?result)
+        (llm/compact { emit: { success: COMPACTED_OK, failure: COMPACT_FAILED } })
+      COMPACT_COUNT_FAILED -> idle
+        (set @entity.beforeTokens 0)
+        (set @entity.afterTokens 0)
+        (set @entity.status idle)
+    }
+
+    state compacting {
+      COMPACTED_OK -> counting_after
+        (llm/token-count { emit: { success: AFTER_COUNTED, failure: COMPACT_COUNT_FAILED } })
+      COMPACT_FAILED -> idle
+        (set @entity.beforeTokens 0)
+        (set @entity.afterTokens 0)
+        (set @entity.status idle)
+    }
+
+    state counting_after {
+      AFTER_COUNTED -> compacted
+        (set @entity.afterTokens ?result)
         (set @entity.status compacted)
         (emit COMPACTED { before: @entity.beforeTokens, after: @entity.afterTokens })
+      COMPACT_COUNT_FAILED -> idle
+        (set @entity.beforeTokens 0)
+        (set @entity.afterTokens 0)
+        (set @entity.status idle)
     }
 
     state compacted {
@@ -70,6 +109,12 @@ orbital AgentContextOrbital {
       COMPACTED {
         before : number!
         after : number!
+      }
+      BEFORE_COUNTED {
+        result : number!
+      }
+      AFTER_COUNTED {
+        result : number!
       }
     }
 

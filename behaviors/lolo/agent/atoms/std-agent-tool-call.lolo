@@ -22,12 +22,19 @@ orbital AgentToolCallOrbital {
         (set @entity.tools [])
         (set @entity.response "")
         (set @entity.status idle)
-      CALL_TOOLS -> done
+      CALL_TOOLS -> calling
         (set @entity.messages ?messages)
         (set @entity.tools ?tools)
-        (set @entity.response (llm/call-tools @entity.messages @entity.tools))
+        (llm/call-tools @entity.messages @entity.tools { emit: { success: TOOLS_CALLED, failure: TOOLS_FAILED } })
+    }
+
+    state calling {
+      TOOLS_CALLED -> done
+        (set @entity.response ?result)
         (set @entity.status done)
-        (emit TOOLS_CALLED { response: @entity.response })
+      TOOLS_FAILED -> done
+        (set @entity.response "")
+        (set @entity.status done)
     }
 
     state done {
@@ -42,7 +49,7 @@ orbital AgentToolCallOrbital {
 
     emits {
       TOOLS_CALLED {
-        response : string!
+        result : string!
       }
     }
 

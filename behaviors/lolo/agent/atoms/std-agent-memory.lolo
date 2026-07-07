@@ -25,9 +25,18 @@ orbital AgentMemoryOrbital {
         (set @entity.category "")
         (set @entity.memoryId "")
         (set @entity.status idle)
-      RECALL -> recalled
+      RECALL -> recalling
         (set @entity.query ?query)
-        (set @entity.results (memory/recall @entity.query))
+        (memory/recall @entity.query { emit: { success: RECALL_COMPLETE, failure: RECALL_FAILED } })
+    }
+
+    state recalling {
+      RECALL_COMPLETE -> recalled
+        (set @entity.results ?result)
+        (set @entity.status recalled)
+        (emit RECALLED { results: @entity.results })
+      RECALL_FAILED -> recalled
+        (set @entity.results [])
         (set @entity.status recalled)
         (emit RECALLED { results: @entity.results })
     }
@@ -44,6 +53,9 @@ orbital AgentMemoryOrbital {
     emits {
       RECALLED {
         results : [MemoryRecord]!
+      }
+      RECALL_COMPLETE {
+        result : [MemoryRecord]!
       }
     }
 
@@ -63,10 +75,19 @@ orbital AgentMemoryOrbital {
         (set @entity.category "")
         (set @entity.memoryId "")
         (set @entity.status idle)
-      STORE -> stored
+      STORE -> storing
         (set @entity.content ?content)
         (set @entity.category ?category)
-        (set @entity.memoryId (memory/store @entity.content @entity.category))
+        (memory/store @entity.content @entity.category { emit: { success: STORE_COMPLETE, failure: STORE_FAILED } })
+    }
+
+    state storing {
+      STORE_COMPLETE -> stored
+        (set @entity.memoryId ?result)
+        (set @entity.status stored)
+        (emit STORED { memoryId: @entity.memoryId })
+      STORE_FAILED -> stored
+        (set @entity.memoryId "")
         (set @entity.status stored)
         (emit STORED { memoryId: @entity.memoryId })
     }
@@ -84,6 +105,9 @@ orbital AgentMemoryOrbital {
     emits {
       STORED {
         memoryId : string!
+      }
+      STORE_COMPLETE {
+        result : string!
       }
     }
 

@@ -133,6 +133,47 @@
                   "type": "[HistoryEntry]"
                 }
               ]
+            },
+            {
+              "event": "SPEC_LOADED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "properties": [
+                    {
+                      "name": "orbitalName",
+                      "type": "string"
+                    },
+                    {
+                      "name": "organism",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "method",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "deltaPrompt",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "required": true,
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "HISTORY_LOADED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "[HistoryEntry]"
+                }
+              ]
             }
           ],
           "linkedEntity": "AgentSession",
@@ -154,6 +195,57 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "SPEC_LOADED",
+                "name": "Spec Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "properties": [
+                      {
+                        "name": "orbitalName",
+                        "type": "string"
+                      },
+                      {
+                        "name": "organism",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "method",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "deltaPrompt",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "SPEC_LOAD_FAILED",
+                "name": "Spec Load Failed"
+              },
+              {
+                "key": "HISTORY_LOADED",
+                "name": "History Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "[HistoryEntry]"
+                  }
+                ]
+              },
+              {
+                "key": "HISTORY_LOAD_FAILED",
+                "name": "History Load Failed"
               },
               {
                 "key": "RESET",
@@ -203,6 +295,12 @@
                 "name": "idle"
               },
               {
+                "name": "reading"
+              },
+              {
+                "name": "loadingHistory"
+              },
+              {
                 "name": "read"
               }
             ],
@@ -242,20 +340,60 @@
                     "@payload.orbitalName"
                   ],
                   [
+                    "session/read-spec",
+                    "@entity.orbitalName",
+                    {
+                      "emit": {
+                        "failure": "SPEC_LOAD_FAILED",
+                        "success": "SPEC_LOADED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "READ_SPEC",
+                "from": "idle",
+                "to": "reading"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.spec",
-                    [
-                      "session/read-spec",
-                      "@entity.orbitalName"
-                    ]
+                    "@payload.result"
                   ],
+                  [
+                    "session/read-history",
+                    "@entity.orbitalName",
+                    {
+                      "emit": {
+                        "failure": "HISTORY_LOAD_FAILED",
+                        "success": "HISTORY_LOADED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SPEC_LOADED",
+                "from": "reading",
+                "to": "loadingHistory"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "SPEC_LOAD_FAILED",
+                "from": "reading",
+                "to": "idle"
+              },
+              {
+                "effects": [
                   [
                     "set",
                     "@entity.history",
-                    [
-                      "session/read-history",
-                      "@entity.orbitalName"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -271,9 +409,21 @@
                     }
                   ]
                 ],
-                "event": "READ_SPEC",
-                "from": "idle",
+                "event": "HISTORY_LOADED",
+                "from": "loadingHistory",
                 "to": "read"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "HISTORY_LOAD_FAILED",
+                "from": "loadingHistory",
+                "to": "idle"
               },
               {
                 "effects": [

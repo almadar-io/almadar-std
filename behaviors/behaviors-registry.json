@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-07-07T10:50:23.869Z",
+  "$generated": "2026-07-07T14:14:52.257Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
   "totalBehaviors": 489,
@@ -18,11 +18,11 @@
       "layer": "UI Patterns",
       "description": "Wraps llm/generate — takes a prompt, returns generated text.",
       "defaultOrbitalName": "AgentCompletionOrbital",
-      "statePattern": "done, idle",
+      "statePattern": "done, generating, idle",
       "complexity": {
-        "states": 2,
-        "events": 4,
-        "transitions": 4
+        "states": 3,
+        "events": 6,
+        "transitions": 6
       },
       "defaultEntity": {
         "name": "Completion",
@@ -86,6 +86,8 @@
       ],
       "connectableEvents": [
         "GENERATE",
+        "GENERATED",
+        "GENERATION_FAILED",
         "RESET",
         "COMPLETED"
       ],
@@ -101,11 +103,11 @@
       "layer": "UI Patterns",
       "description": "Wraps llm/token-count + llm/compact — context window management.",
       "defaultOrbitalName": "AgentContextOrbital",
-      "statePattern": "counted, idle",
+      "statePattern": "counted, counting, idle",
       "complexity": {
-        "states": 2,
-        "events": 4,
-        "transitions": 4
+        "states": 3,
+        "events": 6,
+        "transitions": 6
       },
       "defaultEntity": {
         "name": "ContextWindow",
@@ -174,6 +176,8 @@
       ],
       "connectableEvents": [
         "COUNT",
+        "TOKEN_COUNTED",
+        "COUNT_FAILED",
         "RESET",
         "COUNTED"
       ],
@@ -189,11 +193,11 @@
       "layer": "UI Patterns",
       "description": "Wraps memory/recall + memory/store — semantic memory for agent loops.",
       "defaultOrbitalName": "AgentMemoryOrbital",
-      "statePattern": "idle, recalled",
+      "statePattern": "idle, recalled, recalling",
       "complexity": {
-        "states": 2,
-        "events": 4,
-        "transitions": 4
+        "states": 3,
+        "events": 6,
+        "transitions": 6
       },
       "defaultEntity": {
         "name": "AgentMemory",
@@ -272,6 +276,8 @@
       ],
       "connectableEvents": [
         "RECALL",
+        "RECALL_COMPLETE",
+        "RECALL_FAILED",
         "RESET",
         "RECALLED"
       ],
@@ -287,11 +293,11 @@
       "layer": "UI Patterns",
       "description": "Wraps session/read-spec + session/write-spec + session/read-history — orbital session data.",
       "defaultOrbitalName": "AgentSessionOrbital",
-      "statePattern": "idle, read",
+      "statePattern": "idle, loadingHistory, read, reading",
       "complexity": {
-        "states": 2,
-        "events": 4,
-        "transitions": 4
+        "states": 4,
+        "events": 8,
+        "transitions": 8
       },
       "defaultEntity": {
         "name": "AgentSession",
@@ -360,6 +366,10 @@
       ],
       "connectableEvents": [
         "READ_SPEC",
+        "SPEC_LOADED",
+        "SPEC_LOAD_FAILED",
+        "HISTORY_LOADED",
+        "HISTORY_LOAD_FAILED",
         "RESET",
         "SPEC_READ"
       ],
@@ -375,11 +385,11 @@
       "layer": "UI Patterns",
       "description": "Wraps llm/call-tools — takes messages + tools, returns tool-call result.",
       "defaultOrbitalName": "AgentToolCallOrbital",
-      "statePattern": "done, idle",
+      "statePattern": "calling, done, idle",
       "complexity": {
-        "states": 2,
-        "events": 4,
-        "transitions": 4
+        "states": 3,
+        "events": 5,
+        "transitions": 6
       },
       "defaultEntity": {
         "name": "ToolCall",
@@ -448,8 +458,9 @@
       ],
       "connectableEvents": [
         "CALL_TOOLS",
-        "RESET",
-        "TOOLS_CALLED"
+        "TOOLS_CALLED",
+        "TOOLS_FAILED",
+        "RESET"
       ],
       "eventPayloads": {},
       "exposure": "both",
@@ -5586,6 +5597,7 @@
         "std-calendar",
         "std-confirmation",
         "std-dashboard-grid-embedded",
+        "std-embedded-dashboard",
         "std-esign-flow",
         "std-esign-request",
         "std-event-log",
@@ -8888,6 +8900,7 @@
         "std-confirmation",
         "std-dashboard-grid-embedded",
         "std-date-range",
+        "std-embedded-dashboard",
         "std-esign-flow",
         "std-esign-request",
         "std-event-log",
@@ -10569,6 +10582,7 @@
         "std-confirmation",
         "std-dashboard-grid-embedded",
         "std-date-range",
+        "std-embedded-dashboard",
         "std-esign-flow",
         "std-esign-request",
         "std-event-log",
@@ -12655,6 +12669,7 @@
         "std-confirmation",
         "std-dashboard-grid-embedded",
         "std-date-range",
+        "std-embedded-dashboard",
         "std-esign-flow",
         "std-esign-request",
         "std-event-log",
@@ -13844,6 +13859,7 @@
         "std-confirmation",
         "std-dashboard-grid-embedded",
         "std-date-range",
+        "std-embedded-dashboard",
         "std-esign-flow",
         "std-esign-request",
         "std-event-log",

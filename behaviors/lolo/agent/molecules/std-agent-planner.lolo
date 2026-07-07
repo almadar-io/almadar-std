@@ -21,10 +21,27 @@ orbital AgentPlannerOrbital {
         (set @entity.memories [])
         (set @entity.plan "")
         (set @entity.status idle)
-      PLAN -> planned
+      PLAN -> recalling
         (set @entity.prompt ?prompt)
-        (set @entity.memories (memory/recall @entity.prompt))
-        (set @entity.plan (llm/generate @entity.prompt))
+        (memory/recall @entity.prompt { emit: { success: MEMORIES_RECALLED, failure: RECALL_FAILED } })
+    }
+
+    state recalling {
+      MEMORIES_RECALLED -> planning
+        (set @entity.memories ?result)
+        (llm/generate @entity.prompt { emit: { success: PLAN_GENERATED, failure: PLAN_GENERATION_FAILED } })
+      RECALL_FAILED -> planning
+        (set @entity.memories [])
+        (llm/generate @entity.prompt { emit: { success: PLAN_GENERATED, failure: PLAN_GENERATION_FAILED } })
+    }
+
+    state planning {
+      PLAN_GENERATED -> planned
+        (set @entity.plan ?result)
+        (set @entity.status planned)
+        (emit PLANNED { plan: @entity.plan, memoryCount: @entity.memories })
+      PLAN_GENERATION_FAILED -> planned
+        (set @entity.plan "")
         (set @entity.status planned)
         (emit PLANNED { plan: @entity.plan, memoryCount: @entity.memories })
     }
@@ -43,6 +60,12 @@ orbital AgentPlannerOrbital {
       PLANNED {
         plan : string!
         memoryCount : number!
+      }
+      MEMORIES_RECALLED {
+        result : [MemoryRecord]!
+      }
+      PLAN_GENERATED {
+        result : string!
       }
     }
 

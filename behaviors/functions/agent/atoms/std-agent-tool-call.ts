@@ -30,13 +30,13 @@ const ALIAS = 'AgentToolCall';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentToolCallEventKey = 'CALL_TOOLS' | 'INIT' | 'RESET' | 'TOOLS_CALLED';
+export type StdAgentToolCallEventKey = 'CALL_TOOLS' | 'INIT' | 'RESET' | 'TOOLS_CALLED' | 'TOOLS_FAILED';
 
 /**
  * Payload shape for the `TOOLS_CALLED` event.
  */
 export interface StdAgentToolCallToolsCalledPayload {
-  response: string;
+  result: string;
 }
 
 /**

@@ -31,24 +31,40 @@ orbital CoordinatorOrbital {
         (set @entity.failedCount 0)
         (set @entity.composedSchema "")
         (set @entity.validationErrors [])
-      START -> monitoring
+      START -> planning
         (set @entity.prompt ?prompt)
         (set @entity.totalOrbitals ?totalOrbitals)
         (set @entity.phase planning)
-        (set @entity.plan (llm/generate @entity.prompt))
+        (llm/generate @entity.prompt { emit: { success: PLANNED, failure: PLAN_FAILED } })
+    }
+
+    state planning {
+      PLANNED -> monitoring
+        (set @entity.plan ?result)
         (session/write-spec "coordinator-plan" @entity.plan)
         (set @entity.phase dispatching)
         (emit DISPATCHED { plan: @entity.plan, totalOrbitals: @entity.totalOrbitals })
+      PLAN_FAILED -> monitoring
+        (set @entity.plan "")
     }
 
     state monitoring {
       INIT -> monitoring
         (set @entity.phase monitoring)
-      ALL_DONE -> done
+      ALL_DONE -> assembling
         (set @entity.phase assembling)
-        (set @entity.composedSchema (compose/compose-all))
+        (compose/compose-all { emit: { success: COMPOSED, failure: COMPOSE_FAILED } })
+    }
+
+    state assembling {
+      COMPOSED -> done
+        (set @entity.composedSchema ?result)
         (set @entity.phase validating)
         (validate/validate "composed")
+        (set @entity.phase done)
+        (emit RABIT_DONE { schema: @entity.composedSchema })
+      COMPOSE_FAILED -> done
+        (set @entity.composedSchema "")
         (set @entity.phase done)
         (emit RABIT_DONE { schema: @entity.composedSchema })
     }
@@ -68,6 +84,12 @@ orbital CoordinatorOrbital {
     }
 
     emits {
+      PLANNED {
+        result : string!
+      }
+      COMPOSED {
+        result : string!
+      }
       DISPATCHED {
         plan : string!
         totalOrbitals : number!
@@ -201,11 +223,18 @@ orbital OrbitalProcessOrbital {
     }
 
     state repairing {
-      INIT -> repairing
+      INIT -> fixing
         (set @entity.status repairing)
-        (set @entity.fixPrompt (llm/generate @entity.orbitalName))
-        (emit REBUILD { orbitalName: @entity.orbitalName })
+        (llm/generate @entity.orbitalName { emit: { success: FIX_GENERATED, failure: FIX_FAILED } })
       REBUILD -> building
+    }
+
+    state fixing {
+      FIX_GENERATED -> repairing
+        (set @entity.fixPrompt ?result)
+        (emit REBUILD { orbitalName: @entity.orbitalName })
+      FIX_FAILED -> repairing
+        (set @entity.fixPrompt "")
     }
 
     state done {
@@ -230,6 +259,9 @@ orbital OrbitalProcessOrbital {
       }
       ORBITAL_COMPLETE {
         orbitalName : string!
+      }
+      FIX_GENERATED {
+        result : string!
       }
     }
 

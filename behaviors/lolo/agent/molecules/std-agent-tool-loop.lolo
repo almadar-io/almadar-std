@@ -24,23 +24,36 @@ orbital AgentToolLoopOrbital {
         (set @entity.response "")
         (set @entity.iterations 0)
         (set @entity.status idle)
-      EXECUTE -> done
+      EXECUTE -> calling
         (set @entity.messages ?messages)
         (set @entity.tools ?tools)
-        (set @entity.response (llm/call-tools @entity.messages @entity.tools))
+        (llm/call-tools @entity.messages @entity.tools { emit: { success: TOOLS_CALLED_1, failure: TOOLS_FAILED_1 } })
+    }
+
+    state calling {
+      TOOLS_CALLED_1 -> done
+        (set @entity.response ?result)
         (set @entity.iterations (+ @entity.iterations 1))
         (set @entity.status done)
         (emit LOOP_STEP { response: @entity.response, iteration: @entity.iterations })
+      TOOLS_FAILED_1 -> done
+        (set @entity.response "")
+        (set @entity.status done)
+      TOOLS_CALLED_2 -> done
+        (set @entity.response ?result)
+        (set @entity.iterations (+ @entity.iterations 1))
+        (set @entity.status done)
+        (emit LOOP_STEP { response: @entity.response, iteration: @entity.iterations })
+      TOOLS_FAILED_2 -> done
+        (set @entity.response "")
+        (set @entity.status done)
     }
 
     state done {
       INIT -> done
         (set @entity.status done)
-      CONTINUE -> done
-        (set @entity.response (llm/call-tools @entity.messages @entity.tools))
-        (set @entity.iterations (+ @entity.iterations 1))
-        (set @entity.status done)
-        (emit LOOP_STEP { response: @entity.response, iteration: @entity.iterations })
+      CONTINUE -> calling
+        (llm/call-tools @entity.messages @entity.tools { emit: { success: TOOLS_CALLED_2, failure: TOOLS_FAILED_2 } })
       RESET -> idle
         (set @entity.messages [])
         (set @entity.tools [])
@@ -53,6 +66,12 @@ orbital AgentToolLoopOrbital {
       LOOP_STEP {
         response : string!
         iteration : number!
+      }
+      TOOLS_CALLED_1 {
+        result : string!
+      }
+      TOOLS_CALLED_2 {
+        result : string!
       }
     }
 

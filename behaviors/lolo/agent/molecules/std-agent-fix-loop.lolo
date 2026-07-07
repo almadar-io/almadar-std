@@ -21,12 +21,20 @@ orbital AgentFixLoopOrbital {
         (set @entity.errors [])
         (set @entity.fixPrompt "")
         (set @entity.status idle)
-      VALIDATE_ORBITAL -> fixed
+      VALIDATE_ORBITAL -> generating_prompt
         (set @entity.orbitalName ?orbitalName)
         (validate/validate @entity.orbitalName)
-        (set @entity.fixPrompt (llm/generate @entity.orbitalName))
+        (llm/generate @entity.orbitalName { emit: { success: PROMPT_GENERATED, failure: PROMPT_GENERATION_FAILED } })
+    }
+
+    state generating_prompt {
+      PROMPT_GENERATED -> fixed
+        (set @entity.fixPrompt ?result)
         (set @entity.status fixed)
         (emit FIX_APPLIED { orbitalName: @entity.orbitalName, fixPrompt: @entity.fixPrompt })
+      PROMPT_GENERATION_FAILED -> fixed
+        (set @entity.fixPrompt "")
+        (set @entity.status fixed)
     }
 
     state fixed {
@@ -38,6 +46,9 @@ orbital AgentFixLoopOrbital {
       FIX_APPLIED {
         orbitalName : string!
         fixPrompt : string!
+      }
+      PROMPT_GENERATED {
+        result : string!
       }
     }
 

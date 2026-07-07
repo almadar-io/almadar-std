@@ -104,7 +104,7 @@
               "event": "TOOLS_CALLED",
               "payloadSchema": [
                 {
-                  "name": "response",
+                  "name": "result",
                   "required": true,
                   "type": "string"
                 }
@@ -137,25 +137,32 @@
                 ]
               },
               {
-                "key": "RESET",
-                "name": "Reset"
-              },
-              {
                 "key": "TOOLS_CALLED",
                 "name": "Tools Called",
                 "payloadSchema": [
                   {
-                    "name": "response",
+                    "name": "result",
                     "required": true,
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "TOOLS_FAILED",
+                "name": "Tools Failed"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
               }
             ],
             "states": [
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "calling"
               },
               {
                 "name": "done"
@@ -202,29 +209,53 @@
                     "@payload.tools"
                   ],
                   [
-                    "set",
-                    "@entity.response",
-                    [
-                      "llm/call-tools",
-                      "@entity.messages",
-                      "@entity.tools"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "done"
-                  ],
-                  [
-                    "emit",
-                    "TOOLS_CALLED",
+                    "llm/call-tools",
+                    "@entity.messages",
+                    "@entity.tools",
                     {
-                      "response": "@entity.response"
+                      "emit": {
+                        "failure": "TOOLS_FAILED",
+                        "success": "TOOLS_CALLED"
+                      }
                     }
                   ]
                 ],
                 "event": "CALL_TOOLS",
                 "from": "idle",
+                "to": "calling"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    "@payload.result"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "TOOLS_CALLED",
+                "from": "calling",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "TOOLS_FAILED",
+                "from": "calling",
                 "to": "done"
               },
               {

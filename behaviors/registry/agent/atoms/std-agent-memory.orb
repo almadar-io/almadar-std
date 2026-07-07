@@ -100,6 +100,16 @@
                   "type": "[MemoryRecord]"
                 }
               ]
+            },
+            {
+              "event": "RECALL_COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "[MemoryRecord]"
+                }
+              ]
             }
           ],
           "linkedEntity": "AgentMemory",
@@ -123,6 +133,21 @@
                 ]
               },
               {
+                "key": "RECALL_COMPLETE",
+                "name": "Recall Complete",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "[MemoryRecord]"
+                  }
+                ]
+              },
+              {
+                "key": "RECALL_FAILED",
+                "name": "Recall Failed"
+              },
+              {
                 "key": "RESET",
                 "name": "Reset"
               },
@@ -142,6 +167,9 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "recalling"
               },
               {
                 "name": "recalled"
@@ -193,12 +221,26 @@
                     "@payload.query"
                   ],
                   [
+                    "memory/recall",
+                    "@entity.query",
+                    {
+                      "emit": {
+                        "failure": "RECALL_FAILED",
+                        "success": "RECALL_COMPLETE"
+                      }
+                    }
+                  ]
+                ],
+                "event": "RECALL",
+                "from": "idle",
+                "to": "recalling"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.results",
-                    [
-                      "memory/recall",
-                      "@entity.query"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -213,8 +255,32 @@
                     }
                   ]
                 ],
-                "event": "RECALL",
-                "from": "idle",
+                "event": "RECALL_COMPLETE",
+                "from": "recalling",
+                "to": "recalled"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.results",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "recalled"
+                  ],
+                  [
+                    "emit",
+                    "RECALLED",
+                    {
+                      "results": "@entity.results"
+                    }
+                  ]
+                ],
+                "event": "RECALL_FAILED",
+                "from": "recalling",
                 "to": "recalled"
               },
               {
@@ -266,6 +332,16 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "STORE_COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
             }
           ],
           "linkedEntity": "AgentMemory",
@@ -294,6 +370,21 @@
                 ]
               },
               {
+                "key": "STORE_COMPLETE",
+                "name": "Store Complete",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "STORE_FAILED",
+                "name": "Store Failed"
+              },
+              {
                 "key": "RESET",
                 "name": "Reset"
               },
@@ -313,6 +404,9 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "storing"
               },
               {
                 "name": "stored"
@@ -359,13 +453,27 @@
                     "@payload.category"
                   ],
                   [
+                    "memory/store",
+                    "@entity.content",
+                    "@entity.category",
+                    {
+                      "emit": {
+                        "failure": "STORE_FAILED",
+                        "success": "STORE_COMPLETE"
+                      }
+                    }
+                  ]
+                ],
+                "event": "STORE",
+                "from": "idle",
+                "to": "storing"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.memoryId",
-                    [
-                      "memory/store",
-                      "@entity.content",
-                      "@entity.category"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -380,8 +488,32 @@
                     }
                   ]
                 ],
-                "event": "STORE",
-                "from": "idle",
+                "event": "STORE_COMPLETE",
+                "from": "storing",
+                "to": "stored"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.memoryId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "stored"
+                  ],
+                  [
+                    "emit",
+                    "STORED",
+                    {
+                      "memoryId": "@entity.memoryId"
+                    }
+                  ]
+                ],
+                "event": "STORE_FAILED",
+                "from": "storing",
                 "to": "stored"
               },
               {

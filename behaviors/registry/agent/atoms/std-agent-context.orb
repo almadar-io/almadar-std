@@ -65,6 +65,16 @@
                   "type": "number"
                 }
               ]
+            },
+            {
+              "event": "TOKEN_COUNTED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
             }
           ],
           "linkedEntity": "ContextWindow",
@@ -79,6 +89,21 @@
               {
                 "key": "COUNT",
                 "name": "Count"
+              },
+              {
+                "key": "TOKEN_COUNTED",
+                "name": "Token Counted",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "COUNT_FAILED",
+                "name": "Count Failed"
               },
               {
                 "key": "RESET",
@@ -100,6 +125,9 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "counting"
               },
               {
                 "name": "counted"
@@ -127,10 +155,29 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "llm/token-count",
+                    {
+                      "emit": {
+                        "failure": "COUNT_FAILED",
+                        "success": "TOKEN_COUNTED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "COUNT",
+                "from": "idle",
+                "to": "counting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
                     "@entity.tokenCount",
-                    [
-                      "llm/token-count"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -145,9 +192,26 @@
                     }
                   ]
                 ],
-                "event": "COUNT",
-                "from": "idle",
+                "event": "TOKEN_COUNTED",
+                "from": "counting",
                 "to": "counted"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "COUNT_FAILED",
+                "from": "counting",
+                "to": "idle"
               },
               {
                 "effects": [
@@ -198,6 +262,26 @@
                   "type": "number"
                 }
               ]
+            },
+            {
+              "event": "BEFORE_COUNTED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "AFTER_COUNTED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
             }
           ],
           "linkedEntity": "ContextWindow",
@@ -212,6 +296,40 @@
               {
                 "key": "COMPACT",
                 "name": "Compact"
+              },
+              {
+                "key": "BEFORE_COUNTED",
+                "name": "Before Counted",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "COMPACT_COUNT_FAILED",
+                "name": "Compact Count Failed"
+              },
+              {
+                "key": "COMPACTED_OK",
+                "name": "Compacted Ok"
+              },
+              {
+                "key": "COMPACT_FAILED",
+                "name": "Compact Failed"
+              },
+              {
+                "key": "AFTER_COUNTED",
+                "name": "After Counted",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
               },
               {
                 "key": "RESET",
@@ -238,6 +356,15 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "counting_before"
+              },
+              {
+                "name": "compacting"
+              },
+              {
+                "name": "counting_after"
               },
               {
                 "name": "compacted"
@@ -270,20 +397,110 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.beforeTokens",
-                    [
-                      "llm/token-count"
-                    ]
+                    "@entity.status",
+                    "idle"
                   ],
                   [
-                    "llm/compact"
+                    "llm/token-count",
+                    {
+                      "emit": {
+                        "failure": "COMPACT_COUNT_FAILED",
+                        "success": "BEFORE_COUNTED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "COMPACT",
+                "from": "idle",
+                "to": "counting_before"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.beforeTokens",
+                    "@payload.result"
+                  ],
+                  [
+                    "llm/compact",
+                    {
+                      "emit": {
+                        "failure": "COMPACT_FAILED",
+                        "success": "COMPACTED_OK"
+                      }
+                    }
+                  ]
+                ],
+                "event": "BEFORE_COUNTED",
+                "from": "counting_before",
+                "to": "compacting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.beforeTokens",
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.afterTokens",
-                    [
-                      "llm/token-count"
-                    ]
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "COMPACT_COUNT_FAILED",
+                "from": "counting_before",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "llm/token-count",
+                    {
+                      "emit": {
+                        "failure": "COMPACT_COUNT_FAILED",
+                        "success": "AFTER_COUNTED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "COMPACTED_OK",
+                "from": "compacting",
+                "to": "counting_after"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.beforeTokens",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.afterTokens",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "COMPACT_FAILED",
+                "from": "compacting",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.afterTokens",
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -299,9 +516,31 @@
                     }
                   ]
                 ],
-                "event": "COMPACT",
-                "from": "idle",
+                "event": "AFTER_COUNTED",
+                "from": "counting_after",
                 "to": "compacted"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.beforeTokens",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.afterTokens",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "COMPACT_COUNT_FAILED",
+                "from": "counting_after",
+                "to": "idle"
               },
               {
                 "effects": [

@@ -16,11 +16,19 @@ orbital AgentCompletionOrbital {
         (set @entity.prompt "")
         (set @entity.response "")
         (set @entity.status idle)
-      GENERATE -> done
+      GENERATE -> generating
         (set @entity.prompt ?prompt)
-        (set @entity.response (llm/generate @entity.prompt))
+        (llm/generate @entity.prompt { emit: { success: GENERATED, failure: GENERATION_FAILED } })
+    }
+
+    state generating {
+      GENERATED -> done
+        (set @entity.response ?result)
         (set @entity.status done)
         (emit COMPLETED { response: @entity.response })
+      GENERATION_FAILED -> done
+        (set @entity.response "")
+        (set @entity.status done)
     }
 
     state done {
@@ -35,6 +43,9 @@ orbital AgentCompletionOrbital {
     emits {
       COMPLETED {
         response : string!
+      }
+      GENERATED {
+        result : string!
       }
     }
 

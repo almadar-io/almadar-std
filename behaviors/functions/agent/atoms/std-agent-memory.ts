@@ -30,13 +30,20 @@ const ALIAS = 'AgentMemory';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentMemoryEventKey = 'INIT' | 'RECALL' | 'RECALLED' | 'RESET';
+export type StdAgentMemoryEventKey = 'INIT' | 'RECALL' | 'RECALLED' | 'RECALL_COMPLETE' | 'RECALL_FAILED' | 'RESET';
 
 /**
  * Payload shape for the `RECALLED` event.
  */
 export interface StdAgentMemoryRecalledPayload {
   results: EntityRow[];
+}
+
+/**
+ * Payload shape for the `RECALL_COMPLETE` event.
+ */
+export interface StdAgentMemoryRecallCompletePayload {
+  result: EntityRow[];
 }
 
 /**

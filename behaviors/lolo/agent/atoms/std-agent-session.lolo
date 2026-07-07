@@ -22,12 +22,26 @@ orbital AgentSessionOrbital {
         (set @entity.spec {})
         (set @entity.history [])
         (set @entity.status idle)
-      READ_SPEC -> read
+      READ_SPEC -> reading
         (set @entity.orbitalName ?orbitalName)
-        (set @entity.spec (session/read-spec @entity.orbitalName))
-        (set @entity.history (session/read-history @entity.orbitalName))
+        (session/read-spec @entity.orbitalName { emit: { success: SPEC_LOADED, failure: SPEC_LOAD_FAILED } })
+    }
+
+    state reading {
+      SPEC_LOADED -> loadingHistory
+        (set @entity.spec ?result)
+        (session/read-history @entity.orbitalName { emit: { success: HISTORY_LOADED, failure: HISTORY_LOAD_FAILED } })
+      SPEC_LOAD_FAILED -> idle
+        (set @entity.status idle)
+    }
+
+    state loadingHistory {
+      HISTORY_LOADED -> read
+        (set @entity.history ?result)
         (set @entity.status read)
         (emit SPEC_READ { spec: @entity.spec, history: @entity.history })
+      HISTORY_LOAD_FAILED -> idle
+        (set @entity.status idle)
     }
 
     state read {
@@ -43,6 +57,12 @@ orbital AgentSessionOrbital {
       SPEC_READ {
         spec : OrbitalSpec!
         history : [HistoryEntry]!
+      }
+      SPEC_LOADED {
+        result : OrbitalSpec!
+      }
+      HISTORY_LOADED {
+        result : [HistoryEntry]!
       }
     }
 

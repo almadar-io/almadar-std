@@ -30,13 +30,20 @@ const ALIAS = 'AgentCompletion';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentCompletionEventKey = 'COMPLETED' | 'GENERATE' | 'INIT' | 'RESET';
+export type StdAgentCompletionEventKey = 'COMPLETED' | 'GENERATE' | 'GENERATED' | 'GENERATION_FAILED' | 'INIT' | 'RESET';
 
 /**
  * Payload shape for the `COMPLETED` event.
  */
 export interface StdAgentCompletionCompletedPayload {
   response: string;
+}
+
+/**
+ * Payload shape for the `GENERATED` event.
+ */
+export interface StdAgentCompletionGeneratedPayload {
+  result: string;
 }
 
 /**

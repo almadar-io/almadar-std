@@ -30,7 +30,7 @@ const ALIAS = 'AgentSession';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentSessionEventKey = 'INIT' | 'READ_SPEC' | 'RESET' | 'SPEC_READ';
+export type StdAgentSessionEventKey = 'HISTORY_LOADED' | 'HISTORY_LOAD_FAILED' | 'INIT' | 'READ_SPEC' | 'RESET' | 'SPEC_LOADED' | 'SPEC_LOAD_FAILED' | 'SPEC_READ';
 
 /**
  * Payload shape for the `SPEC_READ` event.
@@ -38,6 +38,20 @@ export type StdAgentSessionEventKey = 'INIT' | 'READ_SPEC' | 'RESET' | 'SPEC_REA
 export interface StdAgentSessionSpecReadPayload {
   spec: EntityRow;
   history: EntityRow[];
+}
+
+/**
+ * Payload shape for the `SPEC_LOADED` event.
+ */
+export interface StdAgentSessionSpecLoadedPayload {
+  result: EntityRow;
+}
+
+/**
+ * Payload shape for the `HISTORY_LOADED` event.
+ */
+export interface StdAgentSessionHistoryLoadedPayload {
+  result: EntityRow[];
 }
 
 /**
