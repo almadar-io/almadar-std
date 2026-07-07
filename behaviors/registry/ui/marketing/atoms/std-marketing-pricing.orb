@@ -1,0 +1,238 @@
+{
+  "description": "Pricing grid atom for marketing pages. Renders tiered pricing cards with plans, features, and CTAs. Pick for SaaS pricing pages and subscription showcases.",
+  "name": "std-marketing-pricing",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "PricingItem",
+        "persistence": "runtime"
+      },
+      "name": "PricingItemOrbital",
+      "pages": [
+        {
+          "name": "PricingItemPricingPage",
+          "path": "/pricing",
+          "traits": [
+            {
+              "ref": "PricingItemPricing"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "plans": {
+              "default": [
+                {
+                  "action": {
+                    "href": "#",
+                    "label": "Get Started"
+                  },
+                  "badge": "",
+                  "description": "For individuals and small projects.",
+                  "features": [
+                    "1 project",
+                    "Community support",
+                    "Basic analytics"
+                  ],
+                  "highlighted": false,
+                  "name": "Starter",
+                  "price": "$0"
+                },
+                {
+                  "action": {
+                    "href": "#",
+                    "label": "Start Trial"
+                  },
+                  "badge": "Most Popular",
+                  "description": "For growing teams that need more power.",
+                  "features": [
+                    "Unlimited projects",
+                    "Priority support",
+                    "Advanced analytics",
+                    "Custom domains"
+                  ],
+                  "highlighted": true,
+                  "name": "Pro",
+                  "price": "$49"
+                },
+                {
+                  "action": {
+                    "href": "#",
+                    "label": "Contact Sales"
+                  },
+                  "badge": "",
+                  "description": "For organizations with advanced needs.",
+                  "features": [
+                    "Dedicated infra",
+                    "SLA guarantee",
+                    "SSO & SAML",
+                    "Audit logs",
+                    "Custom contracts"
+                  ],
+                  "highlighted": false,
+                  "name": "Enterprise",
+                  "price": "Custom"
+                }
+              ],
+              "description": "Array of pricing tiers",
+              "items": {
+                "properties": {
+                  "action": {
+                    "name": "action",
+                    "properties": {
+                      "href": {
+                        "name": "href",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "features": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "features",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "highlighted": {
+                    "name": "highlighted",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "price": {
+                    "name": "price",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Pricing Plans",
+              "tier": "domain",
+              "type": "[PricingPlan]"
+            }
+          },
+          "emits": [
+            {
+              "description": "Indicates a pricing plan has been chosen.",
+              "event": "PLAN_SELECT",
+              "payloadSchema": [
+                {
+                  "name": "plan",
+                  "type": "string"
+                },
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "select, choose, pick, activate",
+              "tier": "domain"
+            }
+          ],
+          "linkedEntity": "PricingItem",
+          "name": "PricingItemPricing",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Indicates a pricing plan has been chosen.",
+                "key": "PLAN_SELECT",
+                "name": "Plan Select",
+                "payloadSchema": [
+                  {
+                    "name": "plan",
+                    "type": "string"
+                  },
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "select, choose, pick, activate",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "plans": "@config.plans",
+                      "type": "pricing-grid"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "PLAN_SELECT",
+                    {
+                      "href": "@payload.href",
+                      "plan": "@payload.plan"
+                    }
+                  ]
+                ],
+                "event": "PLAN_SELECT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

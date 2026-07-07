@@ -86,9 +86,15 @@ orbital BrowseItemOrbital {
         })
         (render-ui main { size: sm, type: spinner })
       BrowseItemLoaded -> browsing
-        (render-ui main (if ["=", @config.browseLook, dense] @config.denseBodyContent (if ["=", @config.browseLook, feed] @config.feedBodyContent (if ["=", @config.browseLook, gallery] @config.galleryBodyContent @config.bodyContent))))
+        (if ["=", @config.browseLook, dense]
+          (render-ui main @config.denseBodyContent)
+          (if ["=", @config.browseLook, feed]
+            (render-ui main @config.feedBodyContent)
+            (if ["=", @config.browseLook, gallery]
+              (render-ui main @config.galleryBodyContent)
+              (render-ui main @config.bodyContent))))
       BrowseItemLoadFailed -> error
-        (render-ui main @trait.Typography1)
+        (render-ui main { children: [@trait.Typography1], direction: vertical, type: stack })
     }
 
     state browsing {
@@ -126,7 +132,13 @@ orbital BrowseItemOrbital {
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
       BrowseItemLoaded -> browsing
-        (render-ui main (if ["=", @config.browseLook, dense] @config.denseBodyContent (if ["=", @config.browseLook, feed] @config.feedBodyContent (if ["=", @config.browseLook, gallery] @config.galleryBodyContent @config.bodyContent))))
+        (if ["=", @config.browseLook, dense]
+          (render-ui main @config.denseBodyContent)
+          (if ["=", @config.browseLook, feed]
+            (render-ui main @config.feedBodyContent)
+            (if ["=", @config.browseLook, gallery]
+              (render-ui main @config.galleryBodyContent)
+              (render-ui main @config.bodyContent))))
     }
 
     state error {

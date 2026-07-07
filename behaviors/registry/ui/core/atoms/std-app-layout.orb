@@ -1,0 +1,427 @@
+{
+  "description": "std-app-layout — dashboard-layout chrome (sidebar nav + top bar with search + topBarActions + notifications) wrapping a single contentTrait slot. Use for list-style apps (CMS / helpdesk / CRM): the chrome stays stable while the consumer's content trait renders the data, and the consumer can add domain icons (cart / profile / help) via topBarActions. Bind once per orbital — the consumer rebinds linkedEntity via `XAppLayout = AppShell.traits.AppLayout -> XEntity` so multiple orbitals in one file each get their own chrome without colliding on a shared atom entity.",
+  "name": "std-app-layout",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "AppLayoutData",
+        "persistence": "runtime"
+      },
+      "name": "AppLayoutOrbital",
+      "pages": [
+        {
+          "name": "AppLayoutPage",
+          "path": "/app-layout",
+          "traits": [
+            {
+              "ref": "AppLayout"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "appName": {
+              "default": "App",
+              "description": "Name shown in the top-left of the chrome header.",
+              "label": "What should this app be called?",
+              "synonyms": "app title, product name, brand name, application name, site name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "contentClassName": {
+              "default": "max-w-5xl mx-auto w-full",
+              "description": "CSS class applied to the content area wrapper.",
+              "label": "Content wrapper class",
+              "tier": "internal",
+              "type": "string"
+            },
+            "contentTrait": {
+              "description": "Trait rendered inside the app layout content area",
+              "label": "Content trait",
+              "tier": "presentation",
+              "type": "trait"
+            },
+            "currentPath": {
+              "default": "",
+              "description": "Active path used to highlight the matching nav item. When omitted, the layout reads the current route.",
+              "label": "Current path",
+              "tier": "internal",
+              "type": "string"
+            },
+            "detailSlot": {
+              "default": "modal",
+              "description": "Slot where detail/edit views render",
+              "label": "Detail slot",
+              "tier": "internal",
+              "type": "slot"
+            },
+            "layoutMode": {
+              "default": "sidebar",
+              "description": "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav.",
+              "label": "Where should navigation be placed?",
+              "synonyms": "nav position, navigation style, menu placement, layout style",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sidebar",
+                "topnav",
+                "bottomnav",
+                "minimal"
+              ]
+            },
+            "layoutPattern": {
+              "default": "dashboard-layout",
+              "description": "UI pattern used to render the application chrome",
+              "label": "Layout pattern",
+              "tier": "internal",
+              "type": "pattern"
+            },
+            "navItems": {
+              "default": [],
+              "description": "Top-level navigation links shown on the left rail.",
+              "items": {
+                "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "children": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "children",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "href": {
+                    "name": "href",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Which sections appear in the sidebar?",
+              "synonyms": "nav links, menu items, sidebar sections, navigation entries, pages",
+              "tier": "presentation",
+              "type": "[NavItem]"
+            },
+            "notificationClickEvent": {
+              "default": "NOTIFY_CLICK",
+              "description": "Event emitted when the user picks a notification",
+              "label": "Notification click event",
+              "tier": "internal",
+              "type": "string"
+            },
+            "notifications": {
+              "default": [],
+              "description": "Items shown in the notifications dropdown.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "What notifications should appear?",
+              "synonyms": "alerts, messages, notices, notification items, bell items",
+              "tier": "presentation",
+              "type": "[NotificationSpec]"
+            },
+            "searchEvent": {
+              "default": "SEARCH",
+              "description": "Event emitted when the user runs a global search",
+              "label": "Search event",
+              "tier": "internal",
+              "type": "string"
+            },
+            "theme": {
+              "default": "",
+              "description": "Data-theme attribute applied to the layout root (e.g. almadar-website-dark).",
+              "label": "Theme",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "topBarActions": {
+              "default": [],
+              "description": "Icon buttons shown on the right side of the top bar (e.g. cart, help, profile).",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "What shortcuts go in the top bar?",
+              "synonyms": "toolbar buttons, header actions, shortcut icons, quick actions",
+              "tier": "presentation",
+              "type": "[ItemAction]"
+            }
+          },
+          "emits": [
+            {
+              "description": "Indicates a search query has been submitted.",
+              "event": "SEARCH",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "query, find, lookup",
+              "tier": "domain"
+            },
+            {
+              "description": "A user interacted with a notification.",
+              "event": "NOTIFY_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "click, tap, select",
+              "tier": "domain"
+            },
+            {
+              "description": "Signals the layout has finished loading and is ready.",
+              "event": "AppLayoutStateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[AppLayoutData]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "ready, initialized, loaded",
+              "tier": "domain"
+            },
+            {
+              "description": "Indicates failure to load the layout state.",
+              "event": "AppLayoutStateLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, load failed",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AppLayoutData",
+          "name": "AppLayout",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals the layout has finished loading and is ready.",
+                "key": "AppLayoutStateLoaded",
+                "name": "App layout state loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[AppLayoutData]"
+                  }
+                ],
+                "synonyms": "ready, initialized, loaded",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates failure to load the layout state.",
+                "key": "AppLayoutStateLoadFailed",
+                "name": "App layout state load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, load failed",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates a search query has been submitted.",
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "query, find, lookup",
+                "tier": "domain"
+              },
+              {
+                "description": "A user interacted with a notification.",
+                "key": "NOTIFY_CLICK",
+                "name": "Notify Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "click, tap, select",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "composing"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AppLayoutData",
+                    {
+                      "emit": {
+                        "failure": "AppLayoutStateLoadFailed",
+                        "success": "AppLayoutStateLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "appName": "@config.appName",
+                          "children": [
+                            {
+                              "children": [
+                                "@config.contentTrait"
+                              ],
+                              "className": "@config.contentClassName",
+                              "direction": "vertical",
+                              "gap": "lg",
+                              "type": "stack"
+                            }
+                          ],
+                          "currentPath": "@config.currentPath",
+                          "layoutMode": "@config.layoutMode",
+                          "navItems": "@config.navItems",
+                          "notificationClickEvent": "@config.notificationClickEvent",
+                          "notifications": "@config.notifications",
+                          "searchEvent": "@config.searchEvent",
+                          "topBarActions": "@config.topBarActions",
+                          "type": "@config.layoutPattern"
+                        }
+                      ],
+                      "className": "min-h-screen w-full",
+                      "data-theme": "@config.theme",
+                      "fullHeight": true,
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "composing",
+                "to": "composing"
+              },
+              {
+                "event": "AppLayoutStateLoaded",
+                "from": "composing",
+                "to": "composing"
+              },
+              {
+                "event": "AppLayoutStateLoadFailed",
+                "from": "composing",
+                "to": "composing"
+              },
+              {
+                "event": "SEARCH",
+                "from": "composing",
+                "to": "composing"
+              },
+              {
+                "event": "NOTIFY_CLICK",
+                "from": "composing",
+                "to": "composing"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.4.1"
+}

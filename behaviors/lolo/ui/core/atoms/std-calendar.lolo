@@ -15,7 +15,6 @@ orbital CalendarEventOrbital {
     time : string @description "event start time of day" @synonyms "start, scheduled time, begins, when, start time" = ""
     duration : number @description "event length in minutes" @synonyms "minutes, length, span, duration" = 60
     selectedRange : string @intrinsic = month
-    activeBody : render-ui @intrinsic
   }
 
   trait CalendarEventCalendar -> @rebindable CalendarEvent [interaction, collection] {
@@ -40,8 +39,11 @@ orbital CalendarEventOrbital {
           type: stack
         })
       CalendarEventLoaded -> month-view
-        (set @entity.activeBody (if ["=", @config.calendarLook, agenda-list] @config.agendaListBodyContent (if ["=", @config.calendarLook, week-timeline] @config.weekTimelineBodyContent @config.bodyContent)))
-        (render-ui main @entity.activeBody)
+        (if ["=", @config.calendarLook, agenda-list]
+          (render-ui main @config.agendaListBodyContent)
+          (if ["=", @config.calendarLook, week-timeline]
+            (render-ui main @config.weekTimelineBodyContent)
+            (render-ui main @config.bodyContent)))
       CalendarEventLoadFailed -> error
         (render-ui main {
           align: center

@@ -64,11 +64,6 @@
             "intrinsic": true,
             "name": "selectedRange",
             "type": "string"
-          },
-          {
-            "intrinsic": true,
-            "name": "activeBody",
-            "type": "string"
           }
         ],
         "name": "CalendarEvent",
@@ -463,7 +458,6 @@
           ],
           "entityContract": {
             "provides": [
-              "activeBody",
               "date",
               "selectedRange"
             ],
@@ -593,32 +587,35 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.activeBody",
+                    "if",
+                    [
+                      "=",
+                      "@config.calendarLook",
+                      "agenda-list"
+                    ],
+                    [
+                      "render-ui",
+                      "main",
+                      "@config.agendaListBodyContent"
+                    ],
                     [
                       "if",
                       [
                         "=",
                         "@config.calendarLook",
-                        "agenda-list"
+                        "week-timeline"
                       ],
-                      "@config.agendaListBodyContent",
                       [
-                        "if",
-                        [
-                          "=",
-                          "@config.calendarLook",
-                          "week-timeline"
-                        ],
-                        "@config.weekTimelineBodyContent",
+                        "render-ui",
+                        "main",
+                        "@config.weekTimelineBodyContent"
+                      ],
+                      [
+                        "render-ui",
+                        "main",
                         "@config.bodyContent"
                       ]
                     ]
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    "@entity.activeBody"
                   ]
                 ],
                 "event": "CalendarEventLoaded",

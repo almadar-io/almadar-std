@@ -35,38 +35,12 @@
           "path": "/pageditems/paginated",
           "traits": [
             {
-              "ref": "PagedItemPaginationRender"
-            },
-            {
-              "ref": "PagedItemPaginationEvents"
+              "ref": "PagedItemPagination"
             }
           ]
         }
       ],
       "traits": [
-        {
-          "config": {
-            "currentPage": {
-              "default": "@entity.currentPage",
-              "type": "unknown"
-            },
-            "pageChangeEvent": {
-              "default": "@config.event",
-              "type": "unknown"
-            },
-            "showPageSize": {
-              "default": false,
-              "type": "unknown"
-            },
-            "totalPages": {
-              "default": "@entity.totalPages",
-              "type": "unknown"
-            }
-          },
-          "linkedEntity": "PagedItem",
-          "name": "PagedItemPaginationRender",
-          "ref": "Pagination.traits.PaginationRender"
-        },
         {
           "category": "interaction",
           "config": {
@@ -113,7 +87,7 @@
             }
           ],
           "linkedEntity": "PagedItem",
-          "name": "PagedItemPaginationEvents",
+          "name": "PagedItemPagination",
           "scope": "instance",
           "stateMachine": {
             "events": [
@@ -193,6 +167,17 @@
                         "success": "PagedItemLoaded"
                       }
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
+                      "showPageSize": false,
+                      "totalPages": "@entity.totalPages",
+                      "type": "pagination"
+                    }
                   ]
                 ],
                 "event": "INIT",
@@ -200,6 +185,19 @@
                 "to": "idle"
               },
               {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
+                      "showPageSize": false,
+                      "totalPages": "@entity.totalPages",
+                      "type": "pagination"
+                    }
+                  ]
+                ],
                 "event": "PagedItemLoaded",
                 "from": "idle",
                 "to": "idle"
@@ -210,6 +208,17 @@
                     "set",
                     "@entity.currentPage",
                     "@payload.page"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
+                      "showPageSize": false,
+                      "totalPages": "@entity.totalPages",
+                      "type": "pagination"
+                    }
                   ]
                 ],
                 "event": "PAGE",
@@ -229,6 +238,17 @@
                         "@config.pageSize"
                       ]
                     ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
+                      "showPageSize": false,
+                      "totalPages": "@entity.totalPages",
+                      "type": "pagination"
+                    }
                   ]
                 ],
                 "event": "ITEMS_LOADED",
@@ -237,12 +257,6 @@
               }
             ]
           }
-        }
-      ],
-      "uses": [
-        {
-          "as": "Pagination",
-          "from": "std/behaviors/ui-pagination"
         }
       ]
     }

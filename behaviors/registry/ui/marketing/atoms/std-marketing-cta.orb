@@ -1,0 +1,218 @@
+{
+  "description": "Call-to-action banner atom for marketing pages. Renders a high-conversion CTA section with title, subtitle, and action buttons. Pick for conversion points at the end of pages or between sections.",
+  "name": "std-marketing-cta",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "CTAItem",
+        "persistence": "runtime"
+      },
+      "name": "CTAItemOrbital",
+      "pages": [
+        {
+          "name": "CTAItemCTAPage",
+          "path": "/cta",
+          "traits": [
+            {
+              "ref": "CTAItemCTA"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "align": {
+              "default": "center",
+              "description": "center or left",
+              "label": "Alignment",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "background": {
+              "default": "primary",
+              "description": "default, alt, dark, gradient, or primary",
+              "label": "Background",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "primaryActionHref": {
+              "default": "#",
+              "label": "Primary Action Link",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "primaryActionLabel": {
+              "default": "Get Started",
+              "label": "Primary Action Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "secondaryActionHref": {
+              "default": "",
+              "label": "Secondary Action Link",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "secondaryActionLabel": {
+              "default": "Learn More",
+              "label": "Secondary Action Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "subtitle": {
+              "default": "Join thousands of teams shipping faster.",
+              "description": "Supporting text below the title",
+              "label": "Subtitle",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Ready to get started?",
+              "description": "Banner headline",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Signals the primary call-to-action has been triggered.",
+              "event": "CTA_PRIMARY",
+              "payloadSchema": [
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "click, select, submit, activate",
+              "tier": "domain"
+            },
+            {
+              "description": "Signals a secondary call to action was triggered.",
+              "event": "CTA_SECONDARY",
+              "payloadSchema": [
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "secondary action, alternate button, second click",
+              "tier": "domain"
+            }
+          ],
+          "linkedEntity": "CTAItem",
+          "name": "CTAItemCTA",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals the primary call-to-action has been triggered.",
+                "key": "CTA_PRIMARY",
+                "name": "Cta Primary",
+                "payloadSchema": [
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "click, select, submit, activate",
+                "tier": "domain"
+              },
+              {
+                "description": "Signals a secondary call to action was triggered.",
+                "key": "CTA_SECONDARY",
+                "name": "Cta Secondary",
+                "payloadSchema": [
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "secondary action, alternate button, second click",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "@config.align",
+                      "background": "@config.background",
+                      "primaryAction": {
+                        "href": "@config.primaryActionHref",
+                        "label": "@config.primaryActionLabel"
+                      },
+                      "secondaryAction": {
+                        "href": "@config.secondaryActionHref",
+                        "label": "@config.secondaryActionLabel"
+                      },
+                      "subtitle": "@config.subtitle",
+                      "title": "@config.title",
+                      "type": "cta-banner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "CTA_PRIMARY",
+                    {
+                      "href": "@config.primaryActionHref"
+                    }
+                  ]
+                ],
+                "event": "CTA_PRIMARY",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "CTA_SECONDARY",
+                    {
+                      "href": "@config.secondaryActionHref"
+                    }
+                  ]
+                ],
+                "event": "CTA_SECONDARY",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

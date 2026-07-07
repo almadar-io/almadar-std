@@ -1,0 +1,164 @@
+[
+  {
+    "organism": "std-confirmation",
+    "orbital": "ConfirmActionOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-confirmation.ts",
+    "entities": [
+      {
+        "name": "ConfirmAction",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "A user-facing identifier for the confirmation action.",
+            "synonyms": "label, title, identifier"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "A detailed explanation of the action being confirmed.",
+            "synonyms": "details, explanation, notes, information"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Indicates the current operational state of the action.",
+            "synonyms": "state, condition, enabled"
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "required": false,
+            "description": "Unique identifier for the pending confirmation request.",
+            "synonyms": "requestId, referenceId, confirmationId"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ConfirmActionConfirmation",
+        "emittedEvents": [
+          "CONFIRM",
+          "CANCEL",
+          "ConfirmActionLoadFailed",
+          "ConfirmActionLoaded"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CONFIRM",
+            "direction": "emit",
+            "description": "Indicates the user has approved the action.",
+            "synonyms": "approve, accept, ok",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Indicates the action was cancelled by the user.",
+            "synonyms": "dismiss, reject, undo",
+            "tier": "domain"
+          },
+          {
+            "name": "ConfirmActionLoadFailed",
+            "direction": "emit",
+            "description": "Indicates failure to load the confirmation action.",
+            "synonyms": "error, failure, failed, problem",
+            "tier": "internal"
+          },
+          {
+            "name": "ConfirmActionLoaded",
+            "direction": "emit",
+            "description": "Indicates the confirmation action has been successfully loaded.",
+            "synonyms": "loaded, ready, initialized",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "REQUEST",
+            "direction": "listen",
+            "description": "A request for confirmation before proceeding.",
+            "synonyms": "prompt, ask, verify",
+            "tier": "domain"
+          },
+          {
+            "name": "CLOSE",
+            "direction": "listen",
+            "description": "Indicates the user dismissed the confirmation.",
+            "synonyms": "dismiss, decline, reject",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "alertMessage",
+            "type": "string",
+            "default": "Are you sure?",
+            "label": "Alert message",
+            "description": "Body text explaining what the user is confirming",
+            "tier": "presentation"
+          },
+          {
+            "key": "confirmLabel",
+            "type": "string",
+            "default": "Confirm",
+            "label": "Confirm button",
+            "description": "Label on the primary confirm action button",
+            "tier": "presentation"
+          },
+          {
+            "key": "icon",
+            "type": "string",
+            "default": "alert-triangle",
+            "label": "Icon",
+            "description": "Icon name displayed in the confirmation modal header",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Confirm Action",
+            "label": "Modal title",
+            "description": "Heading shown at the top of the confirmation modal",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "name",
+            "pendingId"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ConfirmActionConfirmPage",
+        "defaultPath": "/confirmactions/confirm",
+        "primaryEntity": "ConfirmAction"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL",
+      "CONFIRM",
+      "ConfirmActionLoadFailed",
+      "ConfirmActionLoaded"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]

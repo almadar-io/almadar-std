@@ -25,18 +25,34 @@ const BEHAVIOR_PATH = 'std/behaviors/std-filter';
 const ALIAS = 'Filter';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdFilterEventKey = 'CLEAR_FILTERS' | 'FILTER' | 'INIT';
+
+/**
+ * Payload shape for the `FILTER` event.
+ */
+export interface StdFilterFilterPayload {
+  field: string;
+  value: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdFilterConfig {
-  /** Default: `"FilterTarget"` */
-  entity?: unknown;
-  /** Default: `"@config.filters"` */
-  filters?: unknown;
-  /** Default: `"@config.filterBarLook"` */
-  look?: unknown;
+  /** Default: `"FILTER"` */
+  event?: string;
+  /** Default: `"toolbar"` */
+  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
+  /** Default: `[{"field":"status","filterType":"select","label":"Status","options":["active","inactive","pending"]}]` */
+  filters?: EntityRow[];
 }
 
 /**
@@ -52,8 +68,8 @@ export interface StdFilterParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdFilterEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -66,26 +82,11 @@ export interface StdFilterParams {
   pagePath?: string;
 }
 
-/** Trait descriptor: `Filter.traits.FilterTargetFilterRender`. */
-export function stdFilterFilterTargetFilterRenderTrait(params: StdFilterParams): TraitReference {
+/** Trait descriptor: `Filter.traits.FilterTargetFilter`. */
+export function stdFilterTrait(params: StdFilterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FilterTargetFilterRender`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Filter.traits.FilterTargetFilterEvents`. */
-export function stdFilterFilterTargetFilterEventsTrait(params: StdFilterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FilterTargetFilterEvents`,
+    ref: `${ALIAS}.traits.FilterTargetFilter`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -118,8 +119,7 @@ export function stdFilter(params: StdFilterParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdFilterFilterTargetFilterRenderTrait(params),
-      stdFilterFilterTargetFilterEventsTrait(params),
+      stdFilterTrait(params),
     ],
     pages: [
       stdFilterPage(params),

@@ -29,7 +29,6 @@ orbital BoardOrbital {
     currentStage : string @intrinsic = ""
     currentNotes : string @intrinsic = ""
     errorMessage : string @intrinsic = ""
-    activeBody : render-ui @intrinsic
   }
 
   trait BoardItemBoard -> @rebindable BoardView [interaction, instance] {
@@ -53,8 +52,9 @@ orbital BoardOrbital {
           label: (object/get @col label)
           variant: (object/get @col variant default)
         })))
-        (set @entity.activeBody (if ["=", @config.boardLook, kanban-classic] @config.kanbanClassicBodyContent @config.bodyContent))
-        (render-ui main @entity.activeBody)
+        (if ["=", @config.boardLook, kanban-classic]
+          (render-ui main @config.kanbanClassicBodyContent)
+          (render-ui main @config.bodyContent))
       BoardItemsLoadFailed -> error
         (set @entity.errorMessage ?error)
         (render-ui main {

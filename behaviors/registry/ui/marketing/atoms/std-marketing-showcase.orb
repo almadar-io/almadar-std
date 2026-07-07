@@ -1,0 +1,284 @@
+{
+  "description": "Showcase grid atom for marketing pages. Renders a grid of portfolio or product showcase cards with images, badges, and descriptions. Pick for product galleries and portfolio sections.",
+  "name": "std-marketing-showcase",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": [],
+            "description": "A collection of items to display in a grid.",
+            "items": {
+              "properties": {
+                "accentColor": {
+                  "name": "accentColor",
+                  "required": false,
+                  "type": "string"
+                },
+                "badge": {
+                  "name": "badge",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "href": {
+                  "name": "href",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "image": {
+                  "name": "image",
+                  "properties": {
+                    "alt": {
+                      "name": "alt",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "src": {
+                      "name": "src",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": true,
+                  "type": "object"
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "items",
+            "synonyms": "elements, entries, records",
+            "type": "array"
+          }
+        ],
+        "name": "ShowcaseItem",
+        "persistence": "runtime"
+      },
+      "name": "ShowcaseItemOrbital",
+      "pages": [
+        {
+          "name": "ShowcaseItemShowcasePage",
+          "path": "/showcase",
+          "traits": [
+            {
+              "ref": "ShowcaseItemShowcase"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "items": {
+              "default": [
+                {
+                  "accentColor": "",
+                  "badge": "New",
+                  "description": "Real-time analytics at a glance.",
+                  "href": "",
+                  "id": "1",
+                  "image": {
+                    "alt": "Dashboard preview",
+                    "src": ""
+                  },
+                  "title": "Dashboard"
+                },
+                {
+                  "accentColor": "",
+                  "badge": "",
+                  "description": "GraphQL and REST in one click.",
+                  "href": "",
+                  "id": "2",
+                  "image": {
+                    "alt": "API docs preview",
+                    "src": ""
+                  },
+                  "title": "API"
+                },
+                {
+                  "accentColor": "",
+                  "badge": "Beta",
+                  "description": "Native apps without native code.",
+                  "href": "",
+                  "id": "3",
+                  "image": {
+                    "alt": "Mobile app preview",
+                    "src": ""
+                  },
+                  "title": "Mobile"
+                }
+              ],
+              "description": "Array of showcase cards",
+              "items": {
+                "properties": {
+                  "accentColor": {
+                    "name": "accentColor",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "href": {
+                    "name": "href",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "image": {
+                    "name": "image",
+                    "properties": {
+                      "alt": {
+                        "name": "alt",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "src": {
+                        "name": "src",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": true,
+                    "type": "object"
+                  },
+                  "title": {
+                    "name": "title",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Showcase Items",
+              "tier": "presentation",
+              "type": "[ShowcaseCard]"
+            }
+          },
+          "emits": [
+            {
+              "description": "Signals a user clicked on a showcase item.",
+              "event": "SHOWCASE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "title",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "select, tap, activate",
+              "tier": "domain"
+            }
+          ],
+          "linkedEntity": "ShowcaseItem",
+          "name": "ShowcaseItemShowcase",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals a user clicked on a showcase item.",
+                "key": "SHOWCASE_CLICK",
+                "name": "Showcase Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "select, tap, activate",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.items",
+                    "@config.items"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@entity.items",
+                      "type": "showcase-organism"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SHOWCASE_CLICK",
+                    {
+                      "id": "@payload.id",
+                      "title": "@payload.title"
+                    }
+                  ]
+                ],
+                "event": "SHOWCASE_CLICK",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

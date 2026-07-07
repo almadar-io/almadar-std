@@ -16,7 +16,6 @@ orbital StatsItemOrbital {
   entity StatsItem [runtime] {
     id : string!
     cards : [StatCard] @description "A collection of statistical cards to display." @synonyms "statistics, items, displays" = []
-    activeBody : render-ui @intrinsic
   }
 
   trait StatsItemStats -> @rebindable StatsItem [interaction, instance] {
@@ -40,8 +39,13 @@ orbital StatsItemOrbital {
           value: (object/get @metric value 0)
           variant: (object/get @metric variant default)
         })))
-        (set @entity.activeBody (if ["=", @config.statsLook, kpi-tiles] @config.kpiTilesBodyContent (if ["=", @config.statsLook, hero-metric] @config.heroMetricBodyContent (if ["=", @config.statsLook, sparkline-row] @config.sparklineRowBodyContent @config.bodyContent))))
-        (render-ui main @entity.activeBody)
+        (if ["=", @config.statsLook, kpi-tiles]
+          (render-ui main @config.kpiTilesBodyContent)
+          (if ["=", @config.statsLook, hero-metric]
+            (render-ui main @config.heroMetricBodyContent)
+            (if ["=", @config.statsLook, sparkline-row]
+              (render-ui main @config.sparklineRowBodyContent)
+              (render-ui main @config.bodyContent))))
       ;; Pre-seed cards from @config.metrics so the atom renders a
       ;; visible skeleton on initial mount even before any upstream
       ;; ITEMS_LOADED fires. If a metric defines a static `value`,
@@ -64,8 +68,13 @@ orbital StatsItemOrbital {
           value: (if ["=", (object/get @metric aggregation count), sum] (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), avg] (array/avg (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), min] (array/min (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), max] (array/max (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), variance] (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (array/len (array/filter ?data (object/get @metric filter true))))))))
           variant: (object/get @metric variant default)
         })))
-        (set @entity.activeBody (if ["=", @config.statsLook, kpi-tiles] @config.kpiTilesBodyContent (if ["=", @config.statsLook, hero-metric] @config.heroMetricBodyContent (if ["=", @config.statsLook, sparkline-row] @config.sparklineRowBodyContent @config.bodyContent))))
-        (render-ui main @entity.activeBody)
+        (if ["=", @config.statsLook, kpi-tiles]
+          (render-ui main @config.kpiTilesBodyContent)
+          (if ["=", @config.statsLook, hero-metric]
+            (render-ui main @config.heroMetricBodyContent)
+            (if ["=", @config.statsLook, sparkline-row]
+              (render-ui main @config.sparklineRowBodyContent)
+              (render-ui main @config.bodyContent))))
     }
 
     listens {

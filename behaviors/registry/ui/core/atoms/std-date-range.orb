@@ -1,0 +1,227 @@
+{
+  "description": "std-date-range — compact calendar button (Looker / Tableau shape) that opens a popover containing the date-range-picker. Owns a DateRange runtime entity; DATE_RANGE_CHANGED persists @payload.from + @payload.to so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery).",
+  "name": "std-date-range",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The start date of the date range.",
+            "name": "from",
+            "synonyms": "start, beginning, initial",
+            "type": "string"
+          },
+          {
+            "description": "The end date of a date range.",
+            "name": "to",
+            "synonyms": "end date, finish date, end, final date",
+            "type": "string"
+          }
+        ],
+        "name": "DateRange",
+        "persistence": "runtime"
+      },
+      "name": "DateRangeOrbital",
+      "pages": [
+        {
+          "name": "DateRangeFilterPage",
+          "path": "/dateranges/filter",
+          "traits": [
+            {
+              "ref": "DateRangeFilter"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "buttonLabel": {
+              "default": "Date range",
+              "description": "Text on the toolbar button that opens the popover",
+              "label": "Trigger button",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "event": {
+              "default": "DATE_RANGE_CHANGED",
+              "description": "Event name emitted when the user picks a new range",
+              "label": "Change event",
+              "tier": "internal",
+              "type": "string"
+            },
+            "fromLabel": {
+              "default": "From",
+              "description": "Caption shown above the start-date input",
+              "label": "Start-date label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "toLabel": {
+              "default": "To",
+              "description": "Caption shown above the end-date input",
+              "label": "End-date label",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Signals a change in the selected date range.",
+              "event": "DATE_RANGE_CHANGED",
+              "payloadSchema": [
+                {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "synonyms": "range-updated, date-selection, filter-change",
+              "tier": "domain"
+            }
+          ],
+          "linkedEntity": "DateRange",
+          "name": "DateRangeFilter",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "OPEN_DATE_RANGE",
+                "name": "Open Date Range"
+              },
+              {
+                "description": "Signals a change in the selected date range.",
+                "key": "DATE_RANGE_CHANGED",
+                "name": "Date Range Changed",
+                "payloadSchema": [
+                  {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "range-updated, date-selection, filter-change",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "action": "OPEN_DATE_RANGE",
+                          "icon": "calendar",
+                          "label": "@config.buttonLabel",
+                          "size": "sm",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "content": {
+                        "event": "@config.event",
+                        "fromLabel": "@config.fromLabel",
+                        "toLabel": "@config.toLabel",
+                        "type": "date-range-picker"
+                      },
+                      "position": "bottom",
+                      "type": "popover"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.from",
+                    "@entity.from"
+                  ]
+                ],
+                "event": "OPEN_DATE_RANGE",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.from",
+                    "@payload.from"
+                  ],
+                  [
+                    "set",
+                    "@entity.to",
+                    "@payload.to"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "action": "OPEN_DATE_RANGE",
+                          "icon": "calendar",
+                          "label": "@config.buttonLabel",
+                          "size": "sm",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "content": {
+                        "event": "@config.event",
+                        "from": "@entity.from",
+                        "fromLabel": "@config.fromLabel",
+                        "to": "@entity.to",
+                        "toLabel": "@config.toLabel",
+                        "type": "date-range-picker"
+                      },
+                      "position": "bottom",
+                      "type": "popover"
+                    }
+                  ]
+                ],
+                "event": "DATE_RANGE_CHANGED",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "2.0.0"
+}

@@ -170,11 +170,6 @@
             "intrinsic": true,
             "name": "errorMessage",
             "type": "string"
-          },
-          {
-            "intrinsic": true,
-            "name": "activeBody",
-            "type": "string"
           }
         ],
         "name": "BoardView",
@@ -823,7 +818,6 @@
           ],
           "entityContract": {
             "provides": [
-              "activeBody",
               "boards",
               "currentDescription",
               "currentId",
@@ -1173,23 +1167,22 @@
                     ]
                   ],
                   [
-                    "set",
-                    "@entity.activeBody",
+                    "if",
                     [
-                      "if",
-                      [
-                        "=",
-                        "@config.boardLook",
-                        "kanban-classic"
-                      ],
-                      "@config.kanbanClassicBodyContent",
+                      "=",
+                      "@config.boardLook",
+                      "kanban-classic"
+                    ],
+                    [
+                      "render-ui",
+                      "main",
+                      "@config.kanbanClassicBodyContent"
+                    ],
+                    [
+                      "render-ui",
+                      "main",
                       "@config.bodyContent"
                     ]
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    "@entity.activeBody"
                   ]
                 ],
                 "event": "BoardItemsLoaded",

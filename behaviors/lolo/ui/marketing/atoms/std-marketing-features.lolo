@@ -4,27 +4,23 @@ app std-marketing-features "1.0.0"
 ;; Items are declared as an array of { icon, title, description, href, linkLabel } objects.
 ;; The atom emits FEATURE_CLICK when a card with an href is clicked.
 orbital FeatureItemOrbital {
-  uses FeatureGrid from "std/behaviors/ui-feature-grid"
-
     type FeatureCard = { icon : string, title : string!, description : string!, href : string, linkLabel : string }
 
   entity FeatureItem [runtime] {
     id : string!
   }
 
-  trait FeatureItemFeaturesRender = FeatureGrid.traits.FeatureGridRender -> FeatureItem {
-    config {
-      columns: @config.columns
-      gap: @config.gap
-      items: @config.items
-    }
-  }
-
-  trait FeatureItemFeaturesEvents -> FeatureItem [interaction, instance] {
+  trait FeatureItemFeatures -> FeatureItem [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
+        (render-ui main {
+          columns: @config.columns
+          gap: @config.gap
+          items: @config.items
+          type: feature-grid
+        })
       FEATURE_CLICK -> idle
         (emit FEATURE_CLICK { id: ?id, title: ?title })
     }
@@ -83,5 +79,5 @@ orbital FeatureItemOrbital {
     }
   }
 
-  page "/features" as FeatureItemFeaturesPage -> FeatureItemFeaturesRender, FeatureItemFeaturesEvents
+  page "/features" as FeatureItemFeaturesPage -> FeatureItemFeatures
 }

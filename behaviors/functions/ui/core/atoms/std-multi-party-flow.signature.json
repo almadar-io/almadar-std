@@ -1,0 +1,511 @@
+[
+  {
+    "organism": "std-multi-party-flow",
+    "orbital": "MultiPartyFlowOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-multi-party-flow.ts",
+    "entities": [
+      {
+        "name": "MultiPartyView",
+        "fields": [
+          {
+            "name": "parties",
+            "type": "array",
+            "required": false,
+            "description": "A list of participants involved in the transaction.",
+            "synonyms": "participants, actors, members, roles"
+          },
+          {
+            "name": "currentPartyIndex",
+            "type": "number",
+            "required": false,
+            "description": "The numerical position of the current party in the list.",
+            "synonyms": "index, position, order"
+          },
+          {
+            "name": "totalParties",
+            "type": "number",
+            "required": false,
+            "description": "The total number of participants involved in the process.",
+            "synonyms": "count, size, quantity, number_of_parties"
+          },
+          {
+            "name": "currentPartyId",
+            "type": "string",
+            "required": false,
+            "description": "Unique identifier for the currently active party.",
+            "synonyms": "party identifier, party key, party reference"
+          },
+          {
+            "name": "currentPartyTitle",
+            "type": "string",
+            "required": false,
+            "description": "The descriptive name of the current party involved.",
+            "synonyms": "party name, party label, party identifier"
+          },
+          {
+            "name": "currentPartyActor",
+            "type": "string",
+            "required": false,
+            "description": "The identifier of the currently active participant.",
+            "synonyms": "actor, identifier, user, participant"
+          },
+          {
+            "name": "currentPartyIcon",
+            "type": "string",
+            "required": false,
+            "description": "Icon representing the current party in the multi-party flow.",
+            "synonyms": "image, icon, avatar"
+          },
+          {
+            "name": "currentActionLabel",
+            "type": "string",
+            "required": false,
+            "description": "The text displayed for the current action being performed.",
+            "synonyms": "action, task, operation, step"
+          },
+          {
+            "name": "currentActionIcon",
+            "type": "string",
+            "required": false,
+            "description": "Icon representing the current action being performed.",
+            "synonyms": "icon, image, symbol"
+          },
+          {
+            "name": "currentActionDescription",
+            "type": "string",
+            "required": false,
+            "description": "A brief explanation of the action being performed.",
+            "synonyms": "action, description, task, operation"
+          },
+          {
+            "name": "currentStepLabel",
+            "type": "string",
+            "required": false,
+            "description": "The text displayed for the current stage of the process.",
+            "synonyms": "step, stage, status, phase"
+          },
+          {
+            "name": "audit",
+            "type": "array",
+            "required": false,
+            "description": "Records of changes and events related to the view.",
+            "synonyms": "history, log, changes, events"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "required": false,
+            "description": "The justification or explanation for an action or event.",
+            "synonyms": "justification, explanation, cause, rationale"
+          },
+          {
+            "name": "disputeReason",
+            "type": "string",
+            "required": false,
+            "description": "The reason provided for initiating a dispute.",
+            "synonyms": "dispute explanation, dispute justification, reason for dispute"
+          },
+          {
+            "name": "cancelReason",
+            "type": "string",
+            "required": false,
+            "description": "The reason provided for cancelling the transaction.",
+            "synonyms": "cancellation reason, cancel explanation, rejection reason"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "description": "A textual description of an error condition.",
+            "synonyms": "error, error message, problem, issue"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MultiPartyTransaction",
+        "emittedEvents": [
+          "PARTY_CONFIRM",
+          "OPEN_DISPUTE",
+          "CANCEL_TRANSACTION",
+          "SUBMIT_DISPUTE",
+          "SUBMIT_CANCEL",
+          "CANCEL_REASON",
+          "RELEASE",
+          "RESTART",
+          "FlowLoaded",
+          "FlowLoadFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PARTY_CONFIRM",
+            "direction": "emit",
+            "description": "Signals a party's acceptance or agreement within the flow.",
+            "synonyms": "accept, acknowledge, confirm, approve",
+            "tier": "domain"
+          },
+          {
+            "name": "OPEN_DISPUTE",
+            "direction": "emit",
+            "description": "Signals the dispute process has been initiated.",
+            "synonyms": "dispute, challenge, contest",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL_TRANSACTION",
+            "direction": "emit",
+            "description": "Indicates a transaction cancellation request has been initiated.",
+            "synonyms": "terminate, end, void, revoke",
+            "tier": "domain"
+          },
+          {
+            "name": "SUBMIT_DISPUTE",
+            "direction": "emit",
+            "description": "Signals a dispute submission request.",
+            "synonyms": "dispute, challenge, contest",
+            "tier": "domain"
+          },
+          {
+            "name": "SUBMIT_CANCEL",
+            "direction": "emit",
+            "description": "Signals a cancellation request has been submitted.",
+            "synonyms": "request cancel, initiate cancellation, submit termination",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL_REASON",
+            "direction": "emit",
+            "description": "Indicates a reason was provided for transaction cancellation.",
+            "synonyms": "reason, explanation, justification",
+            "tier": "presentation"
+          },
+          {
+            "name": "RELEASE",
+            "direction": "emit",
+            "description": "Transaction funds are distributed to the intended recipients.",
+            "synonyms": "complete, finalize, distribute, payout",
+            "tier": "domain"
+          },
+          {
+            "name": "RESTART",
+            "direction": "emit",
+            "description": "Initiates a reset of the current transaction flow.",
+            "synonyms": "reset, refresh, reinitialize",
+            "tier": "presentation"
+          },
+          {
+            "name": "FlowLoaded",
+            "direction": "emit",
+            "description": "Signals successful loading of the transaction flow data.",
+            "synonyms": "loaded, initialized, ready",
+            "tier": "domain"
+          },
+          {
+            "name": "FlowLoadFailed",
+            "direction": "emit",
+            "description": "Indicates that loading the flow data failed.",
+            "synonyms": "failure, error, problem, unsuccessful",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "FlowSaved",
+            "direction": "listen",
+            "description": "Indicates the flow data has been successfully saved.",
+            "synonyms": "saved, updated, persisted",
+            "tier": "presentation"
+          },
+          {
+            "name": "FlowSaveFailed",
+            "direction": "listen",
+            "description": "Indicates a failure to save the current flow state.",
+            "synonyms": "failed, error, unsuccessful, save error",
+            "tier": "internal"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "cancelIcon",
+            "type": "string",
+            "default": "x",
+            "label": "Cancel icon",
+            "description": "Icon next to the cancel button",
+            "tier": "presentation"
+          },
+          {
+            "key": "cancelLabel",
+            "type": "string",
+            "default": "Cancel transaction",
+            "label": "Cancel button",
+            "description": "Label on the cancel-transaction escape-hatch button",
+            "tier": "presentation"
+          },
+          {
+            "key": "cardLook",
+            "type": "string",
+            "default": "elevated",
+            "label": "Card look",
+            "description": "Layer 2 visual treatment for cards rendered by this atom.",
+            "tier": "presentation",
+            "enumValues": [
+              "elevated",
+              "flat-bordered",
+              "borderless-divider",
+              "ticket",
+              "invoice",
+              "chip",
+              "tile-image-first"
+            ]
+          },
+          {
+            "key": "disputeIcon",
+            "type": "string",
+            "default": "alert-triangle",
+            "label": "Dispute icon",
+            "description": "Icon next to the dispute button",
+            "tier": "presentation"
+          },
+          {
+            "key": "disputeLabel",
+            "type": "string",
+            "default": "Open dispute",
+            "label": "Dispute button",
+            "description": "Label on the open-dispute escape-hatch button",
+            "tier": "presentation"
+          },
+          {
+            "key": "parties",
+            "type": "[PartySpec]",
+            "default": [
+              {
+                "actionDescription": "Authorize $28,500 to be held in escrow until delivery is confirmed.",
+                "actionIcon": "credit-card",
+                "actionLabel": "Confirm payment",
+                "actor": "Alice Chen",
+                "description": "Funds the transaction and confirms receipt of the vehicle.",
+                "icon": "user",
+                "id": "buyer",
+                "stepLabel": "Step 1 of 2",
+                "title": "Buyer"
+              },
+              {
+                "actionDescription": "Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.",
+                "actionIcon": "package",
+                "actionLabel": "Confirm shipment",
+                "actor": "Bob's Auto Sales LLC",
+                "description": "Ships the vehicle and uploads delivery proof.",
+                "icon": "user-check",
+                "id": "seller",
+                "stepLabel": "Step 2 of 2",
+                "title": "Seller"
+              }
+            ],
+            "label": "Parties",
+            "description": "Ordered participants with role, actor name, and required action",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "actionDescription": {
+                  "name": "actionDescription",
+                  "required": false,
+                  "type": "string"
+                },
+                "actionIcon": {
+                  "name": "actionIcon",
+                  "required": false,
+                  "type": "string"
+                },
+                "actionLabel": {
+                  "name": "actionLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "actor": {
+                  "name": "actor",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "stepLabel": {
+                  "name": "stepLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reasonFields",
+            "type": "[string]",
+            "default": [
+              "reason"
+            ],
+            "label": "Reason fields",
+            "description": "Form fields shown when capturing a dispute or cancel reason",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "releaseIcon",
+            "type": "string",
+            "default": "unlock",
+            "label": "Release icon",
+            "description": "Icon next to the release button",
+            "tier": "presentation"
+          },
+          {
+            "key": "releaseLabel",
+            "type": "string",
+            "default": "Release funds",
+            "label": "Release button",
+            "description": "Label on the final-release primary button",
+            "tier": "presentation"
+          },
+          {
+            "key": "timelineLook",
+            "type": "string",
+            "default": "vertical-spacious",
+            "label": "Timeline look",
+            "description": "Layer 2 visual treatment for the timeline.",
+            "tier": "presentation",
+            "enumValues": [
+              "vertical-compact",
+              "vertical-spacious",
+              "horizontal",
+              "swimlane"
+            ]
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Escrow transaction",
+            "label": "Page title",
+            "description": "Heading shown above the transaction view",
+            "tier": "presentation"
+          },
+          {
+            "key": "transactionAmount",
+            "type": "string",
+            "default": "$28,500",
+            "label": "Amount",
+            "description": "Formatted amount held in escrow",
+            "tier": "presentation"
+          },
+          {
+            "key": "transactionReference",
+            "type": "string",
+            "default": "TXN-A8B2C-2024-001",
+            "label": "Reference",
+            "description": "External identifier shown in the summary",
+            "tier": "presentation"
+          },
+          {
+            "key": "transactionSubject",
+            "type": "string",
+            "default": "Sale of 2024 Honda CR-V",
+            "label": "Subject",
+            "description": "Short description of what is being transacted",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [
+          "multi-party"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "audit",
+            "cancelReason",
+            "currentActionDescription",
+            "currentActionIcon",
+            "currentActionLabel",
+            "currentPartyActor",
+            "currentPartyIcon",
+            "currentPartyId",
+            "currentPartyIndex",
+            "currentPartyTitle",
+            "currentStepLabel",
+            "disputeReason",
+            "errorMessage",
+            "parties",
+            "reason",
+            "totalParties"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MultiPartyFlowPage",
+        "defaultPath": "/multi-party-flow",
+        "primaryEntity": "MultiPartyView"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL_REASON",
+      "CANCEL_TRANSACTION",
+      "FlowLoadFailed",
+      "FlowLoaded",
+      "OPEN_DISPUTE",
+      "PARTY_CONFIRM",
+      "RELEASE",
+      "RESTART",
+      "SUBMIT_CANCEL",
+      "SUBMIT_DISPUTE"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]

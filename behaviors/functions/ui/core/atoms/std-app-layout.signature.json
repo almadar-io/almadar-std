@@ -1,0 +1,278 @@
+[
+  {
+    "organism": "std-app-layout",
+    "orbital": "AppLayoutOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-app-layout.ts",
+    "entities": [
+      {
+        "name": "AppLayoutData",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AppLayout",
+        "emittedEvents": [
+          "SEARCH",
+          "NOTIFY_CLICK",
+          "AppLayoutStateLoaded",
+          "AppLayoutStateLoadFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SEARCH",
+            "direction": "emit",
+            "description": "Indicates a search query has been submitted.",
+            "synonyms": "query, find, lookup",
+            "tier": "domain"
+          },
+          {
+            "name": "NOTIFY_CLICK",
+            "direction": "emit",
+            "description": "A user interacted with a notification.",
+            "synonyms": "click, tap, select",
+            "tier": "domain"
+          },
+          {
+            "name": "AppLayoutStateLoaded",
+            "direction": "emit",
+            "description": "Signals the layout has finished loading and is ready.",
+            "synonyms": "ready, initialized, loaded",
+            "tier": "domain"
+          },
+          {
+            "name": "AppLayoutStateLoadFailed",
+            "direction": "emit",
+            "description": "Indicates failure to load the layout state.",
+            "synonyms": "error, failure, load failed",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "string",
+            "default": "App",
+            "label": "What should this app be called?",
+            "description": "Name shown in the top-left of the chrome header.",
+            "synonyms": "app title, product name, brand name, application name, site name",
+            "tier": "presentation"
+          },
+          {
+            "key": "contentClassName",
+            "type": "string",
+            "default": "max-w-5xl mx-auto w-full",
+            "label": "Content wrapper class",
+            "description": "CSS class applied to the content area wrapper.",
+            "tier": "internal"
+          },
+          {
+            "key": "contentTrait",
+            "type": "trait",
+            "label": "Content trait",
+            "description": "Trait rendered inside the app layout content area",
+            "tier": "presentation"
+          },
+          {
+            "key": "currentPath",
+            "type": "string",
+            "default": "",
+            "label": "Current path",
+            "description": "Active path used to highlight the matching nav item. When omitted, the layout reads the current route.",
+            "tier": "internal"
+          },
+          {
+            "key": "detailSlot",
+            "type": "slot",
+            "default": "modal",
+            "label": "Detail slot",
+            "description": "Slot where detail/edit views render",
+            "tier": "internal"
+          },
+          {
+            "key": "layoutMode",
+            "type": "string",
+            "default": "sidebar",
+            "label": "Where should navigation be placed?",
+            "description": "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav.",
+            "synonyms": "nav position, navigation style, menu placement, layout style",
+            "tier": "presentation",
+            "enumValues": [
+              "sidebar",
+              "topnav",
+              "bottomnav",
+              "minimal"
+            ]
+          },
+          {
+            "key": "layoutPattern",
+            "type": "pattern",
+            "default": "dashboard-layout",
+            "label": "Layout pattern",
+            "description": "UI pattern used to render the application chrome",
+            "tier": "internal"
+          },
+          {
+            "key": "navItems",
+            "type": "[NavItem]",
+            "default": [],
+            "label": "Which sections appear in the sidebar?",
+            "description": "Top-level navigation links shown on the left rail.",
+            "synonyms": "nav links, menu items, sidebar sections, navigation entries, pages",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "badge": {
+                  "name": "badge",
+                  "required": false,
+                  "type": "string"
+                },
+                "children": {
+                  "name": "children",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "string",
+            "default": "NOTIFY_CLICK",
+            "label": "Notification click event",
+            "description": "Event emitted when the user picks a notification",
+            "tier": "internal"
+          },
+          {
+            "key": "notifications",
+            "type": "[NotificationSpec]",
+            "default": [],
+            "label": "What notifications should appear?",
+            "description": "Items shown in the notifications dropdown.",
+            "synonyms": "alerts, messages, notices, notification items, bell items",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "searchEvent",
+            "type": "string",
+            "default": "SEARCH",
+            "label": "Search event",
+            "description": "Event emitted when the user runs a global search",
+            "tier": "internal"
+          },
+          {
+            "key": "theme",
+            "type": "string",
+            "default": "",
+            "label": "Theme",
+            "description": "Data-theme attribute applied to the layout root (e.g. almadar-website-dark).",
+            "tier": "presentation"
+          },
+          {
+            "key": "topBarActions",
+            "type": "[ItemAction]",
+            "default": [],
+            "label": "What shortcuts go in the top bar?",
+            "description": "Icon buttons shown on the right side of the top bar (e.g. cart, help, profile).",
+            "synonyms": "toolbar buttons, header actions, shortcut icons, quick actions",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AppLayoutPage",
+        "defaultPath": "/app-layout",
+        "primaryEntity": "AppLayoutData"
+      }
+    ],
+    "emittedEvents": [
+      "AppLayoutStateLoadFailed",
+      "AppLayoutStateLoaded",
+      "NOTIFY_CLICK",
+      "SEARCH"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "substrateSignature": "e3b0c44298fc1c14"
+  }
+]

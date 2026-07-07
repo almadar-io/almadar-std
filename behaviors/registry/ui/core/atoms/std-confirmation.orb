@@ -1,0 +1,398 @@
+{
+  "description": "std-confirmation as a Function",
+  "name": "std-confirmation",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "description": "A user-facing identifier for the confirmation action.",
+            "name": "name",
+            "synonyms": "label, title, identifier",
+            "type": "string"
+          },
+          {
+            "description": "A detailed explanation of the action being confirmed.",
+            "name": "description",
+            "synonyms": "details, explanation, notes, information",
+            "type": "string"
+          },
+          {
+            "default": "active",
+            "description": "Indicates the current operational state of the action.",
+            "name": "status",
+            "synonyms": "state, condition, enabled",
+            "type": "string",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Unique identifier for the pending confirmation request.",
+            "name": "pendingId",
+            "synonyms": "requestId, referenceId, confirmationId",
+            "type": "string"
+          }
+        ],
+        "name": "ConfirmAction",
+        "persistence": "runtime"
+      },
+      "name": "ConfirmActionOrbital",
+      "pages": [
+        {
+          "name": "ConfirmActionConfirmPage",
+          "path": "/confirmactions/confirm",
+          "traits": [
+            {
+              "ref": "ConfirmActionConfirmation"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "alertMessage": {
+              "default": "Are you sure?",
+              "description": "Body text explaining what the user is confirming",
+              "label": "Alert message",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "confirmLabel": {
+              "default": "Confirm",
+              "description": "Label on the primary confirm action button",
+              "label": "Confirm button",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "icon": {
+              "default": "alert-triangle",
+              "description": "Icon name displayed in the confirmation modal header",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Confirm Action",
+              "description": "Heading shown at the top of the confirmation modal",
+              "label": "Modal title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Indicates the user has approved the action.",
+              "event": "CONFIRM",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "approve, accept, ok",
+              "tier": "domain"
+            },
+            {
+              "description": "Indicates the action was cancelled by the user.",
+              "event": "CANCEL",
+              "synonyms": "dismiss, reject, undo",
+              "tier": "domain"
+            },
+            {
+              "description": "Indicates failure to load the confirmation action.",
+              "event": "ConfirmActionLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, failed, problem",
+              "tier": "internal"
+            },
+            {
+              "description": "Indicates the confirmation action has been successfully loaded.",
+              "event": "ConfirmActionLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ConfirmAction]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, ready, initialized",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "name",
+              "pendingId"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ConfirmAction",
+          "name": "ConfirmActionConfirmation",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "A request for confirmation before proceeding.",
+                "key": "REQUEST",
+                "name": "Request",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "ConfirmAction"
+                  }
+                ],
+                "synonyms": "prompt, ask, verify",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates the user has approved the action.",
+                "key": "CONFIRM",
+                "name": "Confirm",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "approve, accept, ok",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates the action was cancelled by the user.",
+                "key": "CANCEL",
+                "name": "Cancel",
+                "synonyms": "dismiss, reject, undo",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates the user dismissed the confirmation.",
+                "key": "CLOSE",
+                "name": "Close",
+                "synonyms": "dismiss, decline, reject",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates failure to load the confirmation action.",
+                "key": "ConfirmActionLoadFailed",
+                "name": "ConfirmAction load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, failed, problem",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates the confirmation action has been successfully loaded.",
+                "key": "ConfirmActionLoaded",
+                "name": "ConfirmAction loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ConfirmAction]"
+                  }
+                ],
+                "synonyms": "loaded, ready, initialized",
+                "tier": "internal"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ConfirmAction",
+                    {
+                      "emit": {
+                        "failure": "ConfirmActionLoadFailed",
+                        "success": "ConfirmActionLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "@config.icon",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "message": "@config.alertMessage",
+                          "type": "alert",
+                          "variant": "error"
+                        },
+                        {
+                          "content": "@entity.name",
+                          "type": "typography",
+                          "variant": "h4"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "@entity.pendingId",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "children": [
+                            {
+                              "action": "CANCEL",
+                              "label": "Cancel",
+                              "type": "button",
+                              "variant": "ghost"
+                            },
+                            {
+                              "action": "CONFIRM",
+                              "actionPayload": {
+                                "id": "@entity.pendingId"
+                              },
+                              "icon": "check",
+                              "label": "@config.confirmLabel",
+                              "type": "button",
+                              "variant": "danger"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "REQUEST",
+                "from": "idle",
+                "guard": "@payload.row",
+                "to": "confirming"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ],
+                "event": "CONFIRM",
+                "from": "confirming",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ],
+                "event": "CANCEL",
+                "from": "confirming",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ],
+                "event": "CLOSE",
+                "from": "confirming",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

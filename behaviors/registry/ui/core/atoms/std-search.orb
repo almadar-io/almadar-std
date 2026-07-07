@@ -27,30 +27,12 @@
           "path": "/searchresults/search",
           "traits": [
             {
-              "ref": "SearchResultSearchRender"
-            },
-            {
-              "ref": "SearchResultSearchEvents"
+              "ref": "SearchResultSearch"
             }
           ]
         }
       ],
       "traits": [
-        {
-          "config": {
-            "event": {
-              "default": "@config.event",
-              "type": "unknown"
-            },
-            "placeholder": {
-              "default": "@config.placeholder",
-              "type": "unknown"
-            }
-          },
-          "linkedEntity": "SearchResult",
-          "name": "SearchResultSearchRender",
-          "ref": "SearchInput.traits.SearchInputRender"
-        },
         {
           "category": "interaction",
           "config": {
@@ -85,8 +67,15 @@
               "tier": "domain"
             }
           ],
+          "entityContract": {
+            "provides": [
+              "searchTerm"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
           "linkedEntity": "SearchResult",
-          "name": "SearchResultSearchEvents",
+          "name": "SearchResultSearch",
           "scope": "instance",
           "stateMachine": {
             "events": [
@@ -117,6 +106,17 @@
             ],
             "transitions": [
               {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "event": "@config.event",
+                      "placeholder": "@config.placeholder",
+                      "type": "search-input"
+                    }
+                  ]
+                ],
                 "event": "INIT",
                 "from": "idle",
                 "to": "idle"
@@ -127,6 +127,15 @@
                     "set",
                     "@entity.searchTerm",
                     "@payload.searchTerm"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "event": "@config.event",
+                      "placeholder": "@config.placeholder",
+                      "type": "search-input"
+                    }
                   ]
                 ],
                 "event": "SEARCH",
@@ -135,12 +144,6 @@
               }
             ]
           }
-        }
-      ],
-      "uses": [
-        {
-          "as": "SearchInput",
-          "from": "std/behaviors/ui-search-input"
         }
       ]
     }

@@ -4,24 +4,31 @@ app std-marketing-hero "1.0.0"
 ;; All copy, imagery, and styling are overrideable at the call site.
 ;; The atom emits CTA_CLICK when the primary or secondary action is triggered.
 orbital HeroItemOrbital {
-  uses HeroSection from "std/behaviors/ui-hero-section"
-
   entity HeroItem [runtime] {
     id : string!
   }
 
-  trait HeroItemHeroRender = HeroSection.traits.HeroSectionRender -> HeroItem {
-    config {
-      align: @config.align
-      background: @config.background
-    }
-  }
-
-  trait HeroItemHeroEvents -> HeroItem [interaction, instance] {
+  trait HeroItemHero -> HeroItem [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
+        (render-ui main {
+          align: @config.align
+          background: @config.background
+          image: { alt: @config.imageAlt, src: @config.imageSrc }
+          imagePosition: @config.imagePosition
+          installCommand: @config.installCommand
+          primaryAction: { href: @config.primaryActionHref, label: @config.primaryActionLabel }
+          secondaryAction: { href: @config.secondaryActionHref, label: @config.secondaryActionLabel }
+          subtitle: @config.subtitle
+          tag: @config.tag
+          tagVariant: @config.tagVariant
+          title: @config.title
+          titleAccent: @config.titleAccent
+          type: hero-section
+          className: @config.className
+        })
       CTA_PRIMARY -> idle
         (emit CTA_PRIMARY { href: @config.primaryActionHref })
       CTA_SECONDARY -> idle
@@ -120,5 +127,5 @@ orbital HeroItemOrbital {
     }
   }
 
-  page "/hero" as HeroItemHeroPage -> HeroItemHeroRender, HeroItemHeroEvents
+  page "/hero" as HeroItemHeroPage -> HeroItemHero
 }

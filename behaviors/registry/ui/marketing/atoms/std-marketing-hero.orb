@@ -1,0 +1,282 @@
+{
+  "description": "Hero section atom for marketing pages. Renders a full-width hero with tag, title, subtitle, actions, and optional image. Pick for landing pages, product launches, and campaign microsites.",
+  "name": "std-marketing-hero",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "HeroItem",
+        "persistence": "runtime"
+      },
+      "name": "HeroItemOrbital",
+      "pages": [
+        {
+          "name": "HeroItemHeroPage",
+          "path": "/hero",
+          "traits": [
+            {
+              "ref": "HeroItemHero"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "align": {
+              "default": "center",
+              "description": "center or left",
+              "label": "Alignment",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "background": {
+              "default": "gradient",
+              "description": "dark, gradient, or subtle",
+              "label": "Background",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional Tailwind classes applied to the hero root, e.g. to reduce height.",
+              "label": "Extra CSS classes",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "imageAlt": {
+              "default": "",
+              "label": "Image Alt Text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "imagePosition": {
+              "default": "below",
+              "description": "below, right, or background",
+              "label": "Image Position",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "imageSrc": {
+              "default": "",
+              "label": "Image Source",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "installCommand": {
+              "default": "",
+              "description": "CLI command shown in a copyable box",
+              "label": "Install Command",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "primaryActionHref": {
+              "default": "#",
+              "label": "Primary Action Link",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "primaryActionLabel": {
+              "default": "Get Started",
+              "label": "Primary Action Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "secondaryActionHref": {
+              "default": "",
+              "label": "Secondary Action Link",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "secondaryActionLabel": {
+              "default": "",
+              "label": "Secondary Action Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "subtitle": {
+              "default": "From idea to production in minutes, not months.",
+              "description": "Supporting text below the title",
+              "label": "Subtitle",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "tag": {
+              "default": "",
+              "description": "Small badge above the headline",
+              "label": "Tag",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "tagVariant": {
+              "default": "accent",
+              "description": "Visual style of the tag badge",
+              "label": "Tag Variant",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Build faster with Almadar",
+              "description": "Main headline",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "titleAccent": {
+              "default": "",
+              "description": "Highlighted portion of the title",
+              "label": "Title Accent",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Signals the primary call to action has been triggered.",
+              "event": "CTA_PRIMARY",
+              "payloadSchema": [
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "click, activate, submit, trigger",
+              "tier": "domain"
+            },
+            {
+              "description": "Signals a secondary call to action has been triggered.",
+              "event": "CTA_SECONDARY",
+              "payloadSchema": [
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "secondary action, second button, alternative link",
+              "tier": "domain"
+            }
+          ],
+          "linkedEntity": "HeroItem",
+          "name": "HeroItemHero",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals the primary call to action has been triggered.",
+                "key": "CTA_PRIMARY",
+                "name": "Cta Primary",
+                "payloadSchema": [
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "click, activate, submit, trigger",
+                "tier": "domain"
+              },
+              {
+                "description": "Signals a secondary call to action has been triggered.",
+                "key": "CTA_SECONDARY",
+                "name": "Cta Secondary",
+                "payloadSchema": [
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "secondary action, second button, alternative link",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "@config.align",
+                      "background": "@config.background",
+                      "className": "@config.className",
+                      "image": {
+                        "alt": "@config.imageAlt",
+                        "src": "@config.imageSrc"
+                      },
+                      "imagePosition": "@config.imagePosition",
+                      "installCommand": "@config.installCommand",
+                      "primaryAction": {
+                        "href": "@config.primaryActionHref",
+                        "label": "@config.primaryActionLabel"
+                      },
+                      "secondaryAction": {
+                        "href": "@config.secondaryActionHref",
+                        "label": "@config.secondaryActionLabel"
+                      },
+                      "subtitle": "@config.subtitle",
+                      "tag": "@config.tag",
+                      "tagVariant": "@config.tagVariant",
+                      "title": "@config.title",
+                      "titleAccent": "@config.titleAccent",
+                      "type": "hero-section"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "CTA_PRIMARY",
+                    {
+                      "href": "@config.primaryActionHref"
+                    }
+                  ]
+                ],
+                "event": "CTA_PRIMARY",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "CTA_SECONDARY",
+                    {
+                      "href": "@config.secondaryActionHref"
+                    }
+                  ]
+                ],
+                "event": "CTA_SECONDARY",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
