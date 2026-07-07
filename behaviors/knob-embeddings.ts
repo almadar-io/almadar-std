@@ -25,7 +25,36 @@ export interface KnobEmbeddingsManifest {
   vectors: Record<string, ReadonlyArray<number>>;
 }
 
+/** Int8-quantized vector: `d` = base64 of one signed byte per dimension,
+ *  `s` = per-vector max-abs scale; value = byte × s ÷ 127. Landed when the
+ *  io manifest (41k knobs × 768 float literals) outgrew GitHub's 100 MB
+ *  blob limit; cosine rank drift is negligible at 8 bits. */
+export interface QuantizedKnobVector {
+  s: number;
+  d: string;
+}
+
+export type StoredKnobVector = ReadonlyArray<number> | QuantizedKnobVector;
+
+export interface StoredKnobEmbeddingsFile {
+  version: string;
+  model: string;
+  dimensions: number;
+  encoding?: 'int8-b64';
+  vectors: Record<string, StoredKnobVector>;
+}
+
 let cache: KnobEmbeddingsManifest | null = null;
+
+function decodeVector(stored: StoredKnobVector): ReadonlyArray<number> {
+  if (!('d' in stored)) return stored;
+  const bytes = Buffer.from(stored.d, 'base64');
+  const out = new Array<number>(bytes.length);
+  for (let i = 0; i < bytes.length; i++) {
+    out[i] = (bytes.readInt8(i) * stored.s) / 127;
+  }
+  return out;
+}
 
 async function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
   if (cache) return cache;
@@ -34,7 +63,7 @@ async function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
     const { resolve } = await import('path');
     const dir = await resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'knob-embeddings.json'), 'utf-8');
-    const parsed = JSON.parse(raw) as KnobEmbeddingsManifest;
+    const parsed = JSON.parse(raw) as StoredKnobEmbeddingsFile;
     if (
       typeof parsed?.model !== 'string' ||
       typeof parsed?.dimensions !== 'number' ||
@@ -43,7 +72,16 @@ async function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
     ) {
       return null;
     }
-    cache = parsed;
+    const vectors: Record<string, ReadonlyArray<number>> = {};
+    for (const [key, stored] of Object.entries(parsed.vectors)) {
+      vectors[key] = decodeVector(stored);
+    }
+    cache = {
+      version: parsed.version,
+      model: parsed.model,
+      dimensions: parsed.dimensions,
+      vectors,
+    };
     return cache;
   } catch {
     return null;

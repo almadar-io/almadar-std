@@ -26,6 +26,13 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { EmbeddingClient } from '@almadar/llm';
+import type {
+  FactoryConfigParam,
+  FactorySignature,
+  FactorySignatureCatalog,
+  FactoryTraitSignature,
+} from '@almadar/core';
+import type { QuantizedKnobVector } from '../behaviors/knob-embeddings.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -39,31 +46,6 @@ const EMBEDDING_MODEL = 'baai/bge-base-en-v1.5';
 const EMBEDDING_DIMS = 768;
 const PRICE_PER_1M = 0.005;
 
-interface ConfigParam {
-  key: string;
-  type: string;
-  label?: string;
-  description?: string;
-  enumValues?: string[];
-  /** Authored as `@synonyms "..."` in `.lolo`; lifted by the
-   *  pattern-sync extractor. Appended to the embedding text so cosine
-   *  narrowing recalls knobs voiced via user vocabulary. */
-  synonyms?: string;
-}
-interface TraitSig {
-  name: string;
-  overridableConfigKeys: ConfigParam[];
-}
-interface Signature {
-  organism: string;
-  orbital: string;
-  tier: 'atoms' | 'molecules' | 'organisms';
-  traits: TraitSig[];
-}
-interface Catalog {
-  generatedFromStdVersion: string;
-  signatures: Signature[];
-}
 interface PackageJson {
   version: string;
 }
@@ -76,7 +58,11 @@ interface PackageJson {
  *  the `.lolo` `@synonyms` annotation appends "taller / shorter /
  *  pixel height" to the knob's embedding text.
  */
-function buildKnobText(sig: Signature, trait: TraitSig, knob: ConfigParam): string {
+function buildKnobText(
+  sig: FactorySignature,
+  trait: FactoryTraitSignature,
+  knob: FactoryConfigParam,
+): string {
   const parts: string[] = [`${sig.organism} ${sig.orbital} ${trait.name}.${knob.key}`];
   if (knob.label) parts.push(knob.label);
   if (knob.description) parts.push(knob.description);
@@ -89,6 +75,23 @@ function buildKnobText(sig: Signature, trait: TraitSig, knob: ConfigParam): stri
   return parts.join('\n');
 }
 
+/** Int8 quantization with per-vector max-abs scale — the JSON-float
+ *  manifest outgrew GitHub's 100 MB blob limit at 41k io knobs; 8-bit
+ *  cosine rank drift is negligible for bge-base embeddings. */
+function quantizeInt8(vector: ReadonlyArray<number>): QuantizedKnobVector {
+  let max = 0;
+  for (const v of vector) {
+    const a = Math.abs(v);
+    if (a > max) max = a;
+  }
+  const scale = max === 0 ? 1 : max;
+  const bytes = Buffer.alloc(vector.length);
+  for (let i = 0; i < vector.length; i++) {
+    bytes.writeInt8(Math.round(((vector[i] ?? 0) / scale) * 127), i);
+  }
+  return { s: Number(scale.toPrecision(6)), d: bytes.toString('base64') };
+}
+
 async function main(): Promise<void> {
   const apiKey = process.env['OPEN_ROUTER_API_KEY'];
   if (!apiKey) {
@@ -99,12 +102,14 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  const catalog: Catalog = JSON.parse(readFileSync(CATALOG_PATH, 'utf-8'));
+  const catalog: FactorySignatureCatalog = JSON.parse(readFileSync(CATALOG_PATH, 'utf-8'));
   const pkg: PackageJson = JSON.parse(readFileSync(PKG_PATH, 'utf-8'));
 
   const keys: string[] = [];
   const texts: string[] = [];
   for (const sig of catalog.signatures) {
+    // internal-exposure organisms never reach Stage-A knob ranking — no consumer can rank their vectors.
+    if (sig.exposure === 'internal') continue;
     for (const trait of sig.traits) {
       for (const knob of trait.overridableConfigKeys) {
         keys.push(`${sig.organism}/${sig.orbital}/${trait.name}/${knob.key}`);
@@ -139,7 +144,7 @@ async function main(): Promise<void> {
       `(≈ $${(totalTokens / 1_000_000 * PRICE_PER_1M).toFixed(6)})`,
   );
 
-  const vectors: Record<string, number[]> = {};
+  const vectors: Record<string, QuantizedKnobVector> = {};
   for (let i = 0; i < keys.length; i++) {
     const embedding = flatEmbeddings[i];
     if (!embedding || embedding.length !== EMBEDDING_DIMS) {
@@ -147,15 +152,14 @@ async function main(): Promise<void> {
         `[build-knob-embeddings] Vector for "${keys[i]}" has dimension ${embedding?.length ?? 0}, expected ${EMBEDDING_DIMS}`,
       );
     }
-    // Quantize to 5 sig figs — cosine ranks stay stable and the
-    // serialized manifest shrinks ~3x vs raw 16-digit JSON numbers.
-    vectors[keys[i]] = embedding.map((v) => Number(v.toFixed(5)));
+    vectors[keys[i]] = quantizeInt8(embedding);
   }
 
   const manifest = {
     version: pkg.version,
     model: EMBEDDING_MODEL,
     dimensions: EMBEDDING_DIMS,
+    encoding: 'int8-b64' as const,
     vectors,
   };
 
