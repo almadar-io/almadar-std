@@ -8,6 +8,7 @@
  * @packageDocumentation
  */
 
+import type { FactoryExposure, FactoryProvenance } from '@almadar/core';
 import { loadGoldenOrb } from './exports-reader.js';
 import { resolveStdDataDir } from './data-dir.js';
 
@@ -76,12 +77,8 @@ export interface RegistryEntry {
    * Optional: registries are not yet stamped (V3 Phase 2 rollout). A
    * missing field means a pre-V3 registry — consumers fall back to their
    * legacy filters.
-   *
-   * TODO(publish-gate): import `FactoryExposure` from `@almadar/core`
-   * once it lands there (unpublished as of this wave) instead of the
-   * inline literal union below.
    */
-  exposure?: 'app' | 'palette' | 'both' | 'internal';
+  exposure?: FactoryExposure;
   /**
    * How the behavior entered the registry: `generated` (pattern-sync
    * emitted wrapper), `authored` (hand-authored, blessed via
@@ -92,12 +89,8 @@ export interface RegistryEntry {
    * Optional: registries are not yet stamped (V3 Phase 2 rollout). A
    * missing field means a pre-V3 registry — consumers fall back to their
    * legacy filters.
-   *
-   * TODO(publish-gate): import `FactoryProvenance` from `@almadar/core`
-   * once it lands there (unpublished as of this wave) instead of the
-   * inline literal union below.
    */
-  provenance?: 'generated' | 'authored' | 'promoted';
+  provenance?: FactoryProvenance;
 }
 
 export interface BehaviorSummary {
