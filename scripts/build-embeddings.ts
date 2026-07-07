@@ -181,7 +181,7 @@ async function main(): Promise<void> {
       const trimmed = cap === Infinity ? chunk : chunk.map((t) => (t.length > cap ? t.slice(0, cap) : t));
       try {
         const result = await client.embedBatch(trimmed);
-        embeddings.push(...result.embeddings);
+        embeddings.push(...result.embeddings.map((e) => [...e]));
         totalTokens += result.usage.totalTokens;
         lastError = null;
         break;
