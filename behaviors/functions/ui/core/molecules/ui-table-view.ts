@@ -90,7 +90,7 @@ export interface StdUiTableViewConfig {
   groupBy?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[]` */
+  /** Default: `[{"event":"VIEW","label":"View"}]` */
   itemActions?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';

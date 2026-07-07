@@ -60,7 +60,7 @@ export interface StdUiTimelineConfig {
   fields?: string[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
+  /** Default: `[{"event":"VIEW","label":"View"}]` */
   itemActions?: EntityRow[];
   /** Default: `[{"date":"Date","description":"Description","icon":"circle","id":"Id","status":"complete","tags":["Item","Item 2"],"title":"Title"},{"date":"Date 2","description":"Description 2","icon":"circle","id":"Id 2","status":"active","tags":["Item","Item 2"],"title":"Title 2"}]` */
   items?: EntityRow[];
@@ -194,14 +194,8 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
           'itemActions': {
             'default': [
               {
-                'label': 'Label',
-                'navigatesTo': 'Navigates To',
-                'variant': 'primary',
-              },
-              {
-                'label': 'Label 2',
-                'navigatesTo': 'Navigates To 2',
-                'variant': 'secondary',
+                'event': 'VIEW',
+                'label': 'View',
               },
             ],
             'description': 'Actions per item',
@@ -435,12 +429,7 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     'error': '@config.error',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      {
-                        'event': 'VIEW',
-                        'label': 'View',
-                      },
-                    ],
+                    'itemActions': '@config.itemActions',
                     'items': '@config.items',
                     'look': '@config.look',
                     'title': '@config.title',
@@ -463,12 +452,7 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     'error': '@config.error',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      {
-                        'event': 'VIEW',
-                        'label': 'View',
-                      },
-                    ],
+                    'itemActions': '@config.itemActions',
                     'items': '@config.items',
                     'look': '@config.look',
                     'title': '@config.title',

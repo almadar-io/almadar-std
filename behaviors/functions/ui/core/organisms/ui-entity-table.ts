@@ -74,7 +74,7 @@ export interface StdUiEntityTableConfig {
   headerActions?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"action":"Action","icon":"circle","label":"Label","navigatesTo":"Navigates To","placement":"row","variant":"default"},{"action":"Action 2","icon":"circle","label":"Label 2","navigatesTo":"Navigates To 2","placement":"bulk","variant":"primary"}]` */
+  /** Default: `[{"event":"VIEW","label":"View"}]` */
   itemActions?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
@@ -418,20 +418,8 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
           'itemActions': {
             'default': [
               {
-                'action': 'Action',
-                'icon': 'circle',
-                'label': 'Label',
-                'navigatesTo': 'Navigates To',
-                'placement': 'row',
-                'variant': 'default',
-              },
-              {
-                'action': 'Action 2',
-                'icon': 'circle',
-                'label': 'Label 2',
-                'navigatesTo': 'Navigates To 2',
-                'placement': 'bulk',
-                'variant': 'primary',
+                'event': 'VIEW',
+                'label': 'View',
               },
             ],
             'description': 'Item actions from generated code - maps to rowActions',
@@ -728,12 +716,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'fields': '@config.fields',
                     'headerActions': '@config.headerActions',
                     'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      {
-                        'event': 'VIEW',
-                        'label': 'View',
-                      },
-                    ],
+                    'itemActions': '@config.itemActions',
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
@@ -774,12 +757,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'fields': '@config.fields',
                     'headerActions': '@config.headerActions',
                     'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      {
-                        'event': 'VIEW',
-                        'label': 'View',
-                      },
-                    ],
+                    'itemActions': '@config.itemActions',
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',

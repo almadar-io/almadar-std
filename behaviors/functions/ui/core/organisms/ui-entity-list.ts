@@ -501,12 +501,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      {
-                        'event': 'VIEW',
-                        'label': 'View',
-                      },
-                    ],
+                    'itemActions': 'ITEM_ACTIONS',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',
@@ -541,12 +536,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      {
-                        'event': 'VIEW',
-                        'label': 'View',
-                      },
-                    ],
+                    'itemActions': 'ITEM_ACTIONS',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',

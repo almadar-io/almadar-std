@@ -96,7 +96,7 @@ export interface StdUiDataGridConfig {
   infiniteScroll?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[]` */
+  /** Default: `[{"event":"VIEW","label":"View"}]` */
   itemActions?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';

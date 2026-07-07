@@ -74,7 +74,7 @@ export interface StdUiEntityCardsConfig {
   imageField?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"action":"Action","label":"Label","navigatesTo":"Navigates To","placement":"card","variant":"primary"},{"action":"Action 2","label":"Label 2","navigatesTo":"Navigates To 2","placement":"footer","variant":"secondary"}]` */
+  /** Default: `[{"event":"VIEW","label":"View"}]` */
   itemActions?: EntityRow[];
   /** Default: `1` */
   maxCols?: number;
@@ -366,18 +366,8 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
           'itemActions': {
             'default': [
               {
-                'action': 'Action',
-                'label': 'Label',
-                'navigatesTo': 'Navigates To',
-                'placement': 'card',
-                'variant': 'primary',
-              },
-              {
-                'action': 'Action 2',
-                'label': 'Label 2',
-                'navigatesTo': 'Navigates To 2',
-                'placement': 'footer',
-                'variant': 'secondary',
+                'event': 'VIEW',
+                'label': 'View',
               },
             ],
             'description': 'Actions for each card item (schema-driven)',
@@ -625,12 +615,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                     'gap': '@config.gap',
                     'imageField': '@config.imageField',
                     'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      {
-                        'event': 'VIEW',
-                        'label': 'View',
-                      },
-                    ],
+                    'itemActions': '@config.itemActions',
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
@@ -669,12 +654,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                     'gap': '@config.gap',
                     'imageField': '@config.imageField',
                     'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      {
-                        'event': 'VIEW',
-                        'label': 'View',
-                      },
-                    ],
+                    'itemActions': '@config.itemActions',
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
