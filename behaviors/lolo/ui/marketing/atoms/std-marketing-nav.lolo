@@ -1,0 +1,86 @@
+app std-marketing-nav "1.0.0"
+"Marketing navigation atom for marketing pages. Renders a sticky header with brand logo and nav links. Pick for site-wide navigation on static pages."
+;; Config-driven navigation using the `header` marketing pattern.
+;; Items are declared as an array of { label, href } objects.
+;; The atom emits NAV_CLICK when a link is clicked.
+orbital NavItemOrbital {
+    type NavLink = { label : string!, href : string! }
+
+  entity NavItem [runtime] {
+    id : string!
+  }
+
+  trait NavItemNav -> NavItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          actions: {
+            label: @config.primaryActionLabel
+            type: button
+            variant: primary
+          }
+          brandName: @config.brandName
+          logoSrc: @config.logoSrc
+          navigationItems: @config.items
+          type: header
+        })
+      NAV_CLICK -> idle
+        (emit NAV_CLICK { href: ?href, label: ?label })
+    }
+
+    emits {
+      NAV_CLICK -> external {
+        href : string
+        label : string
+      }
+        @description "Indicates a navigation link was selected."
+        @synonyms "select, choose, activate"
+        @tier "domain"
+    }
+
+    listens {
+      NAV_CLICK {
+        href : string
+        label : string
+      }
+        @description "A navigation link was selected."
+        @synonyms "select, choose, activate"
+        @tier "domain"
+    }
+
+    config {
+      brandName : string = Almadar
+        @label "Brand Name"
+        @tier "presentation"
+      logoSrc : string = ""
+        @label "Logo Source"
+        @tier "presentation"
+      items : [NavLink] = [{
+        href: "#product"
+        label: Product
+      }, {
+        href: "#pricing"
+        label: Pricing
+      }, {
+        href: "#about"
+        label: About
+      }, {
+        href: "#docs"
+        label: Docs
+      }]
+        @label "Navigation Items"
+        @description "Array of nav links"
+        @tier "presentation"
+      primaryActionLabel : string = "Get Started"
+        @label "Primary Action Label"
+        @tier "presentation"
+      primaryActionHref : string = "#"
+        @label "Primary Action Link"
+        @tier "presentation"
+    }
+  }
+
+  page "/nav" as NavItemNavPage -> NavItemNav
+}

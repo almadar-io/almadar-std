@@ -1,0 +1,43 @@
+app std-marketing-stats "1.0.0"
+"Stats grid atom for marketing pages. Renders a responsive grid of key metrics with values and labels. Pick for social proof, traction, and credibility sections."
+;; Config-driven stats grid using the `stats-grid` marketing pattern.
+;; Stats are declared as an array of { value, label } objects.
+;; The atom renders immediately on INIT with no fetch required.
+orbital StatItemOrbital {
+    type StatCard = { value : string!, label : string! }
+
+  uses StatsGrid from "std/behaviors/ui-stats-grid"
+
+  entity StatItem [runtime] {
+    id : string!
+  }
+
+  trait StatItemStats = StatsGrid.traits.StatsGridRender -> StatItem {
+    config {
+      columns: @config.columns
+      stats: @config.stats
+      stats : [StatCard] = [{
+        label: Developers
+        value: "10K+"
+      }, {
+        label: Uptime
+        value: "99.9%"
+      }, {
+        label: "Requests served"
+        value: "50M+"
+      }, {
+        label: "Average rating"
+        value: "4.9"
+      }]
+        @label "Stats"
+        @description "Array of stat value/label pairs"
+        @tier "presentation"
+      columns : number = 4
+        @label "Columns"
+        @description "Number of grid columns"
+        @tier "presentation"
+    }
+  }
+
+  page "/stats" as StatItemStatsPage -> StatItemStats
+}

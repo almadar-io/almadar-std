@@ -1,0 +1,82 @@
+app std-marketing-footer "1.0.0"
+"Marketing footer atom for marketing pages. Renders a full footer with link columns, logo, and copyright. Pick for every marketing page bottom."
+;; Config-driven footer using the `marketing-footer` marketing pattern.
+;; Columns are declared as an array of { title, items: [{ label, href }] } objects.
+;; The atom renders immediately on INIT with no fetch required.
+orbital FooterItemOrbital {
+    type FooterLink = { label : string!, href : string! }
+
+  type FooterColumn = { title : string!, items : [FooterLink] }
+
+  uses MarketingFooter from "std/behaviors/ui-marketing-footer"
+
+  entity FooterItem [runtime] {
+    id : string!
+  }
+
+  trait FooterItemFooter = MarketingFooter.traits.MarketingFooterRender -> FooterItem {
+    config {
+      columns: @config.columns
+      copyright: @config.copyright
+      logo: {
+        alt: @config.logoAlt
+        href: @config.logoHref
+        src: @config.logoSrc
+      }
+      columns : [FooterColumn] = [{
+        items: [{
+          href: "#"
+          label: Features
+        }, {
+          href: "#"
+          label: Pricing
+        }, {
+          href: "#"
+          label: Changelog
+        }]
+        title: Product
+      }, {
+        items: [{
+          href: "#"
+          label: About
+        }, {
+          href: "#"
+          label: Careers
+        }, {
+          href: "#"
+          label: Blog
+        }]
+        title: Company
+      }, {
+        items: [{
+          href: "#"
+          label: Docs
+        }, {
+          href: "#"
+          label: Community
+        }, {
+          href: "#"
+          label: Support
+        }]
+        title: Resources
+      }]
+        @label "Footer Columns"
+        @description "Array of link column groups"
+        @tier "presentation"
+      copyright : string = "© 2026 Almadar. All rights reserved."
+        @label "Copyright"
+        @tier "presentation"
+      logoSrc : string = ""
+        @label "Logo Source"
+        @tier "presentation"
+      logoAlt : string = ""
+        @label "Logo Alt Text"
+        @tier "presentation"
+      logoHref : string = "/"
+        @label "Logo Link"
+        @tier "presentation"
+    }
+  }
+
+  page "/footer" as FooterItemFooterPage -> FooterItemFooter
+}

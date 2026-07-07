@@ -1,0 +1,30 @@
+app std-marketing-article "1.0.0"
+"Article section atom for marketing pages. Renders a centered prose block with title and rich content. Pick for about pages, mission statements, and blog-style content."
+;; Config-driven article section using the `article-section` marketing pattern.
+;; The atom renders immediately on INIT with no fetch required.
+orbital ArticleItemOrbital {
+  uses ArticleSection from "std/behaviors/ui-article-section"
+
+  entity ArticleItem [runtime] {
+    id : string!
+  }
+
+  trait ArticleItemArticle = ArticleSection.traits.ArticleSectionRender -> ArticleItem {
+    config {
+      title : string = "Our Mission"
+        @label "Title"
+        @description "Section headline"
+        @tier "presentation"
+      content : string = "We believe building software should be as natural as describing it."
+        @label "Content"
+        @description "Body text rendered as markdown"
+        @tier "presentation"
+      maxWidth : string = lg
+        @label "Max Width"
+        @description "Content width constraint"
+        @tier "presentation"
+    }
+  }
+
+  page "/article" as ArticleItemArticlePage -> ArticleItemArticle
+}

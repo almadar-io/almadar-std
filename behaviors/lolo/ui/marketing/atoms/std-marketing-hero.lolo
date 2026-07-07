@@ -1,0 +1,124 @@
+app std-marketing-hero "1.0.0"
+"Hero section atom for marketing pages. Renders a full-width hero with tag, title, subtitle, actions, and optional image. Pick for landing pages, product launches, and campaign microsites."
+;; Config-driven hero that uses the `hero-section` marketing pattern.
+;; All copy, imagery, and styling are overrideable at the call site.
+;; The atom emits CTA_CLICK when the primary or secondary action is triggered.
+orbital HeroItemOrbital {
+  uses HeroSection from "std/behaviors/ui-hero-section"
+
+  entity HeroItem [runtime] {
+    id : string!
+  }
+
+  trait HeroItemHeroRender = HeroSection.traits.HeroSectionRender -> HeroItem {
+    config {
+      align: @config.align
+      background: @config.background
+    }
+  }
+
+  trait HeroItemHeroEvents -> HeroItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      CTA_PRIMARY -> idle
+        (emit CTA_PRIMARY { href: @config.primaryActionHref })
+      CTA_SECONDARY -> idle
+        (emit CTA_SECONDARY { href: @config.secondaryActionHref })
+    }
+
+    emits {
+      CTA_PRIMARY -> external {
+        href : string
+      }
+        @description "Signals the primary call to action has been triggered."
+        @synonyms "click, activate, submit, trigger"
+        @tier "domain"
+      CTA_SECONDARY -> external {
+        href : string
+      }
+        @description "Signals a secondary call to action has been triggered."
+        @synonyms "secondary action, second button, alternative link"
+        @tier "domain"
+    }
+
+    listens {
+      CTA_PRIMARY {
+        href : string
+      }
+        @description "A primary call to action has been triggered."
+        @synonyms "click, select, submit, activate"
+        @tier "domain"
+      CTA_SECONDARY {
+        href : string
+      }
+        @description "A secondary call to action has been triggered."
+        @synonyms "secondary action, second click, alternate button"
+        @tier "domain"
+    }
+
+    config {
+      tag : string = ""
+        @label "Tag"
+        @description "Small badge above the headline"
+        @tier "presentation"
+      tagVariant : string = accent
+        @label "Tag Variant"
+        @description "Visual style of the tag badge"
+        @tier "presentation"
+      title : string = "Build faster with Almadar"
+        @label "Title"
+        @description "Main headline"
+        @tier "presentation"
+      titleAccent : string = ""
+        @label "Title Accent"
+        @description "Highlighted portion of the title"
+        @tier "presentation"
+      subtitle : string = "From idea to production in minutes, not months."
+        @label "Subtitle"
+        @description "Supporting text below the title"
+        @tier "presentation"
+      primaryActionLabel : string = "Get Started"
+        @label "Primary Action Label"
+        @tier "presentation"
+      primaryActionHref : string = "#"
+        @label "Primary Action Link"
+        @tier "presentation"
+      secondaryActionLabel : string = ""
+        @label "Secondary Action Label"
+        @tier "presentation"
+      secondaryActionHref : string = ""
+        @label "Secondary Action Link"
+        @tier "presentation"
+      installCommand : string = ""
+        @label "Install Command"
+        @description "CLI command shown in a copyable box"
+        @tier "presentation"
+      imageSrc : string = ""
+        @label "Image Source"
+        @tier "presentation"
+      imageAlt : string = ""
+        @label "Image Alt Text"
+        @tier "presentation"
+      imagePosition : string = below
+        @label "Image Position"
+        @description "below, right, or background"
+        @tier "presentation"
+      background : string = gradient
+        @label "Background"
+        @description "dark, gradient, or subtle"
+        @tier "presentation"
+      align : string = center
+        @label "Alignment"
+        @description "center or left"
+        @tier "presentation"
+      className : string = ""
+        @label "Extra CSS classes"
+        @description "Additional Tailwind classes applied to the hero root, e.g. to reduce height."
+        @tier "presentation"
+    }
+  }
+
+  page "/hero" as HeroItemHeroPage -> HeroItemHeroRender, HeroItemHeroEvents
+}

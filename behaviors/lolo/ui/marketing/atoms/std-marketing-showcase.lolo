@@ -1,0 +1,87 @@
+app std-marketing-showcase "1.0.0"
+"Showcase grid atom for marketing pages. Renders a grid of portfolio or product showcase cards with images, badges, and descriptions. Pick for product galleries and portfolio sections."
+;; Config-driven showcase using the `showcase-organism` marketing pattern.
+;; Items are declared as an array of { title, description, image, href, badge, accentColor } objects.
+;; The atom emits SHOWCASE_CLICK when a card with an href is clicked.
+orbital ShowcaseItemOrbital {
+    type ShowcaseCard = { id : string!, title : string!, description : string, image : { src : string!, alt : string! }!, href : string, badge : string, accentColor : string }
+
+  entity ShowcaseItem [runtime] {
+    id : string!
+    items : [ShowcaseCard] @description "A collection of items to display in a grid." @synonyms "elements, entries, records" = []
+  }
+
+  trait ShowcaseItemShowcase -> ShowcaseItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.items @config.items)
+        (render-ui main { entity: @entity.items, type: showcase-organism })
+      SHOWCASE_CLICK -> idle
+        (emit SHOWCASE_CLICK { id: ?id, title: ?title })
+    }
+
+    emits {
+      SHOWCASE_CLICK -> external {
+        id : string
+        title : string
+      }
+        @description "Signals a user clicked on a showcase item."
+        @synonyms "select, tap, activate"
+        @tier "domain"
+    }
+
+    listens {
+      SHOWCASE_CLICK {
+        id : string
+        title : string
+      }
+        @description "A grid item was selected or activated."
+        @synonyms "select, activate, tap, press"
+        @tier "domain"
+    }
+
+    config {
+      items : [ShowcaseCard] = [{
+        accentColor: ""
+        badge: New
+        description: "Real-time analytics at a glance."
+        href: ""
+        id: "1"
+        image: {
+          alt: "Dashboard preview"
+          src: ""
+        }
+        title: Dashboard
+      }, {
+        accentColor: ""
+        badge: ""
+        description: "GraphQL and REST in one click."
+        href: ""
+        id: "2"
+        image: {
+          alt: "API docs preview"
+          src: ""
+        }
+        title: API
+      }, {
+        accentColor: ""
+        badge: Beta
+        description: "Native apps without native code."
+        href: ""
+        id: "3"
+        image: {
+          alt: "Mobile app preview"
+          src: ""
+        }
+        title: Mobile
+      }]
+        @label "Showcase Items"
+        @description "Array of showcase cards"
+        @tier "presentation"
+    }
+  }
+
+  page "/showcase" as ShowcaseItemShowcasePage -> ShowcaseItemShowcase
+}

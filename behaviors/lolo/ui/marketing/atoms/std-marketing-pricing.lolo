@@ -1,0 +1,85 @@
+app std-marketing-pricing "1.0.0"
+"Pricing grid atom for marketing pages. Renders tiered pricing cards with plans, features, and CTAs. Pick for SaaS pricing pages and subscription showcases."
+;; Config-driven pricing grid using the `pricing-grid` marketing pattern.
+;; Plans are declared as an array of { name, price, description, features, action, highlighted, badge } objects.
+;; The atom emits PLAN_SELECT when a plan's action button is clicked.
+orbital PricingItemOrbital {
+    type PricingPlan = { name : string!, price : string!, description : string, features : [string], action : { label : string!, href : string! }, highlighted : boolean, badge : string }
+
+  entity PricingItem [runtime] {
+    id : string!
+  }
+
+  trait PricingItemPricing -> PricingItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { plans: @config.plans, type: pricing-grid })
+      PLAN_SELECT -> idle
+        (emit PLAN_SELECT { href: ?href, plan: ?plan })
+    }
+
+    emits {
+      PLAN_SELECT -> external {
+        plan : string
+        href : string
+      }
+        @description "Indicates a pricing plan has been chosen."
+        @synonyms "select, choose, pick, activate"
+        @tier "domain"
+    }
+
+    listens {
+      PLAN_SELECT {
+        plan : string
+        href : string
+      }
+        @description "A pricing plan has been chosen by the user."
+        @synonyms "select, choose, activate, subscribe"
+        @tier "domain"
+    }
+
+    config {
+      plans : [PricingPlan] = [{
+        action: {
+          href: "#"
+          label: "Get Started"
+        }
+        badge: ""
+        description: "For individuals and small projects."
+        features: ["1 project", "Community support", "Basic analytics"]
+        highlighted: false
+        name: Starter
+        price: "$0"
+      }, {
+        action: {
+          href: "#"
+          label: "Start Trial"
+        }
+        badge: "Most Popular"
+        description: "For growing teams that need more power."
+        features: ["Unlimited projects", "Priority support", "Advanced analytics", "Custom domains"]
+        highlighted: true
+        name: Pro
+        price: "$49"
+      }, {
+        action: {
+          href: "#"
+          label: "Contact Sales"
+        }
+        badge: ""
+        description: "For organizations with advanced needs."
+        features: ["Dedicated infra", "SLA guarantee", "SSO & SAML", "Audit logs", "Custom contracts"]
+        highlighted: false
+        name: Enterprise
+        price: Custom
+      }]
+        @label "Pricing Plans"
+        @description "Array of pricing tiers"
+        @tier "domain"
+    }
+  }
+
+  page "/pricing" as PricingItemPricingPage -> PricingItemPricing
+}

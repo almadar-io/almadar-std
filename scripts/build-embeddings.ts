@@ -86,10 +86,17 @@ export function indexTraitsByOrganism(
  *   - description (the domain language signal)
  *   - default entity name (signals what nouns the behavior is about)
  *   - connectable events (signals what the behavior emits/listens)
- *   - trait capabilities + entity-binding/knob synonyms lifted from
+ *   - trait capabilities + entity-binding synonyms lifted from
  *     `factory-signatures.json` (source-tagged `.lolo` metadata) — widens
  *     the thin name/description/entity/events text that compressed cosine
  *     margins on tightly-clustered candidates (G7)
+ *
+ * Knob-level synonyms are deliberately excluded: they belong to Stage B
+ * (`knob-embeddings.json`, one vector per knob). Pooled into the organism
+ * text they form a generic soup shared across every CRUD organism — it
+ * pushes the text past the embedding window so identity keywords compete
+ * with knob phrasing, and any signature shift reshuffles which synonyms
+ * survive, silently moving Stage-A scores.
  *
  * The snippet is what we embed; the query side (Stage A) embeds the
  * user's request and ranks against these vectors via cosine similarity.
@@ -110,9 +117,6 @@ export function buildEntryText(
     for (const trait of traits) {
       for (const capability of trait.capabilities) capabilities.add(capability);
       if (trait.entityBindingSynonyms) synonyms.add(trait.entityBindingSynonyms);
-      for (const knob of trait.overridableConfigKeys) {
-        if (knob.synonyms) synonyms.add(knob.synonyms);
-      }
     }
     if (capabilities.size > 0) {
       parts.push(`Capabilities: ${[...capabilities].sort().join(' ')}`);

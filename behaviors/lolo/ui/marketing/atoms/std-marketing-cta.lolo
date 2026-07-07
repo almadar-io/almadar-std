@@ -1,0 +1,125 @@
+app std-marketing-cta "1.0.0"
+"Call-to-action banner atom for marketing pages. Renders a high-conversion CTA section with title, subtitle, and action buttons. Pick for conversion points at the end of pages or between sections."
+;; Config-driven CTA banner using the `cta-banner` marketing pattern.
+;; The atom emits CTA_PRIMARY and CTA_SECONDARY when buttons are clicked.
+orbital CTAItemOrbital {
+  uses CtaBanner from "std/behaviors/ui-cta-banner"
+
+  entity CTAItem [runtime] {
+    id : string!
+  }
+
+  trait CTAItemCTARender = CtaBanner.traits.CtaBannerRender -> CTAItem {
+    config {
+      align: @config.align
+      background: @config.background
+      primaryAction: { href: @config.primaryActionHref, label: @config.primaryActionLabel }
+      secondaryAction: { href: @config.secondaryActionHref, label: @config.secondaryActionLabel }
+      subtitle: @config.subtitle
+      title: @config.title
+      title : string = "Ready to get started?"
+        @label "Title"
+        @description "Banner headline"
+        @tier "presentation"
+      subtitle : string = "Join thousands of teams shipping faster."
+        @label "Subtitle"
+        @description "Supporting text below the title"
+        @tier "presentation"
+      primaryActionLabel : string = "Get Started"
+        @label "Primary Action Label"
+        @tier "presentation"
+      primaryActionHref : string = "#"
+        @label "Primary Action Link"
+        @tier "presentation"
+      secondaryActionLabel : string = "Learn More"
+        @label "Secondary Action Label"
+        @tier "presentation"
+      secondaryActionHref : string = ""
+        @label "Secondary Action Link"
+        @tier "presentation"
+      background : string = primary
+        @label "Background"
+        @description "default, alt, dark, gradient, or primary"
+        @tier "presentation"
+      align : string = center
+        @label "Alignment"
+        @description "center or left"
+        @tier "presentation"
+    }
+  }
+
+  trait CTAItemCTAEvents -> CTAItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      CTA_PRIMARY -> idle
+        (emit CTA_PRIMARY { href: @config.primaryActionHref })
+      CTA_SECONDARY -> idle
+        (emit CTA_SECONDARY { href: @config.secondaryActionHref })
+    }
+
+    emits {
+      CTA_PRIMARY -> external {
+        href : string
+      }
+        @description "Signals the primary call-to-action has been triggered."
+        @synonyms "click, select, submit, activate"
+        @tier "domain"
+      CTA_SECONDARY -> external {
+        href : string
+      }
+        @description "Signals a secondary call to action was triggered."
+        @synonyms "secondary action, alternate button, second click"
+        @tier "domain"
+    }
+
+    listens {
+      CTA_PRIMARY {
+        href : string
+      }
+        @description "Primary action button was clicked."
+        @synonyms "click, select, submit, activate"
+        @tier "domain"
+      CTA_SECONDARY {
+        href : string
+      }
+        @description "A secondary action button was clicked."
+        @synonyms "clicked, pressed, selected, activated"
+        @tier "domain"
+    }
+
+    config {
+      title : string = "Ready to get started?"
+        @label "Title"
+        @description "Banner headline"
+        @tier "presentation"
+      subtitle : string = "Join thousands of teams shipping faster."
+        @label "Subtitle"
+        @description "Supporting text below the title"
+        @tier "presentation"
+      primaryActionLabel : string = "Get Started"
+        @label "Primary Action Label"
+        @tier "presentation"
+      primaryActionHref : string = "#"
+        @label "Primary Action Link"
+        @tier "presentation"
+      secondaryActionLabel : string = "Learn More"
+        @label "Secondary Action Label"
+        @tier "presentation"
+      secondaryActionHref : string = ""
+        @label "Secondary Action Link"
+        @tier "presentation"
+      background : string = primary
+        @label "Background"
+        @description "default, alt, dark, gradient, or primary"
+        @tier "presentation"
+      align : string = center
+        @label "Alignment"
+        @description "center or left"
+        @tier "presentation"
+    }
+  }
+
+  page "/cta" as CTAItemCTAPage -> CTAItemCTARender
+}

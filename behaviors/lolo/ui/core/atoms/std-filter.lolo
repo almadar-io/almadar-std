@@ -2,37 +2,45 @@ app std-filter "1.0.0"
 "std-filter — single primitive: filter-group. Owns a FilterTarget runtime entity; every FILTER transition persists field/value so cross-trait listeners can route the latest selection into data atoms."
 type FilterSpec = { field : string!, label : string, filterType : string, options : [string] }
 orbital FilterTargetOrbital {
-  uses FilterGroup from "std/behaviors/ui-filter-group"
-
   entity FilterTarget [runtime] {
     id : string!
     field : string @description "The name of the data field being filtered." @synonyms "attribute, property, key"
     value : string @description "The data associated with the filter criterion." @synonyms "data, criterion, content"
   }
 
-  trait FilterTargetFilterRender = FilterGroup.traits.FilterGroupRender -> FilterTarget {
-    config {
-      entity: FilterTarget
-      filters: @config.filters
-      look: @config.filterBarLook
-    }
-  }
-
-  trait FilterTargetFilterEvents -> FilterTarget [interaction, instance] {
+  trait FilterTargetFilter -> @rebindable FilterTarget [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
         (fetch FilterTarget {})
+        (render-ui main {
+          entity: FilterTarget
+          filters: @config.filters
+          look: @config.filterBarLook
+          type: filter-group
+        })
       FILTER -> idle
         (set @entity.field ?field)
         (set @entity.value ?value)
+        (render-ui main {
+          entity: FilterTarget
+          filters: @config.filters
+          look: @config.filterBarLook
+          type: filter-group
+        })
       CLEAR_FILTERS -> idle
         (set @entity.field "")
         (set @entity.value "")
         (emit FILTER {
-        field: ""
-        value: ""
+          field: ""
+          value: ""
+        })
+        (render-ui main {
+          entity: FilterTarget
+          filters: @config.filters
+          look: @config.filterBarLook
+          type: filter-group
         })
     }
 
@@ -81,5 +89,5 @@ orbital FilterTargetOrbital {
     }
   }
 
-  page "/filtertargets" as FilterTargetFilterPage -> FilterTargetFilterRender, FilterTargetFilterEvents
+  page "/filtertargets" as FilterTargetFilterPage -> FilterTargetFilter
 }
