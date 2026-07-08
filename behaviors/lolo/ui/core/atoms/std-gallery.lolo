@@ -22,11 +22,11 @@ orbital GalleryItemOrbital {
     imageUrl : string @description "The URL pointing to the image resource." @synonyms "image, src, path" = "https://picsum.photos/seed/gallery/800/600"
   }
 
-  trait Spinner1 = Spinner.traits.SpinnerRender -> GalleryItem {
+  trait LoadingSpinner = Spinner.traits.SpinnerRender -> GalleryItem {
     config {}
   }
 
-  trait Typography1 = Typography.traits.TypographyRender -> GalleryItem {
+  trait LoadingCaption = Typography.traits.TypographyRender -> GalleryItem {
     config {
       color: muted
       content: "Loading gallery…"
@@ -34,37 +34,37 @@ orbital GalleryItemOrbital {
     }
   }
 
-  trait Icon1 = Icon.traits.IconRender -> GalleryItem {
+  trait GalleryIcon = Icon.traits.IconRender -> GalleryItem {
     config {
       name: image
     }
   }
 
-  trait Typography2 = Typography.traits.TypographyRender -> GalleryItem {
+  trait TitleHeading = Typography.traits.TypographyRender -> GalleryItem {
     config {
       content: @config.title
       variant: h3
     }
   }
 
-  trait Divider1 = Divider.traits.DividerRender -> GalleryItem {
+  trait TitleDivider = Divider.traits.DividerRender -> GalleryItem {
     config {}
   }
 
-  trait MediaGallery1 = MediaGallery.traits.MediaGalleryRender -> GalleryItem {
+  trait MediaGalleryGrid = MediaGallery.traits.MediaGalleryRender -> GalleryItem {
     config {
       entity: ?data
     }
   }
 
-  trait Alert1 = Alert.traits.AlertRender -> GalleryItem {
+  trait ErrorAlert = Alert.traits.AlertRender -> GalleryItem {
     config {
-      message: ?error
+      message: "Failed to load gallery items"
       variant: error
     }
   }
 
-  trait Lightbox1 = Lightbox.traits.LightboxRender -> GalleryItem {
+  trait ImageLightbox = Lightbox.traits.LightboxRender -> GalleryItem {
     config {
       closeAction: CLOSE
       currentIndex: 0
@@ -78,13 +78,13 @@ orbital GalleryItemOrbital {
     }
   }
 
-  trait Spinner2 = Spinner.traits.SpinnerRender -> GalleryItem {
+  trait ReloadSpinner = Spinner.traits.SpinnerRender -> GalleryItem {
     config {
       size: sm
     }
   }
 
-  trait Typography3 = Typography.traits.TypographyRender -> GalleryItem {
+  trait ReloadCaption = Typography.traits.TypographyRender -> GalleryItem {
     config {
       color: muted
       content: "Loading gallery…"
@@ -92,7 +92,7 @@ orbital GalleryItemOrbital {
     }
   }
 
-  trait Spinner3 = Spinner.traits.SpinnerRender -> GalleryItem {
+  trait RetrySpinner = Spinner.traits.SpinnerRender -> GalleryItem {
     config {
       size: sm
     }
@@ -108,7 +108,7 @@ orbital GalleryItemOrbital {
         })
         (render-ui main {
           align: center
-          children: [@trait.Spinner1, @trait.Typography1]
+          children: [@trait.LoadingSpinner, @trait.LoadingCaption]
           className: py-12
           direction: vertical
           gap: md
@@ -118,17 +118,20 @@ orbital GalleryItemOrbital {
         (render-ui main {
           children: [{
             align: center
-            children: [@trait.Icon1, @trait.Typography2]
+            children: [@trait.GalleryIcon, @trait.TitleHeading]
             direction: horizontal
             gap: sm
             type: stack
-          }, @trait.Divider1, @trait.MediaGallery1]
+          }, @trait.TitleDivider, @trait.MediaGalleryGrid]
           direction: vertical
           gap: md
           type: stack
         })
       GalleryItemLoadFailed -> error
-        (render-ui main @trait.Alert1)
+        (render-ui main {
+          children: [@trait.ErrorAlert]
+          type: box
+        })
     }
 
     state browsing {
@@ -137,7 +140,10 @@ orbital GalleryItemOrbital {
         (set @entity.name ?row.name)
         (set @entity.description ?row.description)
         (set @entity.imageUrl ?row.imageUrl)
-        (render-ui modal @trait.Lightbox1)
+        (render-ui modal {
+          children: [@trait.ImageLightbox]
+          type: box
+        })
     }
 
     state viewing {
@@ -148,7 +154,7 @@ orbital GalleryItemOrbital {
         })
         (render-ui main {
           align: center
-          children: [@trait.Spinner2, @trait.Typography3]
+          children: [@trait.ReloadSpinner, @trait.ReloadCaption]
           className: py-12
           direction: vertical
           gap: md
@@ -161,7 +167,14 @@ orbital GalleryItemOrbital {
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
         })
-        (render-ui main @trait.Spinner3)
+        (render-ui main {
+          align: center
+          children: [@trait.RetrySpinner]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
 
     emits {
@@ -222,5 +235,5 @@ orbital GalleryItemOrbital {
     }
   }
 
-  page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery, Spinner1, Typography1, Icon1, Typography2, Divider1, MediaGallery1, Alert1, Lightbox1, Spinner2, Typography3, Spinner3
+  page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery, LoadingSpinner, LoadingCaption, GalleryIcon, TitleHeading, TitleDivider, MediaGalleryGrid, ErrorAlert, ImageLightbox, ReloadSpinner, ReloadCaption, RetrySpinner
 }

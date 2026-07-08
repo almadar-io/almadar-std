@@ -103,6 +103,16 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "PLANNED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
             }
           ],
           "linkedEntity": "BuilderProcess",
@@ -129,6 +139,21 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "PLANNED",
+                "name": "Planned",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PLAN_FAILED",
+                "name": "Plan Failed"
               },
               {
                 "key": "RESET",
@@ -159,6 +184,9 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "planning"
               },
               {
                 "name": "done"
@@ -215,12 +243,26 @@
                     "@payload.orbitalName"
                   ],
                   [
+                    "llm/generate",
+                    "@entity.request",
+                    {
+                      "emit": {
+                        "failure": "PLAN_FAILED",
+                        "success": "PLANNED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "idle",
+                "to": "planning"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.plan",
-                    [
-                      "llm/generate",
-                      "@entity.request"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "behavior/instantiate",
@@ -245,8 +287,42 @@
                     }
                   ]
                 ],
-                "event": "START",
-                "from": "idle",
+                "event": "PLANNED",
+                "from": "planning",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.plan",
+                    ""
+                  ],
+                  [
+                    "behavior/instantiate",
+                    "@entity.orbitalName",
+                    "@entity.plan"
+                  ],
+                  [
+                    "validate/validate",
+                    "@entity.orbitalName"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ],
+                  [
+                    "emit",
+                    "BUILD_COMPLETE",
+                    {
+                      "orbitalName": "@entity.orbitalName",
+                      "plan": "@entity.plan"
+                    }
+                  ]
+                ],
+                "event": "PLAN_FAILED",
+                "from": "planning",
                 "to": "done"
               },
               {

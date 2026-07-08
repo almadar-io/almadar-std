@@ -21,20 +21,20 @@ orbital RateBucketOrbital {
     limiterStatus : string @description "Current operational state of the rate limiter." @synonyms "state, condition, mode" = open
   }
 
-  trait Icon_Shield = Icon.traits.IconRender -> RateBucket {
+  trait ShieldIcon = Icon.traits.IconRender -> RateBucket {
     config {
       name: shield
     }
   }
 
-  trait Typography_RateBucketRateLimiter = Typography.traits.TypographyRender -> RateBucket {
+  trait RateBucketTitle = Typography.traits.TypographyRender -> RateBucket {
     config {
       content: "RateBucket Rate Limiter"
       variant: h2
     }
   }
 
-  trait StatusDot_Open = StatusDot.traits.StatusDotRender -> RateBucket {
+  trait OpenStatusDot = StatusDot.traits.StatusDotRender -> RateBucket {
     config {
       label: Open
       pulse: false
@@ -42,7 +42,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait StatusDot_Throttled = StatusDot.traits.StatusDotRender -> RateBucket {
+  trait ThrottledStatusDot = StatusDot.traits.StatusDotRender -> RateBucket {
     config {
       label: Throttled
       pulse: true
@@ -50,14 +50,14 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait Alert_RateLimitExceeded = Alert.traits.AlertRender -> RateBucket {
+  trait RateLimitAlert = Alert.traits.AlertRender -> RateBucket {
     config {
       message: "Rate limit exceeded. Requests are being throttled."
       variant: error
     }
   }
 
-  trait StatDisplay_Requests = StatDisplay.traits.StatDisplayRender -> RateBucket {
+  trait RequestsStat = StatDisplay.traits.StatDisplayRender -> RateBucket {
     config {
       label: Requests
       look: @config.statLook
@@ -65,7 +65,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait StatDisplay_Window = StatDisplay.traits.StatDisplayRender -> RateBucket {
+  trait WindowStat = StatDisplay.traits.StatDisplayRender -> RateBucket {
     config {
       label: Window
       look: @config.statLook
@@ -73,7 +73,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait Meter_Count = Meter.traits.MeterRender -> RateBucket {
+  trait CountMeter = Meter.traits.MeterRender -> RateBucket {
     config {
       max: 100
       min: 0
@@ -81,7 +81,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait ProgressBar_Count = ProgressBar.traits.ProgressBarRender -> RateBucket {
+  trait CountProgressBar = ProgressBar.traits.ProgressBarRender -> RateBucket {
     config {
       max: 100
       showPercentage: true
@@ -89,7 +89,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait Button_Request = Button.traits.ButtonRender -> RateBucket {
+  trait RequestButton = Button.traits.ButtonRender -> RateBucket {
     config {
       action: REQUEST
       icon: send
@@ -98,7 +98,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait Button_Reset = Button.traits.ButtonRender -> RateBucket {
+  trait ResetButton = Button.traits.ButtonRender -> RateBucket {
     config {
       action: RESET
       icon: rotate-ccw
@@ -107,7 +107,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait Button_Reset_Primary = Button.traits.ButtonRender -> RateBucket {
+  trait ResetPrimaryButton = Button.traits.ButtonRender -> RateBucket {
     config {
       action: RESET
       icon: rotate-ccw
@@ -129,21 +129,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
+              children: [@trait.ShieldIcon, @trait.RateBucketTitle]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Open]
+            }, @trait.OpenStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
           }, { type: divider }, {
-            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
+            children: [@trait.RequestsStat, @trait.WindowStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Count, @trait.ProgressBar_Count, {
-            children: [@trait.Button_Request, @trait.Button_Reset]
+          }, @trait.CountMeter, @trait.CountProgressBar, {
+            children: [@trait.RequestButton, @trait.ResetButton]
             direction: horizontal
             gap: sm
             justify: center
@@ -159,21 +159,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
+              children: [@trait.ShieldIcon, @trait.RateBucketTitle]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Open]
+            }, @trait.OpenStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
           }, { type: divider }, {
-            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
+            children: [@trait.RequestsStat, @trait.WindowStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Count, @trait.ProgressBar_Count, {
-            children: [@trait.Button_Request, @trait.Button_Reset]
+          }, @trait.CountMeter, @trait.CountProgressBar, {
+            children: [@trait.RequestButton, @trait.ResetButton]
             direction: horizontal
             gap: sm
             justify: center
@@ -190,21 +190,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
+              children: [@trait.ShieldIcon, @trait.RateBucketTitle]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Throttled]
+            }, @trait.ThrottledStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_RateLimitExceeded, {
-            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
+          }, { type: divider }, @trait.RateLimitAlert, {
+            children: [@trait.RequestsStat, @trait.WindowStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Count, {
-            children: [@trait.Button_Reset_Primary]
+          }, @trait.CountMeter, {
+            children: [@trait.ResetPrimaryButton]
             direction: horizontal
             gap: sm
             justify: center
@@ -222,21 +222,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
+              children: [@trait.ShieldIcon, @trait.RateBucketTitle]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Open]
+            }, @trait.OpenStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
           }, { type: divider }, {
-            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
+            children: [@trait.RequestsStat, @trait.WindowStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Count, @trait.ProgressBar_Count, {
-            children: [@trait.Button_Request, @trait.Button_Reset]
+          }, @trait.CountMeter, @trait.CountProgressBar, {
+            children: [@trait.RequestButton, @trait.ResetButton]
             direction: horizontal
             gap: sm
             justify: center
@@ -257,21 +257,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
+              children: [@trait.ShieldIcon, @trait.RateBucketTitle]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Open]
+            }, @trait.OpenStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
           }, { type: divider }, {
-            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
+            children: [@trait.RequestsStat, @trait.WindowStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Count, @trait.ProgressBar_Count, {
-            children: [@trait.Button_Request, @trait.Button_Reset]
+          }, @trait.CountMeter, @trait.CountProgressBar, {
+            children: [@trait.RequestButton, @trait.ResetButton]
             direction: horizontal
             gap: sm
             justify: center
@@ -287,21 +287,21 @@ orbital RateBucketOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_RateBucketRateLimiter]
+              children: [@trait.ShieldIcon, @trait.RateBucketTitle]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Throttled]
+            }, @trait.ThrottledStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_RateLimitExceeded, {
-            children: [@trait.StatDisplay_Requests, @trait.StatDisplay_Window]
+          }, { type: divider }, @trait.RateLimitAlert, {
+            children: [@trait.RequestsStat, @trait.WindowStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Count, {
-            children: [@trait.Button_Reset_Primary]
+          }, @trait.CountMeter, {
+            children: [@trait.ResetPrimaryButton]
             direction: horizontal
             gap: sm
             justify: center

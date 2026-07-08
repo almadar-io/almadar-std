@@ -92,6 +92,26 @@
                   "type": "number"
                 }
               ]
+            },
+            {
+              "event": "MEMORIES_RECALLED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "[MemoryRecord]"
+                }
+              ]
+            },
+            {
+              "event": "PLAN_GENERATED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
             }
           ],
           "linkedEntity": "PlannerPlan",
@@ -113,6 +133,36 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "MEMORIES_RECALLED",
+                "name": "Memories Recalled",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "[MemoryRecord]"
+                  }
+                ]
+              },
+              {
+                "key": "RECALL_FAILED",
+                "name": "Recall Failed"
+              },
+              {
+                "key": "PLAN_GENERATED",
+                "name": "Plan Generated",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PLAN_GENERATION_FAILED",
+                "name": "Plan Generation Failed"
               },
               {
                 "key": "RESET",
@@ -139,6 +189,12 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "recalling"
+              },
+              {
+                "name": "planning"
               },
               {
                 "name": "planned"
@@ -180,20 +236,70 @@
                     "@payload.prompt"
                   ],
                   [
+                    "memory/recall",
+                    "@entity.prompt",
+                    {
+                      "emit": {
+                        "failure": "RECALL_FAILED",
+                        "success": "MEMORIES_RECALLED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "PLAN",
+                "from": "idle",
+                "to": "recalling"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.memories",
-                    [
-                      "memory/recall",
-                      "@entity.prompt"
-                    ]
+                    "@payload.result"
                   ],
+                  [
+                    "llm/generate",
+                    "@entity.prompt",
+                    {
+                      "emit": {
+                        "failure": "PLAN_GENERATION_FAILED",
+                        "success": "PLAN_GENERATED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "MEMORIES_RECALLED",
+                "from": "recalling",
+                "to": "planning"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.memories",
+                    []
+                  ],
+                  [
+                    "llm/generate",
+                    "@entity.prompt",
+                    {
+                      "emit": {
+                        "failure": "PLAN_GENERATION_FAILED",
+                        "success": "PLAN_GENERATED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "RECALL_FAILED",
+                "from": "recalling",
+                "to": "planning"
+              },
+              {
+                "effects": [
                   [
                     "set",
                     "@entity.plan",
-                    [
-                      "llm/generate",
-                      "@entity.prompt"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -209,8 +315,33 @@
                     }
                   ]
                 ],
-                "event": "PLAN",
-                "from": "idle",
+                "event": "PLAN_GENERATED",
+                "from": "planning",
+                "to": "planned"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.plan",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "planned"
+                  ],
+                  [
+                    "emit",
+                    "PLANNED",
+                    {
+                      "memoryCount": "@entity.memories",
+                      "plan": "@entity.plan"
+                    }
+                  ]
+                ],
+                "event": "PLAN_GENERATION_FAILED",
+                "from": "planning",
                 "to": "planned"
               },
               {

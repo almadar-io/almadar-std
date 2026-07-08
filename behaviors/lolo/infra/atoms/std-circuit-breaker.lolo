@@ -24,32 +24,32 @@ orbital ServiceNodeOrbital {
     threshold : number @description "Maximum value before triggering an action." @synonyms "limit, cap, boundary" = 5
   }
 
-  trait Icon_Shield = Icon.traits.IconRender -> ServiceNode {
+  trait ShieldIcon = Icon.traits.IconRender -> ServiceNode {
     config {
       name: shield
     }
   }
 
-  trait Icon_AlertTriangle = Icon.traits.IconRender -> ServiceNode {
+  trait AlertTriangleIcon = Icon.traits.IconRender -> ServiceNode {
     config {
       name: alert-triangle
     }
   }
 
-  trait Icon_Activity = Icon.traits.IconRender -> ServiceNode {
+  trait ActivityIcon = Icon.traits.IconRender -> ServiceNode {
     config {
       name: activity
     }
   }
 
-  trait Typography_ServiceNode = Typography.traits.TypographyRender -> ServiceNode {
+  trait ServiceNodeLabel = Typography.traits.TypographyRender -> ServiceNode {
     config {
       content: ServiceNode
       variant: h2
     }
   }
 
-  trait StatusDot_Closed = StatusDot.traits.StatusDotRender -> ServiceNode {
+  trait ClosedStatusDot = StatusDot.traits.StatusDotRender -> ServiceNode {
     config {
       label: "Circuit Closed"
       pulse: false
@@ -57,7 +57,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait StatusDot_Open = StatusDot.traits.StatusDotRender -> ServiceNode {
+  trait OpenStatusDot = StatusDot.traits.StatusDotRender -> ServiceNode {
     config {
       label: "Circuit Open"
       pulse: true
@@ -65,7 +65,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait StatusDot_HalfOpen = StatusDot.traits.StatusDotRender -> ServiceNode {
+  trait HalfOpenStatusDot = StatusDot.traits.StatusDotRender -> ServiceNode {
     config {
       label: "Circuit Half-Open"
       pulse: true
@@ -73,28 +73,28 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait Alert_Success = Alert.traits.AlertRender -> ServiceNode {
+  trait SuccessAlert = Alert.traits.AlertRender -> ServiceNode {
     config {
       message: "Service is healthy. All requests are being processed."
       variant: success
     }
   }
 
-  trait Alert_Error = Alert.traits.AlertRender -> ServiceNode {
+  trait ErrorAlert = Alert.traits.AlertRender -> ServiceNode {
     config {
       message: "Circuit is open. Requests are being rejected to prevent cascading failures."
       variant: error
     }
   }
 
-  trait Alert_Warning = Alert.traits.AlertRender -> ServiceNode {
+  trait WarningAlert = Alert.traits.AlertRender -> ServiceNode {
     config {
       message: "Testing recovery. Limited requests are being allowed through."
       variant: warning
     }
   }
 
-  trait StatDisplay_Failures = StatDisplay.traits.StatDisplayRender -> ServiceNode {
+  trait FailuresStat = StatDisplay.traits.StatDisplayRender -> ServiceNode {
     config {
       label: Failures
       look: @config.statLook
@@ -102,7 +102,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait StatDisplay_Successes = StatDisplay.traits.StatDisplayRender -> ServiceNode {
+  trait SuccessesStat = StatDisplay.traits.StatDisplayRender -> ServiceNode {
     config {
       label: Successes
       look: @config.statLook
@@ -110,7 +110,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait Meter_Failures = Meter.traits.MeterRender -> ServiceNode {
+  trait FailuresMeter = Meter.traits.MeterRender -> ServiceNode {
     config {
       max: @entity.threshold
       min: 0
@@ -118,7 +118,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait Button_Reset = Button.traits.ButtonRender -> ServiceNode {
+  trait ResetButton = Button.traits.ButtonRender -> ServiceNode {
     config {
       action: RESET
       icon: rotate-ccw
@@ -143,20 +143,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
+              children: [@trait.ShieldIcon, @trait.ServiceNodeLabel]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Closed]
+            }, @trait.ClosedStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_Success, {
-            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
+          }, { type: divider }, @trait.SuccessAlert, {
+            children: [@trait.FailuresStat, @trait.SuccessesStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Failures]
+          }, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
@@ -167,20 +167,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_AlertTriangle, @trait.Typography_ServiceNode]
+              children: [@trait.AlertTriangleIcon, @trait.ServiceNodeLabel]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Open]
+            }, @trait.OpenStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_Error, {
-            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
+          }, { type: divider }, @trait.ErrorAlert, {
+            children: [@trait.FailuresStat, @trait.SuccessesStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Failures, @trait.Button_Reset]
+          }, @trait.FailuresMeter, @trait.ResetButton]
           direction: vertical
           gap: lg
           type: stack
@@ -191,20 +191,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
+              children: [@trait.ShieldIcon, @trait.ServiceNodeLabel]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Closed]
+            }, @trait.ClosedStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_Success, {
-            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
+          }, { type: divider }, @trait.SuccessAlert, {
+            children: [@trait.FailuresStat, @trait.SuccessesStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Failures]
+          }, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
@@ -218,17 +218,17 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Activity, @trait.Typography_ServiceNode]
+              children: [@trait.ActivityIcon, @trait.ServiceNodeLabel]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_HalfOpen]
+            }, @trait.HalfOpenStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_Warning, {
-            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
+          }, { type: divider }, @trait.WarningAlert, {
+            children: [@trait.FailuresStat, @trait.SuccessesStat]
             cols: 2
             type: simple-grid
           }]
@@ -242,20 +242,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
+              children: [@trait.ShieldIcon, @trait.ServiceNodeLabel]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Closed]
+            }, @trait.ClosedStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_Success, {
-            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
+          }, { type: divider }, @trait.SuccessAlert, {
+            children: [@trait.FailuresStat, @trait.SuccessesStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Failures]
+          }, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
@@ -269,20 +269,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
+              children: [@trait.ShieldIcon, @trait.ServiceNodeLabel]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Closed]
+            }, @trait.ClosedStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_Success, {
-            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
+          }, { type: divider }, @trait.SuccessAlert, {
+            children: [@trait.FailuresStat, @trait.SuccessesStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Failures]
+          }, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
@@ -293,20 +293,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_AlertTriangle, @trait.Typography_ServiceNode]
+              children: [@trait.AlertTriangleIcon, @trait.ServiceNodeLabel]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Open]
+            }, @trait.OpenStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_Error, {
-            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
+          }, { type: divider }, @trait.ErrorAlert, {
+            children: [@trait.FailuresStat, @trait.SuccessesStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Failures, @trait.Button_Reset]
+          }, @trait.FailuresMeter, @trait.ResetButton]
           direction: vertical
           gap: lg
           type: stack
@@ -317,20 +317,20 @@ orbital ServiceNodeOrbital {
             align: center
             children: [{
               align: center
-              children: [@trait.Icon_Shield, @trait.Typography_ServiceNode]
+              children: [@trait.ShieldIcon, @trait.ServiceNodeLabel]
               direction: horizontal
               gap: md
               type: stack
-            }, @trait.StatusDot_Closed]
+            }, @trait.ClosedStatusDot]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.Alert_Success, {
-            children: [@trait.StatDisplay_Failures, @trait.StatDisplay_Successes]
+          }, { type: divider }, @trait.SuccessAlert, {
+            children: [@trait.FailuresStat, @trait.SuccessesStat]
             cols: 2
             type: simple-grid
-          }, @trait.Meter_Failures]
+          }, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack

@@ -94,6 +94,16 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "PROMPT_GENERATED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
             }
           ],
           "linkedEntity": "FixLoop",
@@ -115,6 +125,21 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "PROMPT_GENERATED",
+                "name": "Prompt Generated",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PROMPT_GENERATION_FAILED",
+                "name": "Prompt Generation Failed"
               },
               {
                 "key": "RESET",
@@ -141,6 +166,9 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "generating_prompt"
               },
               {
                 "name": "fixed"
@@ -186,12 +214,26 @@
                     "@entity.orbitalName"
                   ],
                   [
+                    "llm/generate",
+                    "@entity.orbitalName",
+                    {
+                      "emit": {
+                        "failure": "PROMPT_GENERATION_FAILED",
+                        "success": "PROMPT_GENERATED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "VALIDATE_ORBITAL",
+                "from": "idle",
+                "to": "generating_prompt"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.fixPrompt",
-                    [
-                      "llm/generate",
-                      "@entity.orbitalName"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -207,8 +249,25 @@
                     }
                   ]
                 ],
-                "event": "VALIDATE_ORBITAL",
-                "from": "idle",
+                "event": "PROMPT_GENERATED",
+                "from": "generating_prompt",
+                "to": "fixed"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.fixPrompt",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "fixed"
+                  ]
+                ],
+                "event": "PROMPT_GENERATION_FAILED",
+                "from": "generating_prompt",
                 "to": "fixed"
               },
               {

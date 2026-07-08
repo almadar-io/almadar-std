@@ -22,14 +22,14 @@ orbital ESignRequestOrbital {
   uses DataGrid from "std/behaviors/ui-data-grid"
   uses Alert from "std/behaviors/ui-alert"
 
-  trait Typography1 = Typography.traits.TypographyRender -> ESignRequest {
+  trait TitleHeading = Typography.traits.TypographyRender -> ESignRequest {
     config {
       content: @config.title
       variant: h3
     }
   }
 
-  trait DataGrid1 = DataGrid.traits.DataGridRender -> ESignRequest {
+  trait RequestDataGrid = DataGrid.traits.DataGridRender -> ESignRequest {
     config {
       entity: ?data
       fields: [{
@@ -53,22 +53,13 @@ orbital ESignRequestOrbital {
         name: sentAt
         variant: caption
       }]
-      itemActions: [{
-        event: SEND_REQUEST
-        label: Send
-        variant: primary
-      }, {
-        event: REVOKE_REQUEST
-        label: Revoke
-        variant: danger
-      }]
       look: @config.tableLook
     }
   }
 
-  trait Alert1 = Alert.traits.AlertRender -> ESignRequest {
+  trait ErrorAlert = Alert.traits.AlertRender -> ESignRequest {
     config {
-      message: ?error
+      message: "Failed to load signature requests"
       title: "Failed to load signature requests"
       variant: error
     }
@@ -85,13 +76,16 @@ orbital ESignRequestOrbital {
         (render-ui main { size: md, type: spinner })
       ESignRequestLoaded -> browsing
         (render-ui main {
-          children: [@trait.Typography1, @trait.DataGrid1]
+          children: [@trait.TitleHeading, @trait.RequestDataGrid]
           direction: vertical
           gap: md
           type: stack
         })
       ESignRequestLoadFailed -> error
-        (render-ui main @trait.Alert1)
+        (render-ui main {
+          children: [@trait.ErrorAlert]
+          type: box
+        })
     }
 
     state browsing {

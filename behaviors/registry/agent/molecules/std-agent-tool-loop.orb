@@ -120,6 +120,26 @@
                   "type": "number"
                 }
               ]
+            },
+            {
+              "event": "TOOLS_CALLED_1",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TOOLS_CALLED_2",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
             }
           ],
           "linkedEntity": "ToolLoop",
@@ -146,6 +166,36 @@
                     "type": "[LlmToolDef]"
                   }
                 ]
+              },
+              {
+                "key": "TOOLS_CALLED_1",
+                "name": "Tools Called 1",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TOOLS_FAILED_1",
+                "name": "Tools Failed 1"
+              },
+              {
+                "key": "TOOLS_CALLED_2",
+                "name": "Tools Called 2",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TOOLS_FAILED_2",
+                "name": "Tools Failed 2"
               },
               {
                 "key": "CONTINUE",
@@ -176,6 +226,9 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "calling"
               },
               {
                 "name": "done"
@@ -227,13 +280,27 @@
                     "@payload.tools"
                   ],
                   [
+                    "llm/call-tools",
+                    "@entity.messages",
+                    "@entity.tools",
+                    {
+                      "emit": {
+                        "failure": "TOOLS_FAILED_1",
+                        "success": "TOOLS_CALLED_1"
+                      }
+                    }
+                  ]
+                ],
+                "event": "EXECUTE",
+                "from": "idle",
+                "to": "calling"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.response",
-                    [
-                      "llm/call-tools",
-                      "@entity.messages",
-                      "@entity.tools"
-                    ]
+                    "@payload.result"
                   ],
                   [
                     "set",
@@ -258,8 +325,76 @@
                     }
                   ]
                 ],
-                "event": "EXECUTE",
-                "from": "idle",
+                "event": "TOOLS_CALLED_1",
+                "from": "calling",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "TOOLS_FAILED_1",
+                "from": "calling",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    "@payload.result"
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    [
+                      "+",
+                      "@entity.iterations",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ],
+                  [
+                    "emit",
+                    "LOOP_STEP",
+                    {
+                      "iteration": "@entity.iterations",
+                      "response": "@entity.response"
+                    }
+                  ]
+                ],
+                "event": "TOOLS_CALLED_2",
+                "from": "calling",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "done"
+                  ]
+                ],
+                "event": "TOOLS_FAILED_2",
+                "from": "calling",
                 "to": "done"
               },
               {
@@ -277,40 +412,20 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.response",
-                    [
-                      "llm/call-tools",
-                      "@entity.messages",
-                      "@entity.tools"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.iterations",
-                    [
-                      "+",
-                      "@entity.iterations",
-                      1.0
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "done"
-                  ],
-                  [
-                    "emit",
-                    "LOOP_STEP",
+                    "llm/call-tools",
+                    "@entity.messages",
+                    "@entity.tools",
                     {
-                      "iteration": "@entity.iterations",
-                      "response": "@entity.response"
+                      "emit": {
+                        "failure": "TOOLS_FAILED_2",
+                        "success": "TOOLS_CALLED_2"
+                      }
                     }
                   ]
                 ],
                 "event": "CONTINUE",
                 "from": "done",
-                "to": "done"
+                "to": "calling"
               },
               {
                 "effects": [
