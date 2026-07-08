@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-07-07T14:14:52.257Z",
+  "$generated": "2026-07-08T07:01:44.311Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
   "totalBehaviors": 489,
@@ -551,11 +551,11 @@
       "layer": "UI Patterns",
       "description": "Agent fix-loop molecule — validate an orbital, generate a repair prompt if errors, apply fix.",
       "defaultOrbitalName": "AgentFixLoopOrbital",
-      "statePattern": "fixed, idle",
+      "statePattern": "fixed, generating_prompt, idle",
       "complexity": {
-        "states": 2,
-        "events": 4,
-        "transitions": 4
+        "states": 3,
+        "events": 6,
+        "transitions": 6
       },
       "defaultEntity": {
         "name": "FixLoop",
@@ -624,6 +624,8 @@
       ],
       "connectableEvents": [
         "VALIDATE_ORBITAL",
+        "PROMPT_GENERATED",
+        "PROMPT_GENERATION_FAILED",
         "RESET",
         "FIX_APPLIED"
       ],
@@ -639,11 +641,11 @@
       "layer": "UI Patterns",
       "description": "Agent planner molecule — recall memories, then generate a plan from the prompt + recalled context.",
       "defaultOrbitalName": "AgentPlannerOrbital",
-      "statePattern": "idle, planned",
+      "statePattern": "idle, planned, planning, recalling",
       "complexity": {
-        "states": 2,
-        "events": 4,
-        "transitions": 4
+        "states": 4,
+        "events": 8,
+        "transitions": 8
       },
       "defaultEntity": {
         "name": "PlannerPlan",
@@ -712,6 +714,10 @@
       ],
       "connectableEvents": [
         "PLAN",
+        "MEMORIES_RECALLED",
+        "RECALL_FAILED",
+        "PLAN_GENERATED",
+        "PLAN_GENERATION_FAILED",
         "RESET",
         "PLANNED"
       ],
@@ -727,11 +733,11 @@
       "layer": "UI Patterns",
       "description": "Agent tool-loop molecule — call-tools, check response, emit result for iteration.",
       "defaultOrbitalName": "AgentToolLoopOrbital",
-      "statePattern": "done, idle",
+      "statePattern": "calling, done, idle",
       "complexity": {
-        "states": 2,
-        "events": 5,
-        "transitions": 5
+        "states": 3,
+        "events": 9,
+        "transitions": 9
       },
       "defaultEntity": {
         "name": "ToolLoop",
@@ -806,6 +812,10 @@
       ],
       "connectableEvents": [
         "EXECUTE",
+        "TOOLS_CALLED_1",
+        "TOOLS_FAILED_1",
+        "TOOLS_CALLED_2",
+        "TOOLS_FAILED_2",
         "CONTINUE",
         "RESET",
         "LOOP_STEP"
@@ -822,11 +832,11 @@
       "layer": "UI Patterns",
       "description": "Agent builder organism — plan, build, validate, fix a single orbital end-to-end.",
       "defaultOrbitalName": "AgentBuilderOrbital",
-      "statePattern": "done, idle",
+      "statePattern": "done, idle, planning",
       "complexity": {
-        "states": 2,
-        "events": 5,
-        "transitions": 4
+        "states": 3,
+        "events": 7,
+        "transitions": 6
       },
       "defaultEntity": {
         "name": "BuilderProcess",
@@ -920,6 +930,8 @@
       ],
       "connectableEvents": [
         "START",
+        "PLANNED",
+        "PLAN_FAILED",
         "RESET",
         "BUILD_COMPLETE",
         "RETRY"
@@ -936,11 +948,11 @@
       "layer": "UI Patterns",
       "description": "Rabit organism — coordinator decomposes a prompt into orbital specs, dispatches subagent builds, monitors completion, assembles and validates the composed schema.",
       "defaultOrbitalName": "CoordinatorOrbital",
-      "statePattern": "done, idle, monitoring",
+      "statePattern": "assembling, done, idle, monitoring, planning",
       "complexity": {
-        "states": 3,
-        "events": 6,
-        "transitions": 6
+        "states": 5,
+        "events": 10,
+        "transitions": 10
       },
       "defaultEntity": {
         "name": "Coordinator",
@@ -1043,7 +1055,11 @@
       ],
       "connectableEvents": [
         "START",
+        "PLANNED",
+        "PLAN_FAILED",
         "ALL_DONE",
+        "COMPOSED",
+        "COMPOSE_FAILED",
         "RESET",
         "DISPATCHED",
         "RABIT_DONE"
@@ -5940,7 +5956,6 @@
         "std-dashboard-grid-embedded",
         "std-date-range",
         "std-devops-dashboard",
-        "std-document-mgmt",
         "std-ecommerce",
         "std-esign-request",
         "std-event-log",
@@ -9544,7 +9559,6 @@
         "std-dashboard-grid-embedded",
         "std-date-range",
         "std-devops-dashboard",
-        "std-document-mgmt",
         "std-ecommerce",
         "std-esign-flow",
         "std-esign-request",
