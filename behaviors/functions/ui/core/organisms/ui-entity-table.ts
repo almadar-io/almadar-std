@@ -74,7 +74,7 @@ export interface StdUiEntityTableConfig {
   headerActions?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"event":"VIEW","label":"View"}]` */
+  /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
@@ -420,9 +420,9 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
               {
                 'event': 'VIEW',
                 'label': 'View',
+                'variant': 'ghost',
               },
             ],
-            'description': 'Item actions from generated code - maps to rowActions',
             'items': {
               'properties': {
                 'action': {
@@ -474,7 +474,6 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
               },
               'type': 'object',
             },
-            'label': 'Item Actions',
             'tier': 'presentation',
             'type': '[EntityTableItemActionsItem]',
           },

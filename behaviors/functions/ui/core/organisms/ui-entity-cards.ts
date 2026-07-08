@@ -74,7 +74,7 @@ export interface StdUiEntityCardsConfig {
   imageField?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"event":"VIEW","label":"View"}]` */
+  /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: EntityRow[];
   /** Default: `1` */
   maxCols?: number;
@@ -368,9 +368,9 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               {
                 'event': 'VIEW',
                 'label': 'View',
+                'variant': 'ghost',
               },
             ],
-            'description': 'Actions for each card item (schema-driven)',
             'items': {
               'properties': {
                 'action': {
@@ -417,7 +417,6 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               },
               'type': 'object',
             },
-            'label': 'Item Actions',
             'tier': 'presentation',
             'type': '[EntityCardsItemActionsItem]',
           },

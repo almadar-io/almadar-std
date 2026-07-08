@@ -77,6 +77,8 @@ export interface StdUiEntityListConfig {
   fields?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
+  itemActions?: unknown;
   /** Default: `0` */
   pageProp?: number;
   /** Default: `0` */
@@ -295,6 +297,16 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'itemActions': {
+            'default': [
+              {
+                'event': 'VIEW',
+                'label': 'View',
+                'variant': 'ghost',
+              },
+            ],
+            'type': 'json',
+          },
           'pageProp': {
             'default': 0,
             'description': 'Current page number',
@@ -501,7 +513,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': 'ITEM_ACTIONS',
+                    'itemActions': '@config.itemActions',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',
@@ -536,7 +548,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': 'ITEM_ACTIONS',
+                    'itemActions': '@config.itemActions',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',

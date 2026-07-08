@@ -30,7 +30,21 @@ const ALIAS = 'AgentRabit';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentRabitEventKey = 'ALL_DONE' | 'DISPATCHED' | 'INIT' | 'RABIT_DONE' | 'RESET' | 'START';
+export type StdAgentRabitEventKey = 'ALL_DONE' | 'COMPOSED' | 'COMPOSE_FAILED' | 'DISPATCHED' | 'INIT' | 'PLANNED' | 'PLAN_FAILED' | 'RABIT_DONE' | 'RESET' | 'START';
+
+/**
+ * Payload shape for the `PLANNED` event.
+ */
+export interface StdAgentRabitPlannedPayload {
+  result: string;
+}
+
+/**
+ * Payload shape for the `COMPOSED` event.
+ */
+export interface StdAgentRabitComposedPayload {
+  result: string;
+}
 
 /**
  * Payload shape for the `DISPATCHED` event.
@@ -189,6 +203,26 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
         'category': 'lifecycle',
         'emits': [
           {
+            'event': 'PLANNED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'COMPOSED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+          {
             'event': 'DISPATCHED',
             'payloadSchema': [
               {
@@ -240,8 +274,38 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
               ],
             },
             {
+              'key': 'PLANNED',
+              'name': 'Planned',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PLAN_FAILED',
+              'name': 'Plan Failed',
+            },
+            {
               'key': 'ALL_DONE',
               'name': 'All Done',
+            },
+            {
+              'key': 'COMPOSED',
+              'name': 'Composed',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'COMPOSE_FAILED',
+              'name': 'Compose Failed',
             },
             {
               'key': 'RESET',
@@ -281,7 +345,13 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
               'name': 'idle',
             },
             {
+              'name': 'planning',
+            },
+            {
               'name': 'monitoring',
+            },
+            {
+              'name': 'assembling',
             },
             {
               'name': 'done',
@@ -353,12 +423,26 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
                   'planning',
                 ],
                 [
+                  'llm/generate',
+                  '@entity.prompt',
+                  {
+                    'emit': {
+                      'failure': 'PLAN_FAILED',
+                      'success': 'PLANNED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'START',
+              'from': 'idle',
+              'to': 'planning',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.plan',
-                  [
-                    'llm/generate',
-                    '@entity.prompt',
-                  ],
+                  '@payload.result',
                 ],
                 [
                   'session/write-spec',
@@ -379,8 +463,20 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
                   },
                 ],
               ],
-              'event': 'START',
-              'from': 'idle',
+              'event': 'PLANNED',
+              'from': 'planning',
+              'to': 'monitoring',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.plan',
+                  '',
+                ],
+              ],
+              'event': 'PLAN_FAILED',
+              'from': 'planning',
               'to': 'monitoring',
             },
             {
@@ -403,11 +499,25 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
                   'assembling',
                 ],
                 [
+                  'compose/compose-all',
+                  {
+                    'emit': {
+                      'failure': 'COMPOSE_FAILED',
+                      'success': 'COMPOSED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'ALL_DONE',
+              'from': 'monitoring',
+              'to': 'assembling',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.composedSchema',
-                  [
-                    'compose/compose-all',
-                  ],
+                  '@payload.result',
                 ],
                 [
                   'set',
@@ -431,8 +541,32 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
                   },
                 ],
               ],
-              'event': 'ALL_DONE',
-              'from': 'monitoring',
+              'event': 'COMPOSED',
+              'from': 'assembling',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.composedSchema',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'done',
+                ],
+                [
+                  'emit',
+                  'RABIT_DONE',
+                  {
+                    'schema': '@entity.composedSchema',
+                  },
+                ],
+              ],
+              'event': 'COMPOSE_FAILED',
+              'from': 'assembling',
               'to': 'done',
             },
             {
@@ -1066,6 +1200,16 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
               },
             ],
           },
+          {
+            'event': 'FIX_GENERATED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
         ],
         'linkedEntity': 'OrbitalProcess',
         'name': 'ProcessPipeline',
@@ -1147,6 +1291,21 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
               ],
             },
             {
+              'key': 'FIX_GENERATED',
+              'name': 'Fix Generated',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FIX_FAILED',
+              'name': 'Fix Failed',
+            },
+            {
               'key': 'ORBITAL_COMPLETE',
               'name': 'Orbital Complete',
               'payloadSchema': [
@@ -1171,6 +1330,9 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
             },
             {
               'name': 'repairing',
+            },
+            {
+              'name': 'fixing',
             },
             {
               'name': 'done',
@@ -1346,12 +1508,31 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
                   'repairing',
                 ],
                 [
+                  'llm/generate',
+                  '@entity.orbitalName',
+                  {
+                    'emit': {
+                      'failure': 'FIX_FAILED',
+                      'success': 'FIX_GENERATED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'repairing',
+              'to': 'fixing',
+            },
+            {
+              'event': 'REBUILD',
+              'from': 'repairing',
+              'to': 'building',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.fixPrompt',
-                  [
-                    'llm/generate',
-                    '@entity.orbitalName',
-                  ],
+                  '@payload.result',
                 ],
                 [
                   'emit',
@@ -1361,14 +1542,21 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'repairing',
+              'event': 'FIX_GENERATED',
+              'from': 'fixing',
               'to': 'repairing',
             },
             {
-              'event': 'REBUILD',
-              'from': 'repairing',
-              'to': 'building',
+              'effects': [
+                [
+                  'set',
+                  '@entity.fixPrompt',
+                  '',
+                ],
+              ],
+              'event': 'FIX_FAILED',
+              'from': 'fixing',
+              'to': 'repairing',
             },
             {
               'effects': [

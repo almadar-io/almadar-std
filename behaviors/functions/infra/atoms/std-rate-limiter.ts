@@ -62,11 +62,11 @@ export interface StdRateLimiterParams {
   pagePath?: string;
 }
 
-/** Trait descriptor: `RateLimiter.traits.Icon_Shield`. */
-export function stdRateLimiterIcon_ShieldTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.ShieldIcon`. */
+export function stdRateLimiterShieldIconTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Icon_Shield`,
+    ref: `${ALIAS}.traits.ShieldIcon`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -77,11 +77,11 @@ export function stdRateLimiterIcon_ShieldTrait(params: StdRateLimiterParams): Tr
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.Typography_RateBucketRateLimiter`. */
-export function stdRateLimiterTypography_RateBucketRateLimiterTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.RateBucketTitle`. */
+export function stdRateLimiterRateBucketTitleTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Typography_RateBucketRateLimiter`,
+    ref: `${ALIAS}.traits.RateBucketTitle`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -92,11 +92,11 @@ export function stdRateLimiterTypography_RateBucketRateLimiterTrait(params: StdR
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.StatusDot_Open`. */
-export function stdRateLimiterStatusDot_OpenTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.OpenStatusDot`. */
+export function stdRateLimiterOpenStatusDotTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.StatusDot_Open`,
+    ref: `${ALIAS}.traits.OpenStatusDot`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -107,11 +107,11 @@ export function stdRateLimiterStatusDot_OpenTrait(params: StdRateLimiterParams):
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.StatusDot_Throttled`. */
-export function stdRateLimiterStatusDot_ThrottledTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.ThrottledStatusDot`. */
+export function stdRateLimiterThrottledStatusDotTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.StatusDot_Throttled`,
+    ref: `${ALIAS}.traits.ThrottledStatusDot`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -122,11 +122,11 @@ export function stdRateLimiterStatusDot_ThrottledTrait(params: StdRateLimiterPar
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.Alert_RateLimitExceeded`. */
-export function stdRateLimiterAlert_RateLimitExceededTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.RateLimitAlert`. */
+export function stdRateLimiterRateLimitAlertTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Alert_RateLimitExceeded`,
+    ref: `${ALIAS}.traits.RateLimitAlert`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -137,11 +137,11 @@ export function stdRateLimiterAlert_RateLimitExceededTrait(params: StdRateLimite
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.StatDisplay_Requests`. */
-export function stdRateLimiterStatDisplay_RequestsTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.RequestsStat`. */
+export function stdRateLimiterRequestsStatTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.StatDisplay_Requests`,
+    ref: `${ALIAS}.traits.RequestsStat`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -152,11 +152,11 @@ export function stdRateLimiterStatDisplay_RequestsTrait(params: StdRateLimiterPa
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.StatDisplay_Window`. */
-export function stdRateLimiterStatDisplay_WindowTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.WindowStat`. */
+export function stdRateLimiterWindowStatTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.StatDisplay_Window`,
+    ref: `${ALIAS}.traits.WindowStat`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -167,11 +167,11 @@ export function stdRateLimiterStatDisplay_WindowTrait(params: StdRateLimiterPara
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.Meter_Count`. */
-export function stdRateLimiterMeter_CountTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.CountMeter`. */
+export function stdRateLimiterCountMeterTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Meter_Count`,
+    ref: `${ALIAS}.traits.CountMeter`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -182,11 +182,11 @@ export function stdRateLimiterMeter_CountTrait(params: StdRateLimiterParams): Tr
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.ProgressBar_Count`. */
-export function stdRateLimiterProgressBar_CountTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.CountProgressBar`. */
+export function stdRateLimiterCountProgressBarTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProgressBar_Count`,
+    ref: `${ALIAS}.traits.CountProgressBar`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -197,11 +197,11 @@ export function stdRateLimiterProgressBar_CountTrait(params: StdRateLimiterParam
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.Button_Request`. */
-export function stdRateLimiterButton_RequestTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.RequestButton`. */
+export function stdRateLimiterRequestButtonTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Button_Request`,
+    ref: `${ALIAS}.traits.RequestButton`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -212,11 +212,11 @@ export function stdRateLimiterButton_RequestTrait(params: StdRateLimiterParams):
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.Button_Reset`. */
-export function stdRateLimiterButton_ResetTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.ResetButton`. */
+export function stdRateLimiterResetButtonTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Button_Reset`,
+    ref: `${ALIAS}.traits.ResetButton`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -227,11 +227,11 @@ export function stdRateLimiterButton_ResetTrait(params: StdRateLimiterParams): T
   });
 }
 
-/** Trait descriptor: `RateLimiter.traits.Button_Reset_Primary`. */
-export function stdRateLimiterButton_Reset_PrimaryTrait(params: StdRateLimiterParams): TraitReference {
+/** Trait descriptor: `RateLimiter.traits.ResetPrimaryButton`. */
+export function stdRateLimiterResetPrimaryButtonTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Button_Reset_Primary`,
+    ref: `${ALIAS}.traits.ResetPrimaryButton`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -279,18 +279,18 @@ export function stdRateLimiter(params: StdRateLimiterParams): OrbitalDefinition 
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdRateLimiterIcon_ShieldTrait(params),
-      stdRateLimiterTypography_RateBucketRateLimiterTrait(params),
-      stdRateLimiterStatusDot_OpenTrait(params),
-      stdRateLimiterStatusDot_ThrottledTrait(params),
-      stdRateLimiterAlert_RateLimitExceededTrait(params),
-      stdRateLimiterStatDisplay_RequestsTrait(params),
-      stdRateLimiterStatDisplay_WindowTrait(params),
-      stdRateLimiterMeter_CountTrait(params),
-      stdRateLimiterProgressBar_CountTrait(params),
-      stdRateLimiterButton_RequestTrait(params),
-      stdRateLimiterButton_ResetTrait(params),
-      stdRateLimiterButton_Reset_PrimaryTrait(params),
+      stdRateLimiterShieldIconTrait(params),
+      stdRateLimiterRateBucketTitleTrait(params),
+      stdRateLimiterOpenStatusDotTrait(params),
+      stdRateLimiterThrottledStatusDotTrait(params),
+      stdRateLimiterRateLimitAlertTrait(params),
+      stdRateLimiterRequestsStatTrait(params),
+      stdRateLimiterWindowStatTrait(params),
+      stdRateLimiterCountMeterTrait(params),
+      stdRateLimiterCountProgressBarTrait(params),
+      stdRateLimiterRequestButtonTrait(params),
+      stdRateLimiterResetButtonTrait(params),
+      stdRateLimiterResetPrimaryButtonTrait(params),
       stdRateLimiterRateBucketRateLimiterTrait(params),
     ],
     pages: [

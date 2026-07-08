@@ -30,7 +30,7 @@ const ALIAS = 'AgentBuilder';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentBuilderEventKey = 'BUILD_COMPLETE' | 'INIT' | 'RESET' | 'RETRY' | 'START';
+export type StdAgentBuilderEventKey = 'BUILD_COMPLETE' | 'INIT' | 'PLANNED' | 'PLAN_FAILED' | 'RESET' | 'RETRY' | 'START';
 
 /**
  * Payload shape for the `BUILD_COMPLETE` event.
@@ -38,6 +38,13 @@ export type StdAgentBuilderEventKey = 'BUILD_COMPLETE' | 'INIT' | 'RESET' | 'RET
 export interface StdAgentBuilderBuildCompletePayload {
   orbitalName: string;
   plan: string;
+}
+
+/**
+ * Payload shape for the `PLANNED` event.
+ */
+export interface StdAgentBuilderPlannedPayload {
+  result: string;
 }
 
 /**
@@ -177,6 +184,16 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
               },
             ],
           },
+          {
+            'event': 'PLANNED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
         ],
         'linkedEntity': 'BuilderProcess',
         'name': 'BuilderPipeline',
@@ -202,6 +219,21 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'type': 'string',
                 },
               ],
+            },
+            {
+              'key': 'PLANNED',
+              'name': 'Planned',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PLAN_FAILED',
+              'name': 'Plan Failed',
             },
             {
               'key': 'RESET',
@@ -232,6 +264,9 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             {
               'isInitial': true,
               'name': 'idle',
+            },
+            {
+              'name': 'planning',
             },
             {
               'name': 'done',
@@ -288,12 +323,26 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   '@payload.orbitalName',
                 ],
                 [
+                  'llm/generate',
+                  '@entity.request',
+                  {
+                    'emit': {
+                      'failure': 'PLAN_FAILED',
+                      'success': 'PLANNED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'START',
+              'from': 'idle',
+              'to': 'planning',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.plan',
-                  [
-                    'llm/generate',
-                    '@entity.request',
-                  ],
+                  '@payload.result',
                 ],
                 [
                   'behavior/instantiate',
@@ -318,8 +367,42 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   },
                 ],
               ],
-              'event': 'START',
-              'from': 'idle',
+              'event': 'PLANNED',
+              'from': 'planning',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.plan',
+                  '',
+                ],
+                [
+                  'behavior/instantiate',
+                  '@entity.orbitalName',
+                  '@entity.plan',
+                ],
+                [
+                  'validate/validate',
+                  '@entity.orbitalName',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+                [
+                  'emit',
+                  'BUILD_COMPLETE',
+                  {
+                    'orbitalName': '@entity.orbitalName',
+                    'plan': '@entity.plan',
+                  },
+                ],
+              ],
+              'event': 'PLAN_FAILED',
+              'from': 'planning',
               'to': 'done',
             },
             {

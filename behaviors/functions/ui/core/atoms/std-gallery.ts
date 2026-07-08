@@ -51,11 +51,11 @@ export interface StdGalleryParams {
   pagePath?: string;
 }
 
-/** Trait descriptor: `Gallery.traits.Spinner1`. */
-export function stdGallerySpinner1Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.LoadingSpinner`. */
+export function stdGalleryLoadingSpinnerTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Spinner1`,
+    ref: `${ALIAS}.traits.LoadingSpinner`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -66,11 +66,11 @@ export function stdGallerySpinner1Trait(params: StdGalleryParams): TraitReferenc
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Typography1`. */
-export function stdGalleryTypography1Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.LoadingCaption`. */
+export function stdGalleryLoadingCaptionTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Typography1`,
+    ref: `${ALIAS}.traits.LoadingCaption`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -81,11 +81,11 @@ export function stdGalleryTypography1Trait(params: StdGalleryParams): TraitRefer
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Icon1`. */
-export function stdGalleryIcon1Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.GalleryIcon`. */
+export function stdGalleryGalleryIconTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Icon1`,
+    ref: `${ALIAS}.traits.GalleryIcon`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -96,11 +96,11 @@ export function stdGalleryIcon1Trait(params: StdGalleryParams): TraitReference {
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Typography2`. */
-export function stdGalleryTypography2Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.TitleHeading`. */
+export function stdGalleryTitleHeadingTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Typography2`,
+    ref: `${ALIAS}.traits.TitleHeading`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -111,11 +111,11 @@ export function stdGalleryTypography2Trait(params: StdGalleryParams): TraitRefer
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Divider1`. */
-export function stdGalleryDivider1Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.TitleDivider`. */
+export function stdGalleryTitleDividerTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Divider1`,
+    ref: `${ALIAS}.traits.TitleDivider`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -126,11 +126,11 @@ export function stdGalleryDivider1Trait(params: StdGalleryParams): TraitReferenc
   });
 }
 
-/** Trait descriptor: `Gallery.traits.MediaGallery1`. */
-export function stdGalleryMediaGallery1Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.MediaGalleryGrid`. */
+export function stdGalleryMediaGalleryGridTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.MediaGallery1`,
+    ref: `${ALIAS}.traits.MediaGalleryGrid`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -141,11 +141,11 @@ export function stdGalleryMediaGallery1Trait(params: StdGalleryParams): TraitRef
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Alert1`. */
-export function stdGalleryAlert1Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.ErrorAlert`. */
+export function stdGalleryErrorAlertTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Alert1`,
+    ref: `${ALIAS}.traits.ErrorAlert`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -156,11 +156,11 @@ export function stdGalleryAlert1Trait(params: StdGalleryParams): TraitReference 
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Lightbox1`. */
-export function stdGalleryLightbox1Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.ImageLightbox`. */
+export function stdGalleryImageLightboxTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Lightbox1`,
+    ref: `${ALIAS}.traits.ImageLightbox`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -171,11 +171,11 @@ export function stdGalleryLightbox1Trait(params: StdGalleryParams): TraitReferen
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Spinner2`. */
-export function stdGallerySpinner2Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.ReloadSpinner`. */
+export function stdGalleryReloadSpinnerTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Spinner2`,
+    ref: `${ALIAS}.traits.ReloadSpinner`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -186,11 +186,11 @@ export function stdGallerySpinner2Trait(params: StdGalleryParams): TraitReferenc
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Typography3`. */
-export function stdGalleryTypography3Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.ReloadCaption`. */
+export function stdGalleryReloadCaptionTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Typography3`,
+    ref: `${ALIAS}.traits.ReloadCaption`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -201,11 +201,11 @@ export function stdGalleryTypography3Trait(params: StdGalleryParams): TraitRefer
   });
 }
 
-/** Trait descriptor: `Gallery.traits.Spinner3`. */
-export function stdGallerySpinner3Trait(params: StdGalleryParams): TraitReference {
+/** Trait descriptor: `Gallery.traits.RetrySpinner`. */
+export function stdGalleryRetrySpinnerTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Spinner3`,
+    ref: `${ALIAS}.traits.RetrySpinner`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -253,17 +253,17 @@ export function stdGallery(params: StdGalleryParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdGallerySpinner1Trait(params),
-      stdGalleryTypography1Trait(params),
-      stdGalleryIcon1Trait(params),
-      stdGalleryTypography2Trait(params),
-      stdGalleryDivider1Trait(params),
-      stdGalleryMediaGallery1Trait(params),
-      stdGalleryAlert1Trait(params),
-      stdGalleryLightbox1Trait(params),
-      stdGallerySpinner2Trait(params),
-      stdGalleryTypography3Trait(params),
-      stdGallerySpinner3Trait(params),
+      stdGalleryLoadingSpinnerTrait(params),
+      stdGalleryLoadingCaptionTrait(params),
+      stdGalleryGalleryIconTrait(params),
+      stdGalleryTitleHeadingTrait(params),
+      stdGalleryTitleDividerTrait(params),
+      stdGalleryMediaGalleryGridTrait(params),
+      stdGalleryErrorAlertTrait(params),
+      stdGalleryImageLightboxTrait(params),
+      stdGalleryReloadSpinnerTrait(params),
+      stdGalleryReloadCaptionTrait(params),
+      stdGalleryRetrySpinnerTrait(params),
       stdGalleryGalleryItemGalleryTrait(params),
     ],
     pages: [

@@ -30,7 +30,7 @@ const ALIAS = 'AgentToolLoop';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentToolLoopEventKey = 'CONTINUE' | 'EXECUTE' | 'INIT' | 'LOOP_STEP' | 'RESET';
+export type StdAgentToolLoopEventKey = 'CONTINUE' | 'EXECUTE' | 'INIT' | 'LOOP_STEP' | 'RESET' | 'TOOLS_CALLED_1' | 'TOOLS_CALLED_2' | 'TOOLS_FAILED_1' | 'TOOLS_FAILED_2';
 
 /**
  * Payload shape for the `LOOP_STEP` event.
@@ -38,6 +38,20 @@ export type StdAgentToolLoopEventKey = 'CONTINUE' | 'EXECUTE' | 'INIT' | 'LOOP_S
 export interface StdAgentToolLoopLoopStepPayload {
   response: string;
   iteration: number;
+}
+
+/**
+ * Payload shape for the `TOOLS_CALLED_1` event.
+ */
+export interface StdAgentToolLoopToolsCalled1Payload {
+  result: string;
+}
+
+/**
+ * Payload shape for the `TOOLS_CALLED_2` event.
+ */
+export interface StdAgentToolLoopToolsCalled2Payload {
+  result: string;
 }
 
 /**

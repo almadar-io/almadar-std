@@ -30,7 +30,7 @@ const ALIAS = 'AgentFixLoop';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentFixLoopEventKey = 'FIX_APPLIED' | 'INIT' | 'RESET' | 'VALIDATE_ORBITAL';
+export type StdAgentFixLoopEventKey = 'FIX_APPLIED' | 'INIT' | 'PROMPT_GENERATED' | 'PROMPT_GENERATION_FAILED' | 'RESET' | 'VALIDATE_ORBITAL';
 
 /**
  * Payload shape for the `FIX_APPLIED` event.
@@ -38,6 +38,13 @@ export type StdAgentFixLoopEventKey = 'FIX_APPLIED' | 'INIT' | 'RESET' | 'VALIDA
 export interface StdAgentFixLoopFixAppliedPayload {
   orbitalName: string;
   fixPrompt: string;
+}
+
+/**
+ * Payload shape for the `PROMPT_GENERATED` event.
+ */
+export interface StdAgentFixLoopPromptGeneratedPayload {
+  result: string;
 }
 
 /**

@@ -30,7 +30,7 @@ orbital TacticsBoard2DOrbital {
     maxHealth : number
     unitType : string
     name : string
-    modelUrl : Asset
+    modelUrl : Asset!
   }
   type Tile = {
     id : string
@@ -39,7 +39,7 @@ orbital TacticsBoard2DOrbital {
     z : number
     terrain : string
     passable : boolean
-    terrainSprite : Asset
+    terrainSprite : Asset!
   }
   type Fx = {
     id : string!
@@ -57,7 +57,7 @@ orbital TacticsBoard2DOrbital {
     y : number!
     z : number
     type : string
-    assetUrl : Asset
+    assetUrl : Asset!
     color : string
     elevation : number
   }
@@ -81,9 +81,17 @@ orbital TacticsBoard2DOrbital {
 
   entity GameState [runtime, shared] {
     id : string!
-    units : [Unit] = []
+    units : [Unit] = [
+      { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "unit", name: "Player", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_square.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "player-unit", thumbnailUrl: "" } },
+      { id: "e1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "unit", name: "Enemy", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "red_body_square.png", role: "enemy", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "enemy-unit", thumbnailUrl: "" } }
+    ]
     fx : [Fx] = []
-    tiles : [Tile] = []
+    tiles : [Tile] = [
+      { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json", sprite: "tileBlue_01.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
+      { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json", sprite: "tileBlue_01.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
+      { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json", sprite: "tileBlue_01.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
+      { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json", sprite: "tileBlue_01.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
+    ]
     result : string = "none"
     selectedUnitId : string = ""
     validMoves : [ValidMove] = []
@@ -100,7 +108,16 @@ orbital TacticsBoard2DOrbital {
       gridWidth: 2
       gridHeight: 2
       attackDamage: 3
-      units: [ { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "unit" }, { id: "e1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "unit" } ]
+      units: [
+        { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "unit", name: "Player", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_square.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "player-unit", thumbnailUrl: "" } },
+        { id: "e1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "unit", name: "Enemy", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "red_body_square.png", role: "enemy", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "enemy-unit", thumbnailUrl: "" } }
+      ]
+      tiles: [
+        { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json", sprite: "tileBlue_01.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
+        { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json", sprite: "tileBlue_01.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
+        { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json", sprite: "tileBlue_01.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
+        { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json", sprite: "tileBlue_01.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
+      ]
     }
   }
 

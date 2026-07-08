@@ -30,7 +30,7 @@ const ALIAS = 'AgentPlanner';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentPlannerEventKey = 'INIT' | 'PLAN' | 'PLANNED' | 'RESET';
+export type StdAgentPlannerEventKey = 'INIT' | 'MEMORIES_RECALLED' | 'PLAN' | 'PLANNED' | 'PLAN_GENERATED' | 'PLAN_GENERATION_FAILED' | 'RECALL_FAILED' | 'RESET';
 
 /**
  * Payload shape for the `PLANNED` event.
@@ -38,6 +38,20 @@ export type StdAgentPlannerEventKey = 'INIT' | 'PLAN' | 'PLANNED' | 'RESET';
 export interface StdAgentPlannerPlannedPayload {
   plan: string;
   memoryCount: number;
+}
+
+/**
+ * Payload shape for the `MEMORIES_RECALLED` event.
+ */
+export interface StdAgentPlannerMemoriesRecalledPayload {
+  result: EntityRow[];
+}
+
+/**
+ * Payload shape for the `PLAN_GENERATED` event.
+ */
+export interface StdAgentPlannerPlanGeneratedPayload {
+  result: string;
 }
 
 /**

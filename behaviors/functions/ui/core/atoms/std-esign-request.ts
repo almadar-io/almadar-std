@@ -67,11 +67,11 @@ export interface StdEsignRequestParams {
   pagePath?: string;
 }
 
-/** Trait descriptor: `EsignRequest.traits.Typography1`. */
-export function stdEsignRequestTypography1Trait(params: StdEsignRequestParams): TraitReference {
+/** Trait descriptor: `EsignRequest.traits.TitleHeading`. */
+export function stdEsignRequestTitleHeadingTrait(params: StdEsignRequestParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Typography1`,
+    ref: `${ALIAS}.traits.TitleHeading`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -82,11 +82,11 @@ export function stdEsignRequestTypography1Trait(params: StdEsignRequestParams): 
   });
 }
 
-/** Trait descriptor: `EsignRequest.traits.DataGrid1`. */
-export function stdEsignRequestDataGrid1Trait(params: StdEsignRequestParams): TraitReference {
+/** Trait descriptor: `EsignRequest.traits.RequestDataGrid`. */
+export function stdEsignRequestRequestDataGridTrait(params: StdEsignRequestParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DataGrid1`,
+    ref: `${ALIAS}.traits.RequestDataGrid`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -97,11 +97,11 @@ export function stdEsignRequestDataGrid1Trait(params: StdEsignRequestParams): Tr
   });
 }
 
-/** Trait descriptor: `EsignRequest.traits.Alert1`. */
-export function stdEsignRequestAlert1Trait(params: StdEsignRequestParams): TraitReference {
+/** Trait descriptor: `EsignRequest.traits.ErrorAlert`. */
+export function stdEsignRequestErrorAlertTrait(params: StdEsignRequestParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Alert1`,
+    ref: `${ALIAS}.traits.ErrorAlert`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -149,9 +149,9 @@ export function stdEsignRequest(params: StdEsignRequestParams): OrbitalDefinitio
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdEsignRequestTypography1Trait(params),
-      stdEsignRequestDataGrid1Trait(params),
-      stdEsignRequestAlert1Trait(params),
+      stdEsignRequestTitleHeadingTrait(params),
+      stdEsignRequestRequestDataGridTrait(params),
+      stdEsignRequestErrorAlertTrait(params),
       stdEsignRequestESignRequestSigningTrait(params),
     ],
     pages: [

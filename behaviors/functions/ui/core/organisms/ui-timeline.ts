@@ -60,7 +60,7 @@ export interface StdUiTimelineConfig {
   fields?: string[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"event":"VIEW","label":"View"}]` */
+  /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: EntityRow[];
   /** Default: `[{"date":"Date","description":"Description","icon":"circle","id":"Id","status":"complete","tags":["Item","Item 2"],"title":"Title"},{"date":"Date 2","description":"Description 2","icon":"circle","id":"Id 2","status":"active","tags":["Item","Item 2"],"title":"Title 2"}]` */
   items?: EntityRow[];
@@ -196,9 +196,9 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
               {
                 'event': 'VIEW',
                 'label': 'View',
+                'variant': 'ghost',
               },
             ],
-            'description': 'Actions per item',
             'items': {
               'properties': {
                 'event': {
@@ -229,7 +229,6 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
               },
               'type': 'object',
             },
-            'label': 'Item Actions',
             'tier': 'presentation',
             'type': '[TimelineItemActionsItem]',
           },
