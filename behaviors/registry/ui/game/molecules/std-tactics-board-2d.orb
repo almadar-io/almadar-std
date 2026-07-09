@@ -1743,7 +1743,67 @@
                       "children": [
                         {
                           "camera": {
-                            "zoom": "@config.scale"
+                            "pos": {
+                              "x": [
+                                "/",
+                                [
+                                  "+",
+                                  [
+                                    "array/min",
+                                    "@entity.tiles",
+                                    "x"
+                                  ],
+                                  [
+                                    "array/max",
+                                    "@entity.tiles",
+                                    "x"
+                                  ]
+                                ],
+                                2.0
+                              ],
+                              "y": [
+                                "/",
+                                [
+                                  "+",
+                                  [
+                                    "array/min",
+                                    "@entity.tiles",
+                                    "y"
+                                  ],
+                                  [
+                                    "array/max",
+                                    "@entity.tiles",
+                                    "y"
+                                  ]
+                                ],
+                                2.0
+                              ]
+                            },
+                            "zoom": [
+                              "math/min",
+                              1.0,
+                              [
+                                "/",
+                                5.0,
+                                [
+                                  "+",
+                                  1.0,
+                                  [
+                                    "math/max",
+                                    [
+                                      "array/max",
+                                      "@entity.tiles",
+                                      "x"
+                                    ],
+                                    [
+                                      "array/max",
+                                      "@entity.tiles",
+                                      "y"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
                           },
                           "children": [
                             {
@@ -1754,11 +1814,7 @@
                                   "fn",
                                   "t",
                                   {
-                                    "asset": [
-                                      "object/get",
-                                      "@t",
-                                      "terrainSprite"
-                                    ],
+                                    "fill": "#5c94fc",
                                     "position": {
                                       "x": [
                                         "object/get",
@@ -1771,39 +1827,133 @@
                                         "y"
                                       ]
                                     },
-                                    "type": "draw-sprite"
+                                    "shape": "cell",
+                                    "stroke": "rgba(255,255,255,0.35)",
+                                    "strokeWidth": 1.0,
+                                    "type": "draw-shape"
                                   }
+                                ]
+                              ],
+                              "type": "draw-shape-layer"
+                            },
+                            {
+                              "items": [
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.tiles",
+                                  [
+                                    "fn",
+                                    "t",
+                                    {
+                                      "anchor": "center",
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "terrainSprite"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@t",
+                                          "terrainSprite"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "terrains"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "terrain"
+                                          ]
+                                        ]
+                                      ],
+                                      "height": 0.5,
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@t",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@t",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite",
+                                      "width": 0.5
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@s",
+                                      "asset"
+                                    ],
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -1906,31 +2056,73 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.units",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "anchor": "ground",
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "height": 0.5,
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite",
+                                      "width": 0.5
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "height": 0.8,
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite",
-                                    "width": 0.8
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -1943,8 +2135,10 @@
                                   "fn",
                                   "u",
                                   {
+                                    "anchor": "ground",
                                     "fill": "rgba(0,0,0,0.6)",
                                     "height": 0.12,
+                                    "offsetX": -0.25,
                                     "offsetY": -0.6,
                                     "position": [
                                       "object/get",
@@ -1953,7 +2147,7 @@
                                     ],
                                     "shape": "rect",
                                     "type": "draw-shape",
-                                    "width": 0.8
+                                    "width": 0.5
                                   }
                                 ]
                               ],
@@ -1967,8 +2161,10 @@
                                   "fn",
                                   "u",
                                   {
+                                    "anchor": "ground",
                                     "fill": "#22c55e",
                                     "height": 0.12,
+                                    "offsetX": -0.25,
                                     "offsetY": -0.6,
                                     "position": [
                                       "object/get",
@@ -1979,7 +2175,7 @@
                                     "type": "draw-shape",
                                     "width": [
                                       "*",
-                                      0.8,
+                                      0.5,
                                       [
                                         "/",
                                         [
@@ -2669,7 +2865,67 @@
                     "children": [
                       {
                         "camera": {
-                          "zoom": "@config.scale"
+                          "pos": {
+                            "x": [
+                              "/",
+                              [
+                                "+",
+                                [
+                                  "array/min",
+                                  "@entity.tiles",
+                                  "x"
+                                ],
+                                [
+                                  "array/max",
+                                  "@entity.tiles",
+                                  "x"
+                                ]
+                              ],
+                              2.0
+                            ],
+                            "y": [
+                              "/",
+                              [
+                                "+",
+                                [
+                                  "array/min",
+                                  "@entity.tiles",
+                                  "y"
+                                ],
+                                [
+                                  "array/max",
+                                  "@entity.tiles",
+                                  "y"
+                                ]
+                              ],
+                              2.0
+                            ]
+                          },
+                          "zoom": [
+                            "math/min",
+                            1.0,
+                            [
+                              "/",
+                              5.0,
+                              [
+                                "+",
+                                1.0,
+                                [
+                                  "math/max",
+                                  [
+                                    "array/max",
+                                    "@entity.tiles",
+                                    "x"
+                                  ],
+                                  [
+                                    "array/max",
+                                    "@entity.tiles",
+                                    "y"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
                         },
                         "children": [
                           {
@@ -2680,11 +2936,7 @@
                                 "fn",
                                 "t",
                                 {
-                                  "asset": [
-                                    "object/get",
-                                    "@t",
-                                    "terrainSprite"
-                                  ],
+                                  "fill": "#5c94fc",
                                   "position": {
                                     "x": [
                                       "object/get",
@@ -2697,39 +2949,133 @@
                                       "y"
                                     ]
                                   },
-                                  "type": "draw-sprite"
+                                  "shape": "cell",
+                                  "stroke": "rgba(255,255,255,0.35)",
+                                  "strokeWidth": 1.0,
+                                  "type": "draw-shape"
                                 }
+                              ]
+                            ],
+                            "type": "draw-shape-layer"
+                          },
+                          {
+                            "items": [
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@entity.tiles",
+                                [
+                                  "fn",
+                                  "t",
+                                  {
+                                    "anchor": "center",
+                                    "asset": [
+                                      "if",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@t",
+                                          "terrainSprite"
+                                        ],
+                                        "url"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@t",
+                                        "terrainSprite"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "terrains"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@t",
+                                          "terrain"
+                                        ]
+                                      ]
+                                    ],
+                                    "height": 0.5,
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@t",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@t",
+                                        "y"
+                                      ]
+                                    },
+                                    "type": "draw-sprite",
+                                    "width": 0.5
+                                  }
+                                ]
+                              ],
+                              [
+                                "fn",
+                                "s",
+                                [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@s",
+                                    "asset"
+                                  ],
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"
                           },
                           {
                             "items": [
-                              "array/map",
-                              "@config.features",
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@config.features",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@f",
+                                      "assetUrl"
+                                    ],
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@f",
+                                        "y"
+                                      ]
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
                               [
                                 "fn",
-                                "f",
-                                {
-                                  "asset": [
+                                "s",
+                                [
+                                  "object/get",
+                                  [
                                     "object/get",
-                                    "@f",
-                                    "assetUrl"
+                                    "@s",
+                                    "asset"
                                   ],
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@f",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@f",
-                                      "y"
-                                    ]
-                                  },
-                                  "type": "draw-sprite"
-                                }
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"
@@ -2832,31 +3178,73 @@
                           },
                           {
                             "items": [
-                              "array/map",
-                              "@entity.units",
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  {
+                                    "anchor": "ground",
+                                    "asset": [
+                                      "if",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        "url"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "modelUrl"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "units"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "unitType"
+                                        ]
+                                      ]
+                                    ],
+                                    "height": 0.5,
+                                    "id": [
+                                      "object/get",
+                                      "@u",
+                                      "id"
+                                    ],
+                                    "position": [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "type": "draw-sprite",
+                                    "width": 0.5
+                                  }
+                                ]
+                              ],
                               [
                                 "fn",
-                                "u",
-                                {
-                                  "asset": [
+                                "s",
+                                [
+                                  "object/get",
+                                  [
                                     "object/get",
-                                    "@u",
-                                    "modelUrl"
+                                    "@s",
+                                    "asset"
                                   ],
-                                  "height": 0.8,
-                                  "id": [
-                                    "object/get",
-                                    "@u",
-                                    "id"
-                                  ],
-                                  "position": [
-                                    "object/get",
-                                    "@u",
-                                    "position"
-                                  ],
-                                  "type": "draw-sprite",
-                                  "width": 0.8
-                                }
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"
@@ -2869,8 +3257,10 @@
                                 "fn",
                                 "u",
                                 {
+                                  "anchor": "ground",
                                   "fill": "rgba(0,0,0,0.6)",
                                   "height": 0.12,
+                                  "offsetX": -0.25,
                                   "offsetY": -0.6,
                                   "position": [
                                     "object/get",
@@ -2879,7 +3269,7 @@
                                   ],
                                   "shape": "rect",
                                   "type": "draw-shape",
-                                  "width": 0.8
+                                  "width": 0.5
                                 }
                               ]
                             ],
@@ -2893,8 +3283,10 @@
                                 "fn",
                                 "u",
                                 {
+                                  "anchor": "ground",
                                   "fill": "#22c55e",
                                   "height": 0.12,
+                                  "offsetX": -0.25,
                                   "offsetY": -0.6,
                                   "position": [
                                     "object/get",
@@ -2905,7 +3297,7 @@
                                   "type": "draw-shape",
                                   "width": [
                                     "*",
-                                    0.8,
+                                    0.5,
                                     [
                                       "/",
                                       [

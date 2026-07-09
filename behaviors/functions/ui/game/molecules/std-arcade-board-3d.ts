@@ -31,15 +31,17 @@ const ALIAS = 'ArcadeBoard3d';
  * without modifying its state-machine topology.
  */
 export interface StdArcadeBoard3dConfig {
-  /** Default: `12` */
+  /** Default: `2` */
   gridHeight?: unknown;
-  /** Default: `12` */
+  /** Default: `2` */
   gridWidth?: unknown;
   /** Default: `9999` */
   moveBudget?: unknown;
   /** Default: `true` */
   running?: unknown;
-  /** Default: `[{"health":1,"id":"hero","maxHealth":1,"position":{"x":1,"y":1},"team":"player","unitType":"hero","x":1,"y":1,"z":0}]` */
+  /** Default: `[{"id":"t-0-0","modelUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json","category":"terrain","dimension":"2d","name":"grass","role":"tile","sprite":"tileBlue_01.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png","variant":""},"passable":true,"terrain":"grass","x":0,"y":0,"z":0},{"id":"t-0-1","modelUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json","category":"terrain","dimension":"2d","name":"grass","role":"tile","sprite":"tileBlue_01.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png","variant":""},"passable":true,"terrain":"grass","x":0,"y":1,"z":0},{"id":"t-1-0","modelUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json","category":"terrain","dimension":"2d","name":"grass","role":"tile","sprite":"tileBlue_01.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png","variant":""},"passable":true,"terrain":"grass","x":1,"y":0,"z":0},{"id":"t-1-1","modelUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json","category":"terrain","dimension":"2d","name":"grass","role":"tile","sprite":"tileBlue_01.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png","variant":""},"passable":true,"terrain":"grass","x":1,"y":1,"z":0}]` */
+  tiles?: unknown;
+  /** Default: `[{"health":1,"id":"hero","maxHealth":1,"modelUrl":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"player-unit","role":"player","sprite":"blue_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png","variant":""},"name":"Hero","position":{"x":1,"y":1},"team":"player","unitType":"hero","x":1,"y":1,"z":0}]` */
   units?: unknown;
 }
 

@@ -106,7 +106,82 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'string',
           },
           {
-            'default': [],
+            'default': [
+              {
+                'animation': 'idle',
+                'frame': 0,
+                'health': 10,
+                'id': 'u_hero',
+                'maxHealth': 10,
+                'name': 'Hero',
+                'position': {
+                  'x': 3,
+                  'y': 10,
+                },
+                'sprite': {
+                  'animations': [
+                    'idle',
+                    'walk',
+                    'attack',
+                    'hit',
+                    'death',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json',
+                  'category': 'hero',
+                  'dimension': '2d',
+                  'name': 'hero',
+                  'role': 'npc',
+                  'sprite': 'bear.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png',
+                  'variant': '',
+                },
+                'team': 'player',
+                'unitType': 'hero',
+                'x': 3,
+                'y': 10,
+                'z': 0,
+              },
+              {
+                'animation': 'idle',
+                'frame': 0,
+                'health': 8,
+                'id': 'u_guard',
+                'maxHealth': 8,
+                'name': 'Guard',
+                'position': {
+                  'x': 13,
+                  'y': 4,
+                },
+                'sprite': {
+                  'animations': [
+                    'idle',
+                    'walk',
+                    'attack',
+                    'hit',
+                    'death',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json',
+                  'category': 'guard',
+                  'dimension': '2d',
+                  'name': 'guard',
+                  'role': 'npc',
+                  'sprite': 'crocodile.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png',
+                  'variant': '',
+                },
+                'team': 'enemy',
+                'unitType': 'guard',
+                'x': 13,
+                'y': 4,
+                'z': 0,
+              },
+            ],
             'items': {
               'properties': {
                 'animation': {
@@ -263,7 +338,156 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'array',
           },
           {
-            'default': [],
+            'default': [
+              'array/flatten',
+              [
+                'array/map',
+                [
+                  'array/range',
+                  0,
+                  16,
+                ],
+                [
+                  'fn',
+                  'gy',
+                  [
+                    'array/map',
+                    [
+                      'array/range',
+                      0,
+                      16,
+                    ],
+                    [
+                      'fn',
+                      'gx',
+                      {
+                        'id': [
+                          'str/concat',
+                          't_',
+                          '@gx',
+                          '_',
+                          '@gy',
+                        ],
+                        'passable': [
+                          'and',
+                          [
+                            '>=',
+                            '@gx',
+                            6,
+                          ],
+                          [
+                            '<',
+                            '@gx',
+                            10,
+                          ],
+                        ],
+                        'terrain': [
+                          'if',
+                          [
+                            'and',
+                            [
+                              '<',
+                              '@gx',
+                              6,
+                            ],
+                            [
+                              '<',
+                              '@gy',
+                              6,
+                            ],
+                          ],
+                          'forest',
+                          [
+                            'if',
+                            [
+                              '>=',
+                              '@gx',
+                              10,
+                            ],
+                            'stone',
+                            'grass',
+                          ],
+                        ],
+                        'terrainSprite': [
+                          'if',
+                          [
+                            'and',
+                            [
+                              '<',
+                              '@gx',
+                              6,
+                            ],
+                            [
+                              '<',
+                              '@gy',
+                              6,
+                            ],
+                          ],
+                          {
+                            'animations': [
+                              'static',
+                            ],
+                            'aspect': '1:1',
+                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
+                            'category': 'forest',
+                            'dimension': '2d',
+                            'name': 'forest',
+                            'role': 'tile',
+                            'sprite': 'landscapeTiles_021.png',
+                            'style': '',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                            'variant': '',
+                          },
+                          [
+                            'if',
+                            [
+                              '>=',
+                              '@gx',
+                              10,
+                            ],
+                            {
+                              'animations': [
+                                'static',
+                              ],
+                              'aspect': '1:1',
+                              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
+                              'category': 'stone',
+                              'dimension': '2d',
+                              'name': 'stone',
+                              'role': 'tile',
+                              'sprite': 'landscapeTiles_114.png',
+                              'style': '',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                              'variant': '',
+                            },
+                            {
+                              'animations': [
+                                'static',
+                              ],
+                              'aspect': '1:1',
+                              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
+                              'category': 'grass',
+                              'dimension': '2d',
+                              'name': 'grass',
+                              'role': 'tile',
+                              'sprite': 'landscapeTiles_022.png',
+                              'style': '',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                              'variant': '',
+                            },
+                          ],
+                        ],
+                        'x': '@gx',
+                        'y': '@gy',
+                      },
+                    ],
+                  ],
+                ],
+              ],
+            ],
             'items': {
               'properties': {
                 'id': {
@@ -6758,10 +6982,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
               'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
               'variant': '',
             },
-            'type': 'unknown',
-          },
-          'scale': {
-            'default': 0.25,
             'type': 'unknown',
           },
           'travelIconAsset': {

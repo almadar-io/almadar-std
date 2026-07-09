@@ -39,7 +39,9 @@ export interface StdWorldmapBoard2dConfig {
   gridWidth?: unknown;
   /** Default: `true` */
   running?: unknown;
-  /** Default: `[{"health":3,"id":"hero","maxHealth":3,"position":{"x":0,"y":0},"team":"player","unitType":"hero","x":0,"y":0,"z":0},{"health":3,"id":"guard","maxHealth":3,"position":{"x":3,"y":3},"team":"enemy","unitType":"guard","x":3,"y":3,"z":0}]` */
+  /** Default: `[]` */
+  tiles?: unknown;
+  /** Default: `[{"animation":"idle","frame":0,"health":3,"id":"hero","maxHealth":3,"name":"Hero","position":{"x":0,"y":0},"sprite":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"player-unit","role":"player","sprite":"blue_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png","variant":"default"},"team":"player","unitType":"hero","x":0,"y":0,"z":0},{"animation":"idle","frame":0,"health":3,"id":"guard","maxHealth":3,"name":"Guard","position":{"x":3,"y":3},"sprite":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"enemy-unit","role":"enemy","sprite":"red_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png","variant":"default"},"team":"enemy","unitType":"guard","x":3,"y":3,"z":0}]` */
   units?: unknown;
 }
 

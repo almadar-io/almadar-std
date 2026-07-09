@@ -75,6 +75,8 @@ export interface StdUiCanvas2dConfig {
   bgColor?: string;
   /** Default: `"pan-zoom"` */
   camera?: 'pan-zoom' | 'follow' | 'fixed';
+  /** Default: `{"x":1,"y":1,"z":1}` */
+  cameraPos?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */

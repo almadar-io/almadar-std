@@ -12,6 +12,11 @@ orbital Canvas2dOrbital {
     y : number!
     z : number
   }
+  type Canvas2dCameraPos = {
+    x : number!
+    y : number!
+    z : number
+  }
 
   entity Canvas2dItem [runtime] {
     id : string!
@@ -39,6 +44,7 @@ orbital Canvas2dOrbital {
           scale: @config.scale
           showMinimap: @config.showMinimap
           followTarget: @config.followTarget
+          cameraPos: @config.cameraPos
           bgColor: @config.bgColor
           type: canvas-2d
         })
@@ -117,6 +123,10 @@ orbital Canvas2dOrbital {
       followTarget : Canvas2dFollowTarget = { x: 1, y: 1, z: 1 }
         @label "Follow Target"
         @description "Follow-camera target in scene space (the neutral core `Camera.target`). When `camera:'follow'` the host lerps to keep this point centered."
+        @tier "presentation"
+      cameraPos : Canvas2dCameraPos = { x: 1, y: 1, z: 1 }
+        @label "Camera Pos"
+        @description "Initial camera position in scene space (the neutral core `Camera.pos`). The host projects this to screen space and centers the viewport on it for the first render; ignored once the user pans or a follow target takes over."
         @tier "presentation"
       bgColor : string = "Bg Color"
         @label "Bg Color"

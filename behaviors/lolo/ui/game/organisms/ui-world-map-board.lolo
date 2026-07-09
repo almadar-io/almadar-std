@@ -63,8 +63,11 @@ orbital WorldMapBoardOrbital {
 
   entity GameState [runtime, shared] {
     id : string!
-    units : [Unit] = []
-    tiles : [Tile] = []
+    units : [Unit] = [
+      { id: "u_hero", position: { x: 3, y: 10 }, x: 3, y: 10, z: 0, unitType: "hero", name: "Hero", team: player, health: 10, maxHealth: 10, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json", sprite: "bear.png", role: "npc", category: "hero", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "hero", thumbnailUrl: "" }, animation: "idle", frame: 0 },
+      { id: "u_guard", position: { x: 13, y: 4 }, x: 13, y: 4, z: 0, unitType: "guard", name: "Guard", team: enemy, health: 8, maxHealth: 8, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json", sprite: "crocodile.png", role: "npc", category: "guard", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guard", thumbnailUrl: "" }, animation: "idle", frame: 0 }
+    ]
+    tiles : [Tile] = (array/flatten (array/map (array/range 0 16) (fn gy (array/map (array/range 0 16) (fn gx { id: (str/concat "t_" @gx "_" @gy), x: @gx, y: @gy, terrain: (if (and (< @gx 6) (< @gy 6)) "forest" (if (>= @gx 10) "stone" "grass")), terrainSprite: (if (and (< @gx 6) (< @gy 6)) { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_021.png", role: "tile", category: "forest", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "forest", thumbnailUrl: "" } (if (>= @gx 10) { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_114.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_022.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" })), passable: (and (>= @gx 6) (< @gx 10)) })))))
     result : string = "none"
     gold : number = 0
     selectedHeroId : string = ""
@@ -98,7 +101,6 @@ orbital WorldMapBoardOrbital {
       gridWidth: 16
       gridHeight: 16
       movementRange: 3
-      scale: 0.25
       region: "Overworld"
       fontFamily: "future"
       backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
