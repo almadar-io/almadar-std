@@ -24,7 +24,7 @@ export default defineConfig({
   // downstream packages' tsc checks would be deleted.
   dts: !process.env.ALMADAR_FAST_OVERLAY,
   clean: !process.env.ALMADAR_FAST_OVERLAY,
-  sourcemap: true,
+  sourcemap: false,
   splitting: false,
   treeshake: true,
   // The data sidecars (registry .orb tree + JSON catalogs) are copied by the shared
