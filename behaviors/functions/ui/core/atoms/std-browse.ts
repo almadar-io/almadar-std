@@ -96,36 +96,6 @@ export function stdBrowseDataGrid1Trait(params: StdBrowseParams): TraitReference
   });
 }
 
-/** Trait descriptor: `Browse.traits.SearchIcon`. */
-export function stdBrowseSearchIconTrait(params: StdBrowseParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SearchIcon`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Browse.traits.SearchInput`. */
-export function stdBrowseSearchInputTrait(params: StdBrowseParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SearchInput`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
 /** Trait descriptor: `Browse.traits.DenseTableView`. */
 export function stdBrowseDenseTableViewTrait(params: StdBrowseParams): TraitReference {
   return makeTraitRef({
@@ -180,8 +150,6 @@ export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {
     traits: [
       stdBrowseTypography1Trait(params),
       stdBrowseDataGrid1Trait(params),
-      stdBrowseSearchIconTrait(params),
-      stdBrowseSearchInputTrait(params),
       stdBrowseDenseTableViewTrait(params),
       stdBrowseBrowseItemBrowseTrait(params),
     ],
