@@ -35,22 +35,31 @@
         "overridableConfigKeys": [
           {
             "key": "gridHeight",
-            "type": "unknown",
-            "default": 8
+            "type": "number",
+            "default": 8,
+            "label": "Grid Height",
+            "description": "Grid row count clamping enemy movement bounds",
+            "tier": "domain"
           },
           {
             "key": "gridWidth",
-            "type": "unknown",
-            "default": 8
+            "type": "number",
+            "default": 8,
+            "label": "Grid Width",
+            "description": "Grid column count clamping enemy movement bounds",
+            "tier": "domain"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the chase tick runs; toggle to freeze the mechanic",
+            "tier": "domain"
           },
           {
             "key": "tiles",
-            "type": "unknown",
+            "type": "[Tile]",
             "default": [
               {
                 "id": "t-0-0",
@@ -436,11 +445,39 @@
                 "x": 7,
                 "y": 7
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Initial Tiles",
+            "description": "Seed grid tiles used for passability checks during movement",
+            "tier": "domain"
           },
           {
             "key": "units",
-            "type": "unknown",
+            "type": "[Unit]",
             "default": [
               {
                 "health": 3,
@@ -498,11 +535,83 @@
                 "y": 1,
                 "z": 0
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Initial Units",
+            "description": "Seed units (players and enemies) present before the first tick",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
-        "ref": "Chase.traits.ChaseAi"
+        "ref": "Chase.traits.ChaseAi",
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "units"
+          ]
+        }
       },
       {
         "name": "FxDecay",
@@ -510,13 +619,79 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "decayRate",
+            "type": "number",
+            "default": 1,
+            "label": "Decay Rate",
+            "description": "Ttl units removed from every fx entry each tick; higher fades particles faster.",
+            "tier": "domain"
+          },
+          {
+            "key": "fx",
+            "type": "[Fx]",
+            "default": [],
+            "label": "Initial Fx",
+            "description": "Seed particles rendered before the first BURST; usually empty.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the decay tick runs; toggle to freeze effects.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
-        "ref": "Particles.traits.FxParticles"
+        "ref": "Particles.traits.FxParticles",
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fx"
+          ]
+        }
       },
       {
         "name": "RoundLogic",
@@ -525,12 +700,22 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, incoming unit-count changes are evaluated for win/lose; toggle to freeze.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
-        "ref": "Round.traits.RoundFlow"
+        "ref": "Round.traits.RoundFlow",
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "result"
+          ]
+        }
       },
       {
         "name": "ArenaView",
@@ -972,6 +1157,1443 @@
     "emittedEvents": [],
     "listenedEvents": [],
     "exposure": "palette",
-    "provenance": "generated"
+    "provenance": "generated",
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for ui-arena-board-3d / ArenaBoard3DOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "ChaseAI": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for ChaseAI.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "gridHeight": {
+                      "type": "number",
+                      "default": 8,
+                      "description": "Grid row count clamping enemy movement bounds",
+                      "x-label": "Grid Height",
+                      "x-tier": "domain"
+                    },
+                    "gridWidth": {
+                      "type": "number",
+                      "default": 8,
+                      "description": "Grid column count clamping enemy movement bounds",
+                      "x-label": "Grid Width",
+                      "x-tier": "domain"
+                    },
+                    "running": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "When true the chase tick runs; toggle to freeze the mechanic",
+                      "x-label": "Running",
+                      "x-tier": "domain"
+                    },
+                    "tiles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "id": "t-0-0",
+                          "passable": true,
+                          "x": 0,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-1-0",
+                          "passable": true,
+                          "x": 1,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-2-0",
+                          "passable": true,
+                          "x": 2,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-3-0",
+                          "passable": true,
+                          "x": 3,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-4-0",
+                          "passable": true,
+                          "x": 4,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-5-0",
+                          "passable": true,
+                          "x": 5,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-6-0",
+                          "passable": true,
+                          "x": 6,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-7-0",
+                          "passable": true,
+                          "x": 7,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-0-1",
+                          "passable": true,
+                          "x": 0,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-1-1",
+                          "passable": true,
+                          "x": 1,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-2-1",
+                          "passable": true,
+                          "x": 2,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-3-1",
+                          "passable": true,
+                          "x": 3,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-4-1",
+                          "passable": true,
+                          "x": 4,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-5-1",
+                          "passable": true,
+                          "x": 5,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-6-1",
+                          "passable": true,
+                          "x": 6,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-7-1",
+                          "passable": true,
+                          "x": 7,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-0-2",
+                          "passable": true,
+                          "x": 0,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-1-2",
+                          "passable": true,
+                          "x": 1,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-2-2",
+                          "passable": true,
+                          "x": 2,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-3-2",
+                          "passable": true,
+                          "x": 3,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-4-2",
+                          "passable": true,
+                          "x": 4,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-5-2",
+                          "passable": true,
+                          "x": 5,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-6-2",
+                          "passable": true,
+                          "x": 6,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-7-2",
+                          "passable": true,
+                          "x": 7,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-0-3",
+                          "passable": true,
+                          "x": 0,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-1-3",
+                          "passable": true,
+                          "x": 1,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-2-3",
+                          "passable": true,
+                          "x": 2,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-3-3",
+                          "passable": true,
+                          "x": 3,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-4-3",
+                          "passable": true,
+                          "x": 4,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-5-3",
+                          "passable": true,
+                          "x": 5,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-6-3",
+                          "passable": true,
+                          "x": 6,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-7-3",
+                          "passable": true,
+                          "x": 7,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-0-4",
+                          "passable": true,
+                          "x": 0,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-1-4",
+                          "passable": true,
+                          "x": 1,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-2-4",
+                          "passable": true,
+                          "x": 2,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-3-4",
+                          "passable": true,
+                          "x": 3,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-4-4",
+                          "passable": true,
+                          "x": 4,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-5-4",
+                          "passable": true,
+                          "x": 5,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-6-4",
+                          "passable": true,
+                          "x": 6,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-7-4",
+                          "passable": true,
+                          "x": 7,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-0-5",
+                          "passable": true,
+                          "x": 0,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-1-5",
+                          "passable": true,
+                          "x": 1,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-2-5",
+                          "passable": true,
+                          "x": 2,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-3-5",
+                          "passable": true,
+                          "x": 3,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-4-5",
+                          "passable": true,
+                          "x": 4,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-5-5",
+                          "passable": true,
+                          "x": 5,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-6-5",
+                          "passable": true,
+                          "x": 6,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-7-5",
+                          "passable": true,
+                          "x": 7,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-0-6",
+                          "passable": true,
+                          "x": 0,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-1-6",
+                          "passable": true,
+                          "x": 1,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-2-6",
+                          "passable": true,
+                          "x": 2,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-3-6",
+                          "passable": true,
+                          "x": 3,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-4-6",
+                          "passable": true,
+                          "x": 4,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-5-6",
+                          "passable": true,
+                          "x": 5,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-6-6",
+                          "passable": true,
+                          "x": 6,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-7-6",
+                          "passable": true,
+                          "x": 7,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-0-7",
+                          "passable": true,
+                          "x": 0,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-1-7",
+                          "passable": true,
+                          "x": 1,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-2-7",
+                          "passable": true,
+                          "x": 2,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-3-7",
+                          "passable": true,
+                          "x": 3,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-4-7",
+                          "passable": true,
+                          "x": 4,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-5-7",
+                          "passable": true,
+                          "x": 5,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-6-7",
+                          "passable": true,
+                          "x": 6,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-7-7",
+                          "passable": true,
+                          "x": 7,
+                          "y": 7
+                        }
+                      ],
+                      "description": "Seed grid tiles used for passability checks during movement",
+                      "x-label": "Initial Tiles",
+                      "x-tier": "domain"
+                    },
+                    "units": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "health": 3,
+                          "id": "p1",
+                          "maxHealth": 3,
+                          "position": {
+                            "x": 1,
+                            "y": 1
+                          },
+                          "team": "player",
+                          "unitType": "marine",
+                          "x": 1,
+                          "y": 1,
+                          "z": 0
+                        },
+                        {
+                          "health": 3,
+                          "id": "p2",
+                          "maxHealth": 3,
+                          "position": {
+                            "x": 4,
+                            "y": 4
+                          },
+                          "team": "player",
+                          "unitType": "marine",
+                          "x": 4,
+                          "y": 4,
+                          "z": 0
+                        },
+                        {
+                          "health": 2,
+                          "id": "e1",
+                          "maxHealth": 2,
+                          "position": {
+                            "x": 6,
+                            "y": 6
+                          },
+                          "team": "enemy",
+                          "unitType": "raider",
+                          "x": 6,
+                          "y": 6,
+                          "z": 0
+                        },
+                        {
+                          "health": 2,
+                          "id": "e2",
+                          "maxHealth": 2,
+                          "position": {
+                            "x": 2,
+                            "y": 1
+                          },
+                          "team": "enemy",
+                          "unitType": "raider",
+                          "x": 2,
+                          "y": 1,
+                          "z": 0
+                        }
+                      ],
+                      "description": "Seed units (players and enemies) present before the first tick",
+                      "x-label": "Initial Units",
+                      "x-tier": "domain"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "FxDecay": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for FxDecay.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "decayRate": {
+                      "type": "number",
+                      "default": 1,
+                      "description": "Ttl units removed from every fx entry each tick; higher fades particles faster.",
+                      "x-label": "Decay Rate",
+                      "x-tier": "domain"
+                    },
+                    "fx": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [],
+                      "description": "Seed particles rendered before the first BURST; usually empty.",
+                      "x-label": "Initial Fx",
+                      "x-tier": "domain"
+                    },
+                    "running": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "When true the decay tick runs; toggle to freeze effects.",
+                      "x-label": "Running",
+                      "x-tier": "domain"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "RoundLogic": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for RoundLogic.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "running": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "When true, incoming unit-count changes are evaluated for win/lose; toggle to freeze.",
+                      "x-label": "Running",
+                      "x-tier": "domain"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "ArenaView": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for ArenaView.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "tiles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "id": "t-0-0",
+                          "passable": true,
+                          "x": 0,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-1-0",
+                          "passable": true,
+                          "x": 1,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-2-0",
+                          "passable": true,
+                          "x": 2,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-3-0",
+                          "passable": true,
+                          "x": 3,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-4-0",
+                          "passable": true,
+                          "x": 4,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-5-0",
+                          "passable": true,
+                          "x": 5,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-6-0",
+                          "passable": true,
+                          "x": 6,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-7-0",
+                          "passable": true,
+                          "x": 7,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-0-1",
+                          "passable": true,
+                          "x": 0,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-1-1",
+                          "passable": true,
+                          "x": 1,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-2-1",
+                          "passable": true,
+                          "x": 2,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-3-1",
+                          "passable": true,
+                          "x": 3,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-4-1",
+                          "passable": true,
+                          "x": 4,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-5-1",
+                          "passable": true,
+                          "x": 5,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-6-1",
+                          "passable": true,
+                          "x": 6,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-7-1",
+                          "passable": true,
+                          "x": 7,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-0-2",
+                          "passable": true,
+                          "x": 0,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-1-2",
+                          "passable": true,
+                          "x": 1,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-2-2",
+                          "passable": true,
+                          "x": 2,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-3-2",
+                          "passable": true,
+                          "x": 3,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-4-2",
+                          "passable": true,
+                          "x": 4,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-5-2",
+                          "passable": true,
+                          "x": 5,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-6-2",
+                          "passable": true,
+                          "x": 6,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-7-2",
+                          "passable": true,
+                          "x": 7,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-0-3",
+                          "passable": true,
+                          "x": 0,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-1-3",
+                          "passable": true,
+                          "x": 1,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-2-3",
+                          "passable": true,
+                          "x": 2,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-3-3",
+                          "passable": true,
+                          "x": 3,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-4-3",
+                          "passable": true,
+                          "x": 4,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-5-3",
+                          "passable": true,
+                          "x": 5,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-6-3",
+                          "passable": true,
+                          "x": 6,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-7-3",
+                          "passable": true,
+                          "x": 7,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-0-4",
+                          "passable": true,
+                          "x": 0,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-1-4",
+                          "passable": true,
+                          "x": 1,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-2-4",
+                          "passable": true,
+                          "x": 2,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-3-4",
+                          "passable": true,
+                          "x": 3,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-4-4",
+                          "passable": true,
+                          "x": 4,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-5-4",
+                          "passable": true,
+                          "x": 5,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-6-4",
+                          "passable": true,
+                          "x": 6,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-7-4",
+                          "passable": true,
+                          "x": 7,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-0-5",
+                          "passable": true,
+                          "x": 0,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-1-5",
+                          "passable": true,
+                          "x": 1,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-2-5",
+                          "passable": true,
+                          "x": 2,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-3-5",
+                          "passable": true,
+                          "x": 3,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-4-5",
+                          "passable": true,
+                          "x": 4,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-5-5",
+                          "passable": true,
+                          "x": 5,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-6-5",
+                          "passable": true,
+                          "x": 6,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-7-5",
+                          "passable": true,
+                          "x": 7,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-0-6",
+                          "passable": true,
+                          "x": 0,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-1-6",
+                          "passable": true,
+                          "x": 1,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-2-6",
+                          "passable": true,
+                          "x": 2,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-3-6",
+                          "passable": true,
+                          "x": 3,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-4-6",
+                          "passable": true,
+                          "x": 4,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-5-6",
+                          "passable": true,
+                          "x": 5,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-6-6",
+                          "passable": true,
+                          "x": 6,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-7-6",
+                          "passable": true,
+                          "x": 7,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-0-7",
+                          "passable": true,
+                          "x": 0,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-1-7",
+                          "passable": true,
+                          "x": 1,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-2-7",
+                          "passable": true,
+                          "x": 2,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-3-7",
+                          "passable": true,
+                          "x": 3,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-4-7",
+                          "passable": true,
+                          "x": 4,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-5-7",
+                          "passable": true,
+                          "x": 5,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-6-7",
+                          "passable": true,
+                          "x": 6,
+                          "y": 7
+                        },
+                        {
+                          "id": "t-7-7",
+                          "passable": true,
+                          "x": 7,
+                          "y": 7
+                        }
+                      ]
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": false,
+    "readinessErrors": [
+      "dispatch dist not found/loadable for /home/osamah/kflow.ai.builder/packages/almadar-std"
+    ]
   }
 ]

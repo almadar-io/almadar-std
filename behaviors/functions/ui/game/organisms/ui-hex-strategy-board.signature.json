@@ -1106,27 +1106,47 @@
         "overridableConfigKeys": [
           {
             "key": "initialEnemies",
-            "type": "unknown",
-            "default": 2
+            "type": "number",
+            "default": 2,
+            "label": "Initial Enemies",
+            "description": "Enemy count at start; the kill baseline so the first kill scores correctly.",
+            "tier": "domain"
           },
           {
             "key": "pointsPerKill",
-            "type": "unknown",
-            "default": 10
+            "type": "number",
+            "default": 10,
+            "label": "Points Per Kill",
+            "description": "Points awarded for each enemy removed since the last signal.",
+            "tier": "domain"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, enemy-count drops award points; toggle to freeze scoring.",
+            "tier": "domain"
           },
           {
             "key": "startScore",
-            "type": "unknown",
-            "default": 0
+            "type": "number",
+            "default": 0,
+            "label": "Start Score",
+            "description": "Initial score set on INIT.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
-        "ref": "Score.traits.ScoreKeeper"
+        "ref": "Score.traits.ScoreKeeper",
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "score",
+            "scoreBaseline"
+          ]
+        }
       },
       {
         "name": "Player",
@@ -1439,6 +1459,1895 @@
     "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
-    "substrateSignature": "b1685892c1178caf"
+    "substrateSignature": "b1685892c1178caf",
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for ui-hex-strategy-board / HexStrategyBoardOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "Authority": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for Authority.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "attackDamage": {
+                      "type": "object",
+                      "default": 3
+                    },
+                    "gridHeight": {
+                      "type": "object",
+                      "default": 6
+                    },
+                    "gridWidth": {
+                      "type": "object",
+                      "default": 6
+                    },
+                    "running": {
+                      "type": "object",
+                      "default": true
+                    },
+                    "tiles": {
+                      "type": "object",
+                      "default": [
+                        {
+                          "id": "t-0-0",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-1-0",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-2-0",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-3-0",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-4-0",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-5-0",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-0-1",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-1-1",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-2-1",
+                          "passable": true,
+                          "terrain": "dirt",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "dirt",
+                            "dimension": "2d",
+                            "name": "dirt",
+                            "role": "tile",
+                            "sprite": "dirt_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-3-1",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-4-1",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-5-1",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-0-2",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-1-2",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-2-2",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-3-2",
+                          "passable": true,
+                          "terrain": "dirt",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "dirt",
+                            "dimension": "2d",
+                            "name": "dirt",
+                            "role": "tile",
+                            "sprite": "dirt_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-4-2",
+                          "passable": true,
+                          "terrain": "sand",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "sand",
+                            "dimension": "2d",
+                            "name": "sand",
+                            "role": "tile",
+                            "sprite": "sand_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-5-2",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-0-3",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-1-3",
+                          "passable": true,
+                          "terrain": "dirt",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "dirt",
+                            "dimension": "2d",
+                            "name": "dirt",
+                            "role": "tile",
+                            "sprite": "dirt_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-2-3",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-3-3",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-4-3",
+                          "passable": true,
+                          "terrain": "sand",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "sand",
+                            "dimension": "2d",
+                            "name": "sand",
+                            "role": "tile",
+                            "sprite": "sand_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-5-3",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-0-4",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-1-4",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-2-4",
+                          "passable": true,
+                          "terrain": "grass",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-3-4",
+                          "passable": true,
+                          "terrain": "sand",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "sand",
+                            "dimension": "2d",
+                            "name": "sand",
+                            "role": "tile",
+                            "sprite": "sand_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-4-4",
+                          "passable": true,
+                          "terrain": "sand",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "sand",
+                            "dimension": "2d",
+                            "name": "sand",
+                            "role": "tile",
+                            "sprite": "sand_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-5-4",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-0-5",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-1-5",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-2-5",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-3-5",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-4-5",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-5-5",
+                          "passable": false,
+                          "terrain": "stone",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 5
+                        }
+                      ]
+                    },
+                    "units": {
+                      "type": "object",
+                      "default": [
+                        {
+                          "health": 10,
+                          "id": "u1",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json",
+                            "category": "worker",
+                            "dimension": "2d",
+                            "name": "worker",
+                            "role": "npc",
+                            "sprite": "alienBeige.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"
+                          },
+                          "name": "Miner",
+                          "position": {
+                            "x": 3,
+                            "y": 2
+                          },
+                          "team": "player",
+                          "unitType": "worker",
+                          "x": 3,
+                          "y": 2,
+                          "z": 0
+                        },
+                        {
+                          "health": 8,
+                          "id": "u2",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json",
+                            "category": "ranger",
+                            "dimension": "2d",
+                            "name": "ranger",
+                            "role": "npc",
+                            "sprite": "alienGreen.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"
+                          },
+                          "name": "Thornbow",
+                          "position": {
+                            "x": 2,
+                            "y": 3
+                          },
+                          "team": "player",
+                          "unitType": "ranger",
+                          "x": 2,
+                          "y": 3,
+                          "z": 0
+                        },
+                        {
+                          "health": 12,
+                          "id": "u3",
+                          "maxHealth": 12,
+                          "modelUrl": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json",
+                            "category": "guardian",
+                            "dimension": "2d",
+                            "name": "guardian",
+                            "role": "npc",
+                            "sprite": "alienYellow.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"
+                          },
+                          "name": "Ironwall",
+                          "position": {
+                            "x": 2,
+                            "y": 4
+                          },
+                          "team": "player",
+                          "unitType": "guardian",
+                          "x": 2,
+                          "y": 4,
+                          "z": 0
+                        },
+                        {
+                          "health": 8,
+                          "id": "e1",
+                          "maxHealth": 8,
+                          "modelUrl": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json",
+                            "category": "ranger",
+                            "dimension": "2d",
+                            "name": "ranger",
+                            "role": "npc",
+                            "sprite": "alienGreen.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"
+                          },
+                          "name": "Foe",
+                          "position": {
+                            "x": 4,
+                            "y": 1
+                          },
+                          "team": "enemy",
+                          "unitType": "ranger",
+                          "x": 4,
+                          "y": 1,
+                          "z": 0
+                        },
+                        {
+                          "health": 10,
+                          "id": "e2",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json",
+                            "category": "guardian",
+                            "dimension": "2d",
+                            "name": "guardian",
+                            "role": "npc",
+                            "sprite": "alienYellow.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"
+                          },
+                          "name": "Foe",
+                          "position": {
+                            "x": 3,
+                            "y": 1
+                          },
+                          "team": "enemy",
+                          "unitType": "guardian",
+                          "x": 3,
+                          "y": 1,
+                          "z": 0
+                        }
+                      ]
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "FxDecay": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for FxDecay.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "running": {
+                      "type": "object",
+                      "default": true
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "RoundLogic": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for RoundLogic.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "running": {
+                      "type": "object",
+                      "default": true
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "ScoreKeeper": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for ScoreKeeper.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "initialEnemies": {
+                      "type": "number",
+                      "default": 2,
+                      "description": "Enemy count at start; the kill baseline so the first kill scores correctly.",
+                      "x-label": "Initial Enemies",
+                      "x-tier": "domain"
+                    },
+                    "pointsPerKill": {
+                      "type": "number",
+                      "default": 10,
+                      "description": "Points awarded for each enemy removed since the last signal.",
+                      "x-label": "Points Per Kill",
+                      "x-tier": "domain"
+                    },
+                    "running": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "When true, enemy-count drops award points; toggle to freeze scoring.",
+                      "x-label": "Running",
+                      "x-tier": "domain"
+                    },
+                    "startScore": {
+                      "type": "number",
+                      "default": 0,
+                      "description": "Initial score set on INIT.",
+                      "x-label": "Start Score",
+                      "x-tier": "domain"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "Player": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for Player.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "assetManifest": {
+                      "type": "object",
+                      "default": {
+                        "effects": {
+                          "hit": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "8:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json",
+                            "category": "slash",
+                            "dimension": "2d",
+                            "name": "slash",
+                            "role": "effect",
+                            "sprite": "icon_burst",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png"
+                          }
+                        },
+                        "features": {
+                          "outpost": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/features/hexagonObjects_sheet.json",
+                            "category": "outpost",
+                            "dimension": "2d",
+                            "name": "outpost",
+                            "role": "decoration",
+                            "sprite": "tower.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/features/hexagonObjects_sheet.png"
+                          },
+                          "resource": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/features/hexagonObjects_sheet.json",
+                            "category": "resource",
+                            "dimension": "2d",
+                            "name": "resource",
+                            "role": "decoration",
+                            "sprite": "crystals1.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/features/hexagonObjects_sheet.png"
+                          }
+                        },
+                        "terrains": {
+                          "dirt": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "dirt",
+                            "dimension": "2d",
+                            "name": "dirt",
+                            "role": "tile",
+                            "sprite": "dirt_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "grass": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "grass",
+                            "dimension": "2d",
+                            "name": "grass",
+                            "role": "tile",
+                            "sprite": "grass_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "sand": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "sand",
+                            "dimension": "2d",
+                            "name": "sand",
+                            "role": "tile",
+                            "sprite": "sand_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          },
+                          "stone": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.json",
+                            "category": "stone",
+                            "dimension": "2d",
+                            "name": "stone",
+                            "role": "tile",
+                            "sprite": "stone_01.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/terrain/hexagonTerrain_sheet.png"
+                          }
+                        },
+                        "units": {
+                          "guardian": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json",
+                            "category": "guardian",
+                            "dimension": "2d",
+                            "name": "guardian",
+                            "role": "npc",
+                            "sprite": "alienYellow.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"
+                          },
+                          "ranger": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json",
+                            "category": "ranger",
+                            "dimension": "2d",
+                            "name": "ranger",
+                            "role": "npc",
+                            "sprite": "alienGreen.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"
+                          },
+                          "worker": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json",
+                            "category": "worker",
+                            "dimension": "2d",
+                            "name": "worker",
+                            "role": "npc",
+                            "sprite": "alienBeige.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"
+                          }
+                        }
+                      }
+                    },
+                    "backgroundAsset": {
+                      "type": "object",
+                      "default": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "grey_panel.png",
+                        "style": "fantasy-border",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png"
+                      }
+                    },
+                    "features": {
+                      "type": "object",
+                      "default": [
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/features/hexagonObjects_sheet.json",
+                            "category": "resource",
+                            "dimension": "2d",
+                            "name": "resource",
+                            "role": "decoration",
+                            "sprite": "crystals1.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/features/hexagonObjects_sheet.png"
+                          },
+                          "id": "f1",
+                          "type": "resource",
+                          "x": 3,
+                          "y": 1,
+                          "z": 0
+                        },
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/features/hexagonObjects_sheet.json",
+                            "category": "outpost",
+                            "dimension": "2d",
+                            "name": "outpost",
+                            "role": "decoration",
+                            "sprite": "tower.png",
+                            "style": "",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-pack/features/hexagonObjects_sheet.png"
+                          },
+                          "id": "f2",
+                          "type": "outpost",
+                          "x": 1,
+                          "y": 3,
+                          "z": 0
+                        }
+                      ]
+                    },
+                    "gridHeight": {
+                      "type": "object",
+                      "default": 6
+                    },
+                    "gridWidth": {
+                      "type": "object",
+                      "default": 6
+                    },
+                    "hudBackgroundAsset": {
+                      "type": "object",
+                      "default": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "grey_panel.png",
+                        "style": "fantasy-border",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png"
+                      }
+                    },
+                    "movementRange": {
+                      "type": "object",
+                      "default": 2
+                    },
+                    "projection": {
+                      "type": "object",
+                      "default": "hex"
+                    },
+                    "scale": {
+                      "type": "object",
+                      "default": 0.45
+                    },
+                    "showMinimap": {
+                      "type": "object",
+                      "default": true
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": false,
+    "readinessErrors": [
+      "dispatch dist not found/loadable for /home/osamah/kflow.ai.builder/packages/almadar-std"
+    ]
   }
 ]

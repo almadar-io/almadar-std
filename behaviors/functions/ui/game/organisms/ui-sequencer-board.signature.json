@@ -578,6 +578,522 @@
     ],
     "listenedEvents": [],
     "exposure": "palette",
-    "provenance": "generated"
+    "provenance": "generated",
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for ui-sequencer-board / SequencerBoardOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "SequencerBoardRender": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for SequencerBoardRender.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "allowDuplicates": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "When true the same action can be placed in multiple slots.",
+                      "x-label": "Allow Duplicates",
+                      "x-tier": "domain"
+                    },
+                    "availableActions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "category": "morning",
+                          "description": "Get out of bed",
+                          "iconEmoji": "🌅",
+                          "id": "wake-up",
+                          "name": "Wake Up"
+                        },
+                        {
+                          "category": "hygiene",
+                          "description": "Clean your teeth",
+                          "iconEmoji": "🪥",
+                          "id": "brush-teeth",
+                          "name": "Brush Teeth"
+                        },
+                        {
+                          "category": "food",
+                          "description": "Have your morning meal",
+                          "iconEmoji": "🍳",
+                          "id": "eat-breakfast",
+                          "name": "Eat Breakfast"
+                        },
+                        {
+                          "category": "morning",
+                          "description": "Put on your clothes",
+                          "iconEmoji": "👕",
+                          "id": "get-dressed",
+                          "name": "Get Dressed"
+                        }
+                      ],
+                      "description": "Draggable action cards the player picks from.",
+                      "x-label": "Available Actions",
+                      "x-tier": "domain"
+                    },
+                    "categoryColors": {
+                      "type": "object",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": {},
+                      "description": "Category → color mapping for action card tinting.",
+                      "x-label": "Category Colors",
+                      "x-tier": "presentation"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Put the steps in the right order to start the day right.",
+                      "description": "One-line puzzle brief shown to the player.",
+                      "x-label": "Description",
+                      "x-tier": "domain"
+                    },
+                    "headerImage": {
+                      "type": "object",
+                      "properties": {
+                        "animations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "aspect": {
+                          "type": "string"
+                        },
+                        "category": {
+                          "type": "string"
+                        },
+                        "dimension": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "style": {
+                          "type": "string"
+                        },
+                        "thumbnailUrl": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "default": "",
+                      "description": "Optional banner image shown at the top of the board.",
+                      "x-label": "Header Image",
+                      "x-tier": "presentation"
+                    },
+                    "hint": {
+                      "type": "string",
+                      "default": "You always brush your teeth before breakfast.",
+                      "description": "Hint revealed after 3 failed attempts.",
+                      "x-label": "Hint",
+                      "x-tier": "domain"
+                    },
+                    "maxSlots": {
+                      "type": "number",
+                      "default": 3,
+                      "description": "Number of slots the player fills — must match the solution length.",
+                      "x-label": "Max Slots",
+                      "x-tier": "domain"
+                    },
+                    "slots": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "index": 0,
+                          "placedActionId": ""
+                        },
+                        {
+                          "index": 1,
+                          "placedActionId": ""
+                        },
+                        {
+                          "index": 2,
+                          "placedActionId": ""
+                        }
+                      ],
+                      "description": "Initial empty slot positions; one entry per maxSlots step.",
+                      "x-label": "Slots",
+                      "x-tier": "presentation"
+                    },
+                    "solutions": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "default": [
+                        [
+                          "wake-up",
+                          "brush-teeth",
+                          "eat-breakfast"
+                        ]
+                      ],
+                      "description": "Accepted winning sequences — at least one must match the player's slot order.",
+                      "x-label": "Solutions",
+                      "x-tier": "domain"
+                    },
+                    "stepDurationMs": {
+                      "type": "number",
+                      "default": 1000,
+                      "description": "Playback speed in milliseconds per step.",
+                      "x-label": "Step Duration Ms",
+                      "x-tier": "presentation"
+                    },
+                    "successMessage": {
+                      "type": "string",
+                      "default": "Perfect sequence! Great job!",
+                      "description": "Message shown when the player wins.",
+                      "x-label": "Success Message",
+                      "x-tier": "domain"
+                    },
+                    "title": {
+                      "type": "string",
+                      "default": "Morning Routine",
+                      "description": "Puzzle title shown above the sequencer.",
+                      "x-label": "Title",
+                      "x-tier": "domain"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": false,
+    "readinessErrors": [
+      "dispatch dist not found/loadable for /home/osamah/kflow.ai.builder/packages/almadar-std"
+    ]
   }
 ]
