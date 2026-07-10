@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -92,6 +92,9 @@ export interface StdUiMediaGalleryConfig {
   totalCount?: number;
 }
 
+type _StdUiMediaGalleryEntityName = 'MediaGalleryItem';
+type _StdUiMediaGalleryListenTraitName = 'MediaGalleryRender';
+
 /**
  * Tunable params for the MediaGalleryOrbital orbital.
  *
@@ -130,6 +133,9 @@ export interface StdUiMediaGalleryMediaGalleryOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MediaGalleryOrbital's `uses[]` exports. */
+type _StdUiMediaGalleryMediaGalleryOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the MediaGalleryOrbital orbital with consumer params. */
 export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMediaGalleryOrbitalParams = {}): OrbitalDefinition {
@@ -513,7 +519,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
               'effects': [
                 [
                   'fetch',
-                  'MediaGalleryItem',
+                  ('MediaGalleryItem' satisfies _StdUiMediaGalleryEntityName),
                   {
                     'emit': {
                       'success': 'MediaGalleryLoaded',
@@ -590,7 +596,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             },
           ],
         },
-      } as never, 'MediaGalleryItem', canonicalName) as never,
+      } satisfies Trait, 'MediaGalleryItem', canonicalName),
     ],
     pages: [
       {
@@ -601,7 +607,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'ref': 'MediaGalleryRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,6 +42,9 @@ export interface StdUiSpaceBoard3dConfig {
   /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"astronaut","dimension":"3d","name":"astronautA","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"},"name":"Astronaut","position":{"x":4,"y":16},"team":"player","unitType":"astronaut","x":4,"y":16,"z":0},{"health":12,"id":"u2","maxHealth":12,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"rover","dimension":"3d","name":"rover","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb"},"name":"Rover","position":{"x":9,"y":16},"team":"player","unitType":"rover","x":9,"y":16,"z":0},{"health":10,"id":"u3","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"astronaut","dimension":"3d","name":"astronautA","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"},"name":"Engineer","position":{"x":14,"y":16},"team":"player","unitType":"astronaut","x":14,"y":16,"z":0},{"health":8,"id":"e1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"alien","dimension":"3d","name":"alien","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"},"name":"Alien","position":{"x":4,"y":1},"team":"enemy","unitType":"alien","x":4,"y":1,"z":0},{"health":6,"id":"e2","maxHealth":8,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"raider","dimension":"3d","name":"craft_speederA","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb"},"name":"Raider Craft","position":{"x":9,"y":1},"team":"enemy","unitType":"raider","x":9,"y":1,"z":0},{"health":8,"id":"e3","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"alien","dimension":"3d","name":"alien","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"},"name":"Alien Scout","position":{"x":14,"y":1},"team":"enemy","unitType":"alien","x":14,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiSpaceBoard3dEntityName = 'GameState';
+type _StdUiSpaceBoard3dListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'Player';
 
 /**
  * Tunable params for the SpaceBoard3DOrbital orbital.
@@ -81,6 +84,9 @@ export interface StdUiSpaceBoard3dSpaceBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SpaceBoard3DOrbital's `uses[]` exports. */
+type _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the SpaceBoard3DOrbital orbital with consumer params. */
 export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSpaceBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -537,7 +543,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -548,7 +554,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -559,7 +565,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -909,7 +915,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -930,7 +936,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

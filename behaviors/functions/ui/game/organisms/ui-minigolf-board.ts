@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -116,6 +116,9 @@ export interface StdUiMinigolfBoardConfig {
   scale?: number;
 }
 
+type _StdUiMinigolfBoardEntityName = 'MinigolfBoardItem';
+type _StdUiMinigolfBoardListenTraitName = 'MinigolfBoardRender';
+
 /**
  * Tunable params for the MinigolfBoardOrbital orbital.
  *
@@ -154,6 +157,9 @@ export interface StdUiMinigolfBoardMinigolfBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MinigolfBoardOrbital's `uses[]` exports. */
+type _StdUiMinigolfBoardMinigolfBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the MinigolfBoardOrbital orbital with consumer params. */
 export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoardMinigolfBoardOrbitalParams = {}): OrbitalDefinition {
@@ -10860,7 +10866,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
             'name': 'renderTick',
           },
         ],
-      } as never, 'MinigolfBoardItem', canonicalName) as never,
+      } satisfies Trait, 'MinigolfBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -10871,7 +10877,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
             'ref': 'MinigolfBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

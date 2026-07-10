@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -53,6 +53,9 @@ export interface StdUiBookTableOfContentsConfig {
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
 }
+
+type _StdUiBookTableOfContentsEntityName = 'BookTableOfContentsItem';
+type _StdUiBookTableOfContentsListenTraitName = 'BookTableOfContentsRender';
 
 /**
  * Tunable params for the BookTableOfContentsOrbital orbital.
@@ -92,6 +95,9 @@ export interface StdUiBookTableOfContentsBookTableOfContentsOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BookTableOfContentsOrbital's `uses[]` exports. */
+type _StdUiBookTableOfContentsBookTableOfContentsOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BookTableOfContentsOrbital orbital with consumer params. */
 export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUiBookTableOfContentsBookTableOfContentsOrbitalParams = {}): OrbitalDefinition {
@@ -200,7 +206,7 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
               'effects': [
                 [
                   'fetch',
-                  'BookTableOfContentsItem',
+                  ('BookTableOfContentsItem' satisfies _StdUiBookTableOfContentsEntityName),
                   {
                     'emit': {
                       'success': 'BookTableOfContentsLoaded',
@@ -243,7 +249,7 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             },
           ],
         },
-      } as never, 'BookTableOfContentsItem', canonicalName) as never,
+      } satisfies Trait, 'BookTableOfContentsItem', canonicalName),
     ],
     pages: [
       {
@@ -254,7 +260,7 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             'ref': 'BookTableOfContentsRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

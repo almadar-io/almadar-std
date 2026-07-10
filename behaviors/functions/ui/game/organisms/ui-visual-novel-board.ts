@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -83,6 +83,9 @@ export interface StdUiVisualNovelBoardConfig {
   typewriterSpeed?: number;
 }
 
+type _StdUiVisualNovelBoardEntityName = 'VisualNovelBoardItem';
+type _StdUiVisualNovelBoardListenTraitName = 'VisualNovelBoardRender';
+
 /**
  * Tunable params for the VisualNovelBoardOrbital orbital.
  *
@@ -121,6 +124,9 @@ export interface StdUiVisualNovelBoardVisualNovelBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait VisualNovelBoardOrbital's `uses[]` exports. */
+type _StdUiVisualNovelBoardVisualNovelBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the VisualNovelBoardOrbital orbital with consumer params. */
 export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisualNovelBoardVisualNovelBoardOrbitalParams = {}): OrbitalDefinition {
@@ -1589,7 +1595,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'name': 'typewriterTick',
           },
         ],
-      } as never, 'VisualNovelBoardItem', canonicalName) as never,
+      } satisfies Trait, 'VisualNovelBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -1600,7 +1606,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'ref': 'VisualNovelBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

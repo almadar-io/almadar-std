@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -58,6 +58,9 @@ export interface StdUiTabbedContainerConfig {
   tabs?: EntityRow[];
 }
 
+type _StdUiTabbedContainerEntityName = 'TabbedContainerItem';
+type _StdUiTabbedContainerListenTraitName = 'TabbedContainerRender';
+
 /**
  * Tunable params for the TabbedContainerOrbital orbital.
  *
@@ -96,6 +99,9 @@ export interface StdUiTabbedContainerTabbedContainerOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TabbedContainerOrbital's `uses[]` exports. */
+type _StdUiTabbedContainerTabbedContainerOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the TabbedContainerOrbital orbital with consumer params. */
 export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedContainerTabbedContainerOrbitalParams = {}): OrbitalDefinition {
@@ -286,7 +292,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             },
           ],
         },
-      } as never, 'TabbedContainerItem', canonicalName) as never,
+      } satisfies Trait, 'TabbedContainerItem', canonicalName),
     ],
     pages: [
       {
@@ -297,7 +303,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             'ref': 'TabbedContainerRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

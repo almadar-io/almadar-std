@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -72,6 +72,9 @@ export interface StdUiChatBarConfig {
   totalCount?: number;
 }
 
+type _StdUiChatBarEntityName = 'ChatBarItem';
+type _StdUiChatBarListenTraitName = 'ChatBarRender';
+
 /**
  * Tunable params for the ChatBarOrbital orbital.
  *
@@ -110,6 +113,9 @@ export interface StdUiChatBarChatBarOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ChatBarOrbital's `uses[]` exports. */
+type _StdUiChatBarChatBarOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ChatBarOrbital orbital with consumer params. */
 export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalParams = {}): OrbitalDefinition {
@@ -341,7 +347,7 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             },
           ],
         },
-      } as never, 'ChatBarItem', canonicalName) as never,
+      } satisfies Trait, 'ChatBarItem', canonicalName),
     ],
     pages: [
       {
@@ -352,7 +358,7 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             'ref': 'ChatBarRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

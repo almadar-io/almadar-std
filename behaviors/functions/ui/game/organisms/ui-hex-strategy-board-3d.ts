@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiHexStrategyBoard3dConfig {
   /** Default: `[{"health":1,"id":"settler","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"unit-tower","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/unit-tower.glb","variant":""},"name":"Settler","position":{"x":0,"y":0},"team":"player","unitType":"settler","x":0,"y":0,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiHexStrategyBoard3dEntityName = 'GameState';
+type _StdUiHexStrategyBoard3dListenTraitName = 'HeroAuthority' | 'Collector' | 'FxDecay' | 'RoundGate' | 'Player';
 
 /**
  * Tunable params for the HexStrategyBoard3DOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait HexStrategyBoard3DOrbital's `uses[]` exports. */
+type _StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalUsesRef = 'Frame.traits.HeroAuthority' | 'Frame.traits.Collector' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundGate' | 'Frame.traits.HeroIntent';
 
 /** Per-orbital factory: builds the HexStrategyBoard3DOrbital orbital with consumer params. */
 export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -2173,7 +2179,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
         },
         'linkedEntity': canonicalName,
         'name': 'HeroAuthority',
-        'ref': 'Frame.traits.HeroAuthority',
+        'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2265,7 +2271,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
         },
         'linkedEntity': canonicalName,
         'name': 'Collector',
-        'ref': 'Frame.traits.Collector',
+        'ref': ('Frame.traits.Collector' satisfies _StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2276,7 +2282,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2287,7 +2293,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
         },
         'linkedEntity': canonicalName,
         'name': 'RoundGate',
-        'ref': 'Frame.traits.RoundGate',
+        'ref': ('Frame.traits.RoundGate' satisfies _StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2382,7 +2388,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.HeroIntent',
+        'ref': ('Frame.traits.HeroIntent' satisfies _StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2406,7 +2412,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

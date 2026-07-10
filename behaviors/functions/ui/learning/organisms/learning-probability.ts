@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdLearningProbabilityConfig {
   /** Default: `600` */
   width?: unknown;
 }
+
+type _StdLearningProbabilityEntityName = 'GaltonScene' | 'WalkScene' | 'MonteCarloScene';
+type _StdLearningProbabilityListenTraitName = 'GaltonEngine' | 'WalkEngine' | 'MonteCarloEngine';
 
 /**
  * Tunable params for the GaltonBoardOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdLearningProbabilityGaltonBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait GaltonBoardOrbital's `uses[]` exports. */
+type _StdLearningProbabilityGaltonBoardOrbitalUsesRef = 'ProbGalton.traits.GaltonSim';
 
 /** Per-orbital factory: builds the GaltonBoardOrbital orbital with consumer params. */
 export function stdLearningProbabilityGaltonBoardOrbital(params: StdLearningProbabilityGaltonBoardOrbitalParams = {}): OrbitalDefinition {
@@ -206,7 +212,7 @@ export function stdLearningProbabilityGaltonBoardOrbital(params: StdLearningProb
         },
         'linkedEntity': canonicalName,
         'name': 'GaltonEngine',
-        'ref': 'ProbGalton.traits.GaltonSim',
+        'ref': ('ProbGalton.traits.GaltonSim' satisfies _StdLearningProbabilityGaltonBoardOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -218,7 +224,7 @@ export function stdLearningProbabilityGaltonBoardOrbital(params: StdLearningProb
             'ref': 'GaltonEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -332,6 +338,9 @@ export interface StdLearningProbabilityRandomWalkOrbitalParams {
   >>;
 }
 
+/** `'Alias.traits.TraitName'` literal union of every trait RandomWalkOrbital's `uses[]` exports. */
+type _StdLearningProbabilityRandomWalkOrbitalUsesRef = 'ProbWalk.traits.WalkSim';
+
 /** Per-orbital factory: builds the RandomWalkOrbital orbital with consumer params. */
 export function stdLearningProbabilityRandomWalkOrbital(params: StdLearningProbabilityRandomWalkOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'WalkScene';
@@ -421,7 +430,7 @@ export function stdLearningProbabilityRandomWalkOrbital(params: StdLearningProba
         },
         'linkedEntity': canonicalName,
         'name': 'WalkEngine',
-        'ref': 'ProbWalk.traits.WalkSim',
+        'ref': ('ProbWalk.traits.WalkSim' satisfies _StdLearningProbabilityRandomWalkOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -433,7 +442,7 @@ export function stdLearningProbabilityRandomWalkOrbital(params: StdLearningProba
             'ref': 'WalkEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -547,6 +556,9 @@ export interface StdLearningProbabilityMonteCarloOrbitalParams {
   >>;
 }
 
+/** `'Alias.traits.TraitName'` literal union of every trait MonteCarloOrbital's `uses[]` exports. */
+type _StdLearningProbabilityMonteCarloOrbitalUsesRef = 'MonteCarlo.traits.MonteCarloSim';
+
 /** Per-orbital factory: builds the MonteCarloOrbital orbital with consumer params. */
 export function stdLearningProbabilityMonteCarloOrbital(params: StdLearningProbabilityMonteCarloOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'MonteCarloScene';
@@ -632,7 +644,7 @@ export function stdLearningProbabilityMonteCarloOrbital(params: StdLearningProba
         },
         'linkedEntity': canonicalName,
         'name': 'MonteCarloEngine',
-        'ref': 'MonteCarlo.traits.MonteCarloSim',
+        'ref': ('MonteCarlo.traits.MonteCarloSim' satisfies _StdLearningProbabilityMonteCarloOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -644,7 +656,7 @@ export function stdLearningProbabilityMonteCarloOrbital(params: StdLearningProba
             'ref': 'MonteCarloEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

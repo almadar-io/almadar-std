@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiBattleBoardConfig {
   /** Default: `[{"health":10,"id":"p1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"guardian","dimension":"2d","name":"guardian","role":"npc","sprite":"blue_body_square.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Guardian","position":{"x":3,"y":12},"team":"player","unitType":"guardian","x":3,"y":12,"z":0},{"health":8,"id":"p2","maxHealth":8,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"scrapper","dimension":"2d","name":"scrapper","role":"npc","sprite":"red_body_rhombus.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Scrapper","position":{"x":2,"y":11},"team":"player","unitType":"scrapper","x":2,"y":11,"z":0},{"health":6,"id":"p3","maxHealth":6,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"worker","dimension":"2d","name":"worker","role":"npc","sprite":"yellow_body_squircle.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Worker","position":{"x":4,"y":13},"team":"player","unitType":"worker","x":4,"y":13,"z":0},{"health":7,"id":"p4","maxHealth":7,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"mender","dimension":"2d","name":"mender","role":"npc","sprite":"green_body_circle.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Mender","position":{"x":2,"y":13},"team":"player","unitType":"mender","x":2,"y":13,"z":0},{"health":10,"id":"e1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"guardian","dimension":"2d","name":"guardian","role":"npc","sprite":"blue_body_square.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Foe","position":{"x":12,"y":3},"team":"enemy","unitType":"guardian","x":12,"y":3,"z":0},{"health":10,"id":"e2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"guardian","dimension":"2d","name":"guardian","role":"npc","sprite":"blue_body_square.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Foe","position":{"x":13,"y":4},"team":"enemy","unitType":"guardian","x":13,"y":4,"z":0},{"health":8,"id":"e3","maxHealth":8,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"scrapper","dimension":"2d","name":"scrapper","role":"npc","sprite":"red_body_rhombus.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Foe","position":{"x":11,"y":2},"team":"enemy","unitType":"scrapper","x":11,"y":2,"z":0},{"health":8,"id":"e4","maxHealth":8,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"scrapper","dimension":"2d","name":"scrapper","role":"npc","sprite":"red_body_rhombus.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Foe","position":{"x":13,"y":2},"team":"enemy","unitType":"scrapper","x":13,"y":2,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiBattleBoardEntityName = 'GameState';
+type _StdUiBattleBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'XpKeeper' | 'Player';
 
 /**
  * Tunable params for the BattleBoardOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiBattleBoardBattleBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BattleBoardOrbital's `uses[]` exports. */
+type _StdUiBattleBoardBattleBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper' | 'Xp.traits.XpProgression';
 
 /** Per-orbital factory: builds the BattleBoardOrbital orbital with consumer params. */
 export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattleBoardOrbitalParams = {}): OrbitalDefinition {
@@ -4659,7 +4665,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiBattleBoardBattleBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -4670,7 +4676,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiBattleBoardBattleBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -4681,7 +4687,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiBattleBoardBattleBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -4704,7 +4710,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         },
         'linkedEntity': canonicalName,
         'name': 'ScoreKeeper',
-        'ref': 'Score.traits.ScoreKeeper',
+        'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiBattleBoardBattleBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -4743,7 +4749,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         },
         'linkedEntity': canonicalName,
         'name': 'XpKeeper',
-        'ref': 'Xp.traits.XpProgression',
+        'ref': ('Xp.traits.XpProgression' satisfies _StdUiBattleBoardBattleBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -5030,7 +5036,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiBattleBoardBattleBoardOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -5057,7 +5063,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

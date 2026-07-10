@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -53,6 +53,9 @@ export interface StdUiUiSlotRendererConfig {
   /** Default: `{"enabled":false}` */
   suspense?: EntityRow;
 }
+
+type _StdUiUiSlotRendererEntityName = 'UiSlotRendererItem';
+type _StdUiUiSlotRendererListenTraitName = 'UiSlotRendererRender';
 
 /**
  * Tunable params for the UiSlotRendererOrbital orbital.
@@ -92,6 +95,9 @@ export interface StdUiUiSlotRendererUiSlotRendererOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait UiSlotRendererOrbital's `uses[]` exports. */
+type _StdUiUiSlotRendererUiSlotRendererOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the UiSlotRendererOrbital orbital with consumer params. */
 export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRendererUiSlotRendererOrbitalParams = {}): OrbitalDefinition {
@@ -238,7 +244,7 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
               'effects': [
                 [
                   'fetch',
-                  'UiSlotRendererItem',
+                  ('UiSlotRendererItem' satisfies _StdUiUiSlotRendererEntityName),
                   {},
                 ],
                 [
@@ -263,7 +269,7 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             },
           ],
         },
-      } as never, 'UiSlotRendererItem', canonicalName) as never,
+      } satisfies Trait, 'UiSlotRendererItem', canonicalName),
     ],
     pages: [
       {
@@ -274,7 +280,7 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'ref': 'UiSlotRendererRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

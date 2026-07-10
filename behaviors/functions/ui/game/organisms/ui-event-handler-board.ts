@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -106,6 +106,9 @@ export interface StdUiEventHandlerBoardConfig {
   triggerEvents?: string[];
 }
 
+type _StdUiEventHandlerBoardEntityName = 'EventHandlerBoardItem';
+type _StdUiEventHandlerBoardListenTraitName = 'EventHandlerBoardRender';
+
 /**
  * Tunable params for the EventHandlerBoardOrbital orbital.
  *
@@ -144,6 +147,9 @@ export interface StdUiEventHandlerBoardEventHandlerBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait EventHandlerBoardOrbital's `uses[]` exports. */
+type _StdUiEventHandlerBoardEventHandlerBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the EventHandlerBoardOrbital orbital with consumer params. */
 export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEventHandlerBoardEventHandlerBoardOrbitalParams = {}): OrbitalDefinition {
@@ -4900,7 +4906,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
             },
           ],
         },
-      } as never, 'EventHandlerBoardItem', canonicalName) as never,
+      } satisfies Trait, 'EventHandlerBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -4911,7 +4917,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
             'ref': 'EventHandlerBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

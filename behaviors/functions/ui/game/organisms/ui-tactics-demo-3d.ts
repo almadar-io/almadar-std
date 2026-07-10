@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,6 +42,9 @@ export interface StdUiTacticsDemo3dConfig {
   /** Default: `[{"health":3,"id":"p1","maxHealth":3,"name":"Marine A","position":{"x":0,"y":0},"team":"player","unitType":"marine","x":0,"y":0,"z":0},{"health":3,"id":"p2","maxHealth":3,"name":"Marine B","position":{"x":0,"y":2},"team":"player","unitType":"marine","x":0,"y":2,"z":0},{"health":2,"id":"e1","maxHealth":2,"name":"Raider","position":{"x":2,"y":1},"team":"enemy","unitType":"raider","x":2,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiTacticsDemo3dEntityName = 'GameState';
+type _StdUiTacticsDemo3dListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'Player';
 
 /**
  * Tunable params for the TacticsDemo3DOrbital orbital.
@@ -81,6 +84,9 @@ export interface StdUiTacticsDemo3dTacticsDemo3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TacticsDemo3DOrbital's `uses[]` exports. */
+type _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the TacticsDemo3DOrbital orbital with consumer params. */
 export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3dTacticsDemo3DOrbitalParams = {}): OrbitalDefinition {
@@ -414,7 +420,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -425,7 +431,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -436,7 +442,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -484,7 +490,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -505,7 +511,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

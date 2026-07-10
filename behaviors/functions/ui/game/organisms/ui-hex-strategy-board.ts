@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiHexStrategyBoardConfig {
   /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json","category":"worker","dimension":"2d","name":"worker","role":"npc","sprite":"alienBeige.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"},"name":"Miner","position":{"x":3,"y":2},"team":"player","unitType":"worker","x":3,"y":2,"z":0},{"health":8,"id":"u2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json","category":"ranger","dimension":"2d","name":"ranger","role":"npc","sprite":"alienGreen.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"},"name":"Thornbow","position":{"x":2,"y":3},"team":"player","unitType":"ranger","x":2,"y":3,"z":0},{"health":12,"id":"u3","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json","category":"guardian","dimension":"2d","name":"guardian","role":"npc","sprite":"alienYellow.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"},"name":"Ironwall","position":{"x":2,"y":4},"team":"player","unitType":"guardian","x":2,"y":4,"z":0},{"health":8,"id":"e1","maxHealth":8,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json","category":"ranger","dimension":"2d","name":"ranger","role":"npc","sprite":"alienGreen.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"},"name":"Foe","position":{"x":4,"y":1},"team":"enemy","unitType":"ranger","x":4,"y":1,"z":0},{"health":10,"id":"e2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.json","category":"guardian","dimension":"2d","name":"guardian","role":"npc","sprite":"alienYellow.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/kenney-hexagon-base-pack/units/aliens.png"},"name":"Foe","position":{"x":3,"y":1},"team":"enemy","unitType":"guardian","x":3,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiHexStrategyBoardEntityName = 'GameState';
+type _StdUiHexStrategyBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'Player';
 
 /**
  * Tunable params for the HexStrategyBoardOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiHexStrategyBoardHexStrategyBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait HexStrategyBoardOrbital's `uses[]` exports. */
+type _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the HexStrategyBoardOrbital orbital with consumer params. */
 export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStrategyBoardHexStrategyBoardOrbitalParams = {}): OrbitalDefinition {
@@ -2431,7 +2437,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2442,7 +2448,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2453,7 +2459,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2476,7 +2482,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
         },
         'linkedEntity': canonicalName,
         'name': 'ScoreKeeper',
-        'ref': 'Score.traits.ScoreKeeper',
+        'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2763,7 +2769,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2787,7 +2793,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

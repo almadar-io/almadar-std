@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -84,6 +84,9 @@ export interface StdUiWinterSkiBoardConfig {
   tiles?: EntityRow[];
 }
 
+type _StdUiWinterSkiBoardEntityName = 'WinterSkiBoardItem';
+type _StdUiWinterSkiBoardListenTraitName = 'WinterSkiBoardRender';
+
 /**
  * Tunable params for the WinterSkiBoardOrbital orbital.
  *
@@ -122,6 +125,9 @@ export interface StdUiWinterSkiBoardWinterSkiBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait WinterSkiBoardOrbital's `uses[]` exports. */
+type _StdUiWinterSkiBoardWinterSkiBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the WinterSkiBoardOrbital orbital with consumer params. */
 export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiBoardWinterSkiBoardOrbitalParams = {}): OrbitalDefinition {
@@ -7354,7 +7360,7 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
             'name': 'descentTick',
           },
         ],
-      } as never, 'WinterSkiBoardItem', canonicalName) as never,
+      } satisfies Trait, 'WinterSkiBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -7365,7 +7371,7 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
             'ref': 'WinterSkiBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

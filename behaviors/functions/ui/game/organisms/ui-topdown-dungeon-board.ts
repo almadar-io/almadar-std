@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiTopdownDungeonBoardConfig {
   /** Default: `[{"animation":"idle","frame":0,"health":5,"id":"hero","maxHealth":5,"name":"Hero","position":{"x":2,"y":1},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json","category":"knight","dimension":"2d","name":"knight","role":"npc","sprite":"0,8","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png","variant":""},"team":"player","unitType":"hero","x":2,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiTopdownDungeonBoardEntityName = 'GameState';
+type _StdUiTopdownDungeonBoardListenTraitName = 'HeroAuthority' | 'Enemies' | 'Collector' | 'FxDecay' | 'RoundGate' | 'DungeonIntent';
 
 /**
  * Tunable params for the TopdownDungeonBoardOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TopdownDungeonBoardOrbital's `uses[]` exports. */
+type _StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalUsesRef = 'Frame.traits.HeroAuthority' | 'Frame.traits.Enemies' | 'Frame.traits.Collector' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundGate' | 'Frame.traits.DungeonIntent';
 
 /** Per-orbital factory: builds the TopdownDungeonBoardOrbital orbital with consumer params. */
 export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalParams = {}): OrbitalDefinition {
@@ -3156,7 +3162,7 @@ export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUi
         },
         'linkedEntity': canonicalName,
         'name': 'HeroAuthority',
-        'ref': 'Frame.traits.HeroAuthority',
+        'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -5684,7 +5690,7 @@ export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUi
         },
         'linkedEntity': canonicalName,
         'name': 'Enemies',
-        'ref': 'Frame.traits.Enemies',
+        'ref': ('Frame.traits.Enemies' satisfies _StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -5782,7 +5788,7 @@ export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUi
         },
         'linkedEntity': canonicalName,
         'name': 'Collector',
-        'ref': 'Frame.traits.Collector',
+        'ref': ('Frame.traits.Collector' satisfies _StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -5793,7 +5799,7 @@ export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUi
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -5804,7 +5810,7 @@ export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUi
         },
         'linkedEntity': canonicalName,
         'name': 'RoundGate',
-        'ref': 'Frame.traits.RoundGate',
+        'ref': ('Frame.traits.RoundGate' satisfies _StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -6095,7 +6101,7 @@ export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUi
         },
         'linkedEntity': canonicalName,
         'name': 'DungeonIntent',
-        'ref': 'Frame.traits.DungeonIntent',
+        'ref': ('Frame.traits.DungeonIntent' satisfies _StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -6122,7 +6128,7 @@ export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUi
             'ref': 'DungeonIntent',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

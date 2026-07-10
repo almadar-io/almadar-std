@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -87,6 +87,9 @@ export interface StdUiSportsBoardConfig {
   units?: EntityRow[];
 }
 
+type _StdUiSportsBoardEntityName = 'SportsBoardItem';
+type _StdUiSportsBoardListenTraitName = 'SportsBoardRender';
+
 /**
  * Tunable params for the SportsBoardOrbital orbital.
  *
@@ -125,6 +128,9 @@ export interface StdUiSportsBoardSportsBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SportsBoardOrbital's `uses[]` exports. */
+type _StdUiSportsBoardSportsBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SportsBoardOrbital orbital with consumer params. */
 export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSportsBoardOrbitalParams = {}): OrbitalDefinition {
@@ -6549,7 +6555,7 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
             'name': 'renderTick',
           },
         ],
-      } as never, 'SportsBoardItem', canonicalName) as never,
+      } satisfies Trait, 'SportsBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -6560,7 +6566,7 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
             'ref': 'SportsBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

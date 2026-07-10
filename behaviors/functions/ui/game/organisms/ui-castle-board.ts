@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -101,6 +101,9 @@ export interface StdUiCastleBoardConfig {
   units?: EntityRow[];
 }
 
+type _StdUiCastleBoardEntityName = 'CastleBoardItem';
+type _StdUiCastleBoardListenTraitName = 'CastleBoardRender';
+
 /**
  * Tunable params for the CastleBoardOrbital orbital.
  *
@@ -139,6 +142,9 @@ export interface StdUiCastleBoardCastleBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CastleBoardOrbital's `uses[]` exports. */
+type _StdUiCastleBoardCastleBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the CastleBoardOrbital orbital with consumer params. */
 export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastleBoardOrbitalParams = {}): OrbitalDefinition {
@@ -12670,7 +12676,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'name': 'waveTick',
           },
         ],
-      } as never, 'CastleBoardItem', canonicalName) as never,
+      } satisfies Trait, 'CastleBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -12681,7 +12687,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'ref': 'CastleBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

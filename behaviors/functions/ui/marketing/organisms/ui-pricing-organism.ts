@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -73,6 +73,9 @@ export interface StdUiPricingOrganismConfig {
   totalCount?: number;
 }
 
+type _StdUiPricingOrganismEntityName = 'PricingOrganismItem';
+type _StdUiPricingOrganismListenTraitName = 'PricingOrganismRender';
+
 /**
  * Tunable params for the PricingOrganismOrbital orbital.
  *
@@ -111,6 +114,9 @@ export interface StdUiPricingOrganismPricingOrganismOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait PricingOrganismOrbital's `uses[]` exports. */
+type _StdUiPricingOrganismPricingOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the PricingOrganismOrbital orbital with consumer params. */
 export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingOrganismPricingOrganismOrbitalParams = {}): OrbitalDefinition {
@@ -360,7 +366,7 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
               'effects': [
                 [
                   'fetch',
-                  'PricingOrganismItem',
+                  ('PricingOrganismItem' satisfies _StdUiPricingOrganismEntityName),
                   {
                     'emit': {
                       'success': 'PricingOrganismLoaded',
@@ -423,7 +429,7 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
             },
           ],
         },
-      } as never, 'PricingOrganismItem', canonicalName) as never,
+      } satisfies Trait, 'PricingOrganismItem', canonicalName),
     ],
     pages: [
       {
@@ -434,7 +440,7 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
             'ref': 'PricingOrganismRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

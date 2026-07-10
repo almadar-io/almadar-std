@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -96,6 +96,9 @@ export interface StdLearningPhysicsLabConfig {
   width?: number;
 }
 
+type _StdLearningPhysicsLabEntityName = 'PhysicsLabItem';
+type _StdLearningPhysicsLabListenTraitName = 'PhysicsLabRender';
+
 /**
  * Tunable params for the PhysicsLabOrbital orbital.
  *
@@ -134,6 +137,9 @@ export interface StdLearningPhysicsLabPhysicsLabOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait PhysicsLabOrbital's `uses[]` exports. */
+type _StdLearningPhysicsLabPhysicsLabOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the PhysicsLabOrbital orbital with consumer params. */
 export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysicsLabPhysicsLabOrbitalParams = {}): OrbitalDefinition {
@@ -1502,7 +1508,7 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
             'name': 'physicsTick',
           },
         ],
-      } as never, 'PhysicsLabItem', canonicalName) as never,
+      } satisfies Trait, 'PhysicsLabItem', canonicalName),
     ],
     pages: [
       {
@@ -1513,7 +1519,7 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
             'ref': 'PhysicsLabRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

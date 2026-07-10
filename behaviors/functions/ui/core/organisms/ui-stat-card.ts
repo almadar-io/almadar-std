@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -101,6 +101,9 @@ export interface StdUiStatCardConfig {
   value?: string[];
 }
 
+type _StdUiStatCardEntityName = 'StatCardItem';
+type _StdUiStatCardListenTraitName = 'StatCardRender';
+
 /**
  * Tunable params for the StatCardOrbital orbital.
  *
@@ -139,6 +142,9 @@ export interface StdUiStatCardStatCardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait StatCardOrbital's `uses[]` exports. */
+type _StdUiStatCardStatCardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the StatCardOrbital orbital with consumer params. */
 export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbitalParams = {}): OrbitalDefinition {
@@ -521,7 +527,7 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
               'effects': [
                 [
                   'fetch',
-                  'StatCardItem',
+                  ('StatCardItem' satisfies _StdUiStatCardEntityName),
                   {
                     'emit': {
                       'success': 'StatCardLoaded',
@@ -612,7 +618,7 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             },
           ],
         },
-      } as never, 'StatCardItem', canonicalName) as never,
+      } satisfies Trait, 'StatCardItem', canonicalName),
     ],
     pages: [
       {
@@ -623,7 +629,7 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'ref': 'StatCardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

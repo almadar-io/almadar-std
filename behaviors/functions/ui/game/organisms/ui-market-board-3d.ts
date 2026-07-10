@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiMarketBoard3dConfig {
   /** Default: `[{"health":1,"id":"u1","maxHealth":1,"modelUrl":{"animations":["static","idle","walk","sprint","jump","fall","crouch","sit","drive","die","pick-up","emote-yes","emote-no","holding-right","holding-left","holding-both","holding-right-shoot","holding-left-shoot","holding-both-shoot","attack-melee-right","attack-melee-left","attack-kick-right","attack-kick-left","interact-right","interact-left","wheelchair-sit","wheelchair-look-left","wheelchair-look-right","wheelchair-move-forward","wheelchair-move-back","wheelchair-move-left","wheelchair-move-right"],"aspect":"1:1","category":"character-employee","dimension":"3d","name":"character-employee","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/units/character-employee.glb"},"name":"Shopkeeper","position":{"x":7,"y":7},"team":"player","unitType":"shopkeeper","x":7,"y":7,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiMarketBoard3dEntityName = 'GameState';
+type _StdUiMarketBoard3dListenTraitName = 'HeroAuthority' | 'Patience' | 'FxDecay' | 'RoundGate' | 'Player';
 
 /**
  * Tunable params for the MarketBoard3DOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiMarketBoard3dMarketBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MarketBoard3DOrbital's `uses[]` exports. */
+type _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef = 'Frame.traits.HeroAuthority' | 'Frame.traits.Patience' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundGate' | 'Frame.traits.MarketIntent';
 
 /** Per-orbital factory: builds the MarketBoard3DOrbital orbital with consumer params. */
 export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3dMarketBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -2205,7 +2211,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'HeroAuthority',
-        'ref': 'Frame.traits.HeroAuthority',
+        'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2337,7 +2343,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'Patience',
-        'ref': 'Frame.traits.Patience',
+        'ref': ('Frame.traits.Patience' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2348,7 +2354,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2367,7 +2373,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'RoundGate',
-        'ref': 'Frame.traits.RoundGate',
+        'ref': ('Frame.traits.RoundGate' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2748,7 +2754,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.MarketIntent',
+        'ref': ('Frame.traits.MarketIntent' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2772,7 +2778,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

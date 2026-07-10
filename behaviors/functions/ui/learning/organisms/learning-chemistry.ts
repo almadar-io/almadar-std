@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -40,6 +40,9 @@ export interface StdLearningChemistryConfig {
   /** Default: `600` */
   width?: unknown;
 }
+
+type _StdLearningChemistryEntityName = 'DiffusionScene' | 'ReactionScene' | 'OsmosisScene';
+type _StdLearningChemistryListenTraitName = 'DiffusionEngine' | 'ReactionEngine' | 'OsmosisEngine';
 
 /**
  * Tunable params for the DiffusionOrbital orbital.
@@ -79,6 +82,9 @@ export interface StdLearningChemistryDiffusionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait DiffusionOrbital's `uses[]` exports. */
+type _StdLearningChemistryDiffusionOrbitalUsesRef = 'ChemDiffusion.traits.ChemDiffusionSim';
 
 /** Per-orbital factory: builds the DiffusionOrbital orbital with consumer params. */
 export function stdLearningChemistryDiffusionOrbital(params: StdLearningChemistryDiffusionOrbitalParams = {}): OrbitalDefinition {
@@ -303,7 +309,7 @@ export function stdLearningChemistryDiffusionOrbital(params: StdLearningChemistr
         },
         'linkedEntity': canonicalName,
         'name': 'DiffusionEngine',
-        'ref': 'ChemDiffusion.traits.ChemDiffusionSim',
+        'ref': ('ChemDiffusion.traits.ChemDiffusionSim' satisfies _StdLearningChemistryDiffusionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -315,7 +321,7 @@ export function stdLearningChemistryDiffusionOrbital(params: StdLearningChemistr
             'ref': 'DiffusionEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -428,6 +434,9 @@ export interface StdLearningChemistryReactionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ReactionOrbital's `uses[]` exports. */
+type _StdLearningChemistryReactionOrbitalUsesRef = 'ChemReaction.traits.ChemReactionSim';
 
 /** Per-orbital factory: builds the ReactionOrbital orbital with consumer params. */
 export function stdLearningChemistryReactionOrbital(params: StdLearningChemistryReactionOrbitalParams = {}): OrbitalDefinition {
@@ -643,7 +652,7 @@ export function stdLearningChemistryReactionOrbital(params: StdLearningChemistry
         },
         'linkedEntity': canonicalName,
         'name': 'ReactionEngine',
-        'ref': 'ChemReaction.traits.ChemReactionSim',
+        'ref': ('ChemReaction.traits.ChemReactionSim' satisfies _StdLearningChemistryReactionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -655,7 +664,7 @@ export function stdLearningChemistryReactionOrbital(params: StdLearningChemistry
             'ref': 'ReactionEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -768,6 +777,9 @@ export interface StdLearningChemistryOsmosisOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait OsmosisOrbital's `uses[]` exports. */
+type _StdLearningChemistryOsmosisOrbitalUsesRef = 'ChemOsmosis.traits.ChemOsmosisSim';
 
 /** Per-orbital factory: builds the OsmosisOrbital orbital with consumer params. */
 export function stdLearningChemistryOsmosisOrbital(params: StdLearningChemistryOsmosisOrbitalParams = {}): OrbitalDefinition {
@@ -1027,7 +1039,7 @@ export function stdLearningChemistryOsmosisOrbital(params: StdLearningChemistryO
         },
         'linkedEntity': canonicalName,
         'name': 'OsmosisEngine',
-        'ref': 'ChemOsmosis.traits.ChemOsmosisSim',
+        'ref': ('ChemOsmosis.traits.ChemOsmosisSim' satisfies _StdLearningChemistryOsmosisOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1039,7 +1051,7 @@ export function stdLearningChemistryOsmosisOrbital(params: StdLearningChemistryO
             'ref': 'OsmosisEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

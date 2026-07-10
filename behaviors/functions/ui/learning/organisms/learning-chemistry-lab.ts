@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -63,6 +63,9 @@ export interface StdLearningChemistryLabConfig {
   width?: number;
 }
 
+type _StdLearningChemistryLabEntityName = 'ChemistryLabItem';
+type _StdLearningChemistryLabListenTraitName = 'ChemistryLabRender';
+
 /**
  * Tunable params for the ChemistryLabOrbital orbital.
  *
@@ -101,6 +104,9 @@ export interface StdLearningChemistryLabChemistryLabOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ChemistryLabOrbital's `uses[]` exports. */
+type _StdLearningChemistryLabChemistryLabOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ChemistryLabOrbital orbital with consumer params. */
 export function stdLearningChemistryLabChemistryLabOrbital(params: StdLearningChemistryLabChemistryLabOrbitalParams = {}): OrbitalDefinition {
@@ -923,7 +929,7 @@ export function stdLearningChemistryLabChemistryLabOrbital(params: StdLearningCh
             },
           ],
         },
-      } as never, 'ChemistryLabItem', canonicalName) as never,
+      } satisfies Trait, 'ChemistryLabItem', canonicalName),
     ],
     pages: [
       {
@@ -934,7 +940,7 @@ export function stdLearningChemistryLabChemistryLabOrbital(params: StdLearningCh
             'ref': 'ChemistryLabRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

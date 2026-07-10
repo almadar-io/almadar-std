@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,6 +42,9 @@ export interface StdUiPirateBoard3dConfig {
   /** Default: `[{"health":10,"id":"p1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"ship-medium","dimension":"3d","name":"ship-medium","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-medium.glb"},"name":"Player Galleon","position":{"x":4,"y":16},"team":"player","unitType":"ship-medium","x":4,"y":16,"z":0},{"health":8,"id":"p2","maxHealth":8,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"ship-small","dimension":"3d","name":"ship-small","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-small.glb"},"name":"Player Sloop","position":{"x":9,"y":16},"team":"player","unitType":"ship-small","x":9,"y":16,"z":0},{"health":9,"id":"p3","maxHealth":9,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"ship-small","dimension":"3d","name":"ship-small","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-small.glb"},"name":"Player Corvette","position":{"x":14,"y":16},"team":"player","unitType":"ship-small","x":14,"y":16,"z":0},{"health":10,"id":"e1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"ship-pirate-medium","dimension":"3d","name":"ship-pirate-medium","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-pirate-medium.glb"},"name":"Corsair Galleon","position":{"x":4,"y":1},"team":"enemy","unitType":"ship-pirate-medium","x":4,"y":1,"z":0},{"health":8,"id":"e2","maxHealth":8,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"ship-pirate-small","dimension":"3d","name":"ship-pirate-small","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-pirate-small.glb"},"name":"Corsair Sloop","position":{"x":9,"y":1},"team":"enemy","unitType":"ship-pirate-small","x":9,"y":1,"z":0},{"health":9,"id":"e3","maxHealth":9,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"ship-pirate-small","dimension":"3d","name":"ship-pirate-small","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-pirate-small.glb"},"name":"Corsair Cutter","position":{"x":14,"y":1},"team":"enemy","unitType":"ship-pirate-small","x":14,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiPirateBoard3dEntityName = 'GameState';
+type _StdUiPirateBoard3dListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'Player';
 
 /**
  * Tunable params for the PirateBoard3DOrbital orbital.
@@ -81,6 +84,9 @@ export interface StdUiPirateBoard3dPirateBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait PirateBoard3DOrbital's `uses[]` exports. */
+type _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the PirateBoard3DOrbital orbital with consumer params. */
 export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3dPirateBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -537,7 +543,7 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -548,7 +554,7 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -559,7 +565,7 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -808,7 +814,7 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -829,7 +835,7 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

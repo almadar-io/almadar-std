@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -34,6 +34,9 @@ export interface StdLearningAlgorithmsConfig {
   /** Default: `true` */
   running?: unknown;
 }
+
+type _StdLearningAlgorithmsEntityName = 'AstargraphScene' | 'AstargridScene' | 'BfsScene' | 'BinarysearchScene' | 'BubblesortScene' | 'DfsScene' | 'DijkstraScene' | 'FloodfillScene' | 'GameoflifeScene' | 'GridbfsScene' | 'HeapsortScene' | 'InsertionsortScene' | 'MazegenScene' | 'MergesortScene' | 'MstScene' | 'QuicksortScene' | 'SelectionsortScene' | 'SlidingwindowScene' | 'ToposortScene' | 'TwopointerScene';
+type _StdLearningAlgorithmsListenTraitName = 'AstargraphEngine' | 'AstargridEngine' | 'BfsEngine' | 'BinarysearchEngine' | 'BubblesortEngine' | 'DfsEngine' | 'DijkstraEngine' | 'FloodfillEngine' | 'GameoflifeEngine' | 'GridbfsEngine' | 'HeapsortEngine' | 'InsertionsortEngine' | 'MazegenEngine' | 'MergesortEngine' | 'MstEngine' | 'QuicksortEngine' | 'SelectionsortEngine' | 'SlidingwindowEngine' | 'ToposortEngine' | 'TwopointerEngine';
 
 /**
  * Tunable params for the AstargraphOrbital orbital.
@@ -73,6 +76,9 @@ export interface StdLearningAlgorithmsAstargraphOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait AstargraphOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsAstargraphOrbitalUsesRef = 'Astargraph.traits.AstarSim';
 
 /** Per-orbital factory: builds the AstargraphOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsAstargraphOrbital(params: StdLearningAlgorithmsAstargraphOrbitalParams = {}): OrbitalDefinition {
@@ -300,7 +306,7 @@ export function stdLearningAlgorithmsAstargraphOrbital(params: StdLearningAlgori
         },
         'linkedEntity': canonicalName,
         'name': 'AstargraphEngine',
-        'ref': 'Astargraph.traits.AstarSim',
+        'ref': ('Astargraph.traits.AstarSim' satisfies _StdLearningAlgorithmsAstargraphOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -312,7 +318,7 @@ export function stdLearningAlgorithmsAstargraphOrbital(params: StdLearningAlgori
             'ref': 'AstargraphEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -425,6 +431,9 @@ export interface StdLearningAlgorithmsAstargridOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait AstargridOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsAstargridOrbitalUsesRef = 'Astargrid.traits.AstarGridSim';
 
 /** Per-orbital factory: builds the AstargridOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsAstargridOrbital(params: StdLearningAlgorithmsAstargridOrbitalParams = {}): OrbitalDefinition {
@@ -557,7 +566,7 @@ export function stdLearningAlgorithmsAstargridOrbital(params: StdLearningAlgorit
         },
         'linkedEntity': canonicalName,
         'name': 'AstargridEngine',
-        'ref': 'Astargrid.traits.AstarGridSim',
+        'ref': ('Astargrid.traits.AstarGridSim' satisfies _StdLearningAlgorithmsAstargridOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -569,7 +578,7 @@ export function stdLearningAlgorithmsAstargridOrbital(params: StdLearningAlgorit
             'ref': 'AstargridEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -682,6 +691,9 @@ export interface StdLearningAlgorithmsBfsOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BfsOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsBfsOrbitalUsesRef = 'Bfs.traits.BfsSim';
 
 /** Per-orbital factory: builds the BfsOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsBfsOrbital(params: StdLearningAlgorithmsBfsOrbitalParams = {}): OrbitalDefinition {
@@ -843,7 +855,7 @@ export function stdLearningAlgorithmsBfsOrbital(params: StdLearningAlgorithmsBfs
         },
         'linkedEntity': canonicalName,
         'name': 'BfsEngine',
-        'ref': 'Bfs.traits.BfsSim',
+        'ref': ('Bfs.traits.BfsSim' satisfies _StdLearningAlgorithmsBfsOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -855,7 +867,7 @@ export function stdLearningAlgorithmsBfsOrbital(params: StdLearningAlgorithmsBfs
             'ref': 'BfsEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -968,6 +980,9 @@ export interface StdLearningAlgorithmsBinarysearchOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BinarysearchOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsBinarysearchOrbitalUsesRef = 'Binarysearch.traits.BinarySearchSim';
 
 /** Per-orbital factory: builds the BinarysearchOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsBinarysearchOrbital(params: StdLearningAlgorithmsBinarysearchOrbitalParams = {}): OrbitalDefinition {
@@ -1090,7 +1105,7 @@ export function stdLearningAlgorithmsBinarysearchOrbital(params: StdLearningAlgo
         },
         'linkedEntity': canonicalName,
         'name': 'BinarysearchEngine',
-        'ref': 'Binarysearch.traits.BinarySearchSim',
+        'ref': ('Binarysearch.traits.BinarySearchSim' satisfies _StdLearningAlgorithmsBinarysearchOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1102,7 +1117,7 @@ export function stdLearningAlgorithmsBinarysearchOrbital(params: StdLearningAlgo
             'ref': 'BinarysearchEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1216,6 +1231,9 @@ export interface StdLearningAlgorithmsBubblesortOrbitalParams {
   >>;
 }
 
+/** `'Alias.traits.TraitName'` literal union of every trait BubblesortOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsBubblesortOrbitalUsesRef = 'Bubblesort.traits.BubbleSortSim';
+
 /** Per-orbital factory: builds the BubblesortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsBubblesortOrbital(params: StdLearningAlgorithmsBubblesortOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'BubblesortScene';
@@ -1303,7 +1321,7 @@ export function stdLearningAlgorithmsBubblesortOrbital(params: StdLearningAlgori
         },
         'linkedEntity': canonicalName,
         'name': 'BubblesortEngine',
-        'ref': 'Bubblesort.traits.BubbleSortSim',
+        'ref': ('Bubblesort.traits.BubbleSortSim' satisfies _StdLearningAlgorithmsBubblesortOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1315,7 +1333,7 @@ export function stdLearningAlgorithmsBubblesortOrbital(params: StdLearningAlgori
             'ref': 'BubblesortEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1428,6 +1446,9 @@ export interface StdLearningAlgorithmsDfsOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait DfsOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsDfsOrbitalUsesRef = 'Dfs.traits.DfsSim';
 
 /** Per-orbital factory: builds the DfsOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsDfsOrbital(params: StdLearningAlgorithmsDfsOrbitalParams = {}): OrbitalDefinition {
@@ -1589,7 +1610,7 @@ export function stdLearningAlgorithmsDfsOrbital(params: StdLearningAlgorithmsDfs
         },
         'linkedEntity': canonicalName,
         'name': 'DfsEngine',
-        'ref': 'Dfs.traits.DfsSim',
+        'ref': ('Dfs.traits.DfsSim' satisfies _StdLearningAlgorithmsDfsOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1601,7 +1622,7 @@ export function stdLearningAlgorithmsDfsOrbital(params: StdLearningAlgorithmsDfs
             'ref': 'DfsEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1714,6 +1735,9 @@ export interface StdLearningAlgorithmsDijkstraOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait DijkstraOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsDijkstraOrbitalUsesRef = 'Dijkstra.traits.DijkstraSim';
 
 /** Per-orbital factory: builds the DijkstraOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsDijkstraOrbital(params: StdLearningAlgorithmsDijkstraOrbitalParams = {}): OrbitalDefinition {
@@ -1907,7 +1931,7 @@ export function stdLearningAlgorithmsDijkstraOrbital(params: StdLearningAlgorith
         },
         'linkedEntity': canonicalName,
         'name': 'DijkstraEngine',
-        'ref': 'Dijkstra.traits.DijkstraSim',
+        'ref': ('Dijkstra.traits.DijkstraSim' satisfies _StdLearningAlgorithmsDijkstraOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1919,7 +1943,7 @@ export function stdLearningAlgorithmsDijkstraOrbital(params: StdLearningAlgorith
             'ref': 'DijkstraEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -2032,6 +2056,9 @@ export interface StdLearningAlgorithmsFloodfillOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait FloodfillOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsFloodfillOrbitalUsesRef = 'Floodfill.traits.FloodFillSim';
 
 /** Per-orbital factory: builds the FloodfillOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsFloodfillOrbital(params: StdLearningAlgorithmsFloodfillOrbitalParams = {}): OrbitalDefinition {
@@ -2158,7 +2185,7 @@ export function stdLearningAlgorithmsFloodfillOrbital(params: StdLearningAlgorit
         },
         'linkedEntity': canonicalName,
         'name': 'FloodfillEngine',
-        'ref': 'Floodfill.traits.FloodFillSim',
+        'ref': ('Floodfill.traits.FloodFillSim' satisfies _StdLearningAlgorithmsFloodfillOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2170,7 +2197,7 @@ export function stdLearningAlgorithmsFloodfillOrbital(params: StdLearningAlgorit
             'ref': 'FloodfillEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -2284,6 +2311,9 @@ export interface StdLearningAlgorithmsGameoflifeOrbitalParams {
   >>;
 }
 
+/** `'Alias.traits.TraitName'` literal union of every trait GameoflifeOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsGameoflifeOrbitalUsesRef = 'Gameoflife.traits.GameOfLifeSim';
+
 /** Per-orbital factory: builds the GameoflifeOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsGameoflifeOrbital(params: StdLearningAlgorithmsGameoflifeOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'GameoflifeScene';
@@ -2361,7 +2391,7 @@ export function stdLearningAlgorithmsGameoflifeOrbital(params: StdLearningAlgori
         },
         'linkedEntity': canonicalName,
         'name': 'GameoflifeEngine',
-        'ref': 'Gameoflife.traits.GameOfLifeSim',
+        'ref': ('Gameoflife.traits.GameOfLifeSim' satisfies _StdLearningAlgorithmsGameoflifeOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2373,7 +2403,7 @@ export function stdLearningAlgorithmsGameoflifeOrbital(params: StdLearningAlgori
             'ref': 'GameoflifeEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -2486,6 +2516,9 @@ export interface StdLearningAlgorithmsGridbfsOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait GridbfsOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsGridbfsOrbitalUsesRef = 'Gridbfs.traits.GridBfsSim';
 
 /** Per-orbital factory: builds the GridbfsOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsGridbfsOrbital(params: StdLearningAlgorithmsGridbfsOrbitalParams = {}): OrbitalDefinition {
@@ -2607,7 +2640,7 @@ export function stdLearningAlgorithmsGridbfsOrbital(params: StdLearningAlgorithm
         },
         'linkedEntity': canonicalName,
         'name': 'GridbfsEngine',
-        'ref': 'Gridbfs.traits.GridBfsSim',
+        'ref': ('Gridbfs.traits.GridBfsSim' satisfies _StdLearningAlgorithmsGridbfsOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2619,7 +2652,7 @@ export function stdLearningAlgorithmsGridbfsOrbital(params: StdLearningAlgorithm
             'ref': 'GridbfsEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -2732,6 +2765,9 @@ export interface StdLearningAlgorithmsHeapsortOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait HeapsortOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsHeapsortOrbitalUsesRef = 'Heapsort.traits.HeapSortSim';
 
 /** Per-orbital factory: builds the HeapsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsHeapsortOrbital(params: StdLearningAlgorithmsHeapsortOrbitalParams = {}): OrbitalDefinition {
@@ -2870,7 +2906,7 @@ export function stdLearningAlgorithmsHeapsortOrbital(params: StdLearningAlgorith
         },
         'linkedEntity': canonicalName,
         'name': 'HeapsortEngine',
-        'ref': 'Heapsort.traits.HeapSortSim',
+        'ref': ('Heapsort.traits.HeapSortSim' satisfies _StdLearningAlgorithmsHeapsortOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2882,7 +2918,7 @@ export function stdLearningAlgorithmsHeapsortOrbital(params: StdLearningAlgorith
             'ref': 'HeapsortEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -2996,6 +3032,9 @@ export interface StdLearningAlgorithmsInsertionsortOrbitalParams {
   >>;
 }
 
+/** `'Alias.traits.TraitName'` literal union of every trait InsertionsortOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsInsertionsortOrbitalUsesRef = 'Insertionsort.traits.InsertionSortSim';
+
 /** Per-orbital factory: builds the InsertionsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsInsertionsortOrbital(params: StdLearningAlgorithmsInsertionsortOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'InsertionsortScene';
@@ -3083,7 +3122,7 @@ export function stdLearningAlgorithmsInsertionsortOrbital(params: StdLearningAlg
         },
         'linkedEntity': canonicalName,
         'name': 'InsertionsortEngine',
-        'ref': 'Insertionsort.traits.InsertionSortSim',
+        'ref': ('Insertionsort.traits.InsertionSortSim' satisfies _StdLearningAlgorithmsInsertionsortOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -3095,7 +3134,7 @@ export function stdLearningAlgorithmsInsertionsortOrbital(params: StdLearningAlg
             'ref': 'InsertionsortEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -3208,6 +3247,9 @@ export interface StdLearningAlgorithmsMazegenOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MazegenOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsMazegenOrbitalUsesRef = 'Mazegen.traits.MazeGenSim';
 
 /** Per-orbital factory: builds the MazegenOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsMazegenOrbital(params: StdLearningAlgorithmsMazegenOrbitalParams = {}): OrbitalDefinition {
@@ -3325,7 +3367,7 @@ export function stdLearningAlgorithmsMazegenOrbital(params: StdLearningAlgorithm
         },
         'linkedEntity': canonicalName,
         'name': 'MazegenEngine',
-        'ref': 'Mazegen.traits.MazeGenSim',
+        'ref': ('Mazegen.traits.MazeGenSim' satisfies _StdLearningAlgorithmsMazegenOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -3337,7 +3379,7 @@ export function stdLearningAlgorithmsMazegenOrbital(params: StdLearningAlgorithm
             'ref': 'MazegenEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -3450,6 +3492,9 @@ export interface StdLearningAlgorithmsMergesortOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MergesortOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsMergesortOrbitalUsesRef = 'Mergesort.traits.MergeSortSim';
 
 /** Per-orbital factory: builds the MergesortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsMergesortOrbital(params: StdLearningAlgorithmsMergesortOrbitalParams = {}): OrbitalDefinition {
@@ -3632,7 +3677,7 @@ export function stdLearningAlgorithmsMergesortOrbital(params: StdLearningAlgorit
         },
         'linkedEntity': canonicalName,
         'name': 'MergesortEngine',
-        'ref': 'Mergesort.traits.MergeSortSim',
+        'ref': ('Mergesort.traits.MergeSortSim' satisfies _StdLearningAlgorithmsMergesortOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -3644,7 +3689,7 @@ export function stdLearningAlgorithmsMergesortOrbital(params: StdLearningAlgorit
             'ref': 'MergesortEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -3757,6 +3802,9 @@ export interface StdLearningAlgorithmsMstOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MstOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsMstOrbitalUsesRef = 'Mst.traits.MstSim';
 
 /** Per-orbital factory: builds the MstOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsMstOrbital(params: StdLearningAlgorithmsMstOrbitalParams = {}): OrbitalDefinition {
@@ -3950,7 +3998,7 @@ export function stdLearningAlgorithmsMstOrbital(params: StdLearningAlgorithmsMst
         },
         'linkedEntity': canonicalName,
         'name': 'MstEngine',
-        'ref': 'Mst.traits.MstSim',
+        'ref': ('Mst.traits.MstSim' satisfies _StdLearningAlgorithmsMstOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -3962,7 +4010,7 @@ export function stdLearningAlgorithmsMstOrbital(params: StdLearningAlgorithmsMst
             'ref': 'MstEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -4075,6 +4123,9 @@ export interface StdLearningAlgorithmsQuicksortOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait QuicksortOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsQuicksortOrbitalUsesRef = 'Quicksort.traits.QuickSortSim';
 
 /** Per-orbital factory: builds the QuicksortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsQuicksortOrbital(params: StdLearningAlgorithmsQuicksortOrbitalParams = {}): OrbitalDefinition {
@@ -4232,7 +4283,7 @@ export function stdLearningAlgorithmsQuicksortOrbital(params: StdLearningAlgorit
         },
         'linkedEntity': canonicalName,
         'name': 'QuicksortEngine',
-        'ref': 'Quicksort.traits.QuickSortSim',
+        'ref': ('Quicksort.traits.QuickSortSim' satisfies _StdLearningAlgorithmsQuicksortOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -4244,7 +4295,7 @@ export function stdLearningAlgorithmsQuicksortOrbital(params: StdLearningAlgorit
             'ref': 'QuicksortEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -4358,6 +4409,9 @@ export interface StdLearningAlgorithmsSelectionsortOrbitalParams {
   >>;
 }
 
+/** `'Alias.traits.TraitName'` literal union of every trait SelectionsortOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsSelectionsortOrbitalUsesRef = 'Selectionsort.traits.SelectionSortSim';
+
 /** Per-orbital factory: builds the SelectionsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsSelectionsortOrbital(params: StdLearningAlgorithmsSelectionsortOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'SelectionsortScene';
@@ -4450,7 +4504,7 @@ export function stdLearningAlgorithmsSelectionsortOrbital(params: StdLearningAlg
         },
         'linkedEntity': canonicalName,
         'name': 'SelectionsortEngine',
-        'ref': 'Selectionsort.traits.SelectionSortSim',
+        'ref': ('Selectionsort.traits.SelectionSortSim' satisfies _StdLearningAlgorithmsSelectionsortOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -4462,7 +4516,7 @@ export function stdLearningAlgorithmsSelectionsortOrbital(params: StdLearningAlg
             'ref': 'SelectionsortEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -4575,6 +4629,9 @@ export interface StdLearningAlgorithmsSlidingwindowOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SlidingwindowOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsSlidingwindowOrbitalUsesRef = 'Slidingwindow.traits.SlidingWindowSim';
 
 /** Per-orbital factory: builds the SlidingwindowOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsSlidingwindowOrbital(params: StdLearningAlgorithmsSlidingwindowOrbitalParams = {}): OrbitalDefinition {
@@ -4697,7 +4754,7 @@ export function stdLearningAlgorithmsSlidingwindowOrbital(params: StdLearningAlg
         },
         'linkedEntity': canonicalName,
         'name': 'SlidingwindowEngine',
-        'ref': 'Slidingwindow.traits.SlidingWindowSim',
+        'ref': ('Slidingwindow.traits.SlidingWindowSim' satisfies _StdLearningAlgorithmsSlidingwindowOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -4709,7 +4766,7 @@ export function stdLearningAlgorithmsSlidingwindowOrbital(params: StdLearningAlg
             'ref': 'SlidingwindowEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -4822,6 +4879,9 @@ export interface StdLearningAlgorithmsToposortOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ToposortOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsToposortOrbitalUsesRef = 'Toposort.traits.ToposortSim';
 
 /** Per-orbital factory: builds the ToposortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsToposortOrbital(params: StdLearningAlgorithmsToposortOrbitalParams = {}): OrbitalDefinition {
@@ -4969,7 +5029,7 @@ export function stdLearningAlgorithmsToposortOrbital(params: StdLearningAlgorith
         },
         'linkedEntity': canonicalName,
         'name': 'ToposortEngine',
-        'ref': 'Toposort.traits.ToposortSim',
+        'ref': ('Toposort.traits.ToposortSim' satisfies _StdLearningAlgorithmsToposortOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -4981,7 +5041,7 @@ export function stdLearningAlgorithmsToposortOrbital(params: StdLearningAlgorith
             'ref': 'ToposortEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -5094,6 +5154,9 @@ export interface StdLearningAlgorithmsTwopointerOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TwopointerOrbital's `uses[]` exports. */
+type _StdLearningAlgorithmsTwopointerOrbitalUsesRef = 'Twopointer.traits.TwoPointerSim';
 
 /** Per-orbital factory: builds the TwopointerOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsTwopointerOrbital(params: StdLearningAlgorithmsTwopointerOrbitalParams = {}): OrbitalDefinition {
@@ -5211,7 +5274,7 @@ export function stdLearningAlgorithmsTwopointerOrbital(params: StdLearningAlgori
         },
         'linkedEntity': canonicalName,
         'name': 'TwopointerEngine',
-        'ref': 'Twopointer.traits.TwoPointerSim',
+        'ref': ('Twopointer.traits.TwoPointerSim' satisfies _StdLearningAlgorithmsTwopointerOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -5223,7 +5286,7 @@ export function stdLearningAlgorithmsTwopointerOrbital(params: StdLearningAlgori
             'ref': 'TwopointerEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

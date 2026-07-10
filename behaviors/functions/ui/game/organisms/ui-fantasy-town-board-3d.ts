@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,6 +42,9 @@ export interface StdUiFantasyTownBoard3dConfig {
   /** Default: `[{"health":12,"id":"soldier","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"soldier","dimension":"3d","name":"character-soldier","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb"},"name":"Soldier","position":{"x":4,"y":14},"team":"player","unitType":"soldier","x":4,"y":14,"z":0},{"health":12,"id":"guard","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"guard","dimension":"3d","name":"character-j","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb"},"name":"Guard","position":{"x":8,"y":14},"team":"player","unitType":"guard","x":8,"y":14,"z":0},{"health":12,"id":"sentinel","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"guard","dimension":"3d","name":"character-j","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb"},"name":"Sentinel","position":{"x":12,"y":14},"team":"player","unitType":"guard","x":12,"y":14,"z":0},{"health":10,"id":"goblin","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"goblin","dimension":"3d","name":"character-l","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb"},"name":"Goblin","position":{"x":4,"y":1},"team":"enemy","unitType":"goblin","x":4,"y":1,"z":0},{"health":14,"id":"troll","maxHealth":14,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"troll","dimension":"3d","name":"character-o","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb"},"name":"Troll","position":{"x":8,"y":1},"team":"enemy","unitType":"troll","x":8,"y":1,"z":0},{"health":10,"id":"raider","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"goblin","dimension":"3d","name":"character-l","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb"},"name":"Raider","position":{"x":12,"y":1},"team":"enemy","unitType":"goblin","x":12,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiFantasyTownBoard3dEntityName = 'GameState';
+type _StdUiFantasyTownBoard3dListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'Player';
 
 /**
  * Tunable params for the FantasyTownBoard3DOrbital orbital.
@@ -81,6 +84,9 @@ export interface StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait FantasyTownBoard3DOrbital's `uses[]` exports. */
+type _StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the FantasyTownBoard3DOrbital orbital with consumer params. */
 export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -555,7 +561,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -566,7 +572,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -577,7 +583,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1003,7 +1009,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1024,7 +1030,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

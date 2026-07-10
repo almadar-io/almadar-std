@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiSpaceStationBoardConfig {
   /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.json","category":"crew","dimension":"2d","name":"crew","role":"npc","sprite":"robot_blue.png","style":"sci-fi","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.png"},"name":"Commander","position":{"x":2,"y":3},"team":"player","unitType":"crew","x":2,"y":3,"z":0},{"health":10,"id":"u2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.json","category":"crew","dimension":"2d","name":"crew","role":"npc","sprite":"robot_blue.png","style":"sci-fi","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.png"},"name":"Engineer","position":{"x":4,"y":3},"team":"player","unitType":"crew","x":4,"y":3,"z":0},{"health":10,"id":"u3","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.json","category":"crew","dimension":"2d","name":"crew","role":"npc","sprite":"robot_blue.png","style":"sci-fi","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.png"},"name":"Technician","position":{"x":3,"y":5},"team":"player","unitType":"crew","x":3,"y":5,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiSpaceStationBoardEntityName = 'GameState';
+type _StdUiSpaceStationBoardListenTraitName = 'CrewAuthority' | 'FxDecay' | 'Crew';
 
 /**
  * Tunable params for the SpaceStationBoardOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiSpaceStationBoardSpaceStationBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SpaceStationBoardOrbital's `uses[]` exports. */
+type _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef = 'Frame.traits.CrewAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.CrewIntent';
 
 /** Per-orbital factory: builds the SpaceStationBoardOrbital orbital with consumer params. */
 export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpaceStationBoardSpaceStationBoardOrbitalParams = {}): OrbitalDefinition {
@@ -1656,7 +1662,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
         },
         'linkedEntity': canonicalName,
         'name': 'CrewAuthority',
-        'ref': 'Frame.traits.CrewAuthority',
+        'ref': ('Frame.traits.CrewAuthority' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1667,7 +1673,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1966,7 +1972,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
         },
         'linkedEntity': canonicalName,
         'name': 'Crew',
-        'ref': 'Frame.traits.CrewIntent',
+        'ref': ('Frame.traits.CrewIntent' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1984,7 +1990,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
             'ref': 'Crew',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

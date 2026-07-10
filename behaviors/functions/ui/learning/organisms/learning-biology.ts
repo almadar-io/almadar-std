@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,6 +42,9 @@ export interface StdLearningBiologyConfig {
   /** Default: `600` */
   width?: unknown;
 }
+
+type _StdLearningBiologyEntityName = 'PopulationScene' | 'FoodwebScene' | 'MitosisScene' | 'CellScene';
+type _StdLearningBiologyListenTraitName = 'PopulationEngine' | 'FoodwebEngine' | 'MitosisEngine' | 'CellEngine';
 
 /**
  * Tunable params for the PredatorPreyOrbital orbital.
@@ -81,6 +84,9 @@ export interface StdLearningBiologyPredatorPreyOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait PredatorPreyOrbital's `uses[]` exports. */
+type _StdLearningBiologyPredatorPreyOrbitalUsesRef = 'BioPopulation.traits.BioPopulationSim';
 
 /** Per-orbital factory: builds the PredatorPreyOrbital orbital with consumer params. */
 export function stdLearningBiologyPredatorPreyOrbital(params: StdLearningBiologyPredatorPreyOrbitalParams = {}): OrbitalDefinition {
@@ -222,7 +228,7 @@ export function stdLearningBiologyPredatorPreyOrbital(params: StdLearningBiology
         },
         'linkedEntity': canonicalName,
         'name': 'PopulationEngine',
-        'ref': 'BioPopulation.traits.BioPopulationSim',
+        'ref': ('BioPopulation.traits.BioPopulationSim' satisfies _StdLearningBiologyPredatorPreyOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -234,7 +240,7 @@ export function stdLearningBiologyPredatorPreyOrbital(params: StdLearningBiology
             'ref': 'PopulationEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -347,6 +353,9 @@ export interface StdLearningBiologyFoodwebOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait FoodwebOrbital's `uses[]` exports. */
+type _StdLearningBiologyFoodwebOrbitalUsesRef = 'BioFoodweb.traits.BioFoodwebSim';
 
 /** Per-orbital factory: builds the FoodwebOrbital orbital with consumer params. */
 export function stdLearningBiologyFoodwebOrbital(params: StdLearningBiologyFoodwebOrbitalParams = {}): OrbitalDefinition {
@@ -539,7 +548,7 @@ export function stdLearningBiologyFoodwebOrbital(params: StdLearningBiologyFoodw
         },
         'linkedEntity': canonicalName,
         'name': 'FoodwebEngine',
-        'ref': 'BioFoodweb.traits.BioFoodwebSim',
+        'ref': ('BioFoodweb.traits.BioFoodwebSim' satisfies _StdLearningBiologyFoodwebOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -551,7 +560,7 @@ export function stdLearningBiologyFoodwebOrbital(params: StdLearningBiologyFoodw
             'ref': 'FoodwebEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -664,6 +673,9 @@ export interface StdLearningBiologyMitosisOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MitosisOrbital's `uses[]` exports. */
+type _StdLearningBiologyMitosisOrbitalUsesRef = 'BioMitosis.traits.BioMitosisSim';
 
 /** Per-orbital factory: builds the MitosisOrbital orbital with consumer params. */
 export function stdLearningBiologyMitosisOrbital(params: StdLearningBiologyMitosisOrbitalParams = {}): OrbitalDefinition {
@@ -802,7 +814,7 @@ export function stdLearningBiologyMitosisOrbital(params: StdLearningBiologyMitos
         },
         'linkedEntity': canonicalName,
         'name': 'MitosisEngine',
-        'ref': 'BioMitosis.traits.BioMitosisSim',
+        'ref': ('BioMitosis.traits.BioMitosisSim' satisfies _StdLearningBiologyMitosisOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -814,7 +826,7 @@ export function stdLearningBiologyMitosisOrbital(params: StdLearningBiologyMitos
             'ref': 'MitosisEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -927,6 +939,9 @@ export interface StdLearningBiologyCellStructureOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CellStructureOrbital's `uses[]` exports. */
+type _StdLearningBiologyCellStructureOrbitalUsesRef = 'BioCell.traits.BioCellSim';
 
 /** Per-orbital factory: builds the CellStructureOrbital orbital with consumer params. */
 export function stdLearningBiologyCellStructureOrbital(params: StdLearningBiologyCellStructureOrbitalParams = {}): OrbitalDefinition {
@@ -1128,7 +1143,7 @@ export function stdLearningBiologyCellStructureOrbital(params: StdLearningBiolog
         },
         'linkedEntity': canonicalName,
         'name': 'CellEngine',
-        'ref': 'BioCell.traits.BioCellSim',
+        'ref': ('BioCell.traits.BioCellSim' satisfies _StdLearningBiologyCellStructureOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1140,7 +1155,7 @@ export function stdLearningBiologyCellStructureOrbital(params: StdLearningBiolog
             'ref': 'CellEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

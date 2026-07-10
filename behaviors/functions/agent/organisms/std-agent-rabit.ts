@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -61,6 +61,9 @@ export interface StdAgentRabitRabitDonePayload {
   schema: string;
 }
 
+type _StdAgentRabitEntityName = 'Coordinator' | 'OrbitalProcess';
+type _StdAgentRabitListenTraitName = 'CoordinatorPipeline' | 'CoordinatorMonitor' | 'CoordinatorListener' | 'ProcessPipeline' | 'ProcessDispatcher';
+
 /**
  * Tunable params for the CoordinatorOrbital orbital.
  *
@@ -99,6 +102,9 @@ export interface StdAgentRabitCoordinatorOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CoordinatorOrbital's `uses[]` exports. */
+type _StdAgentRabitCoordinatorOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the CoordinatorOrbital orbital with consumer params. */
 export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinatorOrbitalParams = {}): OrbitalDefinition {
@@ -630,7 +636,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
             },
           ],
         },
-      } as never, 'Coordinator', canonicalName) as never,
+      } satisfies Trait, 'Coordinator', canonicalName),
       rebindInlineTraitEntity({
         'category': 'lifecycle',
         'emits': [
@@ -838,7 +844,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
             },
           ],
         },
-      } as never, 'Coordinator', canonicalName) as never,
+      } satisfies Trait, 'Coordinator', canonicalName),
       rebindInlineTraitEntity({
         'category': 'lifecycle',
         'linkedEntity': 'Coordinator',
@@ -847,7 +853,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
             'event': 'RABIT_DONE',
             'source': {
               'kind': 'trait',
-              'trait': 'CoordinatorPipeline',
+              'trait': ('CoordinatorPipeline' satisfies _StdAgentRabitListenTraitName),
             },
             'triggers': 'RABIT_DONE',
           },
@@ -913,7 +919,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
             },
           ],
         },
-      } as never, 'Coordinator', canonicalName) as never,
+      } satisfies Trait, 'Coordinator', canonicalName),
     ],
     pages: [
       {
@@ -930,7 +936,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
             'ref': 'CoordinatorListener',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1045,6 +1051,9 @@ export interface StdAgentRabitOrbitalProcessOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait OrbitalProcessOrbital's `uses[]` exports. */
+type _StdAgentRabitOrbitalProcessOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the OrbitalProcessOrbital orbital with consumer params. */
 export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalProcessOrbitalParams = {}): OrbitalDefinition {
@@ -1579,7 +1588,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
             },
           ],
         },
-      } as never, 'OrbitalProcess', canonicalName) as never,
+      } satisfies Trait, 'OrbitalProcess', canonicalName),
       rebindInlineTraitEntity({
         'category': 'lifecycle',
         'linkedEntity': 'OrbitalProcess',
@@ -1589,7 +1598,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
             'source': {
               'kind': 'orbital',
               'orbital': 'CoordinatorOrbital',
-              'trait': 'CoordinatorPipeline',
+              'trait': ('CoordinatorPipeline' satisfies _StdAgentRabitListenTraitName),
             },
             'triggers': 'DISPATCHED',
           },
@@ -1660,7 +1669,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
             },
           ],
         },
-      } as never, 'OrbitalProcess', canonicalName) as never,
+      } satisfies Trait, 'OrbitalProcess', canonicalName),
     ],
     pages: [
       {
@@ -1674,7 +1683,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
             'ref': 'ProcessDispatcher',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

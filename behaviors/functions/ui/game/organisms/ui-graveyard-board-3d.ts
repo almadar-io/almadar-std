@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,6 +42,9 @@ export interface StdUiGraveyardBoard3dConfig {
   /** Default: `[{"health":12,"id":"p1","maxHealth":12,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-keeper","dimension":"3d","name":"character-keeper","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb"},"name":"Keeper","position":{"x":4,"y":18},"team":"player","unitType":"keeper","x":4,"y":18,"z":0},{"health":12,"id":"p2","maxHealth":12,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-keeper","dimension":"3d","name":"character-keeper","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb"},"name":"Warden","position":{"x":10,"y":18},"team":"player","unitType":"keeper","x":10,"y":18,"z":0},{"health":12,"id":"p3","maxHealth":12,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-keeper","dimension":"3d","name":"character-keeper","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb"},"name":"Sentinel","position":{"x":16,"y":18},"team":"player","unitType":"keeper","x":16,"y":18,"z":0},{"health":8,"id":"e1","maxHealth":8,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-skeleton","dimension":"3d","name":"character-skeleton","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-skeleton.glb"},"name":"Skeleton","position":{"x":4,"y":1},"team":"enemy","unitType":"skeleton","x":4,"y":1,"z":0},{"health":10,"id":"e2","maxHealth":10,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-zombie","dimension":"3d","name":"character-zombie","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-zombie.glb"},"name":"Zombie","position":{"x":10,"y":1},"team":"enemy","unitType":"zombie","x":10,"y":1,"z":0},{"health":6,"id":"e3","maxHealth":6,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-ghost","dimension":"3d","name":"character-ghost","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-ghost.glb"},"name":"Ghost","position":{"x":16,"y":1},"team":"enemy","unitType":"ghost","x":16,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiGraveyardBoard3dEntityName = 'GameState';
+type _StdUiGraveyardBoard3dListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'Player';
 
 /**
  * Tunable params for the GraveyardBoard3DOrbital orbital.
@@ -81,6 +84,9 @@ export interface StdUiGraveyardBoard3dGraveyardBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait GraveyardBoard3DOrbital's `uses[]` exports. */
+type _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the GraveyardBoard3DOrbital orbital with consumer params. */
 export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGraveyardBoard3dGraveyardBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -555,7 +561,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -566,7 +572,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -577,7 +583,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -826,7 +832,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -847,7 +853,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

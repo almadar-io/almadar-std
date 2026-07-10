@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -101,6 +101,9 @@ export interface StdUiBuilderBoardConfig {
   totalCount?: number;
 }
 
+type _StdUiBuilderBoardEntityName = 'BuilderBoardItem';
+type _StdUiBuilderBoardListenTraitName = 'BuilderBoardRender';
+
 /**
  * Tunable params for the BuilderBoardOrbital orbital.
  *
@@ -139,6 +142,9 @@ export interface StdUiBuilderBoardBuilderBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BuilderBoardOrbital's `uses[]` exports. */
+type _StdUiBuilderBoardBuilderBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BuilderBoardOrbital orbital with consumer params. */
 export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBuilderBoardOrbitalParams = {}): OrbitalDefinition {
@@ -2003,7 +2009,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
             },
           ],
         },
-      } as never, 'BuilderBoardItem', canonicalName) as never,
+      } satisfies Trait, 'BuilderBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -2014,7 +2020,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
             'ref': 'BuilderBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

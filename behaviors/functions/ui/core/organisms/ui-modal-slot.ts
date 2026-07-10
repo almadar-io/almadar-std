@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -53,6 +53,9 @@ export interface StdUiModalSlotConfig {
   /** Default: `"Title"` */
   title?: string;
 }
+
+type _StdUiModalSlotEntityName = 'ModalSlotItem';
+type _StdUiModalSlotListenTraitName = 'ModalSlotRender';
 
 /**
  * Tunable params for the ModalSlotOrbital orbital.
@@ -92,6 +95,9 @@ export interface StdUiModalSlotModalSlotOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ModalSlotOrbital's `uses[]` exports. */
+type _StdUiModalSlotModalSlotOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ModalSlotOrbital orbital with consumer params. */
 export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOrbitalParams = {}): OrbitalDefinition {
@@ -229,7 +235,7 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
               'effects': [
                 [
                   'fetch',
-                  'ModalSlotItem',
+                  ('ModalSlotItem' satisfies _StdUiModalSlotEntityName),
                   {},
                 ],
                 [
@@ -254,7 +260,7 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
             },
           ],
         },
-      } as never, 'ModalSlotItem', canonicalName) as never,
+      } satisfies Trait, 'ModalSlotItem', canonicalName),
     ],
     pages: [
       {
@@ -265,7 +271,7 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
             'ref': 'ModalSlotRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

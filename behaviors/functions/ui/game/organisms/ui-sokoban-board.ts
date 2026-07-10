@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -100,6 +100,9 @@ export interface StdUiSokobanBoardConfig {
   tiles?: EntityRow[];
 }
 
+type _StdUiSokobanBoardEntityName = 'SokobanBoardItem';
+type _StdUiSokobanBoardListenTraitName = 'SokobanBoardRender';
+
 /**
  * Tunable params for the SokobanBoardOrbital orbital.
  *
@@ -138,6 +141,9 @@ export interface StdUiSokobanBoardSokobanBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SokobanBoardOrbital's `uses[]` exports. */
+type _StdUiSokobanBoardSokobanBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SokobanBoardOrbital orbital with consumer params. */
 export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSokobanBoardOrbitalParams = {}): OrbitalDefinition {
@@ -5700,7 +5706,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
             'name': 'renderTick',
           },
         ],
-      } as never, 'SokobanBoardItem', canonicalName) as never,
+      } satisfies Trait, 'SokobanBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -5711,7 +5717,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
             'ref': 'SokobanBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

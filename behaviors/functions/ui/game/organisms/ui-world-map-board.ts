@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiWorldMapBoardConfig {
   /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u_hero","maxHealth":10,"name":"Hero","position":{"x":3,"y":10},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json","category":"hero","dimension":"2d","name":"hero","role":"npc","sprite":"bear.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png","variant":""},"team":"player","unitType":"hero"},{"animation":"idle","frame":0,"health":8,"id":"u_guard","maxHealth":8,"name":"Guard","position":{"x":13,"y":4},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json","category":"guard","dimension":"2d","name":"guard","role":"npc","sprite":"crocodile.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png","variant":""},"team":"enemy","unitType":"guard"}]` */
   units?: unknown;
 }
+
+type _StdUiWorldMapBoardEntityName = 'GameState';
+type _StdUiWorldMapBoardListenTraitName = 'Authority' | 'RoundLogic' | 'GoldAuthority' | 'Hero';
 
 /**
  * Tunable params for the WorldMapBoardOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiWorldMapBoardWorldMapBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait WorldMapBoardOrbital's `uses[]` exports. */
+type _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.RoundLogic' | 'Frame.traits.GoldAuthority' | 'Frame.traits.WorldMapIntent';
 
 /** Per-orbital factory: builds the WorldMapBoardOrbital orbital with consumer params. */
 export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoardWorldMapBoardOrbitalParams = {}): OrbitalDefinition {
@@ -6664,7 +6670,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -6675,7 +6681,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -6694,7 +6700,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
         },
         'linkedEntity': canonicalName,
         'name': 'GoldAuthority',
-        'ref': 'Frame.traits.GoldAuthority',
+        'ref': ('Frame.traits.GoldAuthority' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -7021,7 +7027,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
         },
         'linkedEntity': canonicalName,
         'name': 'Hero',
-        'ref': 'Frame.traits.WorldMapIntent',
+        'ref': ('Frame.traits.WorldMapIntent' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -7042,7 +7048,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'ref': 'Hero',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

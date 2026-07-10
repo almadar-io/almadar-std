@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -105,6 +105,9 @@ export interface StdUiStateArchitectBoardConfig {
   variables?: EntityRow[];
 }
 
+type _StdUiStateArchitectBoardEntityName = 'StateArchitectBoardItem';
+type _StdUiStateArchitectBoardListenTraitName = 'StateArchitectBoardRender';
+
 /**
  * Tunable params for the StateArchitectBoardOrbital orbital.
  *
@@ -143,6 +146,9 @@ export interface StdUiStateArchitectBoardStateArchitectBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait StateArchitectBoardOrbital's `uses[]` exports. */
+type _StdUiStateArchitectBoardStateArchitectBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the StateArchitectBoardOrbital orbital with consumer params. */
 export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUiStateArchitectBoardStateArchitectBoardOrbitalParams = {}): OrbitalDefinition {
@@ -3854,7 +3860,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
             },
           ],
         },
-      } as never, 'StateArchitectBoardItem', canonicalName) as never,
+      } satisfies Trait, 'StateArchitectBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -3865,7 +3871,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
             'ref': 'StateArchitectBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

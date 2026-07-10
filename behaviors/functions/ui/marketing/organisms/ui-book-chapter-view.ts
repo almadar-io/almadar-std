@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -51,6 +51,9 @@ export interface StdUiBookChapterViewConfig {
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
 }
+
+type _StdUiBookChapterViewEntityName = 'BookChapterViewItem';
+type _StdUiBookChapterViewListenTraitName = 'BookChapterViewRender';
 
 /**
  * Tunable params for the BookChapterViewOrbital orbital.
@@ -90,6 +93,9 @@ export interface StdUiBookChapterViewBookChapterViewOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BookChapterViewOrbital's `uses[]` exports. */
+type _StdUiBookChapterViewBookChapterViewOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BookChapterViewOrbital orbital with consumer params. */
 export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChapterViewBookChapterViewOrbitalParams = {}): OrbitalDefinition {
@@ -191,7 +197,7 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               'effects': [
                 [
                   'fetch',
-                  'BookChapterViewItem',
+                  ('BookChapterViewItem' satisfies _StdUiBookChapterViewEntityName),
                   {
                     'emit': {
                       'success': 'BookChapterViewLoaded',
@@ -232,7 +238,7 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
             },
           ],
         },
-      } as never, 'BookChapterViewItem', canonicalName) as never,
+      } satisfies Trait, 'BookChapterViewItem', canonicalName),
     ],
     pages: [
       {
@@ -243,7 +249,7 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
             'ref': 'BookChapterViewRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

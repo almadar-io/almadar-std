@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiNatureSurvivalBoard3dConfig {
   /** Default: `[{"health":1,"id":"survivor","maxHealth":1,"modelUrl":{"animations":["idle","walk"],"aspect":"1:1","category":"character-male-a","dimension":"3d","name":"character-male-a","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb","variant":""},"name":"Survivor","position":{"x":1,"y":1},"team":"player","unitType":"survivor","x":1,"y":1,"z":0},{"health":1,"id":"deer","maxHealth":1,"modelUrl":{"animations":["idle","walk"],"aspect":"1:1","category":"animal-deer","dimension":"3d","name":"animal-deer","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-cube-pets/units/animal-deer.glb","variant":""},"name":"Deer","position":{"x":2,"y":3},"team":"neutral","unitType":"deer","x":2,"y":3,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiNatureSurvivalBoard3dEntityName = 'GameState';
+type _StdUiNatureSurvivalBoard3dListenTraitName = 'HeroAuthority' | 'Gather' | 'FxDecay' | 'Flow' | 'Player';
 
 /**
  * Tunable params for the NatureSurvivalBoard3DOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait NatureSurvivalBoard3DOrbital's `uses[]` exports. */
+type _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef = 'Frame.traits.HeroAuthority' | 'Frame.traits.Gather' | 'Frame.traits.FxDecay' | 'Frame.traits.Flow' | 'Frame.traits.SurvivalIntent';
 
 /** Per-orbital factory: builds the NatureSurvivalBoard3DOrbital orbital with consumer params. */
 export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -2684,7 +2690,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
         },
         'linkedEntity': canonicalName,
         'name': 'HeroAuthority',
-        'ref': 'Frame.traits.HeroAuthority',
+        'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -3040,7 +3046,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
         },
         'linkedEntity': canonicalName,
         'name': 'Gather',
-        'ref': 'Frame.traits.Gather',
+        'ref': ('Frame.traits.Gather' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -3051,7 +3057,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -3062,7 +3068,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
         },
         'linkedEntity': canonicalName,
         'name': 'Flow',
-        'ref': 'Frame.traits.Flow',
+        'ref': ('Frame.traits.Flow' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -3157,7 +3163,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.SurvivalIntent',
+        'ref': ('Frame.traits.SurvivalIntent' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -3181,7 +3187,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

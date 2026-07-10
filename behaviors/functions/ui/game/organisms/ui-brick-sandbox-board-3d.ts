@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -72,6 +72,9 @@ export interface StdUiBrickSandboxBoard3dConfig {
   scale?: number;
 }
 
+type _StdUiBrickSandboxBoard3dEntityName = 'BrickSandboxBoard3DItem';
+type _StdUiBrickSandboxBoard3dListenTraitName = 'BrickSandboxBoard3DRender';
+
 /**
  * Tunable params for the BrickSandboxBoard3DOrbital orbital.
  *
@@ -110,6 +113,9 @@ export interface StdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BrickSandboxBoard3DOrbital's `uses[]` exports. */
+type _StdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BrickSandboxBoard3DOrbital orbital with consumer params. */
 export function stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital(params: StdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -2226,7 +2232,7 @@ export function stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital(params: StdUi
             },
           ],
         },
-      } as never, 'BrickSandboxBoard3DItem', canonicalName) as never,
+      } satisfies Trait, 'BrickSandboxBoard3DItem', canonicalName),
     ],
     pages: [
       {
@@ -2237,7 +2243,7 @@ export function stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital(params: StdUi
             'ref': 'BrickSandboxBoard3DRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

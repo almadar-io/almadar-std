@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiTopdownRtsBoardConfig {
   /** Default: `[{"health":10,"id":"t1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json","category":"tankBody_green","dimension":"2d","name":"tankBody_green","role":"npc","sprite":"medievalUnit_01.png","style":"vector-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"},"name":"Alpha","position":{"x":1,"y":1},"team":"player","unitType":"tank","x":1,"y":1,"z":0},{"health":10,"id":"t2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json","category":"tankBody_dark","dimension":"2d","name":"tankBody_dark","role":"npc","sprite":"medievalUnit_05.png","style":"vector-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"},"name":"Bravo","position":{"x":6,"y":0},"team":"enemy","unitType":"tank","x":6,"y":0,"z":0},{"health":8,"id":"t3","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json","category":"tankBody_dark","dimension":"2d","name":"tankBody_dark","role":"npc","sprite":"medievalUnit_05.png","style":"vector-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"},"name":"Charlie","position":{"x":6,"y":4},"team":"enemy","unitType":"tank","x":6,"y":4,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiTopdownRtsBoardEntityName = 'GameState';
+type _StdUiTopdownRtsBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'Producer' | 'Player';
 
 /**
  * Tunable params for the TopdownRtsBoardOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TopdownRtsBoardOrbital's `uses[]` exports. */
+type _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper' | 'Production.traits.Producer';
 
 /** Per-orbital factory: builds the TopdownRtsBoardOrbital orbital with consumer params. */
 export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams = {}): OrbitalDefinition {
@@ -1397,7 +1403,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1408,7 +1414,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1419,7 +1425,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1442,7 +1448,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
         },
         'linkedEntity': canonicalName,
         'name': 'ScoreKeeper',
-        'ref': 'Score.traits.ScoreKeeper',
+        'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1485,7 +1491,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
         },
         'linkedEntity': canonicalName,
         'name': 'Producer',
-        'ref': 'Production.traits.Producer',
+        'ref': ('Production.traits.Producer' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1745,7 +1751,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1772,7 +1778,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

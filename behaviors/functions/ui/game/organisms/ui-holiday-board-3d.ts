@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiHolidayBoard3dConfig {
   /** Default: `[{"health":1,"id":"player1","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"nutcracker","dimension":"3d","name":"nutcracker","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/nutcracker.glb","variant":""},"name":"Nutcracker","position":{"x":1,"y":1},"team":"player","unitType":"nutcracker","x":1,"y":1,"z":0},{"health":1,"id":"npc1","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"reindeer","dimension":"3d","name":"reindeer","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/reindeer.glb","variant":""},"name":"Reindeer","position":{"x":8,"y":8},"team":"neutral","unitType":"reindeer","x":8,"y":8,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiHolidayBoard3dEntityName = 'GameState';
+type _StdUiHolidayBoard3dListenTraitName = 'HeroAuthority' | 'Collector' | 'FxDecay' | 'RoundGate' | 'Player';
 
 /**
  * Tunable params for the HolidayBoard3DOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiHolidayBoard3dHolidayBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait HolidayBoard3DOrbital's `uses[]` exports. */
+type _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef = 'Frame.traits.HeroAuthority' | 'Frame.traits.Collector' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundGate' | 'Frame.traits.HeroIntent';
 
 /** Per-orbital factory: builds the HolidayBoard3DOrbital orbital with consumer params. */
 export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoard3dHolidayBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -1786,7 +1792,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
         },
         'linkedEntity': canonicalName,
         'name': 'HeroAuthority',
-        'ref': 'Frame.traits.HeroAuthority',
+        'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1954,7 +1960,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
         },
         'linkedEntity': canonicalName,
         'name': 'Collector',
-        'ref': 'Frame.traits.Collector',
+        'ref': ('Frame.traits.Collector' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1965,7 +1971,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1976,7 +1982,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
         },
         'linkedEntity': canonicalName,
         'name': 'RoundGate',
-        'ref': 'Frame.traits.RoundGate',
+        'ref': ('Frame.traits.RoundGate' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2053,7 +2059,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.HeroIntent',
+        'ref': ('Frame.traits.HeroIntent' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2077,7 +2083,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

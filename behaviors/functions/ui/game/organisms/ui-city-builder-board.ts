@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -102,6 +102,9 @@ export interface StdUiCityBuilderBoardConfig {
   woodPerBuilding?: number;
 }
 
+type _StdUiCityBuilderBoardEntityName = 'CityBuilderBoardItem';
+type _StdUiCityBuilderBoardListenTraitName = 'CityBuilderBoardRender';
+
 /**
  * Tunable params for the CityBuilderBoardOrbital orbital.
  *
@@ -140,6 +143,9 @@ export interface StdUiCityBuilderBoardCityBuilderBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CityBuilderBoardOrbital's `uses[]` exports. */
+type _StdUiCityBuilderBoardCityBuilderBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the CityBuilderBoardOrbital orbital with consumer params. */
 export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBuilderBoardCityBuilderBoardOrbitalParams = {}): OrbitalDefinition {
@@ -8517,7 +8523,7 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
             'name': 'resourceIncomeTick',
           },
         ],
-      } as never, 'CityBuilderBoardItem', canonicalName) as never,
+      } satisfies Trait, 'CityBuilderBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -8528,7 +8534,7 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
             'ref': 'CityBuilderBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

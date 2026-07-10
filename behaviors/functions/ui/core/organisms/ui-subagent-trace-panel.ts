@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -90,6 +90,9 @@ export interface StdUiSubagentTracePanelConfig {
   totalCount?: number;
 }
 
+type _StdUiSubagentTracePanelEntityName = 'SubagentTracePanelItem';
+type _StdUiSubagentTracePanelListenTraitName = 'SubagentTracePanelRender';
+
 /**
  * Tunable params for the SubagentTracePanelOrbital orbital.
  *
@@ -128,6 +131,9 @@ export interface StdUiSubagentTracePanelSubagentTracePanelOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SubagentTracePanelOrbital's `uses[]` exports. */
+type _StdUiSubagentTracePanelSubagentTracePanelOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SubagentTracePanelOrbital orbital with consumer params. */
 export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSubagentTracePanelSubagentTracePanelOrbitalParams = {}): OrbitalDefinition {
@@ -472,7 +478,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             },
           ],
         },
-      } as never, 'SubagentTracePanelItem', canonicalName) as never,
+      } satisfies Trait, 'SubagentTracePanelItem', canonicalName),
     ],
     pages: [
       {
@@ -483,7 +489,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'ref': 'SubagentTracePanelRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -40,6 +40,9 @@ export interface StdLearningMathConfig {
   /** Default: `600` */
   width?: unknown;
 }
+
+type _StdLearningMathEntityName = 'VectorScene' | 'LinearScene' | 'NumberlineScene' | 'SequenceScene' | 'UnitCircleScene' | 'SineWaveScene';
+type _StdLearningMathListenTraitName = 'VectorEngine' | 'LinearEngine' | 'NumberlineEngine' | 'SequenceEngine' | 'UnitCircleEngine' | 'SineWaveEngine';
 
 /**
  * Tunable params for the VectorAdditionOrbital orbital.
@@ -79,6 +82,9 @@ export interface StdLearningMathVectorAdditionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait VectorAdditionOrbital's `uses[]` exports. */
+type _StdLearningMathVectorAdditionOrbitalUsesRef = 'MathVectors.traits.MathVectorsSim';
 
 /** Per-orbital factory: builds the VectorAdditionOrbital orbital with consumer params. */
 export function stdLearningMathVectorAdditionOrbital(params: StdLearningMathVectorAdditionOrbitalParams = {}): OrbitalDefinition {
@@ -204,7 +210,7 @@ export function stdLearningMathVectorAdditionOrbital(params: StdLearningMathVect
         },
         'linkedEntity': canonicalName,
         'name': 'VectorEngine',
-        'ref': 'MathVectors.traits.MathVectorsSim',
+        'ref': ('MathVectors.traits.MathVectorsSim' satisfies _StdLearningMathVectorAdditionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -216,7 +222,7 @@ export function stdLearningMathVectorAdditionOrbital(params: StdLearningMathVect
             'ref': 'VectorEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -329,6 +335,9 @@ export interface StdLearningMathLinearSystemsOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait LinearSystemsOrbital's `uses[]` exports. */
+type _StdLearningMathLinearSystemsOrbitalUsesRef = 'MathLinear.traits.MathLinearSim';
 
 /** Per-orbital factory: builds the LinearSystemsOrbital orbital with consumer params. */
 export function stdLearningMathLinearSystemsOrbital(params: StdLearningMathLinearSystemsOrbitalParams = {}): OrbitalDefinition {
@@ -508,7 +517,7 @@ export function stdLearningMathLinearSystemsOrbital(params: StdLearningMathLinea
         },
         'linkedEntity': canonicalName,
         'name': 'LinearEngine',
-        'ref': 'MathLinear.traits.MathLinearSim',
+        'ref': ('MathLinear.traits.MathLinearSim' satisfies _StdLearningMathLinearSystemsOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -520,7 +529,7 @@ export function stdLearningMathLinearSystemsOrbital(params: StdLearningMathLinea
             'ref': 'LinearEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -633,6 +642,9 @@ export interface StdLearningMathNumberLineOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait NumberLineOrbital's `uses[]` exports. */
+type _StdLearningMathNumberLineOrbitalUsesRef = 'MathNumberline.traits.MathNumberlineSim';
 
 /** Per-orbital factory: builds the NumberLineOrbital orbital with consumer params. */
 export function stdLearningMathNumberLineOrbital(params: StdLearningMathNumberLineOrbitalParams = {}): OrbitalDefinition {
@@ -927,7 +939,7 @@ export function stdLearningMathNumberLineOrbital(params: StdLearningMathNumberLi
         },
         'linkedEntity': canonicalName,
         'name': 'NumberlineEngine',
-        'ref': 'MathNumberline.traits.MathNumberlineSim',
+        'ref': ('MathNumberline.traits.MathNumberlineSim' satisfies _StdLearningMathNumberLineOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -939,7 +951,7 @@ export function stdLearningMathNumberLineOrbital(params: StdLearningMathNumberLi
             'ref': 'NumberlineEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1052,6 +1064,9 @@ export interface StdLearningMathArithmeticSequenceOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ArithmeticSequenceOrbital's `uses[]` exports. */
+type _StdLearningMathArithmeticSequenceOrbitalUsesRef = 'MathSequence.traits.MathSequenceSim';
 
 /** Per-orbital factory: builds the ArithmeticSequenceOrbital orbital with consumer params. */
 export function stdLearningMathArithmeticSequenceOrbital(params: StdLearningMathArithmeticSequenceOrbitalParams = {}): OrbitalDefinition {
@@ -1305,7 +1320,7 @@ export function stdLearningMathArithmeticSequenceOrbital(params: StdLearningMath
         },
         'linkedEntity': canonicalName,
         'name': 'SequenceEngine',
-        'ref': 'MathSequence.traits.MathSequenceSim',
+        'ref': ('MathSequence.traits.MathSequenceSim' satisfies _StdLearningMathArithmeticSequenceOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1317,7 +1332,7 @@ export function stdLearningMathArithmeticSequenceOrbital(params: StdLearningMath
             'ref': 'SequenceEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1430,6 +1445,9 @@ export interface StdLearningMathUnitCircleOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait UnitCircleOrbital's `uses[]` exports. */
+type _StdLearningMathUnitCircleOrbitalUsesRef = 'MathUnitCircle.traits.MathUnitCircleSim';
 
 /** Per-orbital factory: builds the UnitCircleOrbital orbital with consumer params. */
 export function stdLearningMathUnitCircleOrbital(params: StdLearningMathUnitCircleOrbitalParams = {}): OrbitalDefinition {
@@ -1560,7 +1578,7 @@ export function stdLearningMathUnitCircleOrbital(params: StdLearningMathUnitCirc
         },
         'linkedEntity': canonicalName,
         'name': 'UnitCircleEngine',
-        'ref': 'MathUnitCircle.traits.MathUnitCircleSim',
+        'ref': ('MathUnitCircle.traits.MathUnitCircleSim' satisfies _StdLearningMathUnitCircleOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1572,7 +1590,7 @@ export function stdLearningMathUnitCircleOrbital(params: StdLearningMathUnitCirc
             'ref': 'UnitCircleEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1686,6 +1704,9 @@ export interface StdLearningMathSineWaveOrbitalParams {
   >>;
 }
 
+/** `'Alias.traits.TraitName'` literal union of every trait SineWaveOrbital's `uses[]` exports. */
+type _StdLearningMathSineWaveOrbitalUsesRef = 'MathSineWave.traits.MathSineWaveSim';
+
 /** Per-orbital factory: builds the SineWaveOrbital orbital with consumer params. */
 export function stdLearningMathSineWaveOrbital(params: StdLearningMathSineWaveOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'SineWaveScene';
@@ -1776,7 +1797,7 @@ export function stdLearningMathSineWaveOrbital(params: StdLearningMathSineWaveOr
         },
         'linkedEntity': canonicalName,
         'name': 'SineWaveEngine',
-        'ref': 'MathSineWave.traits.MathSineWaveSim',
+        'ref': ('MathSineWave.traits.MathSineWaveSim' satisfies _StdLearningMathSineWaveOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1788,7 +1809,7 @@ export function stdLearningMathSineWaveOrbital(params: StdLearningMathSineWaveOr
             'ref': 'SineWaveEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

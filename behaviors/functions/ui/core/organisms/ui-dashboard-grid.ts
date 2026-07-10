@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -68,6 +68,9 @@ export interface StdUiDashboardGridConfig {
   totalCount?: number;
 }
 
+type _StdUiDashboardGridEntityName = 'DashboardGridItem';
+type _StdUiDashboardGridListenTraitName = 'DashboardGridRender';
+
 /**
  * Tunable params for the DashboardGridOrbital orbital.
  *
@@ -106,6 +109,9 @@ export interface StdUiDashboardGridDashboardGridOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait DashboardGridOrbital's `uses[]` exports. */
+type _StdUiDashboardGridDashboardGridOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the DashboardGridOrbital orbital with consumer params. */
 export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGridDashboardGridOrbitalParams = {}): OrbitalDefinition {
@@ -357,7 +363,7 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
             },
           ],
         },
-      } as never, 'DashboardGridItem', canonicalName) as never,
+      } satisfies Trait, 'DashboardGridItem', canonicalName),
     ],
     pages: [
       {
@@ -368,7 +374,7 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
             'ref': 'DashboardGridRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

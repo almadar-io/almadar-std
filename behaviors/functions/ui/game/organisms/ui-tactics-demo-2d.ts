@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiTacticsDemo2dConfig {
   /** Default: `[{"health":3,"id":"p1","maxHealth":3,"modelUrl":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"player-unit","role":"player","sprite":"blue_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Soldier A","position":{"x":0,"y":0},"team":"player","unitType":"soldier","x":0,"y":0,"z":0},{"health":3,"id":"p2","maxHealth":3,"modelUrl":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"player-unit","role":"player","sprite":"blue_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Soldier B","position":{"x":0,"y":2},"team":"player","unitType":"soldier","x":0,"y":2,"z":0},{"health":2,"id":"e1","maxHealth":2,"modelUrl":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"enemy-unit","role":"enemy","sprite":"red_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Raider","position":{"x":2,"y":1},"team":"enemy","unitType":"raider","x":2,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiTacticsDemo2dEntityName = 'GameState';
+type _StdUiTacticsDemo2dListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'Player';
 
 /**
  * Tunable params for the TacticsDemo2DOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiTacticsDemo2dTacticsDemo2DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TacticsDemo2DOrbital's `uses[]` exports. */
+type _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the TacticsDemo2DOrbital orbital with consumer params. */
 export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2dTacticsDemo2DOrbitalParams = {}): OrbitalDefinition {
@@ -1083,7 +1089,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1094,7 +1100,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1105,7 +1111,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1120,7 +1126,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
         },
         'linkedEntity': canonicalName,
         'name': 'ScoreKeeper',
-        'ref': 'Score.traits.ScoreKeeper',
+        'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1164,7 +1170,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1188,7 +1194,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

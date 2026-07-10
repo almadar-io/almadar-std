@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -50,6 +50,9 @@ export interface StdUiRuntimeDebuggerConfig {
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 }
+
+type _StdUiRuntimeDebuggerEntityName = 'RuntimeDebuggerItem';
+type _StdUiRuntimeDebuggerListenTraitName = 'RuntimeDebuggerRender';
 
 /**
  * Tunable params for the RuntimeDebuggerOrbital orbital.
@@ -89,6 +92,9 @@ export interface StdUiRuntimeDebuggerRuntimeDebuggerOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait RuntimeDebuggerOrbital's `uses[]` exports. */
+type _StdUiRuntimeDebuggerRuntimeDebuggerOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the RuntimeDebuggerOrbital orbital with consumer params. */
 export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeDebuggerRuntimeDebuggerOrbitalParams = {}): OrbitalDefinition {
@@ -207,7 +213,7 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             },
           ],
         },
-      } as never, 'RuntimeDebuggerItem', canonicalName) as never,
+      } satisfies Trait, 'RuntimeDebuggerItem', canonicalName),
     ],
     pages: [
       {
@@ -218,7 +224,7 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             'ref': 'RuntimeDebuggerRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

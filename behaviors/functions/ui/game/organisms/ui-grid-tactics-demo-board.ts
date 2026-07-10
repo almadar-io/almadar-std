@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,6 +42,9 @@ export interface StdUiGridTacticsDemoBoardConfig {
   /** Default: `[{"health":3,"id":"p1","maxHealth":3,"position":{"x":1,"y":1},"team":"player","unitType":"marine","x":1,"y":1,"z":0},{"health":3,"id":"p2","maxHealth":3,"position":{"x":1,"y":4},"team":"player","unitType":"marine","x":1,"y":4,"z":0},{"health":2,"id":"e1","maxHealth":2,"position":{"x":4,"y":1},"team":"enemy","unitType":"raider","x":4,"y":1,"z":0},{"health":2,"id":"e2","maxHealth":2,"position":{"x":4,"y":4},"team":"enemy","unitType":"raider","x":4,"y":4,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiGridTacticsDemoBoardEntityName = 'GameState';
+type _StdUiGridTacticsDemoBoardListenTraitName = 'TacticsAuthority' | 'FxDecay' | 'RoundLogic' | 'PlayerIntent';
 
 /**
  * Tunable params for the GridTacticsDemoOrbital orbital.
@@ -81,6 +84,9 @@ export interface StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait GridTacticsDemoOrbital's `uses[]` exports. */
+type _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef = 'Tactics.traits.GridTactics' | 'Particles.traits.FxParticles' | 'Round.traits.RoundFlow';
 
 /** Per-orbital factory: builds the GridTacticsDemoOrbital orbital with consumer params. */
 export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams = {}): OrbitalDefinition {
@@ -383,7 +389,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
         },
         'linkedEntity': canonicalName,
         'name': 'TacticsAuthority',
-        'ref': 'Tactics.traits.GridTactics',
+        'ref': ('Tactics.traits.GridTactics' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -394,7 +400,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Particles.traits.FxParticles',
+        'ref': ('Particles.traits.FxParticles' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -405,7 +411,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Round.traits.RoundFlow',
+        'ref': ('Round.traits.RoundFlow' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
       rebindInlineTraitEntity({
         'category': 'interaction',
@@ -1689,7 +1695,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
             'name': 'renderTick',
           },
         ],
-      } as never, 'GameState', canonicalName) as never,
+      } satisfies Trait, 'GameState', canonicalName),
     ],
     pages: [
       {
@@ -1709,7 +1715,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
             'ref': 'PlayerIntent',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

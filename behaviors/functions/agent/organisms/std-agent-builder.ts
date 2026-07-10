@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -46,6 +46,9 @@ export interface StdAgentBuilderBuildCompletePayload {
 export interface StdAgentBuilderPlannedPayload {
   result: string;
 }
+
+type _StdAgentBuilderEntityName = 'BuilderProcess';
+type _StdAgentBuilderListenTraitName = 'BuilderPipeline' | 'BuilderListener';
 
 /**
  * Tunable params for the AgentBuilderOrbital orbital.
@@ -85,6 +88,9 @@ export interface StdAgentBuilderAgentBuilderOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait AgentBuilderOrbital's `uses[]` exports. */
+type _StdAgentBuilderAgentBuilderOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the AgentBuilderOrbital orbital with consumer params. */
 export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentBuilderOrbitalParams = {}): OrbitalDefinition {
@@ -456,7 +462,7 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             },
           ],
         },
-      } as never, 'BuilderProcess', canonicalName) as never,
+      } satisfies Trait, 'BuilderProcess', canonicalName),
       rebindInlineTraitEntity({
         'category': 'lifecycle',
         'linkedEntity': 'BuilderProcess',
@@ -465,7 +471,7 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             'event': 'BUILD_COMPLETE',
             'source': {
               'kind': 'trait',
-              'trait': 'BuilderPipeline',
+              'trait': ('BuilderPipeline' satisfies _StdAgentBuilderListenTraitName),
             },
             'triggers': 'BUILD_COMPLETE',
           },
@@ -547,7 +553,7 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             },
           ],
         },
-      } as never, 'BuilderProcess', canonicalName) as never,
+      } satisfies Trait, 'BuilderProcess', canonicalName),
     ],
     pages: [
       {
@@ -561,7 +567,7 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             'ref': 'BuilderListener',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

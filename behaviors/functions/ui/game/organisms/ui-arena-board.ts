@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,6 +42,9 @@ export interface StdUiArenaBoardConfig {
   /** Default: `[{"health":3,"id":"p1","maxHealth":3,"position":{"x":1,"y":1},"team":"player","unitType":"marine","x":1,"y":1,"z":0},{"health":3,"id":"p2","maxHealth":3,"position":{"x":4,"y":4},"team":"player","unitType":"marine","x":4,"y":4,"z":0},{"health":2,"id":"e1","maxHealth":2,"position":{"x":6,"y":6},"team":"enemy","unitType":"raider","x":6,"y":6,"z":0},{"health":2,"id":"e2","maxHealth":2,"position":{"x":2,"y":1},"team":"enemy","unitType":"raider","x":2,"y":1,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiArenaBoardEntityName = 'GameState';
+type _StdUiArenaBoardListenTraitName = 'ChaseAI' | 'FxDecay' | 'RoundLogic' | 'ArenaView';
 
 /**
  * Tunable params for the ArenaBoardOrbital orbital.
@@ -81,6 +84,9 @@ export interface StdUiArenaBoardArenaBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ArenaBoardOrbital's `uses[]` exports. */
+type _StdUiArenaBoardArenaBoardOrbitalUsesRef = 'Chase.traits.ChaseAi' | 'Particles.traits.FxParticles' | 'Round.traits.RoundFlow';
 
 /** Per-orbital factory: builds the ArenaBoardOrbital orbital with consumer params. */
 export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoardOrbitalParams = {}): OrbitalDefinition {
@@ -703,7 +709,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
         },
         'linkedEntity': canonicalName,
         'name': 'ChaseAI',
-        'ref': 'Chase.traits.ChaseAi',
+        'ref': ('Chase.traits.ChaseAi' satisfies _StdUiArenaBoardArenaBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -714,7 +720,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Particles.traits.FxParticles',
+        'ref': ('Particles.traits.FxParticles' satisfies _StdUiArenaBoardArenaBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -725,7 +731,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Round.traits.RoundFlow',
+        'ref': ('Round.traits.RoundFlow' satisfies _StdUiArenaBoardArenaBoardOrbitalUsesRef),
       }),
       rebindInlineTraitEntity({
         'category': 'interaction',
@@ -1551,7 +1557,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
             'name': 'renderTick',
           },
         ],
-      } as never, 'GameState', canonicalName) as never,
+      } satisfies Trait, 'GameState', canonicalName),
     ],
     pages: [
       {
@@ -1571,7 +1577,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
             'ref': 'ArenaView',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

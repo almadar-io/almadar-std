@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -138,6 +138,9 @@ export interface StdUiTopDownShooterBoardConfig {
   width?: number;
 }
 
+type _StdUiTopDownShooterBoardEntityName = 'TopDownShooterBoardItem';
+type _StdUiTopDownShooterBoardListenTraitName = 'TopDownShooterBoardRender';
+
 /**
  * Tunable params for the TopDownShooterBoardOrbital orbital.
  *
@@ -176,6 +179,9 @@ export interface StdUiTopDownShooterBoardTopDownShooterBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TopDownShooterBoardOrbital's `uses[]` exports. */
+type _StdUiTopDownShooterBoardTopDownShooterBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the TopDownShooterBoardOrbital orbital with consumer params. */
 export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUiTopDownShooterBoardTopDownShooterBoardOrbitalParams = {}): OrbitalDefinition {
@@ -6960,7 +6966,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
             'name': 'simulateTick',
           },
         ],
-      } as never, 'TopDownShooterBoardItem', canonicalName) as never,
+      } satisfies Trait, 'TopDownShooterBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -6971,7 +6977,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
             'ref': 'TopDownShooterBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

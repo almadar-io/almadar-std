@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -138,6 +138,9 @@ export interface StdUiSkateparkBoard3dConfig {
   worldWidth?: number;
 }
 
+type _StdUiSkateparkBoard3dEntityName = 'SkateparkBoard3DItem';
+type _StdUiSkateparkBoard3dListenTraitName = 'SkateparkBoard3DRender';
+
 /**
  * Tunable params for the SkateparkBoard3DOrbital orbital.
  *
@@ -176,6 +179,9 @@ export interface StdUiSkateparkBoard3dSkateparkBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SkateparkBoard3DOrbital's `uses[]` exports. */
+type _StdUiSkateparkBoard3dSkateparkBoard3DOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SkateparkBoard3DOrbital orbital with consumer params. */
 export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkateparkBoard3dSkateparkBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -3845,7 +3851,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
             'name': 'animTick',
           },
         ],
-      } as never, 'SkateparkBoard3DItem', canonicalName) as never,
+      } satisfies Trait, 'SkateparkBoard3DItem', canonicalName),
     ],
     pages: [
       {
@@ -3856,7 +3862,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
             'ref': 'SkateparkBoard3DRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

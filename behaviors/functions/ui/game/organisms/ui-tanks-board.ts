@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiTanksBoardConfig {
   /** Default: `[{"health":10,"id":"t1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json","category":"tankBody_green","dimension":"2d","name":"tankBody_green","role":"npc","sprite":"tankBody_green.png","style":"sci-fi","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"},"name":"Alpha","position":{"x":1,"y":1},"team":"player","unitType":"tank","x":1,"y":1,"z":0},{"health":10,"id":"t2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json","category":"tankBody_dark","dimension":"2d","name":"tankBody_dark","role":"npc","sprite":"tankBody_dark.png","style":"sci-fi","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"},"name":"Bravo","position":{"x":6,"y":0},"team":"enemy","unitType":"tank","x":6,"y":0,"z":0},{"health":8,"id":"t3","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json","category":"tankBody_dark","dimension":"2d","name":"tankBody_dark","role":"npc","sprite":"tankBody_dark.png","style":"sci-fi","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"},"name":"Charlie","position":{"x":6,"y":4},"team":"enemy","unitType":"tank","x":6,"y":4,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiTanksBoardEntityName = 'GameState';
+type _StdUiTanksBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'Player';
 
 /**
  * Tunable params for the TanksBoardOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiTanksBoardTanksBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TanksBoardOrbital's `uses[]` exports. */
+type _StdUiTanksBoardTanksBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the TanksBoardOrbital orbital with consumer params. */
 export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoardOrbitalParams = {}): OrbitalDefinition {
@@ -1383,7 +1389,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
         },
         'linkedEntity': canonicalName,
         'name': 'Authority',
-        'ref': 'Frame.traits.TacticsAuthority',
+        'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1394,7 +1400,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1405,7 +1411,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
         },
         'linkedEntity': canonicalName,
         'name': 'RoundLogic',
-        'ref': 'Frame.traits.RoundLogic',
+        'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1428,7 +1434,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
         },
         'linkedEntity': canonicalName,
         'name': 'ScoreKeeper',
-        'ref': 'Score.traits.ScoreKeeper',
+        'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1714,7 +1720,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.PlayerIntent',
+        'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1738,7 +1744,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -88,6 +88,9 @@ export interface StdUiCardBattlerBoardConfig {
   turnsToWin?: number;
 }
 
+type _StdUiCardBattlerBoardEntityName = 'CardBattlerBoardItem';
+type _StdUiCardBattlerBoardListenTraitName = 'CardBattlerBoardRender';
+
 /**
  * Tunable params for the CardBattlerBoardOrbital orbital.
  *
@@ -126,6 +129,9 @@ export interface StdUiCardBattlerBoardCardBattlerBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CardBattlerBoardOrbital's `uses[]` exports. */
+type _StdUiCardBattlerBoardCardBattlerBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the CardBattlerBoardOrbital orbital with consumer params. */
 export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBattlerBoardCardBattlerBoardOrbitalParams = {}): OrbitalDefinition {
@@ -2870,7 +2876,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
             },
           ],
         },
-      } as never, 'CardBattlerBoardItem', canonicalName) as never,
+      } satisfies Trait, 'CardBattlerBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -2881,7 +2887,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
             'ref': 'CardBattlerBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

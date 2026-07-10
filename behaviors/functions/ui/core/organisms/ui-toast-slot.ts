@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -56,6 +56,9 @@ export interface StdUiToastSlotConfig {
   variant?: 'success' | 'error' | 'info' | 'warning';
 }
 
+type _StdUiToastSlotEntityName = 'ToastSlotItem';
+type _StdUiToastSlotListenTraitName = 'ToastSlotRender';
+
 /**
  * Tunable params for the ToastSlotOrbital orbital.
  *
@@ -94,6 +97,9 @@ export interface StdUiToastSlotToastSlotOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ToastSlotOrbital's `uses[]` exports. */
+type _StdUiToastSlotToastSlotOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ToastSlotOrbital orbital with consumer params. */
 export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOrbitalParams = {}): OrbitalDefinition {
@@ -237,7 +243,7 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'effects': [
                 [
                   'fetch',
-                  'ToastSlotItem',
+                  ('ToastSlotItem' satisfies _StdUiToastSlotEntityName),
                   {},
                 ],
                 [
@@ -263,7 +269,7 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             },
           ],
         },
-      } as never, 'ToastSlotItem', canonicalName) as never,
+      } satisfies Trait, 'ToastSlotItem', canonicalName),
     ],
     pages: [
       {
@@ -274,7 +280,7 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'ref': 'ToastSlotRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -77,6 +77,9 @@ export interface StdUiBoardgameBoardConfig {
   track?: EntityRow[];
 }
 
+type _StdUiBoardgameBoardEntityName = 'BoardgameBoardItem';
+type _StdUiBoardgameBoardListenTraitName = 'BoardgameBoardRender';
+
 /**
  * Tunable params for the BoardgameBoardOrbital orbital.
  *
@@ -115,6 +118,9 @@ export interface StdUiBoardgameBoardBoardgameBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BoardgameBoardOrbital's `uses[]` exports. */
+type _StdUiBoardgameBoardBoardgameBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BoardgameBoardOrbital orbital with consumer params. */
 export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameBoardBoardgameBoardOrbitalParams = {}): OrbitalDefinition {
@@ -5442,7 +5448,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
             'name': 'rivalTick',
           },
         ],
-      } as never, 'BoardgameBoardItem', canonicalName) as never,
+      } satisfies Trait, 'BoardgameBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -5453,7 +5459,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
             'ref': 'BoardgameBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

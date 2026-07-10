@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -102,6 +102,9 @@ export interface StdUiEntityCardsConfig {
   variant?: string;
 }
 
+type _StdUiEntityCardsEntityName = 'EntityCardsItem';
+type _StdUiEntityCardsListenTraitName = 'EntityCardsRender';
+
 /**
  * Tunable params for the EntityCardsOrbital orbital.
  *
@@ -140,6 +143,9 @@ export interface StdUiEntityCardsEntityCardsOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait EntityCardsOrbital's `uses[]` exports. */
+type _StdUiEntityCardsEntityCardsOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the EntityCardsOrbital orbital with consumer params. */
 export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntityCardsOrbitalParams = {}): OrbitalDefinition {
@@ -591,7 +597,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               'effects': [
                 [
                   'fetch',
-                  'EntityCardsItem',
+                  ('EntityCardsItem' satisfies _StdUiEntityCardsEntityName),
                   {
                     'emit': {
                       'success': 'EntityCardsLoaded',
@@ -688,7 +694,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             },
           ],
         },
-      } as never, 'EntityCardsItem', canonicalName) as never,
+      } satisfies Trait, 'EntityCardsItem', canonicalName),
     ],
     pages: [
       {
@@ -699,7 +705,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'ref': 'EntityCardsRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

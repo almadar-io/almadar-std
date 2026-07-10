@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -73,6 +73,9 @@ export interface StdUiBookViewerConfig {
   totalCount?: number;
 }
 
+type _StdUiBookViewerEntityName = 'BookViewerItem';
+type _StdUiBookViewerListenTraitName = 'BookViewerRender';
+
 /**
  * Tunable params for the BookViewerOrbital orbital.
  *
@@ -111,6 +114,9 @@ export interface StdUiBookViewerBookViewerOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BookViewerOrbital's `uses[]` exports. */
+type _StdUiBookViewerBookViewerOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BookViewerOrbital orbital with consumer params. */
 export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookViewerOrbitalParams = {}): OrbitalDefinition {
@@ -389,7 +395,7 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
               'effects': [
                 [
                   'fetch',
-                  'BookViewerItem',
+                  ('BookViewerItem' satisfies _StdUiBookViewerEntityName),
                   {
                     'emit': {
                       'success': 'BookViewerLoaded',
@@ -452,7 +458,7 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             },
           ],
         },
-      } as never, 'BookViewerItem', canonicalName) as never,
+      } satisfies Trait, 'BookViewerItem', canonicalName),
     ],
     pages: [
       {
@@ -463,7 +469,7 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'ref': 'BookViewerRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

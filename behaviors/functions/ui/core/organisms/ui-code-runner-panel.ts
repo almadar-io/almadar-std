@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -50,6 +50,9 @@ export interface StdUiCodeRunnerPanelConfig {
   /** Default: `true` */
   runnable?: boolean;
 }
+
+type _StdUiCodeRunnerPanelEntityName = 'CodeRunnerPanelItem';
+type _StdUiCodeRunnerPanelListenTraitName = 'CodeRunnerPanelRender';
 
 /**
  * Tunable params for the CodeRunnerPanelOrbital orbital.
@@ -89,6 +92,9 @@ export interface StdUiCodeRunnerPanelCodeRunnerPanelOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CodeRunnerPanelOrbital's `uses[]` exports. */
+type _StdUiCodeRunnerPanelCodeRunnerPanelOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the CodeRunnerPanelOrbital orbital with consumer params. */
 export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunnerPanelCodeRunnerPanelOrbitalParams = {}): OrbitalDefinition {
@@ -196,7 +202,7 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
             },
           ],
         },
-      } as never, 'CodeRunnerPanelItem', canonicalName) as never,
+      } satisfies Trait, 'CodeRunnerPanelItem', canonicalName),
     ],
     pages: [
       {
@@ -207,7 +213,7 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
             'ref': 'CodeRunnerPanelRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

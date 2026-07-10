@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -115,6 +115,9 @@ export interface StdUiFormSectionConfig {
   violationTriggers?: EntityRow[];
 }
 
+type _StdUiFormSectionEntityName = 'FormSectionItem';
+type _StdUiFormSectionListenTraitName = 'FormSectionRender';
+
 /**
  * Tunable params for the FormSectionOrbital orbital.
  *
@@ -153,6 +156,9 @@ export interface StdUiFormSectionFormSectionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait FormSectionOrbital's `uses[]` exports. */
+type _StdUiFormSectionFormSectionOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the FormSectionOrbital orbital with consumer params. */
 export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormSectionOrbitalParams = {}): OrbitalDefinition {
@@ -1183,7 +1189,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               'effects': [
                 [
                   'fetch',
-                  'FormSectionItem',
+                  ('FormSectionItem' satisfies _StdUiFormSectionEntityName),
                   {
                     'emit': {
                       'success': 'FormSectionLoaded',
@@ -1276,7 +1282,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             },
           ],
         },
-      } as never, 'FormSectionItem', canonicalName) as never,
+      } satisfies Trait, 'FormSectionItem', canonicalName),
     ],
     pages: [
       {
@@ -1287,7 +1293,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'ref': 'FormSectionRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

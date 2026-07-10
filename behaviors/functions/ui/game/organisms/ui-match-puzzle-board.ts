@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -78,6 +78,9 @@ export interface StdUiMatchPuzzleBoardConfig {
   tiles?: EntityRow[];
 }
 
+type _StdUiMatchPuzzleBoardEntityName = 'MatchPuzzleBoardItem';
+type _StdUiMatchPuzzleBoardListenTraitName = 'MatchPuzzleBoardRender';
+
 /**
  * Tunable params for the MatchPuzzleBoardOrbital orbital.
  *
@@ -116,6 +119,9 @@ export interface StdUiMatchPuzzleBoardMatchPuzzleBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MatchPuzzleBoardOrbital's `uses[]` exports. */
+type _StdUiMatchPuzzleBoardMatchPuzzleBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the MatchPuzzleBoardOrbital orbital with consumer params. */
 export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchPuzzleBoardMatchPuzzleBoardOrbitalParams = {}): OrbitalDefinition {
@@ -6303,7 +6309,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
             'name': 'animTick',
           },
         ],
-      } as never, 'MatchPuzzleBoardItem', canonicalName) as never,
+      } satisfies Trait, 'MatchPuzzleBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -6314,7 +6320,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
             'ref': 'MatchPuzzleBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

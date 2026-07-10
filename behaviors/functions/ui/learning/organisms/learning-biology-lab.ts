@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -61,6 +61,9 @@ export interface StdLearningBiologyLabConfig {
   width?: number;
 }
 
+type _StdLearningBiologyLabEntityName = 'BiologyLabItem';
+type _StdLearningBiologyLabListenTraitName = 'BiologyLabRender';
+
 /**
  * Tunable params for the BiologyLabOrbital orbital.
  *
@@ -99,6 +102,9 @@ export interface StdLearningBiologyLabBiologyLabOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait BiologyLabOrbital's `uses[]` exports. */
+type _StdLearningBiologyLabBiologyLabOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BiologyLabOrbital orbital with consumer params. */
 export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiologyLabBiologyLabOrbitalParams = {}): OrbitalDefinition {
@@ -808,7 +814,7 @@ export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiolog
             },
           ],
         },
-      } as never, 'BiologyLabItem', canonicalName) as never,
+      } satisfies Trait, 'BiologyLabItem', canonicalName),
     ],
     pages: [
       {
@@ -819,7 +825,7 @@ export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiolog
             'ref': 'BiologyLabRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

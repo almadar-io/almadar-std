@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -126,6 +126,9 @@ export interface StdUiTowerDefenseBoardConfig {
   unitScale?: number;
 }
 
+type _StdUiTowerDefenseBoardEntityName = 'TowerDefenseBoardItem';
+type _StdUiTowerDefenseBoardListenTraitName = 'TowerDefenseBoardRender';
+
 /**
  * Tunable params for the TowerDefenseBoardOrbital orbital.
  *
@@ -164,6 +167,9 @@ export interface StdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait TowerDefenseBoardOrbital's `uses[]` exports. */
+type _StdUiTowerDefenseBoardTowerDefenseBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the TowerDefenseBoardOrbital orbital with consumer params. */
 export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams = {}): OrbitalDefinition {
@@ -12647,7 +12653,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'name': 'towerFireTick',
           },
         ],
-      } as never, 'TowerDefenseBoardItem', canonicalName) as never,
+      } satisfies Trait, 'TowerDefenseBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -12658,7 +12664,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'ref': 'TowerDefenseBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

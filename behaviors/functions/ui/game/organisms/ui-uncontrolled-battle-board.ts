@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -84,6 +84,9 @@ export interface StdUiUncontrolledBattleBoardConfig {
   title?: string;
 }
 
+type _StdUiUncontrolledBattleBoardEntityName = 'UncontrolledBattleBoardItem';
+type _StdUiUncontrolledBattleBoardListenTraitName = 'UncontrolledBattleBoardRender';
+
 /**
  * Tunable params for the UncontrolledBattleBoardOrbital orbital.
  *
@@ -122,6 +125,9 @@ export interface StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalParam
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait UncontrolledBattleBoardOrbital's `uses[]` exports. */
+type _StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the UncontrolledBattleBoardOrbital orbital with consumer params. */
 export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(params: StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalParams = {}): OrbitalDefinition {
@@ -5627,7 +5633,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
             'name': 'autoBattleTick',
           },
         ],
-      } as never, 'UncontrolledBattleBoardItem', canonicalName) as never,
+      } satisfies Trait, 'UncontrolledBattleBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -5638,7 +5644,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
             'ref': 'UncontrolledBattleBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -71,6 +71,9 @@ export interface StdUiHeroOrganismConfig {
   totalCount?: number;
 }
 
+type _StdUiHeroOrganismEntityName = 'HeroOrganismItem';
+type _StdUiHeroOrganismListenTraitName = 'HeroOrganismRender';
+
 /**
  * Tunable params for the HeroOrganismOrbital orbital.
  *
@@ -109,6 +112,9 @@ export interface StdUiHeroOrganismHeroOrganismOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait HeroOrganismOrbital's `uses[]` exports. */
+type _StdUiHeroOrganismHeroOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the HeroOrganismOrbital orbital with consumer params. */
 export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHeroOrganismOrbitalParams = {}): OrbitalDefinition {
@@ -415,7 +421,7 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
               'effects': [
                 [
                   'fetch',
-                  'HeroOrganismItem',
+                  ('HeroOrganismItem' satisfies _StdUiHeroOrganismEntityName),
                   {
                     'emit': {
                       'success': 'HeroOrganismLoaded',
@@ -476,7 +482,7 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             },
           ],
         },
-      } as never, 'HeroOrganismItem', canonicalName) as never,
+      } satisfies Trait, 'HeroOrganismItem', canonicalName),
     ],
     pages: [
       {
@@ -487,7 +493,7 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'ref': 'HeroOrganismRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

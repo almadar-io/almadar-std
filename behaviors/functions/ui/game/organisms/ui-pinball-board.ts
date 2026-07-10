@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -134,6 +134,9 @@ export interface StdUiPinballBoardConfig {
   width?: number;
 }
 
+type _StdUiPinballBoardEntityName = 'PinballBoardItem';
+type _StdUiPinballBoardListenTraitName = 'PinballBoardRender';
+
 /**
  * Tunable params for the PinballBoardOrbital orbital.
  *
@@ -172,6 +175,9 @@ export interface StdUiPinballBoardPinballBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait PinballBoardOrbital's `uses[]` exports. */
+type _StdUiPinballBoardPinballBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the PinballBoardOrbital orbital with consumer params. */
 export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPinballBoardOrbitalParams = {}): OrbitalDefinition {
@@ -4295,7 +4301,7 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
             'name': 'idleTick',
           },
         ],
-      } as never, 'PinballBoardItem', canonicalName) as never,
+      } satisfies Trait, 'PinballBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -4306,7 +4312,7 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
             'ref': 'PinballBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

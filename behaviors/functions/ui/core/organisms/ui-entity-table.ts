@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -104,6 +104,9 @@ export interface StdUiEntityTableConfig {
   totalCount?: number;
 }
 
+type _StdUiEntityTableEntityName = 'EntityTableItem';
+type _StdUiEntityTableListenTraitName = 'EntityTableRender';
+
 /**
  * Tunable params for the EntityTableOrbital orbital.
  *
@@ -142,6 +145,9 @@ export interface StdUiEntityTableEntityTableOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait EntityTableOrbital's `uses[]` exports. */
+type _StdUiEntityTableEntityTableOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the EntityTableOrbital orbital with consumer params. */
 export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntityTableOrbitalParams = {}): OrbitalDefinition {
@@ -691,7 +697,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
               'effects': [
                 [
                   'fetch',
-                  'EntityTableItem',
+                  ('EntityTableItem' satisfies _StdUiEntityTableEntityName),
                   {
                     'emit': {
                       'success': 'EntityTableLoaded',
@@ -792,7 +798,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             },
           ],
         },
-      } as never, 'EntityTableItem', canonicalName) as never,
+      } satisfies Trait, 'EntityTableItem', canonicalName),
     ],
     pages: [
       {
@@ -803,7 +809,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'ref': 'EntityTableRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

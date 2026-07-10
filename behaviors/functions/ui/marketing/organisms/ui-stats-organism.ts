@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -71,6 +71,9 @@ export interface StdUiStatsOrganismConfig {
   totalCount?: number;
 }
 
+type _StdUiStatsOrganismEntityName = 'StatsOrganismItem';
+type _StdUiStatsOrganismListenTraitName = 'StatsOrganismRender';
+
 /**
  * Tunable params for the StatsOrganismOrbital orbital.
  *
@@ -109,6 +112,9 @@ export interface StdUiStatsOrganismStatsOrganismOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait StatsOrganismOrbital's `uses[]` exports. */
+type _StdUiStatsOrganismStatsOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the StatsOrganismOrbital orbital with consumer params. */
 export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganismStatsOrganismOrbitalParams = {}): OrbitalDefinition {
@@ -315,7 +321,7 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
               'effects': [
                 [
                   'fetch',
-                  'StatsOrganismItem',
+                  ('StatsOrganismItem' satisfies _StdUiStatsOrganismEntityName),
                   {
                     'emit': {
                       'success': 'StatsOrganismLoaded',
@@ -376,7 +382,7 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             },
           ],
         },
-      } as never, 'StatsOrganismItem', canonicalName) as never,
+      } satisfies Trait, 'StatsOrganismItem', canonicalName),
     ],
     pages: [
       {
@@ -387,7 +393,7 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             'ref': 'StatsOrganismRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

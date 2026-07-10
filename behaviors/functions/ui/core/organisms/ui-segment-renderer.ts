@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -48,6 +48,9 @@ export interface StdUiSegmentRendererConfig {
   /** Default: `{"activationResponse":"Activation Response","reflectionNotes":["Item","Item 2"]}` */
   userProgress?: EntityRow;
 }
+
+type _StdUiSegmentRendererEntityName = 'SegmentRendererItem';
+type _StdUiSegmentRendererListenTraitName = 'SegmentRendererRender';
 
 /**
  * Tunable params for the SegmentRendererOrbital orbital.
@@ -87,6 +90,9 @@ export interface StdUiSegmentRendererSegmentRendererOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SegmentRendererOrbital's `uses[]` exports. */
+type _StdUiSegmentRendererSegmentRendererOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SegmentRendererOrbital orbital with consumer params. */
 export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentRendererSegmentRendererOrbitalParams = {}): OrbitalDefinition {
@@ -239,7 +245,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             },
           ],
         },
-      } as never, 'SegmentRendererItem', canonicalName) as never,
+      } satisfies Trait, 'SegmentRendererItem', canonicalName),
     ],
     pages: [
       {
@@ -250,7 +256,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'ref': 'SegmentRendererRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

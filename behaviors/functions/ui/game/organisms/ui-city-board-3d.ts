@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiCityBoard3dConfig {
   /** Default: `[{"health":1,"id":"car1","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"delivery","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-car-kit/units/delivery.glb"},"name":"Courier Car","position":{"x":2,"y":2},"team":"player","unitType":"courier","x":2,"y":2,"z":0},{"health":1,"id":"npc-taxi","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"taxi","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-car-kit/units/taxi.glb"},"name":"Taxi","position":{"x":6,"y":2},"team":"neutral","unitType":"traffic","x":6,"y":2,"z":0},{"health":1,"id":"npc-tram","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"train-tram-classic","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-train-kit/units/train-tram-classic.glb"},"name":"Tram","position":{"x":2,"y":6},"team":"neutral","unitType":"traffic","x":2,"y":6,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiCityBoard3dEntityName = 'GameState';
+type _StdUiCityBoard3dListenTraitName = 'HeroAuthority' | 'Collector' | 'FxDecay' | 'RoundGate' | 'Player';
 
 /**
  * Tunable params for the CityBoard3DOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiCityBoard3dCityBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CityBoard3DOrbital's `uses[]` exports. */
+type _StdUiCityBoard3dCityBoard3DOrbitalUsesRef = 'Frame.traits.HeroAuthority' | 'Frame.traits.Collector' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundGate' | 'Frame.traits.HeroIntent';
 
 /** Per-orbital factory: builds the CityBoard3DOrbital orbital with consumer params. */
 export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -2698,7 +2704,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
         },
         'linkedEntity': canonicalName,
         'name': 'HeroAuthority',
-        'ref': 'Frame.traits.HeroAuthority',
+        'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2863,7 +2869,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
         },
         'linkedEntity': canonicalName,
         'name': 'Collector',
-        'ref': 'Frame.traits.Collector',
+        'ref': ('Frame.traits.Collector' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2874,7 +2880,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2885,7 +2891,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
         },
         'linkedEntity': canonicalName,
         'name': 'RoundGate',
-        'ref': 'Frame.traits.RoundGate',
+        'ref': ('Frame.traits.RoundGate' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -2977,7 +2983,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.HeroIntent',
+        'ref': ('Frame.traits.HeroIntent' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -3001,7 +3007,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

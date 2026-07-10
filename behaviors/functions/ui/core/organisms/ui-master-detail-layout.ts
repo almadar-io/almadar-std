@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -51,6 +51,9 @@ export interface StdUiMasterDetailLayoutConfig {
   /** Default: `"350px"` */
   masterWidth?: string;
 }
+
+type _StdUiMasterDetailLayoutEntityName = 'MasterDetailLayoutItem';
+type _StdUiMasterDetailLayoutListenTraitName = 'MasterDetailLayoutRender';
 
 /**
  * Tunable params for the MasterDetailLayoutOrbital orbital.
@@ -90,6 +93,9 @@ export interface StdUiMasterDetailLayoutMasterDetailLayoutOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MasterDetailLayoutOrbital's `uses[]` exports. */
+type _StdUiMasterDetailLayoutMasterDetailLayoutOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the MasterDetailLayoutOrbital orbital with consumer params. */
 export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMasterDetailLayoutMasterDetailLayoutOrbitalParams = {}): OrbitalDefinition {
@@ -216,7 +222,7 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             },
           ],
         },
-      } as never, 'MasterDetailLayoutItem', canonicalName) as never,
+      } satisfies Trait, 'MasterDetailLayoutItem', canonicalName),
     ],
     pages: [
       {
@@ -227,7 +233,7 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'ref': 'MasterDetailLayoutRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

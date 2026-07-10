@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -75,6 +75,9 @@ export interface StdUiFeatureGridOrganismConfig {
   totalCount?: number;
 }
 
+type _StdUiFeatureGridOrganismEntityName = 'FeatureGridOrganismItem';
+type _StdUiFeatureGridOrganismListenTraitName = 'FeatureGridOrganismRender';
+
 /**
  * Tunable params for the FeatureGridOrganismOrbital orbital.
  *
@@ -113,6 +116,9 @@ export interface StdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait FeatureGridOrganismOrbital's `uses[]` exports. */
+type _StdUiFeatureGridOrganismFeatureGridOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the FeatureGridOrganismOrbital orbital with consumer params. */
 export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams = {}): OrbitalDefinition {
@@ -348,7 +354,7 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
               'effects': [
                 [
                   'fetch',
-                  'FeatureGridOrganismItem',
+                  ('FeatureGridOrganismItem' satisfies _StdUiFeatureGridOrganismEntityName),
                   {
                     'emit': {
                       'success': 'FeatureGridOrganismLoaded',
@@ -413,7 +419,7 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             },
           ],
         },
-      } as never, 'FeatureGridOrganismItem', canonicalName) as never,
+      } satisfies Trait, 'FeatureGridOrganismItem', canonicalName),
     ],
     pages: [
       {
@@ -424,7 +430,7 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'ref': 'FeatureGridOrganismRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

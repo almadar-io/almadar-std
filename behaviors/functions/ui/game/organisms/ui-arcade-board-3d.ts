@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,6 +44,9 @@ export interface StdUiArcadeBoard3dConfig {
   /** Default: `[{"health":1,"id":"player1","maxHealth":1,"modelUrl":{"animations":["idle","walk"],"aspect":"1:1","category":"character-gamer","dimension":"3d","name":"character-gamer","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/units/character-gamer.glb","variant":""},"name":"Kid Gamer","position":{"x":2,"y":1},"team":"player","unitType":"player-kid","x":2,"y":1,"z":0},{"health":1,"id":"npc1","maxHealth":1,"modelUrl":{"animations":["idle","walk"],"aspect":"1:1","category":"character-employee","dimension":"3d","name":"character-employee","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/units/character-employee.glb","variant":""},"name":"Wandering Kid","position":{"x":2,"y":3},"team":"neutral","unitType":"wander-kid","x":2,"y":3,"z":0}]` */
   units?: unknown;
 }
+
+type _StdUiArcadeBoard3dEntityName = 'GameState';
+type _StdUiArcadeBoard3dListenTraitName = 'HeroAuthority' | 'PlayEconomy' | 'FxDecay' | 'RoundGate' | 'Player';
 
 /**
  * Tunable params for the ArcadeBoard3DOrbital orbital.
@@ -83,6 +86,9 @@ export interface StdUiArcadeBoard3dArcadeBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ArcadeBoard3DOrbital's `uses[]` exports. */
+type _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef = 'Frame.traits.HeroAuthority' | 'Frame.traits.PlayEconomy' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundGate' | 'Frame.traits.ArcadeIntent';
 
 /** Per-orbital factory: builds the ArcadeBoard3DOrbital orbital with consumer params. */
 export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3dArcadeBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -1338,7 +1344,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'HeroAuthority',
-        'ref': 'Frame.traits.HeroAuthority',
+        'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1420,7 +1426,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'PlayEconomy',
-        'ref': 'Frame.traits.PlayEconomy',
+        'ref': ('Frame.traits.PlayEconomy' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1431,7 +1437,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'FxDecay',
-        'ref': 'Frame.traits.FxDecay',
+        'ref': ('Frame.traits.FxDecay' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1446,7 +1452,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'RoundGate',
-        'ref': 'Frame.traits.RoundGate',
+        'ref': ('Frame.traits.RoundGate' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1711,7 +1717,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
         },
         'linkedEntity': canonicalName,
         'name': 'Player',
-        'ref': 'Frame.traits.ArcadeIntent',
+        'ref': ('Frame.traits.ArcadeIntent' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1735,7 +1741,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
             'ref': 'Player',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

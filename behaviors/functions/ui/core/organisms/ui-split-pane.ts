@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -54,6 +54,9 @@ export interface StdUiSplitPaneConfig {
   /** Default: `"Right Class Name"` */
   rightClassName?: string;
 }
+
+type _StdUiSplitPaneEntityName = 'SplitPaneItem';
+type _StdUiSplitPaneListenTraitName = 'SplitPaneRender';
 
 /**
  * Tunable params for the SplitPaneOrbital orbital.
@@ -93,6 +96,9 @@ export interface StdUiSplitPaneSplitPaneOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SplitPaneOrbital's `uses[]` exports. */
+type _StdUiSplitPaneSplitPaneOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SplitPaneOrbital orbital with consumer params. */
 export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOrbitalParams = {}): OrbitalDefinition {
@@ -232,7 +238,7 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             },
           ],
         },
-      } as never, 'SplitPaneItem', canonicalName) as never,
+      } satisfies Trait, 'SplitPaneItem', canonicalName),
     ],
     pages: [
       {
@@ -243,7 +249,7 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'ref': 'SplitPaneRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

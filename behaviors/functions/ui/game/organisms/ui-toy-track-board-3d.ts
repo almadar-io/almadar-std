@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -139,6 +139,9 @@ export interface StdUiToyTrackBoard3dConfig {
   units?: EntityRow[];
 }
 
+type _StdUiToyTrackBoard3dEntityName = 'ToyTrackBoard3DItem';
+type _StdUiToyTrackBoard3dListenTraitName = 'ToyTrackBoard3DRender';
+
 /**
  * Tunable params for the ToyTrackBoard3DOrbital orbital.
  *
@@ -177,6 +180,9 @@ export interface StdUiToyTrackBoard3dToyTrackBoard3DOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ToyTrackBoard3DOrbital's `uses[]` exports. */
+type _StdUiToyTrackBoard3dToyTrackBoard3DOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ToyTrackBoard3DOrbital orbital with consumer params. */
 export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrackBoard3dToyTrackBoard3DOrbitalParams = {}): OrbitalDefinition {
@@ -4484,7 +4490,7 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
             'name': 'rivalTick',
           },
         ],
-      } as never, 'ToyTrackBoard3DItem', canonicalName) as never,
+      } satisfies Trait, 'ToyTrackBoard3DItem', canonicalName),
     ],
     pages: [
       {
@@ -4495,7 +4501,7 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
             'ref': 'ToyTrackBoard3DRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

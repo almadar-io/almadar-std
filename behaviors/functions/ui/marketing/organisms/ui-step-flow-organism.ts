@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -77,6 +77,9 @@ export interface StdUiStepFlowOrganismConfig {
   totalCount?: number;
 }
 
+type _StdUiStepFlowOrganismEntityName = 'StepFlowOrganismItem';
+type _StdUiStepFlowOrganismListenTraitName = 'StepFlowOrganismRender';
+
 /**
  * Tunable params for the StepFlowOrganismOrbital orbital.
  *
@@ -115,6 +118,9 @@ export interface StdUiStepFlowOrganismStepFlowOrganismOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait StepFlowOrganismOrbital's `uses[]` exports. */
+type _StdUiStepFlowOrganismStepFlowOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the StepFlowOrganismOrbital orbital with consumer params. */
 export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFlowOrganismStepFlowOrganismOrbitalParams = {}): OrbitalDefinition {
@@ -356,7 +362,7 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
               'effects': [
                 [
                   'fetch',
-                  'StepFlowOrganismItem',
+                  ('StepFlowOrganismItem' satisfies _StdUiStepFlowOrganismEntityName),
                   {
                     'emit': {
                       'success': 'StepFlowOrganismLoaded',
@@ -423,7 +429,7 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             },
           ],
         },
-      } as never, 'StepFlowOrganismItem', canonicalName) as never,
+      } satisfies Trait, 'StepFlowOrganismItem', canonicalName),
     ],
     pages: [
       {
@@ -434,7 +440,7 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'ref': 'StepFlowOrganismRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

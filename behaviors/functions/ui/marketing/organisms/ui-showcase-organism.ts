@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -75,6 +75,9 @@ export interface StdUiShowcaseOrganismConfig {
   totalCount?: number;
 }
 
+type _StdUiShowcaseOrganismEntityName = 'ShowcaseOrganismItem';
+type _StdUiShowcaseOrganismListenTraitName = 'ShowcaseOrganismRender';
+
 /**
  * Tunable params for the ShowcaseOrganismOrbital orbital.
  *
@@ -113,6 +116,9 @@ export interface StdUiShowcaseOrganismShowcaseOrganismOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ShowcaseOrganismOrbital's `uses[]` exports. */
+type _StdUiShowcaseOrganismShowcaseOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ShowcaseOrganismOrbital orbital with consumer params. */
 export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowcaseOrganismShowcaseOrganismOrbitalParams = {}): OrbitalDefinition {
@@ -368,7 +374,7 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
               'effects': [
                 [
                   'fetch',
-                  'ShowcaseOrganismItem',
+                  ('ShowcaseOrganismItem' satisfies _StdUiShowcaseOrganismEntityName),
                   {
                     'emit': {
                       'success': 'ShowcaseOrganismLoaded',
@@ -433,7 +439,7 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
             },
           ],
         },
-      } as never, 'ShowcaseOrganismItem', canonicalName) as never,
+      } satisfies Trait, 'ShowcaseOrganismItem', canonicalName),
     ],
     pages: [
       {
@@ -444,7 +450,7 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
             'ref': 'ShowcaseOrganismRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

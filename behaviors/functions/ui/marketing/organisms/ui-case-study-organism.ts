@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -73,6 +73,9 @@ export interface StdUiCaseStudyOrganismConfig {
   totalCount?: number;
 }
 
+type _StdUiCaseStudyOrganismEntityName = 'CaseStudyOrganismItem';
+type _StdUiCaseStudyOrganismListenTraitName = 'CaseStudyOrganismRender';
+
 /**
  * Tunable params for the CaseStudyOrganismOrbital orbital.
  *
@@ -111,6 +114,9 @@ export interface StdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CaseStudyOrganismOrbital's `uses[]` exports. */
+type _StdUiCaseStudyOrganismCaseStudyOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the CaseStudyOrganismOrbital orbital with consumer params. */
 export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams = {}): OrbitalDefinition {
@@ -344,7 +350,7 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
               'effects': [
                 [
                   'fetch',
-                  'CaseStudyOrganismItem',
+                  ('CaseStudyOrganismItem' satisfies _StdUiCaseStudyOrganismEntityName),
                   {
                     'emit': {
                       'success': 'CaseStudyOrganismLoaded',
@@ -407,7 +413,7 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             },
           ],
         },
-      } as never, 'CaseStudyOrganismItem', canonicalName) as never,
+      } satisfies Trait, 'CaseStudyOrganismItem', canonicalName),
     ],
     pages: [
       {
@@ -418,7 +424,7 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'ref': 'CaseStudyOrganismRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

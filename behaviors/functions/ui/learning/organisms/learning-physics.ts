@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -46,6 +46,9 @@ export interface StdLearningPhysicsConfig {
   /** Default: `600` */
   width?: unknown;
 }
+
+type _StdLearningPhysicsEntityName = 'ProjectileScene' | 'FreeFallScene' | 'SpringScene' | 'FrictionScene' | 'CircularScene' | 'PendulumScene' | 'CollisionScene' | 'InclineScene' | 'OrbitScene' | 'GasScene' | 'MagneticScene' | 'WaveScene' | 'ReflectionScene';
+type _StdLearningPhysicsListenTraitName = 'ProjectileEngine' | 'FreeFallEngine' | 'SpringEngine' | 'FrictionEngine' | 'CircularEngine' | 'PendulumEngine' | 'CollisionEngine' | 'InclineEngine' | 'OrbitEngine' | 'GasEngine' | 'MagneticEngine' | 'WaveEngine' | 'ReflectionEngine';
 
 /**
  * Tunable params for the ProjectileMotionOrbital orbital.
@@ -85,6 +88,9 @@ export interface StdLearningPhysicsProjectileMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ProjectileMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsProjectileMotionOrbitalUsesRef = 'Projectile.traits.ProjectileSim';
 
 /** Per-orbital factory: builds the ProjectileMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsProjectileMotionOrbital(params: StdLearningPhysicsProjectileMotionOrbitalParams = {}): OrbitalDefinition {
@@ -237,7 +243,7 @@ export function stdLearningPhysicsProjectileMotionOrbital(params: StdLearningPhy
         },
         'linkedEntity': canonicalName,
         'name': 'ProjectileEngine',
-        'ref': 'Projectile.traits.ProjectileSim',
+        'ref': ('Projectile.traits.ProjectileSim' satisfies _StdLearningPhysicsProjectileMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -249,7 +255,7 @@ export function stdLearningPhysicsProjectileMotionOrbital(params: StdLearningPhy
             'ref': 'ProjectileEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -362,6 +368,9 @@ export interface StdLearningPhysicsFreeFallMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait FreeFallMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsFreeFallMotionOrbitalUsesRef = 'FreeFall.traits.FreeFallSim';
 
 /** Per-orbital factory: builds the FreeFallMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsFreeFallMotionOrbital(params: StdLearningPhysicsFreeFallMotionOrbitalParams = {}): OrbitalDefinition {
@@ -526,7 +535,7 @@ export function stdLearningPhysicsFreeFallMotionOrbital(params: StdLearningPhysi
         },
         'linkedEntity': canonicalName,
         'name': 'FreeFallEngine',
-        'ref': 'FreeFall.traits.FreeFallSim',
+        'ref': ('FreeFall.traits.FreeFallSim' satisfies _StdLearningPhysicsFreeFallMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -538,7 +547,7 @@ export function stdLearningPhysicsFreeFallMotionOrbital(params: StdLearningPhysi
             'ref': 'FreeFallEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -651,6 +660,9 @@ export interface StdLearningPhysicsSpringMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SpringMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsSpringMotionOrbitalUsesRef = 'Spring.traits.SpringSim';
 
 /** Per-orbital factory: builds the SpringMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsSpringMotionOrbital(params: StdLearningPhysicsSpringMotionOrbitalParams = {}): OrbitalDefinition {
@@ -815,7 +827,7 @@ export function stdLearningPhysicsSpringMotionOrbital(params: StdLearningPhysics
         },
         'linkedEntity': canonicalName,
         'name': 'SpringEngine',
-        'ref': 'Spring.traits.SpringSim',
+        'ref': ('Spring.traits.SpringSim' satisfies _StdLearningPhysicsSpringMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -827,7 +839,7 @@ export function stdLearningPhysicsSpringMotionOrbital(params: StdLearningPhysics
             'ref': 'SpringEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -940,6 +952,9 @@ export interface StdLearningPhysicsFrictionMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait FrictionMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsFrictionMotionOrbitalUsesRef = 'Friction.traits.FrictionSim';
 
 /** Per-orbital factory: builds the FrictionMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsFrictionMotionOrbital(params: StdLearningPhysicsFrictionMotionOrbitalParams = {}): OrbitalDefinition {
@@ -1096,7 +1111,7 @@ export function stdLearningPhysicsFrictionMotionOrbital(params: StdLearningPhysi
         },
         'linkedEntity': canonicalName,
         'name': 'FrictionEngine',
-        'ref': 'Friction.traits.FrictionSim',
+        'ref': ('Friction.traits.FrictionSim' satisfies _StdLearningPhysicsFrictionMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1108,7 +1123,7 @@ export function stdLearningPhysicsFrictionMotionOrbital(params: StdLearningPhysi
             'ref': 'FrictionEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1221,6 +1236,9 @@ export interface StdLearningPhysicsCircularMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CircularMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsCircularMotionOrbitalUsesRef = 'Circular.traits.CircularSim';
 
 /** Per-orbital factory: builds the CircularMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsCircularMotionOrbital(params: StdLearningPhysicsCircularMotionOrbitalParams = {}): OrbitalDefinition {
@@ -1373,7 +1391,7 @@ export function stdLearningPhysicsCircularMotionOrbital(params: StdLearningPhysi
         },
         'linkedEntity': canonicalName,
         'name': 'CircularEngine',
-        'ref': 'Circular.traits.CircularSim',
+        'ref': ('Circular.traits.CircularSim' satisfies _StdLearningPhysicsCircularMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1385,7 +1403,7 @@ export function stdLearningPhysicsCircularMotionOrbital(params: StdLearningPhysi
             'ref': 'CircularEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1498,6 +1516,9 @@ export interface StdLearningPhysicsPendulumMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait PendulumMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsPendulumMotionOrbitalUsesRef = 'Pendulum.traits.PendulumSim';
 
 /** Per-orbital factory: builds the PendulumMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsPendulumMotionOrbital(params: StdLearningPhysicsPendulumMotionOrbitalParams = {}): OrbitalDefinition {
@@ -1668,7 +1689,7 @@ export function stdLearningPhysicsPendulumMotionOrbital(params: StdLearningPhysi
         },
         'linkedEntity': canonicalName,
         'name': 'PendulumEngine',
-        'ref': 'Pendulum.traits.PendulumSim',
+        'ref': ('Pendulum.traits.PendulumSim' satisfies _StdLearningPhysicsPendulumMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1680,7 +1701,7 @@ export function stdLearningPhysicsPendulumMotionOrbital(params: StdLearningPhysi
             'ref': 'PendulumEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -1793,6 +1814,9 @@ export interface StdLearningPhysicsCollisionMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait CollisionMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsCollisionMotionOrbitalUsesRef = 'Collision.traits.CollisionSim';
 
 /** Per-orbital factory: builds the CollisionMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsCollisionMotionOrbital(params: StdLearningPhysicsCollisionMotionOrbitalParams = {}): OrbitalDefinition {
@@ -1957,7 +1981,7 @@ export function stdLearningPhysicsCollisionMotionOrbital(params: StdLearningPhys
         },
         'linkedEntity': canonicalName,
         'name': 'CollisionEngine',
-        'ref': 'Collision.traits.CollisionSim',
+        'ref': ('Collision.traits.CollisionSim' satisfies _StdLearningPhysicsCollisionMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -1969,7 +1993,7 @@ export function stdLearningPhysicsCollisionMotionOrbital(params: StdLearningPhys
             'ref': 'CollisionEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -2082,6 +2106,9 @@ export interface StdLearningPhysicsInclineMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait InclineMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsInclineMotionOrbitalUsesRef = 'Incline.traits.InclineSim';
 
 /** Per-orbital factory: builds the InclineMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsInclineMotionOrbital(params: StdLearningPhysicsInclineMotionOrbitalParams = {}): OrbitalDefinition {
@@ -2248,7 +2275,7 @@ export function stdLearningPhysicsInclineMotionOrbital(params: StdLearningPhysic
         },
         'linkedEntity': canonicalName,
         'name': 'InclineEngine',
-        'ref': 'Incline.traits.InclineSim',
+        'ref': ('Incline.traits.InclineSim' satisfies _StdLearningPhysicsInclineMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2260,7 +2287,7 @@ export function stdLearningPhysicsInclineMotionOrbital(params: StdLearningPhysic
             'ref': 'InclineEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -2373,6 +2400,9 @@ export interface StdLearningPhysicsOrbitMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait OrbitMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsOrbitMotionOrbitalUsesRef = 'Orbit.traits.OrbitSim';
 
 /** Per-orbital factory: builds the OrbitMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsOrbitMotionOrbital(params: StdLearningPhysicsOrbitMotionOrbitalParams = {}): OrbitalDefinition {
@@ -2537,7 +2567,7 @@ export function stdLearningPhysicsOrbitMotionOrbital(params: StdLearningPhysicsO
         },
         'linkedEntity': canonicalName,
         'name': 'OrbitEngine',
-        'ref': 'Orbit.traits.OrbitSim',
+        'ref': ('Orbit.traits.OrbitSim' satisfies _StdLearningPhysicsOrbitMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2549,7 +2579,7 @@ export function stdLearningPhysicsOrbitMotionOrbital(params: StdLearningPhysicsO
             'ref': 'OrbitEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -2662,6 +2692,9 @@ export interface StdLearningPhysicsGasMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait GasMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsGasMotionOrbitalUsesRef = 'Gas.traits.GasSim';
 
 /** Per-orbital factory: builds the GasMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsGasMotionOrbital(params: StdLearningPhysicsGasMotionOrbitalParams = {}): OrbitalDefinition {
@@ -2970,7 +3003,7 @@ export function stdLearningPhysicsGasMotionOrbital(params: StdLearningPhysicsGas
         },
         'linkedEntity': canonicalName,
         'name': 'GasEngine',
-        'ref': 'Gas.traits.GasSim',
+        'ref': ('Gas.traits.GasSim' satisfies _StdLearningPhysicsGasMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -2982,7 +3015,7 @@ export function stdLearningPhysicsGasMotionOrbital(params: StdLearningPhysicsGas
             'ref': 'GasEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -3095,6 +3128,9 @@ export interface StdLearningPhysicsMagneticMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait MagneticMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsMagneticMotionOrbitalUsesRef = 'Magnetic.traits.MagneticSim';
 
 /** Per-orbital factory: builds the MagneticMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsMagneticMotionOrbital(params: StdLearningPhysicsMagneticMotionOrbitalParams = {}): OrbitalDefinition {
@@ -3251,7 +3287,7 @@ export function stdLearningPhysicsMagneticMotionOrbital(params: StdLearningPhysi
         },
         'linkedEntity': canonicalName,
         'name': 'MagneticEngine',
-        'ref': 'Magnetic.traits.MagneticSim',
+        'ref': ('Magnetic.traits.MagneticSim' satisfies _StdLearningPhysicsMagneticMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -3263,7 +3299,7 @@ export function stdLearningPhysicsMagneticMotionOrbital(params: StdLearningPhysi
             'ref': 'MagneticEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -3376,6 +3412,9 @@ export interface StdLearningPhysicsWaveMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait WaveMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsWaveMotionOrbitalUsesRef = 'Wave.traits.WaveSim';
 
 /** Per-orbital factory: builds the WaveMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsWaveMotionOrbital(params: StdLearningPhysicsWaveMotionOrbitalParams = {}): OrbitalDefinition {
@@ -3760,7 +3799,7 @@ export function stdLearningPhysicsWaveMotionOrbital(params: StdLearningPhysicsWa
         },
         'linkedEntity': canonicalName,
         'name': 'WaveEngine',
-        'ref': 'Wave.traits.WaveSim',
+        'ref': ('Wave.traits.WaveSim' satisfies _StdLearningPhysicsWaveMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -3772,7 +3811,7 @@ export function stdLearningPhysicsWaveMotionOrbital(params: StdLearningPhysicsWa
             'ref': 'WaveEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
@@ -3885,6 +3924,9 @@ export interface StdLearningPhysicsReflectionMotionOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait ReflectionMotionOrbital's `uses[]` exports. */
+type _StdLearningPhysicsReflectionMotionOrbitalUsesRef = 'Reflection.traits.ReflectionSim';
 
 /** Per-orbital factory: builds the ReflectionMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsReflectionMotionOrbital(params: StdLearningPhysicsReflectionMotionOrbitalParams = {}): OrbitalDefinition {
@@ -4039,7 +4081,7 @@ export function stdLearningPhysicsReflectionMotionOrbital(params: StdLearningPhy
         },
         'linkedEntity': canonicalName,
         'name': 'ReflectionEngine',
-        'ref': 'Reflection.traits.ReflectionSim',
+        'ref': ('Reflection.traits.ReflectionSim' satisfies _StdLearningPhysicsReflectionMotionOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -4051,7 +4093,7 @@ export function stdLearningPhysicsReflectionMotionOrbital(params: StdLearningPhy
             'ref': 'ReflectionEngine',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -101,6 +101,9 @@ export interface StdUiSequencerBoardConfig {
   title?: string;
 }
 
+type _StdUiSequencerBoardEntityName = 'SequencerBoardItem';
+type _StdUiSequencerBoardListenTraitName = 'SequencerBoardRender';
+
 /**
  * Tunable params for the SequencerBoardOrbital orbital.
  *
@@ -139,6 +142,9 @@ export interface StdUiSequencerBoardSequencerBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait SequencerBoardOrbital's `uses[]` exports. */
+type _StdUiSequencerBoardSequencerBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SequencerBoardOrbital orbital with consumer params. */
 export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerBoardSequencerBoardOrbitalParams = {}): OrbitalDefinition {
@@ -2337,7 +2343,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'name': 'playbackTick',
           },
         ],
-      } as never, 'SequencerBoardItem', canonicalName) as never,
+      } satisfies Trait, 'SequencerBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -2348,7 +2354,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'ref': 'SequencerBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];

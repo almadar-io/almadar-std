@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -98,6 +98,9 @@ export interface StdUiDebuggerBoardConfig {
   totalCount?: number;
 }
 
+type _StdUiDebuggerBoardEntityName = 'DebuggerBoardItem';
+type _StdUiDebuggerBoardListenTraitName = 'DebuggerBoardRender';
+
 /**
  * Tunable params for the DebuggerBoardOrbital orbital.
  *
@@ -136,6 +139,9 @@ export interface StdUiDebuggerBoardDebuggerBoardOrbitalParams {
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
+
+/** `'Alias.traits.TraitName'` literal union of every trait DebuggerBoardOrbital's `uses[]` exports. */
+type _StdUiDebuggerBoardDebuggerBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the DebuggerBoardOrbital orbital with consumer params. */
 export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoardDebuggerBoardOrbitalParams = {}): OrbitalDefinition {
@@ -1480,7 +1486,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
             },
           ],
         },
-      } as never, 'DebuggerBoardItem', canonicalName) as never,
+      } satisfies Trait, 'DebuggerBoardItem', canonicalName),
     ],
     pages: [
       {
@@ -1491,7 +1497,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
             'ref': 'DebuggerBoardRender',
           },
         ],
-      } as never,
+      } satisfies Page,
     ],
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
