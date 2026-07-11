@@ -8,6 +8,8 @@ orbital FooterItemOrbital {
 
   type FooterColumn = { title : string!, items : [FooterLink] }
 
+  type FooterLogo = { alt : string, href : string, src : string }
+
   uses MarketingFooter from "std/behaviors/ui-marketing-footer"
 
   entity FooterItem [runtime] {
@@ -16,13 +18,6 @@ orbital FooterItemOrbital {
 
   trait FooterItemFooter = MarketingFooter.traits.MarketingFooterRender -> FooterItem {
     config {
-      columns: @config.columns
-      copyright: @config.copyright
-      logo: {
-        alt: @config.logoAlt
-        href: @config.logoHref
-        src: @config.logoSrc
-      }
       columns : [FooterColumn] = [{
         items: [{
           href: "#"
@@ -66,14 +61,9 @@ orbital FooterItemOrbital {
       copyright : string = "© 2026 Almadar. All rights reserved."
         @label "Copyright"
         @tier "presentation"
-      logoSrc : string = ""
-        @label "Logo Source"
-        @tier "presentation"
-      logoAlt : string = ""
-        @label "Logo Alt Text"
-        @tier "presentation"
-      logoHref : string = "/"
-        @label "Logo Link"
+      logo : FooterLogo = { alt: "", href: "/", src: "" }
+        @label "Logo"
+        @description "Logo image with link and alt text"
         @tier "presentation"
     }
   }
