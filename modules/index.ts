@@ -36,6 +36,9 @@ export { PROB_OPERATORS, getProbOperators } from './prob.js';
 // OS triggers module
 export { OS_OPERATORS } from './os.js';
 
+// Browser device module (client host path)
+export { BROWSER_OPERATORS } from './browser.js';
+
 // Behavior composition module (compile-time operators)
 export { COMPOSITION_OPERATORS, getCompositionOperators } from './composition.js';
 

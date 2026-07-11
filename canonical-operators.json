@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-07-06T02:15:49.259Z",
+  "generated": "2026-07-11T04:18:15.730Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -107,6 +107,12 @@
     },
     "std-os": {
       "description": "OS-level event watchers for system triggers",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-browser": {
+      "description": "Browser device APIs (file picker, clipboard, geolocation) — client host effects",
       "target": [
         "ts"
       ]
@@ -844,6 +850,76 @@
       "returnType": "array",
       "description": "Apply cross-orbital event wiring. Adds external emits/listens to inline traits.",
       "module": "composition"
+    },
+    "browser/clipboard-read": {
+      "category": "std-browser",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "string",
+      "description": "Read text from the system clipboard (navigator.clipboard.readText / host clipboard). Requires a user gesture and clipboard permission. Resolves with the clipboard text via the trailing { emit } envelope.",
+      "module": "browser",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": "string"
+      }
+    },
+    "browser/clipboard-write": {
+      "category": "std-browser",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Write text to the system clipboard (navigator.clipboard.writeText / host clipboard). Requires a user gesture. Emits success/failure via the trailing { emit } envelope.",
+      "module": "browser",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": "string"
+      }
+    },
+    "browser/geolocation-current": {
+      "category": "std-browser",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "object",
+      "description": "Read the current device position (navigator.geolocation.getCurrentPosition / host geolocation). Requires location permission. Resolves with { latitude, longitude, accuracy } via the trailing { emit } envelope.",
+      "module": "browser",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "latitude": "number",
+            "longitude": "number",
+            "accuracy": "number"
+          }
+        }
+      }
+    },
+    "browser/open-file-picker": {
+      "category": "std-browser",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "array",
+      "description": "Open the OS file picker (window.showOpenFilePicker / host dialog). Resolves with the selected file metadata list, or emits failure when the user cancels or the capability is denied. Async; use the trailing { emit } envelope for success/failure events.",
+      "module": "browser",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "array",
+          "of": {
+            "kind": "object",
+            "fields": {
+              "name": "string",
+              "size": "number",
+              "type": "string",
+              "lastModified": "number"
+            }
+          }
+        }
+      }
     },
     "call-service": {
       "category": "effect",

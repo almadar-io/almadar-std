@@ -27,6 +27,7 @@ import { CONTRACT_OPERATORS } from './modules/contract.js';
 import { DATA_OPERATORS } from './modules/data.js';
 import { PROB_OPERATORS } from './modules/prob.js';
 import { OS_OPERATORS } from './modules/os.js';
+import { BROWSER_OPERATORS } from './modules/browser.js';
 import { COMPOSITION_OPERATORS } from './modules/composition.js';
 import { VEC_OPERATORS } from './modules/vector.js';
 import { GEO_OPERATORS } from './modules/geo.js';
@@ -70,6 +71,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...DATA_OPERATORS,
   ...PROB_OPERATORS,
   ...OS_OPERATORS,
+  ...BROWSER_OPERATORS,
   ...COMPOSITION_OPERATORS,
   ...VEC_OPERATORS,
   ...GEO_OPERATORS,
@@ -115,6 +117,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   data: DATA_OPERATORS,
   prob: PROB_OPERATORS,
   os: OS_OPERATORS,
+  browser: BROWSER_OPERATORS,
   composition: COMPOSITION_OPERATORS,
   vec: VEC_OPERATORS,
   geo: GEO_OPERATORS,

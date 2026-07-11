@@ -106,6 +106,12 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Watch file system, processes, ports, signals, and environment for OS-level triggers.',
         icon: '🖥️',
     },
+    browser: {
+        name: 'Browser Device',
+        displayName: 'Browser Device APIs',
+        description: 'User-initiated device APIs on the client host path: file picker, clipboard, and geolocation, routed through the host bridge on native.',
+        icon: '🌐',
+    },
     graph: {
         name: 'Graph',
         displayName: 'Graph Operations',

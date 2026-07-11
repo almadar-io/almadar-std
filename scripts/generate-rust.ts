@@ -56,6 +56,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-async': { description: 'Async utilities (runtime only)', target: ['ts'] },
     'std-prob': { description: 'Probabilistic programming', target: ['ts'] },
     'std-os': { description: 'OS-level event watchers for system triggers', target: ['ts'] },
+    'std-browser': { description: 'Browser device APIs (file picker, clipboard, geolocation) — client host effects', target: ['ts'] },
       'std-composition': { description: 'Behavior composition (compile-time)', target: ['ts', 'rust'] },
     'std-llm': { description: 'LLM interaction substrate (runtime)', target: ['ts'] },
     'std-workspace': { description: 'Workspace I/O substrate (runtime)', target: ['ts'] },
