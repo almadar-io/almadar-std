@@ -1,15 +1,13 @@
 app std-export "3.0.0"
-"std-export — a row of export-format buttons. Predefined CSV/XLSX/PDF defaults; caller can override via config.formats. Emits EXPORT_REQUESTED { format, tileId } on the bus; host or sibling orbital generates the file."
+"std-export — a dropdown format menu (CSV/XLSX/PDF defaults; caller can override via config.formats). Emits EXPORT_REQUESTED { itemId, label } on the bus — itemId is the picked format id; host or sibling orbital generates the file. tileId is a static per-instance config value, not echoed in the click payload."
 orbital ExportOrbital {
     uses Button from "std/behaviors/ui-button"
-    uses DataList from "std/behaviors/ui-data-list"
-    uses Popover from "std/behaviors/ui-popover"
+    uses Menu from "std/behaviors/ui-menu"
 
-    type FormatOption = { id : string!, format : string!, label : string! }
+    type FormatOption = { id : string!, format : string!, label : string!, event : string }
 
   entity ExportPanel [runtime] {
     id : string!
-    options : [FormatOption] @description "Configuration settings for available export formats." @synonyms "format, export-types, configurations" = []
   }
 
   trait Button1 = Button.traits.ButtonRender -> ExportPanel {
@@ -22,18 +20,11 @@ orbital ExportOrbital {
     }
   }
 
-  trait DataList1 = DataList.traits.DataListRender -> ExportPanel {
+  trait Menu1 = Menu.traits.MenuRender -> ExportPanel {
     config {
-      fields: []
-      look: @config.tableLook
-    }
-  }
-
-  trait Popover1 = Popover.traits.PopoverRender -> ExportPanel {
-    config {
-      children: [@trait.Button1]
-      content: @trait.DataList1
-      position: bottom
+      items: @config.formats
+      position: bottom-start
+      trigger: [@trait.Button1]
     }
   }
 
@@ -42,30 +33,27 @@ orbital ExportOrbital {
 
     state idle {
       INIT -> idle
-        (set @entity.options @config.formats)
-        (render-ui main { children: [@trait.Popover1], type: box })
+        (render-ui main { children: [@trait.Menu1], type: box })
       OPEN_EXPORT -> idle
-        (set @entity.options @entity.options)
       EXPORT_REQUESTED -> idle
-        (set @entity.options @entity.options)
     }
 
     emits {
       EXPORT_REQUESTED -> external {
-        format : string!
-        tileId : string
+        itemId : string!
+        label : string!
       }
-        @description "Requests export of data in a specified format."
+        @description "Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry)."
         @synonyms "export, save, download, generate"
         @tier "domain"
     }
 
     listens {
       EXPORT_REQUESTED {
-        format : string!
-        tileId : string
+        itemId : string!
+        label : string!
       }
-        @description "A request to export data in a specific format."
+        @description "A request to export data in a specific format. itemId is the picked format id."
         @synonyms "export, generate, save, download"
         @tier "domain"
     }
@@ -78,18 +66,21 @@ orbital ExportOrbital {
         @tier "internal"
       event : string = EXPORT_REQUESTED
         @label "Export event"
-        @description "Event emitted when the user picks a format"
+        @description "Event emitted when the user picks a format. Each entry in formats[] carries its own literal event field (no per-item templating in .lolo) — overriding this alone does not retarget the click; also set formats[].event to match."
         @synonyms "bus event name. internal wiring; users rarely target directly"
         @tier "internal"
       formats : [FormatOption] = [{
+        event: EXPORT_REQUESTED
         format: csv
         id: csv
         label: CSV
       }, {
+        event: EXPORT_REQUESTED
         format: xlsx
         id: xlsx
         label: XLSX
       }, {
+        event: EXPORT_REQUESTED
         format: pdf
         id: pdf
         label: PDF
@@ -103,12 +94,8 @@ orbital ExportOrbital {
         @description "Text shown on the toolbar button that opens the export popover"
         @synonyms "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')"
         @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
-        @label "Table look"
-        @description "Layer 2 visual treatment for the data table rendered by this atom."
-        @tier "presentation"
     }
   }
 
-  page "/exports/menu" as ExportMenuPage -> ExportMenu, Button1, DataList1, Popover1
+  page "/exports/menu" as ExportMenuPage -> ExportMenu, Button1, Menu1
 }

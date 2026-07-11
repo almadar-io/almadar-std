@@ -1,5 +1,5 @@
 {
-  "description": "std-export — a row of export-format buttons. Predefined CSV/XLSX/PDF defaults; caller can override via config.formats. Emits EXPORT_REQUESTED { format, tileId } on the bus; host or sibling orbital generates the file.",
+  "description": "std-export — a dropdown format menu (CSV/XLSX/PDF defaults; caller can override via config.formats). Emits EXPORT_REQUESTED { itemId, label } on the bus — itemId is the picked format id; host or sibling orbital generates the file. tileId is a static per-instance config value, not echoed in the click payload.",
   "name": "std-export",
   "orbitals": [
     {
@@ -9,33 +9,6 @@
             "name": "id",
             "required": true,
             "type": "string"
-          },
-          {
-            "default": [],
-            "description": "Configuration settings for available export formats.",
-            "items": {
-              "properties": {
-                "format": {
-                  "name": "format",
-                  "required": true,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            },
-            "name": "options",
-            "synonyms": "format, export-types, configurations",
-            "type": "array"
           }
         ],
         "name": "ExportPanel",
@@ -54,10 +27,7 @@
               "ref": "Button1"
             },
             {
-              "ref": "DataList1"
-            },
-            {
-              "ref": "Popover1"
+              "ref": "Menu1"
             }
           ]
         }
@@ -92,39 +62,24 @@
         },
         {
           "config": {
-            "fields": {
-              "default": [],
+            "items": {
+              "default": "@config.formats",
               "type": "unknown"
             },
-            "look": {
-              "default": "@config.tableLook",
+            "position": {
+              "default": "bottom-start",
               "type": "unknown"
-            }
-          },
-          "linkedEntity": "ExportPanel",
-          "name": "DataList1",
-          "ref": "DataList.traits.DataListRender"
-        },
-        {
-          "config": {
-            "children": {
+            },
+            "trigger": {
               "default": [
                 "@trait.Button1"
               ],
               "type": "unknown"
-            },
-            "content": {
-              "default": "@trait.DataList1",
-              "type": "unknown"
-            },
-            "position": {
-              "default": "bottom",
-              "type": "unknown"
             }
           },
           "linkedEntity": "ExportPanel",
-          "name": "Popover1",
-          "ref": "Popover.traits.PopoverRender"
+          "name": "Menu1",
+          "ref": "Menu.traits.MenuRender"
         },
         {
           "category": "interaction",
@@ -139,7 +94,7 @@
             },
             "event": {
               "default": "EXPORT_REQUESTED",
-              "description": "Event emitted when the user picks a format",
+              "description": "Event emitted when the user picks a format. Each entry in formats[] carries its own literal event field (no per-item templating in .lolo) — overriding this alone does not retarget the click; also set formats[].event to match.",
               "label": "Export event",
               "synonyms": "bus event name. internal wiring; users rarely target directly",
               "tier": "internal",
@@ -148,16 +103,19 @@
             "formats": {
               "default": [
                 {
+                  "event": "EXPORT_REQUESTED",
                   "format": "csv",
                   "id": "csv",
                   "label": "CSV"
                 },
                 {
+                  "event": "EXPORT_REQUESTED",
                   "format": "xlsx",
                   "id": "xlsx",
                   "label": "XLSX"
                 },
                 {
+                  "event": "EXPORT_REQUESTED",
                   "format": "pdf",
                   "id": "pdf",
                   "label": "PDF"
@@ -166,6 +124,11 @@
               "description": "Export formats shown to the user in the popover",
               "items": {
                 "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
                   "format": {
                     "name": "format",
                     "required": true,
@@ -189,20 +152,6 @@
               "tier": "presentation",
               "type": "[FormatOption]"
             },
-            "tableLook": {
-              "default": "dense",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "label": "Table look",
-              "tier": "presentation",
-              "type": "string",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            },
             "tileId": {
               "default": "",
               "description": "Identifier of the dashboard tile being exported",
@@ -214,16 +163,17 @@
           },
           "emits": [
             {
-              "description": "Requests export of data in a specified format.",
+              "description": "Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry).",
               "event": "EXPORT_REQUESTED",
               "payloadSchema": [
                 {
-                  "name": "format",
+                  "name": "itemId",
                   "required": true,
                   "type": "string"
                 },
                 {
-                  "name": "tileId",
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 }
               ],
@@ -246,17 +196,18 @@
                 "name": "Open Export"
               },
               {
-                "description": "Requests export of data in a specified format.",
+                "description": "Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry).",
                 "key": "EXPORT_REQUESTED",
                 "name": "Export Requested",
                 "payloadSchema": [
                   {
-                    "name": "format",
+                    "name": "itemId",
                     "required": true,
                     "type": "string"
                   },
                   {
-                    "name": "tileId",
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -274,16 +225,11 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.options",
-                    "@config.formats"
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
-                        "@trait.Popover1"
+                        "@trait.Menu1"
                       ],
                       "type": "box"
                     }
@@ -294,25 +240,11 @@
                 "to": "idle"
               },
               {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.options",
-                    "@entity.options"
-                  ]
-                ],
                 "event": "OPEN_EXPORT",
                 "from": "idle",
                 "to": "idle"
               },
               {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.options",
-                    "@entity.options"
-                  ]
-                ],
                 "event": "EXPORT_REQUESTED",
                 "from": "idle",
                 "to": "idle"
@@ -327,12 +259,8 @@
           "from": "std/behaviors/ui-button"
         },
         {
-          "as": "DataList",
-          "from": "std/behaviors/ui-data-list"
-        },
-        {
-          "as": "Popover",
-          "from": "std/behaviors/ui-popover"
+          "as": "Menu",
+          "from": "std/behaviors/ui-menu"
         }
       ]
     }
