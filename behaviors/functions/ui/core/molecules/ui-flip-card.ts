@@ -46,12 +46,18 @@ export interface StdUiFlipCardFlipPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFlipCardConfig {
+  /** Default: `[{"content":"Back","type":"typography"}]` */
+  back?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   flipped?: boolean;
+  /** Default: `[{"content":"Front","type":"typography"}]` */
+  front?: unknown;
   /** Default: `"h-64"` */
   height?: string;
+  /** Default: `"FLIP"` */
+  onFlip?: string;
 }
 
 /**

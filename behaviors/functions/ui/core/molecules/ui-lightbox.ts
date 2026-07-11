@@ -70,6 +70,10 @@ export interface StdUiLightboxConfig {
   images?: EntityRow[];
   /** Default: `false` */
   isOpen?: boolean;
+  /** Default: `"CLOSE"` */
+  onClose?: string;
+  /** Default: `"INDEX_CHANGE"` */
+  onIndexChange?: string;
   /** Default: `true` */
   showCounter?: boolean;
 }

@@ -52,6 +52,8 @@ export interface StdUiDayCellConfig {
   date?: string;
   /** Default: `false` */
   isToday?: boolean;
+  /** Default: `"CLICK"` */
+  onClick?: string;
 }
 
 /**

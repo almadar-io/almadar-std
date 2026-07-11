@@ -54,12 +54,16 @@ export interface StdUiVoteStackConfig {
   disabled?: boolean;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"VOTE"` */
+  onVote?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `"up"` */
   userVote?: 'up' | 'down' | 'none';
   /** Default: `"vertical"` */
   variant?: 'vertical' | 'horizontal';
+  /** Default: `"VOTE"` */
+  voteEvent?: string;
 }
 
 /**

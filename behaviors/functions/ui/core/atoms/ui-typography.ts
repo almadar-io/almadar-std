@@ -47,6 +47,8 @@ export interface StdUiTypographyConfig {
   className?: string;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
+  /** Default: `[{"content":"Content","type":"typography"}]` */
+  content?: unknown;
   /** Default: `1` */
   level?: number;
   /** Default: `"visible"` */

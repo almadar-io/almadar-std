@@ -60,8 +60,16 @@ export interface StdUiPaginationConfig {
   currentPage?: number;
   /** Default: `7` */
   maxVisiblePages?: number;
+  /** Default: `"PAGE_CHANGE"` */
+  onPageChange?: string;
+  /** Default: `"PAGE_SIZE_CHANGE"` */
+  onPageSizeChange?: string;
+  /** Default: `"PAGE_CHANGE"` */
+  pageChangeEvent?: string;
   /** Default: `0` */
   pageSize?: number;
+  /** Default: `"PAGE_SIZE_CHANGE"` */
+  pageSizeChangeEvent?: string;
   /** Default: `[]` */
   pageSizeOptions?: number[];
   /** Default: `false` */

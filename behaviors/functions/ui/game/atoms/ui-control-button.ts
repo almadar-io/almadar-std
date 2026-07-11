@@ -63,8 +63,16 @@ export interface StdUiControlButtonConfig {
   icon?: unknown;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"PRESS"` */
+  onPress?: string;
+  /** Default: `"RELEASE"` */
+  onRelease?: string;
+  /** Default: `"PRESS"` */
+  pressEvent?: string;
   /** Default: `false` */
   pressed?: boolean;
+  /** Default: `"RELEASE"` */
+  releaseEvent?: string;
   /** Default: `"circle"` */
   shape?: 'circle' | 'rounded' | 'square';
   /** Default: `"md"` */

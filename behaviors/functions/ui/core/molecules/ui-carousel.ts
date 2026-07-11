@@ -60,6 +60,8 @@ export interface StdUiCarouselConfig {
   showArrows?: boolean;
   /** Default: `true` */
   showDots?: boolean;
+  /** Default: `"SLIDE_CHANGE"` */
+  slideChangeEvent?: string;
   /** Default: `{}` */
   slideChangePayload?: unknown;
 }

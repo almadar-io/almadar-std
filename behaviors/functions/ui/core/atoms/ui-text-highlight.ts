@@ -74,6 +74,8 @@ export interface StdUiTextHighlightHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTextHighlightConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `"Annotation Id"` */
   annotationId?: string;
   /** Default: `[{"content":"Sample content","type":"typography"}]` */
@@ -82,8 +84,16 @@ export interface StdUiTextHighlightConfig {
   className?: string;
   /** Default: `"question"` */
   highlightType?: 'question' | 'note';
+  /** Default: `"HOVER"` */
+  hoverEvent?: string;
   /** Default: `false` */
   isActive?: boolean;
+  /** Default: `"CLICK"` */
+  onClick?: string;
+  /** Default: `"MOUSE_ENTER"` */
+  onMouseEnter?: string;
+  /** Default: `"MOUSE_LEAVE"` */
+  onMouseLeave?: string;
 }
 
 /**

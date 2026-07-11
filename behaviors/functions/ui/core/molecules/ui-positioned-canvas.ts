@@ -68,6 +68,14 @@ export interface StdUiPositionedCanvasConfig {
   editable?: boolean;
   /** Default: `600` */
   height?: number;
+  /** Default: `"MOVE"` */
+  moveEvent?: string;
+  /** Default: `"MOVE"` */
+  onMove?: string;
+  /** Default: `"SELECT"` */
+  onSelect?: string;
+  /** Default: `"SELECT"` */
+  selectEvent?: string;
   /** Default: `""` */
   selectedId?: string;
   /** Default: `800` */

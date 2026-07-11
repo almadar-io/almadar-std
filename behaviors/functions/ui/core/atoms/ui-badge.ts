@@ -56,6 +56,8 @@ export interface StdUiBadgeConfig {
   iconAsset?: EntityRow;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"REMOVE"` */
+  onRemove?: string;
   /** Default: `"Remove Label"` */
   removeLabel?: string;
   /** Default: `"sm"` */

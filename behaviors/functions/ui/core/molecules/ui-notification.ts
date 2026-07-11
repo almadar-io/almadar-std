@@ -53,18 +53,26 @@ export interface StdUiNotificationActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiNotificationConfig {
+  /** Default: `"ACTION"` */
+  actionEvent?: string;
   /** Default: `"Action Label"` */
   actionLabel?: string;
   /** Default: `"Badge"` */
   badge?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"DISMISS"` */
+  dismissEvent?: string;
   /** Default: `true` */
   dismissible?: boolean;
   /** Default: `5000` */
   duration?: number;
   /** Default: `"Message"` */
   message?: string;
+  /** Default: `"ACTION"` */
+  onAction?: string;
+  /** Default: `"DISMISS"` */
+  onDismiss?: string;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"info"` */

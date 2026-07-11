@@ -43,6 +43,8 @@ export interface StdUiSplitPaneConfig {
   className?: string;
   /** Default: `"horizontal"` */
   direction?: 'horizontal' | 'vertical';
+  /** Default: `[{"content":"Left","type":"typography"}]` */
+  left?: unknown;
   /** Default: `"Left Class Name"` */
   leftClassName?: string;
   /** Default: `100` */
@@ -51,6 +53,8 @@ export interface StdUiSplitPaneConfig {
   ratio?: number;
   /** Default: `true` */
   resizable?: boolean;
+  /** Default: `[{"content":"Right","type":"typography"}]` */
+  right?: unknown;
   /** Default: `"Right Class Name"` */
   rightClassName?: string;
 }
@@ -145,6 +149,18 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
               'vertical',
             ],
           },
+          'left': {
+            'default': [
+              {
+                'content': 'Left',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Content for the left/top pane',
+            'label': 'Left',
+            'tier': 'presentation',
+            'type': 'node',
+          },
           'leftClassName': {
             'default': 'Left Class Name',
             'description': 'Class for left/top pane',
@@ -172,6 +188,18 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'label': 'Resizable',
             'tier': 'presentation',
             'type': 'boolean',
+          },
+          'right': {
+            'default': [
+              {
+                'content': 'Right',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Content for the right/bottom pane',
+            'label': 'Right',
+            'tier': 'presentation',
+            'type': 'node',
           },
           'rightClassName': {
             'default': 'Right Class Name',
@@ -211,22 +239,12 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
                   {
                     'className': '@config.className',
                     'direction': '@config.direction',
-                    'left': [
-                      {
-                        'content': 'Left',
-                        'type': 'typography',
-                      },
-                    ],
+                    'left': '@config.left',
                     'leftClassName': '@config.leftClassName',
                     'minSize': '@config.minSize',
                     'ratio': '@config.ratio',
                     'resizable': '@config.resizable',
-                    'right': [
-                      {
-                        'content': 'Right',
-                        'type': 'typography',
-                      },
-                    ],
+                    'right': '@config.right',
                     'rightClassName': '@config.rightClassName',
                     'type': 'split-pane',
                   },

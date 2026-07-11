@@ -46,6 +46,8 @@ export interface StdUiConditionalWrapperConfig {
   condition?: EntityRow;
   /** Default: `{"formValues":{},"globalVariables":{}}` */
   context?: EntityRow;
+  /** Default: `[{"content":"Fallback","type":"typography"}]` */
+  fallback?: unknown;
 }
 
 /**

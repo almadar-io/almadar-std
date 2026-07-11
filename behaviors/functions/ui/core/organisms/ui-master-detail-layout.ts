@@ -41,11 +41,15 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
 export interface StdUiMasterDetailLayoutConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"content":"Detail","type":"typography"}]` */
+  detail?: unknown;
   /** Default: `"Detail Class Name"` */
   detailClassName?: string;
   emptyDetail?: unknown;
   /** Default: `false` */
   hasSelection?: boolean;
+  /** Default: `[{"content":"Master","type":"typography"}]` */
+  master?: unknown;
   /** Default: `"Master Class Name"` */
   masterClassName?: string;
   /** Default: `"350px"` */
@@ -131,6 +135,18 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'tier': 'presentation',
             'type': 'string',
           },
+          'detail': {
+            'default': [
+              {
+                'content': 'Detail',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Detail panel content',
+            'label': 'Detail',
+            'tier': 'presentation',
+            'type': 'node',
+          },
           'detailClassName': {
             'default': 'Detail Class Name',
             'description': 'Class for detail pane',
@@ -150,6 +166,18 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'label': 'Has Selection',
             'tier': 'presentation',
             'type': 'boolean',
+          },
+          'master': {
+            'default': [
+              {
+                'content': 'Master',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Master panel content (usually a list)',
+            'label': 'Master',
+            'tier': 'presentation',
+            'type': 'node',
           },
           'masterClassName': {
             'default': 'Master Class Name',
@@ -195,21 +223,11 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                   'main',
                   {
                     'className': '@config.className',
-                    'detail': [
-                      {
-                        'content': 'Detail',
-                        'type': 'typography',
-                      },
-                    ],
+                    'detail': '@config.detail',
                     'detailClassName': '@config.detailClassName',
                     'emptyDetail': '@config.emptyDetail',
                     'hasSelection': '@config.hasSelection',
-                    'master': [
-                      {
-                        'content': 'Master',
-                        'type': 'typography',
-                      },
-                    ],
+                    'master': '@config.master',
                     'masterClassName': '@config.masterClassName',
                     'masterWidth': '@config.masterWidth',
                     'type': 'master-detail-layout',

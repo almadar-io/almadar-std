@@ -75,10 +75,16 @@ export interface StdUiGraphCanvasConfig {
   linkDistance?: number;
   /** Default: `0.18` */
   linkOpacity?: number;
+  /** Default: `"NODE_CLICK"` */
+  nodeClickEvent?: string;
   /** Default: `28` */
   nodeSpacing?: number;
   /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1,"x":1,"y":1},{"color":"Color 2","group":"Group 2","id":"Id 2","label":"Label 2","size":2,"x":2,"y":2}]` */
   nodes?: EntityRow[];
+  /** Default: `"NODE_CLICK"` */
+  onNodeClick?: string;
+  /** Default: `"NODE_DOUBLE_CLICK"` */
+  onNodeDoubleClick?: string;
   /** Default: `800` */
   repulsion?: number;
   /** Default: `"Selected Node Id"` */

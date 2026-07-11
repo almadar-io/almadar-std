@@ -67,6 +67,8 @@ export interface StdUiFormSectionFormSectionLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFormSectionConfig {
+  /** Default: `"CANCEL"` */
+  cancelEvent?: string;
   /** Default: `"Cancel Label"` */
   cancelLabel?: string;
   /** Default: `[{"content":"Sample content","type":"typography"}]` */
@@ -93,6 +95,8 @@ export interface StdUiFormSectionConfig {
   mode?: 'create' | 'edit';
   /** Default: `"On Cancel"` */
   onCancel?: string;
+  /** Default: `"FIELD_CHANGE"` */
+  onFieldChange?: string;
   /** Default: `"On Submit"` */
   onSubmit?: string;
   /** Default: `{}` */
@@ -107,6 +111,8 @@ export interface StdUiFormSectionConfig {
   showCancel?: boolean;
   /** Default: `true` */
   showSubmit?: boolean;
+  /** Default: `"SUBMIT"` */
+  submitEvent?: string;
   /** Default: `"Submit Label"` */
   submitLabel?: string;
   /** Default: `"Title"` */
@@ -187,6 +193,13 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
       rebindInlineTraitEntity({
         'category': 'interaction',
         'config': {
+          'cancelEvent': {
+            'default': 'CANCEL',
+            'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
+            'label': 'Cancel Event',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'cancelLabel': {
             'default': 'Cancel Label',
             'description': 'Cancel button label (if provided, shows cancel button)',
@@ -571,6 +584,13 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'default': 'On Cancel',
             'description': 'Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})',
             'label': 'On Cancel',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'onFieldChange': {
+            'default': 'FIELD_CHANGE',
+            'description': 'Callback when any field value changes',
+            'label': 'On Field Change',
             'tier': 'presentation',
             'type': 'string',
           },
@@ -960,6 +980,13 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'submitEvent': {
+            'default': 'SUBMIT',
+            'description': 'Event dispatch props (for trait state machine integration)',
+            'label': 'Submit Event',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'submitLabel': {
             'default': 'Submit Label',
             'description': 'Submit button label',
@@ -1032,7 +1059,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
         'emits': [
           {
             'description': 'Event dispatch props (for trait state machine integration)',
-            'event': 'SUBMIT',
+            'event': '@config.submitEvent',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1044,7 +1071,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           },
           {
             'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
-            'event': 'CANCEL',
+            'event': '@config.cancelEvent',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1056,7 +1083,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           },
           {
             'description': 'Callback when any field value changes',
-            'event': 'FIELD_CHANGE',
+            'event': '@config.onFieldChange',
             'payloadSchema': [
               {
                 'name': 'change',
@@ -1126,8 +1153,8 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             },
             {
               'description': 'Event dispatch props (for trait state machine integration)',
-              'key': 'SUBMIT',
-              'name': 'Submit',
+              'key': '@config.submitEvent',
+              'name': '@config.submit event',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1138,8 +1165,8 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             },
             {
               'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
-              'key': 'CANCEL',
-              'name': 'Cancel',
+              'key': '@config.cancelEvent',
+              'name': '@config.cancel event',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1150,8 +1177,8 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             },
             {
               'description': 'Callback when any field value changes',
-              'key': 'FIELD_CHANGE',
-              'name': 'Field Change',
+              'key': '@config.onFieldChange',
+              'name': '@config.on field change',
               'payloadSchema': [
                 {
                   'name': 'change',
@@ -1200,7 +1227,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   'render-ui',
                   'main',
                   {
-                    'cancelEvent': 'CANCEL',
+                    'cancelEvent': '@config.cancelEvent',
                     'cancelLabel': '@config.cancelLabel',
                     'children': '@config.children',
                     'className': '@config.className',
@@ -1217,7 +1244,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'layout': '@config.layout',
                     'mode': '@config.mode',
                     'onCancel': '@config.onCancel',
-                    'onFieldChange': 'FIELD_CHANGE',
+                    'onFieldChange': '@config.onFieldChange',
                     'onSubmit': '@config.onSubmit',
                     'relationsData': '@config.relationsData',
                     'relationsLoading': '@config.relationsLoading',
@@ -1225,7 +1252,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
-                    'submitEvent': 'SUBMIT',
+                    'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
                     'title': '@config.title',
                     'type': 'form-section',
@@ -1243,7 +1270,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   'render-ui',
                   'main',
                   {
-                    'cancelEvent': 'CANCEL',
+                    'cancelEvent': '@config.cancelEvent',
                     'cancelLabel': '@config.cancelLabel',
                     'children': '@config.children',
                     'className': '@config.className',
@@ -1260,7 +1287,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'layout': '@config.layout',
                     'mode': '@config.mode',
                     'onCancel': '@config.onCancel',
-                    'onFieldChange': 'FIELD_CHANGE',
+                    'onFieldChange': '@config.onFieldChange',
                     'onSubmit': '@config.onSubmit',
                     'relationsData': '@config.relationsData',
                     'relationsLoading': '@config.relationsLoading',
@@ -1268,7 +1295,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
-                    'submitEvent': 'SUBMIT',
+                    'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
                     'title': '@config.title',
                     'type': 'form-section',

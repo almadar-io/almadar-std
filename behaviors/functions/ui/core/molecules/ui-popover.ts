@@ -43,6 +43,8 @@ export interface StdUiPopoverConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"content":"Content","type":"typography"}]` */
+  content?: unknown;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
   /** Default: `true` */

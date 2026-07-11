@@ -60,6 +60,8 @@ export interface StdUiSelectValueChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSelectConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
@@ -70,6 +72,10 @@ export interface StdUiSelectConfig {
   groups?: EntityRow[];
   /** Default: `false` */
   multiple?: boolean;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
+  /** Default: `"VALUE_CHANGE"` */
+  onValueChange?: string;
   /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
   /** Default: `"Placeholder"` */

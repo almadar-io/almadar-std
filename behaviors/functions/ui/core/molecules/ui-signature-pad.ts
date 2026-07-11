@@ -62,6 +62,8 @@ export interface StdUiSignaturePadClearPayload {
 export interface StdUiSignaturePadConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `"CLEAR"` */
+  clearEvent?: string;
   error?: EntityRow;
   /** Default: `200` */
   height?: number;
@@ -71,8 +73,12 @@ export interface StdUiSignaturePadConfig {
   isLoading?: boolean;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
   /** Default: `false` */
   readOnly?: boolean;
+  /** Default: `"SIGN"` */
+  signEvent?: string;
   /** Default: `"Stroke Color"` */
   strokeColor?: string;
   /** Default: `2` */

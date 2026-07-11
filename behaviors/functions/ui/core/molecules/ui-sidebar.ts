@@ -64,6 +64,10 @@ export interface StdUiSidebarConfig {
   brandName?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"CLOSE"` */
+  closeEvent?: string;
+  /** Default: `"COLLAPSE_CHANGE"` */
+  collapseChangeEvent?: string;
   /** Default: `false` */
   collapsed?: boolean;
   /** Default: `false` */
@@ -76,6 +80,10 @@ export interface StdUiSidebarConfig {
   isLoading?: boolean;
   /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subItems":[]},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","id":"Id 2","isActive":true,"label":"Label 2","subItems":[]}]` */
   items?: EntityRow[];
+  /** Default: `[{"content":"Logo","type":"typography"}]` */
+  logo?: unknown;
+  /** Default: `"LOGO_CLICK"` */
+  logoClickEvent?: string;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   logoSrc?: unknown;
   /** Default: `false` */

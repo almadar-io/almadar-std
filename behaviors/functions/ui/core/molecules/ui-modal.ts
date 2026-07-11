@@ -57,6 +57,8 @@ export interface StdUiModalConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"CLOSE"` */
+  closeEvent?: string;
   /** Default: `true` */
   closeOnEscape?: boolean;
   /** Default: `true` */
@@ -66,6 +68,8 @@ export interface StdUiModalConfig {
   isOpen?: boolean;
   /** Default: `"centered-card"` */
   look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
+  /** Default: `"CLOSE"` */
+  onClose?: string;
   /** Default: `true` */
   showCloseButton?: boolean;
   /** Default: `"md"` */

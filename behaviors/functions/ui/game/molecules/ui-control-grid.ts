@@ -55,12 +55,16 @@ export interface StdUiControlGridDirectionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiControlGridConfig {
+  /** Default: `"ACTION"` */
+  actionEvent?: string;
   /** Default: `[{"assetUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"icon":"circle","id":"Id","label":"Label","variant":"primary"},{"assetUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"icon":"circle","id":"Id 2","label":"Label 2","variant":"secondary"}]` */
   buttons?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `{"item":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
   directionAssets?: Record<string, TraitConfig>;
+  /** Default: `"DIRECTION"` */
+  directionEvent?: string;
   /** Default: `{"item":"Item"}` */
   directionEvents?: Record<string, TraitConfig>;
   /** Default: `{"item":"Item"}` */
@@ -73,6 +77,10 @@ export interface StdUiControlGridConfig {
   kind?: 'dpad' | 'actions';
   /** Default: `"horizontal"` */
   layout?: 'horizontal' | 'vertical' | 'diamond';
+  /** Default: `"ACTION"` */
+  onAction?: string;
+  /** Default: `"DIRECTION"` */
+  onDirection?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
 }

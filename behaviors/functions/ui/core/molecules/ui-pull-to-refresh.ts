@@ -50,6 +50,8 @@ export interface StdUiPullToRefreshConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"REFRESH"` */
+  refreshEvent?: string;
   /** Default: `{}` */
   refreshPayload?: unknown;
   /** Default: `60` */

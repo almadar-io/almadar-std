@@ -53,10 +53,14 @@ export interface StdUiTextareaChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTextareaConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
   error?: string;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
   /** Default: `"Placeholder"` */
   placeholder?: string;
   /** Default: `0` */

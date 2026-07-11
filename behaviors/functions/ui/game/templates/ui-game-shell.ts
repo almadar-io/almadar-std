@@ -39,6 +39,8 @@ export type StdUiGameShellEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameShellConfig {
+  /** Default: `[{"content":"Addons","type":"typography"}]` */
+  addons?: unknown;
   /** Default: `"Game"` */
   appName?: string;
   /** Default: `{"animations":["static"],"aspect":"1:1","category":"backgroundAsset","dimension":"2d","name":"backgroundAsset","role":"decoration","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
@@ -47,10 +49,16 @@ export interface StdUiGameShellConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"content":"Controls","type":"typography"}]` */
+  controls?: unknown;
   /** Default: `"future"` */
   fontFamily?: string;
+  /** Default: `[{"content":"Hud","type":"typography"}]` */
+  hud?: unknown;
   /** Default: `{"animations":["static"],"aspect":"1:1","category":"hudBackgroundAsset","dimension":"2d","name":"hudBackgroundAsset","role":"decoration","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
   hudBackgroundAsset?: EntityRow;
+  /** Default: `[{"content":"Overlay","type":"typography"}]` */
+  overlay?: unknown;
   /** Default: `true` */
   showTopBar?: boolean;
 }

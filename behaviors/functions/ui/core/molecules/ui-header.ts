@@ -77,12 +77,22 @@ export interface StdUiHeaderConfig {
   isLoading?: boolean;
   /** Default: `false` */
   isMenuOpen?: boolean;
+  /** Default: `[{"content":"Logo","type":"typography"}]` */
+  logo?: unknown;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   logoSrc?: unknown;
   /** Default: `"compact-bar"` */
   look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
   /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","label":"Label"},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","label":"Label 2"}]` */
   navigationItems?: EntityRow[];
+  /** Default: `"LOGO_CLICK"` */
+  onLogoClick?: string;
+  /** Default: `"MENU_TOGGLE"` */
+  onMenuToggle?: string;
+  /** Default: `"SEARCH"` */
+  onSearch?: string;
+  /** Default: `"USER_CLICK"` */
+  onUserClick?: string;
   /** Default: `"Search Placeholder"` */
   searchPlaceholder?: string;
   /** Default: `true` */

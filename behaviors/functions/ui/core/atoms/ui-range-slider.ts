@@ -53,6 +53,8 @@ export interface StdUiRangeSliderChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRangeSliderConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `0` */
@@ -65,6 +67,8 @@ export interface StdUiRangeSliderConfig {
   max?: number;
   /** Default: `0` */
   min?: number;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
   /** Default: `false` */
   showTicks?: boolean;
   /** Default: `false` */

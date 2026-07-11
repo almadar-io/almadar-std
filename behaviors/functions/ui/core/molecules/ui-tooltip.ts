@@ -43,6 +43,8 @@ export interface StdUiTooltipConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"content":"Content","type":"typography"}]` */
+  content?: unknown;
   /** Default: `200` */
   delay?: number;
   /** Default: `0` */

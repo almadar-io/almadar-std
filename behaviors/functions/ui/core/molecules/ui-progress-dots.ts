@@ -52,6 +52,8 @@ export interface StdUiProgressDotsConfig {
   count?: number;
   /** Default: `1` */
   currentIndex?: number;
+  /** Default: `"DOT_CLICK"` */
+  onDotClick?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
 }

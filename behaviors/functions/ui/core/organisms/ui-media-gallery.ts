@@ -80,6 +80,8 @@ export interface StdUiMediaGalleryConfig {
   selectedIds?: string[];
   /** Default: `[]` */
   selectedItems?: string[];
+  /** Default: `"SELECTION"` */
+  selectionEvent?: string;
   /** Default: `false` */
   showUpload?: boolean;
   /** Default: `"Sort By"` */
@@ -399,6 +401,13 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'tier': 'presentation',
             'type': '[string]',
           },
+          'selectionEvent': {
+            'default': 'SELECTION',
+            'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
+            'label': 'Selection Event',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'showUpload': {
             'default': false,
             'description': 'Show upload button',
@@ -442,7 +451,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
         'emits': [
           {
             'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
-            'event': 'SELECTION',
+            'event': '@config.selectionEvent',
             'payloadSchema': [
               {
                 'name': 'selection',
@@ -496,8 +505,8 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             },
             {
               'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
-              'key': 'SELECTION',
-              'name': 'Selection',
+              'key': '@config.selectionEvent',
+              'name': '@config.selection event',
               'payloadSchema': [
                 {
                   'name': 'selection',
@@ -545,7 +554,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     'selectable': '@config.selectable',
                     'selectedIds': '@config.selectedIds',
                     'selectedItems': '@config.selectedItems',
-                    'selectionEvent': 'SELECTION',
+                    'selectionEvent': '@config.selectionEvent',
                     'showUpload': '@config.showUpload',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
@@ -580,7 +589,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     'selectable': '@config.selectable',
                     'selectedIds': '@config.selectedIds',
                     'selectedItems': '@config.selectedItems',
-                    'selectionEvent': 'SELECTION',
+                    'selectionEvent': '@config.selectionEvent',
                     'showUpload': '@config.showUpload',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',

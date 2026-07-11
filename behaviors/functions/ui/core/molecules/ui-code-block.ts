@@ -73,6 +73,8 @@ export interface StdUiCodeBlockConfig {
   newValue?: string;
   /** Default: `"Old Value"` */
   oldValue?: string;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
   /** Default: `false` */
   showCopy?: boolean;
   /** Default: `true` */

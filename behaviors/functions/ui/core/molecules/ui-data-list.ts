@@ -126,6 +126,12 @@ export interface StdUiDataListConfig {
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"ITEM_CLICK"` */
+  itemClickEvent?: string;
+  /** Default: `"LOAD_MORE"` */
+  loadMoreEvent?: string;
+  /** Default: `"LONG_PRESS"` */
+  longPressEvent?: string;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `0` */
@@ -134,6 +140,8 @@ export interface StdUiDataListConfig {
   pageSize?: number;
   /** Default: `"Position Event"` */
   positionEvent?: string;
+  /** Default: `"REORDER"` */
+  reorderEvent?: string;
   /** Default: `false` */
   reorderable?: boolean;
   /** Default: `"Sender Field"` */
@@ -142,8 +150,12 @@ export interface StdUiDataListConfig {
   sortable?: boolean;
   /** Default: `[{"icon":"circle","label":"Label","variant":"primary"},{"icon":"circle","label":"Label 2","variant":"secondary"}]` */
   swipeLeftActions?: EntityRow[];
+  /** Default: `"SWIPE_LEFT"` */
+  swipeLeftEvent?: string;
   /** Default: `[{"icon":"circle","label":"Label","variant":"primary"},{"icon":"circle","label":"Label 2","variant":"secondary"}]` */
   swipeRightActions?: EntityRow[];
+  /** Default: `"SWIPE_RIGHT"` */
+  swipeRightEvent?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'card' | 'compact' | 'message';
 }

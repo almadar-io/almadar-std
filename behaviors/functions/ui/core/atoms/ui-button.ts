@@ -46,6 +46,8 @@ export interface StdUiButtonActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiButtonConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `""` */

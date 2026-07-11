@@ -52,6 +52,8 @@ export interface StdUiTimeSlotCellConfig {
   className?: string;
   /** Default: `false` */
   isOccupied?: boolean;
+  /** Default: `"CLICK"` */
+  onClick?: string;
   /** Default: `"Time"` */
   time?: string;
 }

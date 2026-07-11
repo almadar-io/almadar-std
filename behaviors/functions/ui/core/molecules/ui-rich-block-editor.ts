@@ -53,10 +53,14 @@ export interface StdUiRichBlockEditorRichBlockEditorLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRichBlockEditorConfig {
+  /** Default: `"CHANGE"` */
+  changeEvent?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
   enableBlocks?: boolean;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
   /** Default: `"Placeholder"` */
   placeholder?: string;
   /** Default: `false` */

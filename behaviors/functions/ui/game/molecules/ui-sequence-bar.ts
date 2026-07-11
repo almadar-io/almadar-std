@@ -65,12 +65,20 @@ export interface StdUiSequenceBarConfig {
   currentStep?: number;
   /** Default: `1` */
   maxSlots?: number;
+  /** Default: `"SLOT_DROP"` */
+  onSlotDrop?: string;
+  /** Default: `"SLOT_REMOVE"` */
+  onSlotRemove?: string;
   /** Default: `false` */
   playing?: boolean;
   /** Default: `"lg"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"SLOT_DROP"` */
+  slotDropEvent?: string;
   /** Default: `[]` */
   slotFeedback?: string[];
+  /** Default: `"SLOT_REMOVE"` */
+  slotRemoveEvent?: string;
   /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id","name":"Name"},{"category":"Category 2","description":"Description 2","iconEmoji":"Icon Emoji 2","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id 2","name":"Name 2"}]` */
   slots?: EntityRow[];
 }

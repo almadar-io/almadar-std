@@ -46,6 +46,8 @@ export interface StdUiCardActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCardConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */

@@ -44,6 +44,8 @@ export interface StdUiAuthLayoutConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"` */
   backgroundImage?: unknown;
   brandingContent?: unknown;
+  /** Default: `[{"content":"Logo","type":"typography"}]` */
+  logo?: unknown;
   /** Default: `true` */
   showBranding?: boolean;
 }

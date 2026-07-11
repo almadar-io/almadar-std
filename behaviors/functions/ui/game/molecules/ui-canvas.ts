@@ -87,6 +87,8 @@ export interface StdUiCanvasConfig {
   className?: string;
   /** Default: `[]` */
   drawables?: EntityRow[];
+  /** Default: `"FEATURE_CLICK"` */
+  featureClickEvent?: string;
   /** Default: `[]` */
   fogOfWar?: unknown;
   /** Default: `false` */
@@ -111,6 +113,14 @@ export interface StdUiCanvasConfig {
   showMinimap?: boolean;
   /** Default: `false` */
   showTileInfo?: boolean;
+  /** Default: `"TILE_CLICK"` */
+  tileClickEvent?: string;
+  /** Default: `"TILE_HOVER"` */
+  tileHoverEvent?: string;
+  /** Default: `"TILE_LEAVE"` */
+  tileLeaveEvent?: string;
+  /** Default: `"UNIT_CLICK"` */
+  unitClickEvent?: string;
   /** Default: `0` */
   unitScale?: number;
   /** Default: `0` */

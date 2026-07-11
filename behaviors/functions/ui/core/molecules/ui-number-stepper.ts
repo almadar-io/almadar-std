@@ -53,6 +53,8 @@ export interface StdUiNumberStepperActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiNumberStepperConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `""` */
@@ -65,6 +67,8 @@ export interface StdUiNumberStepperConfig {
   max?: number;
   /** Default: `0` */
   min?: number;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `1` */

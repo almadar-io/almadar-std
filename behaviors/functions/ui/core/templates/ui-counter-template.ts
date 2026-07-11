@@ -69,6 +69,18 @@ export interface StdUiCounterTemplateCounterTemplateLoadedPayload {
 export interface StdUiCounterTemplateConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `"DECREMENT"` */
+  decrementEvent?: string;
+  /** Default: `"INCREMENT"` */
+  incrementEvent?: string;
+  /** Default: `"DECREMENT"` */
+  onDecrement?: string;
+  /** Default: `"INCREMENT"` */
+  onIncrement?: string;
+  /** Default: `"RESET"` */
+  onReset?: string;
+  /** Default: `"RESET"` */
+  resetEvent?: string;
   /** Default: `true` */
   showReset?: boolean;
   /** Default: `"md"` */

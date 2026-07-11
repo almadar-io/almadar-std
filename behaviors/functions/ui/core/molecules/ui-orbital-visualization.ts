@@ -55,6 +55,8 @@ export interface StdUiOrbitalVisualizationConfig {
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"CLICK"` */
+  onClick?: string;
   schema?: EntityRow;
   /** Default: `true` */
   showLabel?: boolean;

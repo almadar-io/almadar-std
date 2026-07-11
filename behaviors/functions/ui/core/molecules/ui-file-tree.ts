@@ -50,6 +50,8 @@ export interface StdUiFileTreeConfig {
   className?: string;
   /** Default: `16` */
   indent?: number;
+  /** Default: `"FILE_SELECT"` */
+  onFileSelect?: string;
   /** Default: `"Selected Path"` */
   selectedPath?: string;
   /** Default: `[{"children":[],"language":"Language","name":"Name","path":"Path","size":1,"type":"file"},{"children":[],"language":"Language 2","name":"Name 2","path":"Path 2","size":2,"type":"dir"}]` */

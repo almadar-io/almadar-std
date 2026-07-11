@@ -57,6 +57,8 @@ export interface StdUiDrawerConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"CLOSE"` */
+  closeEvent?: string;
   /** Default: `true` */
   closeOnEscape?: boolean;
   /** Default: `true` */
@@ -64,6 +66,8 @@ export interface StdUiDrawerConfig {
   footer?: unknown;
   /** Default: `true` */
   isOpen?: boolean;
+  /** Default: `"CLOSE"` */
+  onClose?: string;
   /** Default: `"right"` */
   position?: 'left' | 'right';
   /** Default: `true` */

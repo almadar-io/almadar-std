@@ -60,6 +60,8 @@ export interface StdUiFormSectionHeaderConfig {
   isCollapsed?: boolean;
   /** Default: `false` */
   isComplete?: boolean;
+  /** Default: `"TOGGLE"` */
+  onToggle?: string;
   /** Default: `"Subtitle"` */
   subtitle?: string;
   /** Default: `"Title"` */

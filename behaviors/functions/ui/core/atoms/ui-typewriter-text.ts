@@ -48,6 +48,8 @@ export interface StdUiTypewriterTextCompletePayload {
 export interface StdUiTypewriterTextConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `"COMPLETE"` */
+  onComplete?: string;
   /** Default: `40` */
   speed?: number;
   /** Default: `0` */

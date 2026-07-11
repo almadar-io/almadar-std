@@ -52,6 +52,10 @@ export interface StdUiErrorStateConfig {
   description?: string;
   /** Default: `"Message"` */
   message?: string;
+  /** Default: `"RETRY"` */
+  onRetry?: string;
+  /** Default: `"RETRY"` */
+  retryEvent?: string;
   /** Default: `"Title"` */
   title?: string;
 }

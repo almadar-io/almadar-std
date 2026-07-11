@@ -98,6 +98,8 @@ export interface StdUiDataGridConfig {
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"LOAD_MORE"` */
+  loadMoreEvent?: string;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `0` */
@@ -114,6 +116,8 @@ export interface StdUiDataGridConfig {
   scrollX?: boolean;
   /** Default: `false` */
   selectable?: boolean;
+  /** Default: `"SELECTION"` */
+  selectionEvent?: string;
   /** Default: `false` */
   sortable?: boolean;
 }

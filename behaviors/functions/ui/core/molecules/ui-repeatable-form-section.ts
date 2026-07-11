@@ -78,6 +78,12 @@ export interface StdUiRepeatableFormSectionConfig {
   maxItems?: number;
   /** Default: `0` */
   minItems?: number;
+  /** Default: `"ADD"` */
+  onAdd?: string;
+  /** Default: `"REMOVE"` */
+  onRemove?: string;
+  /** Default: `"REORDER"` */
+  onReorder?: string;
   /** Default: `false` */
   readOnly?: boolean;
   /** Default: `"Section Type"` */

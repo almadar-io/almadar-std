@@ -78,10 +78,26 @@ export interface StdUiReplyTreeReplyTreeLoadedPayload {
 export interface StdUiReplyTreeConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `"CONTINUE_THREAD"` */
+  continueThreadEvent?: string;
+  /** Default: `"FLAG"` */
+  flagEvent?: string;
   /** Default: `6` */
   maxDepth?: number;
+  /** Default: `"CONTINUE_THREAD"` */
+  onContinueThread?: string;
+  /** Default: `"FLAG"` */
+  onFlag?: string;
+  /** Default: `"REPLY"` */
+  onReply?: string;
+  /** Default: `"VOTE"` */
+  onVote?: string;
+  /** Default: `"REPLY"` */
+  replyEvent?: string;
   /** Default: `true` */
   showActions?: boolean;
+  /** Default: `"VOTE"` */
+  voteEvent?: string;
 }
 
 /**

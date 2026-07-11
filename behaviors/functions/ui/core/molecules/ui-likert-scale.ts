@@ -46,10 +46,14 @@ export interface StdUiLikertScaleChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLikertScaleConfig {
+  /** Default: `"CHANGE"` */
+  changeEvent?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
   /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
   /** Default: `"Question"` */

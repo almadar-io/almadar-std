@@ -62,6 +62,10 @@ export interface StdUiFilterGroupConfig {
   isLoading?: boolean;
   /** Default: `"toolbar"` */
   look?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
+  /** Default: `"CLEAR_ALL"` */
+  onClearAll?: string;
+  /** Default: `"FILTER_CHANGE"` */
+  onFilterChange?: string;
   /** Default: `"Query"` */
   query?: string;
   /** Default: `true` */

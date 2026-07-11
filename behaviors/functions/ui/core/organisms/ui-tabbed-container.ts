@@ -52,6 +52,8 @@ export interface StdUiTabbedContainerConfig {
   className?: string;
   /** Default: `"Default Tab"` */
   defaultTab?: string;
+  /** Default: `"TAB_CHANGE"` */
+  onTabChange?: string;
   /** Default: `"top"` */
   position?: 'top' | 'left';
   /** Default: `[{"badge":"Badge","content":"Content","disabled":false,"id":"Id","label":"Label","sectionId":"Section Id"},{"badge":"Badge 2","content":"Content 2","disabled":true,"id":"Id 2","label":"Label 2","sectionId":"Section Id 2"}]` */
@@ -151,6 +153,13 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             'tier': 'presentation',
             'type': 'string',
           },
+          'onTabChange': {
+            'default': 'TAB_CHANGE',
+            'description': 'Callback when tab changes',
+            'label': 'On Tab Change',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'position': {
             'default': 'top',
             'description': 'Tab position',
@@ -225,7 +234,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
         'emits': [
           {
             'description': 'Callback when tab changes',
-            'event': 'TAB_CHANGE',
+            'event': '@config.onTabChange',
             'payloadSchema': [
               {
                 'name': 'tabId',
@@ -252,8 +261,8 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             },
             {
               'description': 'Callback when tab changes',
-              'key': 'TAB_CHANGE',
-              'name': 'Tab Change',
+              'key': '@config.onTabChange',
+              'name': '@config.on tab change',
               'payloadSchema': [
                 {
                   'name': 'tabId',
@@ -279,7 +288,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
                     'activeTab': '@config.activeTab',
                     'className': '@config.className',
                     'defaultTab': '@config.defaultTab',
-                    'onTabChange': 'TAB_CHANGE',
+                    'onTabChange': '@config.onTabChange',
                     'position': '@config.position',
                     'tabs': '@config.tabs',
                     'type': 'tabbed-container',

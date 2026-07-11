@@ -98,6 +98,18 @@ export interface StdUiWizardNavigationConfig {
   isValid?: boolean;
   /** Default: `"Next Label"` */
   nextLabel?: string;
+  /** Default: `"BACK"` */
+  onBack?: string;
+  /** Default: `"BACK_CLICK"` */
+  onBackClick?: string;
+  /** Default: `"COMPLETE"` */
+  onComplete?: string;
+  /** Default: `"COMPLETE_CLICK"` */
+  onCompleteClick?: string;
+  /** Default: `"NEXT"` */
+  onNext?: string;
+  /** Default: `"NEXT_CLICK"` */
+  onNextClick?: string;
   /** Default: `true` */
   showBack?: boolean;
   /** Default: `true` */

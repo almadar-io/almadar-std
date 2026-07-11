@@ -48,6 +48,8 @@ export interface StdUiUploadDropZoneActionPayload {
 export interface StdUiUploadDropZoneConfig {
   /** Default: `"Accept"` */
   accept?: string;
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `""` */

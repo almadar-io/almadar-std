@@ -47,6 +47,8 @@ export interface StdUiSplitSectionConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"content":"Description","type":"typography"}]` */
+  description?: unknown;
   /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   image?: EntityRow;
   /** Default: `"right"` */

@@ -51,8 +51,14 @@ export interface StdUiQrScannerConfig {
   className?: string;
   /** Default: `"environment"` */
   facingMode?: 'environment' | 'user';
+  /** Default: `[{"content":"Fallback","type":"typography"}]` */
+  fallback?: unknown;
+  /** Default: `"SCAN"` */
+  onScan?: string;
   /** Default: `false` */
   paused?: boolean;
+  /** Default: `"SCAN"` */
+  scanEvent?: string;
   /** Default: `true` */
   showCameraControls?: boolean;
   /** Default: `true` */

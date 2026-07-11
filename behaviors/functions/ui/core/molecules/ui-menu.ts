@@ -47,6 +47,8 @@ export interface StdUiMenuConfig {
   items?: EntityRow[];
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
+  /** Default: `[{"content":"Trigger","type":"typography"}]` */
+  trigger?: unknown;
 }
 
 /**

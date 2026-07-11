@@ -60,6 +60,8 @@ export interface StdUiRelationSelectConfig {
   isLoading?: boolean;
   /** Default: `"Name"` */
   name?: string;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
   /** Default: `[{"description":"Description","disabled":false,"label":"Label","value":"Value"},{"description":"Description 2","disabled":true,"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
   /** Default: `"Placeholder"` */

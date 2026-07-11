@@ -46,6 +46,8 @@ export interface StdUiRadioActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRadioConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */

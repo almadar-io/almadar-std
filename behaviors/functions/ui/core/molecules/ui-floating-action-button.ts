@@ -53,6 +53,8 @@ export interface StdUiFloatingActionButtonClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFloatingActionButtonConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `[{"icon":"circle","id":"Id","label":"Label","variant":"primary"},{"icon":"circle","id":"Id 2","label":"Label 2","variant":"secondary"}]` */
@@ -63,6 +65,8 @@ export interface StdUiFloatingActionButtonConfig {
   icon?: unknown;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"CLICK"` */
+  onClick?: string;
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left' | 'top-center';
   /** Default: `"primary"` */

@@ -46,6 +46,8 @@ export interface StdUiOverlayActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiOverlayConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `false` */
   blur?: boolean;
   /** Default: `""` */

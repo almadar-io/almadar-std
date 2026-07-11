@@ -93,8 +93,20 @@ export interface StdUiCalendarGridConfig {
   /** Default: `""` */
   className?: string;
   dayWindow?: string;
+  /** Default: `"LONG_PRESS"` */
+  longPressEvent?: string;
   /** Default: `{}` */
   longPressPayload?: unknown;
+  /** Default: `"DAY_CLICK"` */
+  onDayClick?: string;
+  /** Default: `"EVENT_CLICK"` */
+  onEventClick?: string;
+  /** Default: `"SLOT_CLICK"` */
+  onSlotClick?: string;
+  /** Default: `"SWIPE_LEFT"` */
+  swipeLeftEvent?: string;
+  /** Default: `"SWIPE_RIGHT"` */
+  swipeRightEvent?: string;
   /** Default: `[]` */
   timeSlots?: string[];
   /** Default: `"2024-01-01"` */

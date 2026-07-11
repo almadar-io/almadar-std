@@ -53,6 +53,8 @@ export interface StdUiBoxHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBoxConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `"transparent"` */
@@ -69,6 +71,8 @@ export interface StdUiBoxConfig {
   fullHeight?: boolean;
   /** Default: `false` */
   fullWidth?: boolean;
+  /** Default: `"HOVER"` */
+  hoverEvent?: string;
   /** Default: `"none"` */
   margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   /** Default: `"none"` */

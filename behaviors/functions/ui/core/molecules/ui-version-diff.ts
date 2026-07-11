@@ -68,8 +68,20 @@ export interface StdUiVersionDiffConfig {
   className?: string;
   /** Default: `"Language"` */
   language?: string;
+  /** Default: `"REVERT"` */
+  onRevert?: string;
+  /** Default: `"SELECT_AFTER"` */
+  onSelectAfter?: string;
+  /** Default: `"SELECT_BEFORE"` */
+  onSelectBefore?: string;
+  /** Default: `"REVERT"` */
+  revertEvent?: string;
   /** Default: `[{"author":"Author","content":"Content","id":"Id","label":"Label","timestamp":"Timestamp"},{"author":"Author 2","content":"Content 2","id":"Id 2","label":"Label 2","timestamp":"Timestamp 2"}]` */
   revisions?: EntityRow[];
+  /** Default: `"SELECT_AFTER"` */
+  selectAfterEvent?: string;
+  /** Default: `"SELECT_BEFORE"` */
+  selectBeforeEvent?: string;
   /** Default: `"side-by-side"` */
   view?: 'side-by-side' | 'inline';
 }

@@ -53,6 +53,8 @@ export interface StdUiAvatarActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAvatarConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `"Alt"` */
@@ -67,6 +69,8 @@ export interface StdUiAvatarConfig {
   initials?: string;
   /** Default: `"Name"` */
   name?: string;
+  /** Default: `"CLICK"` */
+  onClick?: string;
   /** Default: `"md"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */

@@ -57,6 +57,8 @@ export interface StdUiPageHeaderConfig {
   actions?: EntityRow[];
   /** Default: `"Active Tab"` */
   activeTab?: string;
+  /** Default: `"BACK"` */
+  backEvent?: string;
   /** Default: `[{"href":"Href","label":"Label"},{"href":"Href 2","label":"Label 2"}]` */
   breadcrumbs?: EntityRow[];
   /** Default: `[{"content":"Sample content","type":"typography"}]` */
@@ -66,6 +68,8 @@ export interface StdUiPageHeaderConfig {
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"TAB_CHANGE"` */
+  onTabChange?: string;
   /** Default: `false` */
   showBack?: boolean;
   status?: EntityRow;

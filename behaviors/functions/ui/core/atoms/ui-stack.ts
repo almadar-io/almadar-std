@@ -46,6 +46,8 @@ export interface StdUiStackActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStackConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `"stretch"` */

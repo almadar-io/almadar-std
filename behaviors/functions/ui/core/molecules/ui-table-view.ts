@@ -102,6 +102,8 @@ export interface StdUiTableViewConfig {
   positionEvent?: string;
   /** Default: `"Reorder Event"` */
   reorderEvent?: string;
+  /** Default: `"SELECT"` */
+  selectEvent?: string;
   /** Default: `false` */
   selectable?: boolean;
   /** Default: `[]` */
@@ -110,6 +112,8 @@ export interface StdUiTableViewConfig {
   sortColumn?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `"SORT"` */
+  sortEvent?: string;
   /** Default: `false` */
   sortable?: boolean;
 }

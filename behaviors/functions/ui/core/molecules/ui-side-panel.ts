@@ -57,8 +57,12 @@ export interface StdUiSidePanelConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"CLOSE"` */
+  closeEvent?: string;
   /** Default: `false` */
   isOpen?: boolean;
+  /** Default: `"CLOSE"` */
+  onClose?: string;
   /** Default: `"right"` */
   position?: 'left' | 'right';
   /** Default: `true` */

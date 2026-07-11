@@ -54,6 +54,8 @@ export interface StdUiCheckboxConfig {
   defaultChecked?: boolean;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
 }
 
 /**

@@ -52,6 +52,8 @@ export interface StdUiFlipContainerConfig {
   className?: string;
   /** Default: `false` */
   flipped?: boolean;
+  /** Default: `"CLICK"` */
+  onClick?: string;
 }
 
 /**

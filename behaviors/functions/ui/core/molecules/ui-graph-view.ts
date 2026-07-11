@@ -61,6 +61,10 @@ export interface StdUiGraphViewConfig {
   height?: number;
   /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1},{"color":"Color 2","group":"Group 2","id":"Id 2","label":"Label 2","size":2}]` */
   nodes?: EntityRow[];
+  /** Default: `"NODE_CLICK"` */
+  onNodeClick?: string;
+  /** Default: `"NODE_HOVER"` */
+  onNodeHover?: string;
   /** Default: `true` */
   showLabels?: boolean;
   /** Default: `0` */

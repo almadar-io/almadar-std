@@ -65,8 +65,12 @@ export interface StdUiAccordionConfig {
   items?: EntityRow[];
   /** Default: `false` */
   multiple?: boolean;
+  /** Default: `"ITEM_TOGGLE"` */
+  onItemToggle?: string;
   /** Default: `[]` */
   openItems?: string[];
+  /** Default: `"TOGGLE"` */
+  toggleEvent?: string;
 }
 
 /**

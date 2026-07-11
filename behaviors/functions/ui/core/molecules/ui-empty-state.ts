@@ -46,6 +46,8 @@ export interface StdUiEmptyStateActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEmptyStateConfig {
+  /** Default: `"ACTION"` */
+  actionEvent?: string;
   /** Default: `"Action Label"` */
   actionLabel?: string;
   /** Default: `""` */
@@ -60,6 +62,8 @@ export interface StdUiEmptyStateConfig {
   look?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
   /** Default: `"Message"` */
   message?: string;
+  /** Default: `"ACTION"` */
+  onAction?: string;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"default"` */

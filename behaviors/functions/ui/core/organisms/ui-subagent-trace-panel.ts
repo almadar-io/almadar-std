@@ -70,6 +70,8 @@ export interface StdUiSubagentTracePanelConfig {
   isLoading?: boolean;
   /** Default: `"overlay"` */
   mode?: 'overlay' | 'tab';
+  /** Default: `"CLOSE"` */
+  onClose?: string;
   /** Default: `false` */
   open?: boolean;
   /** Default: `0` */
@@ -256,6 +258,13 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
               'tab',
             ],
           },
+          'onClose': {
+            'default': 'CLOSE',
+            'description': 'Optional dismiss handler.',
+            'label': 'On Close',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'open': {
             'default': false,
             'description': 'Whether the panel is visible. Typically auto-opens during generation in overlay mode.',
@@ -334,7 +343,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
         'emits': [
           {
             'description': 'Optional dismiss handler.',
-            'event': 'CLOSE',
+            'event': '@config.onClose',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -384,9 +393,13 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
               'tier': 'essential',
             },
             {
-              'description': 'Optional dismiss handler.',
               'key': 'CLOSE',
               'name': 'Close',
+            },
+            {
+              'description': 'Optional dismiss handler.',
+              'key': '@config.onClose',
+              'name': '@config.on close',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -437,7 +450,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
                     'focusedOrbital': '@config.focusedOrbital',
                     'isLoading': '@config.isLoading',
                     'mode': '@config.mode',
-                    'onClose': 'CLOSE',
+                    'onClose': '@config.onClose',
                     'open': '@config.open',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',

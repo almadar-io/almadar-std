@@ -55,12 +55,20 @@ export interface StdUiFilterPillClickPayload {
 export interface StdUiFilterPillConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `"CLICK"` */
+  clickEvent?: string;
   /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"CLICK"` */
+  onClick?: string;
+  /** Default: `"REMOVE"` */
+  onRemove?: string;
   /** Default: `true` */
   removable?: boolean;
+  /** Default: `"REMOVE"` */
+  removeEvent?: string;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `"default"` */

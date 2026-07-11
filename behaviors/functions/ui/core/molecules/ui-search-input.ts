@@ -56,6 +56,8 @@ export interface StdUiSearchInputConfig {
   event?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"SEARCH"` */
+  onSearch?: string;
   /** Default: `"Placeholder"` */
   placeholder?: string;
   /** Default: `"Query"` */

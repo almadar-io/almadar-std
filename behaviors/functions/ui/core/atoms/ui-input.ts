@@ -60,6 +60,8 @@ export interface StdUiInputChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInputConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
@@ -77,6 +79,10 @@ export interface StdUiInputConfig {
   /** Default: `"Label"` */
   label?: string;
   leftIcon?: unknown;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
+  /** Default: `"CLEAR"` */
+  onClear?: string;
   /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
   /** Default: `"Placeholder"` */

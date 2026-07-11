@@ -77,6 +77,10 @@ export interface StdUiConfirmDialogConfig {
   /** Default: `true` */
   isOpen?: boolean;
   message?: unknown;
+  /** Default: `"CLOSE"` */
+  onClose?: string;
+  /** Default: `"CONFIRM"` */
+  onConfirm?: string;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `"Title"` */

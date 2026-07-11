@@ -58,6 +58,8 @@ export interface StdUiSwitchConfig {
   label?: string;
   /** Default: `"Name"` */
   name?: string;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
 }
 
 /**

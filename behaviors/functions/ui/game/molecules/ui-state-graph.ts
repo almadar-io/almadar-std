@@ -56,6 +56,8 @@ export interface StdUiStateGraphConfig {
   height?: number;
   /** Default: `"Initial State"` */
   initialState?: string;
+  /** Default: `"NODE_CLICK"` */
+  nodeClickEvent?: string;
   /** Default: `"Selected State"` */
   selectedState?: string;
   /** Default: `["Item","Item 2"]` */

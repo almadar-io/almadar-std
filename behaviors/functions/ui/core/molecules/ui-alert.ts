@@ -58,10 +58,16 @@ export interface StdUiAlertConfig {
   children?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"DISMISS"` */
+  dismissEvent?: string;
   /** Default: `false` */
   dismissible?: boolean;
   /** Default: `"Message"` */
   message?: string;
+  /** Default: `"CLOSE"` */
+  onClose?: string;
+  /** Default: `"DISMISS"` */
+  onDismiss?: string;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"info"` */

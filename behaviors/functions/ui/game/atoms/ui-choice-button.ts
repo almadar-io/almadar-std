@@ -53,6 +53,8 @@ export interface StdUiChoiceButtonActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiChoiceButtonConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   assetUrl?: EntityRow;
   /** Default: `""` */
@@ -63,6 +65,8 @@ export interface StdUiChoiceButtonConfig {
   icon?: unknown;
   /** Default: `0` */
   index?: number;
+  /** Default: `"CLICK"` */
+  onClick?: string;
   /** Default: `{"item":"Item"}` */
   payload?: Record<string, TraitConfig>;
   /** Default: `false` */

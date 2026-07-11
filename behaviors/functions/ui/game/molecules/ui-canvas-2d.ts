@@ -96,6 +96,14 @@ export interface StdUiCanvas2dConfig {
   scale?: number;
   /** Default: `true` */
   showMinimap?: boolean;
+  /** Default: `"TILE_CLICK"` */
+  tileClickEvent?: string;
+  /** Default: `"TILE_HOVER"` */
+  tileHoverEvent?: string;
+  /** Default: `"TILE_LEAVE"` */
+  tileLeaveEvent?: string;
+  /** Default: `"UNIT_CLICK"` */
+  unitClickEvent?: string;
 }
 
 /**
