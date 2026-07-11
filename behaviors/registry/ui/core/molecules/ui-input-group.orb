@@ -30,10 +30,74 @@
         {
           "category": "interaction",
           "config": {
+            "action": {
+              "default": "ACTION",
+              "description": "Declarative event name for trait dispatch",
+              "label": "Action",
+              "tier": "presentation",
+              "type": "string"
+            },
             "className": {
               "default": "",
               "description": "Additional CSS classes",
               "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "clearable": {
+              "default": false,
+              "description": "Show clear button when input has value",
+              "label": "Clearable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Whether input is disabled",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "error": {
+              "default": "",
+              "description": "error prop",
+              "label": "Error",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "helperText": {
+              "default": "Helper Text",
+              "description": "helperText prop",
+              "label": "Helper Text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "inputType": {
+              "default": "text",
+              "description": "Input type - supports 'select' and 'textarea' in addition to standard types",
+              "label": "Input Type",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "text",
+                "email",
+                "password",
+                "number",
+                "tel",
+                "url",
+                "search",
+                "date",
+                "datetime-local",
+                "time",
+                "checkbox",
+                "select",
+                "textarea"
+              ]
+            },
+            "label": {
+              "default": "Label",
+              "description": "label prop",
+              "label": "Label",
               "tier": "presentation",
               "type": "string"
             },
@@ -43,13 +107,129 @@
               "tier": "presentation",
               "type": "node"
             },
+            "leftIcon": {
+              "description": "leftIcon prop",
+              "label": "Left Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "onChange": {
+              "default": "CHANGE",
+              "description": "onChange handler or declarative event key for trait dispatch",
+              "label": "On Change",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "onClear": {
+              "default": "CLEAR",
+              "description": "Callback or declarative event key when clear button is clicked",
+              "label": "On Clear",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "options": {
+              "default": [
+                {
+                  "label": "Label",
+                  "value": "Value"
+                },
+                {
+                  "label": "Label 2",
+                  "value": "Value 2"
+                }
+              ],
+              "description": "Options for select type",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Options",
+              "tier": "presentation",
+              "type": "[InputGroupOptionsItem]"
+            },
+            "placeholder": {
+              "default": "Placeholder",
+              "description": "Placeholder text",
+              "label": "Placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
             "rightAddon": {
               "description": "Right addon (icon, button, or text)",
               "label": "Right Addon",
               "tier": "presentation",
               "type": "node"
+            },
+            "rightIcon": {
+              "description": "rightIcon prop",
+              "label": "Right Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "rows": {
+              "default": 0.0,
+              "description": "Rows for textarea type",
+              "label": "Rows",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "value": {
+              "default": "Value",
+              "description": "Current value",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "string"
             }
           },
+          "emits": [
+            {
+              "description": "Declarative event name for trait dispatch",
+              "event": "@config.action",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Callback or declarative event key when clear button is clicked",
+              "event": "@config.onClear",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "onChange handler or declarative event key for trait dispatch",
+              "event": "@config.onChange",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -63,6 +243,42 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Declarative event name for trait dispatch",
+                "key": "@config.action",
+                "name": "@config.action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Callback or declarative event key when clear button is clicked",
+                "key": "@config.onClear",
+                "name": "@config.on clear",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "onChange handler or declarative event key for trait dispatch",
+                "key": "@config.onChange",
+                "name": "@config.on change",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -78,10 +294,25 @@
                     "render-ui",
                     "main",
                     {
+                      "action": "@config.action",
                       "className": "@config.className",
+                      "clearable": "@config.clearable",
+                      "disabled": "@config.disabled",
+                      "error": "@config.error",
+                      "helperText": "@config.helperText",
+                      "inputType": "@config.inputType",
+                      "label": "@config.label",
                       "leftAddon": "@config.leftAddon",
+                      "leftIcon": "@config.leftIcon",
+                      "onChange": "@config.onChange",
+                      "onClear": "@config.onClear",
+                      "options": "@config.options",
+                      "placeholder": "@config.placeholder",
                       "rightAddon": "@config.rightAddon",
-                      "type": "input-group"
+                      "rightIcon": "@config.rightIcon",
+                      "rows": "@config.rows",
+                      "type": "input-group",
+                      "value": "@config.value"
                     }
                   ]
                 ],

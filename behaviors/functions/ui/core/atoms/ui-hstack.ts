@@ -30,7 +30,51 @@ const ALIAS = 'UiHstack';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiHstackEventKey = 'INIT';
+export type StdUiHstackEventKey = 'ACTION' | 'INIT';
+
+/**
+ * Payload shape for the `ACTION` event.
+ */
+export interface StdUiHstackActionPayload {
+  id?: string;
+}
+
+/**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdUiHstackConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
+  /** Default: `{}` */
+  actionPayload?: unknown;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  flex?: boolean;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  /** Default: `false` */
+  responsive?: boolean;
+  /** Default: `false` */
+  reverse?: boolean;
+  /** Default: `"Role"` */
+  role?: string;
+  /** Default: `{}` */
+  style?: unknown;
+  /** Default: `0` */
+  tabIndex?: number;
+  /** Default: `false` */
+  wrap?: boolean;
+}
 
 /**
  * Params for the ui-hstack descriptor helpers.
@@ -53,8 +97,8 @@ export interface StdUiHstackParams {
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
+  /** Typed call-site config block — see the per-field interface. */
+  config?: StdUiHstackConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }

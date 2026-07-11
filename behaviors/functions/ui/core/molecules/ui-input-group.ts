@@ -30,7 +30,28 @@ const ALIAS = 'UiInputGroup';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiInputGroupEventKey = 'INIT';
+export type StdUiInputGroupEventKey = 'ACTION' | 'CHANGE' | 'CLEAR' | 'INIT';
+
+/**
+ * Payload shape for the `ACTION` event.
+ */
+export interface StdUiInputGroupActionPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CLEAR` event.
+ */
+export interface StdUiInputGroupClearPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CHANGE` event.
+ */
+export interface StdUiInputGroupChangePayload {
+  id?: string;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -39,10 +60,38 @@ export type StdUiInputGroupEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiInputGroupConfig {
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  clearable?: boolean;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `""` */
+  error?: string;
+  /** Default: `"Helper Text"` */
+  helperText?: string;
+  /** Default: `"text"` */
+  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
+  /** Default: `"Label"` */
+  label?: string;
   leftAddon?: unknown;
+  leftIcon?: unknown;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
+  /** Default: `"CLEAR"` */
+  onClear?: string;
+  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
+  options?: EntityRow[];
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
   rightAddon?: unknown;
+  rightIcon?: unknown;
+  /** Default: `0` */
+  rows?: number;
+  /** Default: `"Value"` */
+  value?: string;
 }
 
 /**
