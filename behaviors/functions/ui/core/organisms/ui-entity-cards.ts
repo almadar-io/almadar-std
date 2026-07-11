@@ -75,7 +75,7 @@ export interface StdUiEntityCardsConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: EntityRow[];
+  itemActions?: unknown;
   /** Default: `1` */
   maxCols?: number;
   /** Default: `280` */
@@ -377,54 +377,8 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 'variant': 'ghost',
               },
             ],
-            'items': {
-              'properties': {
-                'action': {
-                  'name': 'action',
-                  'required': false,
-                  'type': 'string',
-                },
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'placement': {
-                  'name': 'placement',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'card',
-                    'footer',
-                    'row',
-                  ],
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
             'tier': 'presentation',
-            'type': '[EntityCardsItemActionsItem]',
+            'type': 'json',
           },
           'maxCols': {
             'default': 1,

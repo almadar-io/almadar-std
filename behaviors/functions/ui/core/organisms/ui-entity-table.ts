@@ -75,7 +75,7 @@ export interface StdUiEntityTableConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: EntityRow[];
+  itemActions?: unknown;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `0` */
@@ -429,59 +429,8 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 'variant': 'ghost',
               },
             ],
-            'items': {
-              'properties': {
-                'action': {
-                  'name': 'action',
-                  'required': false,
-                  'type': 'string',
-                },
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'placement': {
-                  'name': 'placement',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'row',
-                    'bulk',
-                  ],
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'default',
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
             'tier': 'presentation',
-            'type': '[EntityTableItemActionsItem]',
+            'type': 'json',
           },
           'look': {
             'default': 'dense',

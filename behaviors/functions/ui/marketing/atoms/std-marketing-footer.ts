@@ -35,14 +35,8 @@ export interface StdMarketingFooterConfig {
   columns?: EntityRow[];
   /** Default: `"© 2026 Almadar. All rights reserved."` */
   copyright?: string;
-  /** Default: `{"alt":"@config.logoAlt","href":"@config.logoHref","src":"@config.logoSrc"}` */
-  logo?: unknown;
-  /** Default: `""` */
-  logoAlt?: string;
-  /** Default: `"/"` */
-  logoHref?: string;
-  /** Default: `""` */
-  logoSrc?: string;
+  /** Default: `{"alt":"","href":"/","src":""}` */
+  logo?: EntityRow;
 }
 
 /**

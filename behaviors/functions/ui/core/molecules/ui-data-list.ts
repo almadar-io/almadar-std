@@ -125,7 +125,7 @@ export interface StdUiDataListConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: EntityRow[];
+  itemActions?: unknown;
   /** Default: `"ITEM_CLICK"` */
   itemClickEvent?: string;
   /** Default: `"LOAD_MORE"` */

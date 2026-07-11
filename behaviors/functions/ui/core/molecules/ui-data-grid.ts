@@ -97,7 +97,7 @@ export interface StdUiDataGridConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: EntityRow[];
+  itemActions?: unknown;
   /** Default: `"LOAD_MORE"` */
   loadMoreEvent?: string;
   /** Default: `"dense"` */

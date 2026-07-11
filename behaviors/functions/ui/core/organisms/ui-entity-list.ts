@@ -78,7 +78,7 @@ export interface StdUiEntityListConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: string;
+  itemActions?: unknown;
   /** Default: `0` */
   pageProp?: number;
   /** Default: `0` */
@@ -312,7 +312,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               },
             ],
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'json',
           },
           'pageProp': {
             'default': 0,

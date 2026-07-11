@@ -91,7 +91,7 @@ export interface StdUiTableViewConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: EntityRow[];
+  itemActions?: unknown;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
   /** Default: `0` */

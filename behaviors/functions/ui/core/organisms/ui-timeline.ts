@@ -61,7 +61,7 @@ export interface StdUiTimelineConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: EntityRow[];
+  itemActions?: unknown;
   /** Default: `[{"date":"Date","description":"Description","icon":"circle","id":"Id","status":"complete","tags":["Item","Item 2"],"title":"Title"},{"date":"Date 2","description":"Description 2","icon":"circle","id":"Id 2","status":"active","tags":["Item","Item 2"],"title":"Title 2"}]` */
   items?: EntityRow[];
   /** Default: `"vertical-spacious"` */
@@ -205,38 +205,8 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                 'variant': 'ghost',
               },
             ],
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
             'tier': 'presentation',
-            'type': '[TimelineItemActionsItem]',
+            'type': 'json',
           },
           'items': {
             'default': [

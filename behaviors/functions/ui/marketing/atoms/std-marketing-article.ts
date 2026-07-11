@@ -31,6 +31,8 @@ const ALIAS = 'MarketingArticle';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingArticleConfig {
+  /** Default: `[{"content":"@config.content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `"We believe building software should be as natural as describing it."` */
   content?: string;
   /** Default: `"lg"` */
