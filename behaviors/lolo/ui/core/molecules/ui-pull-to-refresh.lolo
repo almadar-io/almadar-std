@@ -11,7 +11,7 @@ orbital PullToRefreshOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          refreshEvent: REFRESH
+          refreshEvent: @config.refreshEvent
           refreshPayload: @config.refreshPayload
           threshold: @config.threshold
           children: @config.children
@@ -29,6 +29,10 @@ orbital PullToRefreshOrbital {
     }
 
     config {
+      refreshEvent : string = "REFRESH"
+        @label "Refresh Event"
+        @description "Event name to emit on refresh (emitted as UI:{refreshEvent})"
+        @tier "presentation"
       refreshPayload : json = {}
         @label "Refresh Payload"
         @description "Payload to include with the refresh event"

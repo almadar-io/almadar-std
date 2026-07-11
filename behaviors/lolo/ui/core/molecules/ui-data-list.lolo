@@ -54,7 +54,7 @@ orbital DataListOrbital {
           accepts: @config.accepts
           sortable: @config.sortable
           dropEvent: @config.dropEvent
-          reorderEvent: REORDER
+          reorderEvent: @config.reorderEvent
           positionEvent: @config.positionEvent
           dndItemIdField: @config.dndItemIdField
           dndRoot: @config.dndRoot
@@ -63,7 +63,7 @@ orbital DataListOrbital {
           columns: @config.columns
           itemActions: @config.itemActions
           maxInlineActions: @config.maxInlineActions
-          itemClickEvent: ITEM_CLICK
+          itemClickEvent: @config.itemClickEvent
           gap: @config.gap
           variant: @config.variant
           groupBy: @config.groupBy
@@ -73,13 +73,13 @@ orbital DataListOrbital {
           isLoading: @config.isLoading
           error: @config.error
           reorderable: @config.reorderable
-          swipeLeftEvent: SWIPE_LEFT
+          swipeLeftEvent: @config.swipeLeftEvent
           swipeLeftActions: @config.swipeLeftActions
-          swipeRightEvent: SWIPE_RIGHT
+          swipeRightEvent: @config.swipeRightEvent
           swipeRightActions: @config.swipeRightActions
-          longPressEvent: LONG_PRESS
+          longPressEvent: @config.longPressEvent
           infiniteScroll: @config.infiniteScroll
-          loadMoreEvent: LOAD_MORE
+          loadMoreEvent: @config.loadMoreEvent
           hasMore: @config.hasMore
           pageSize: @config.pageSize
           look: @config.look
@@ -91,7 +91,7 @@ orbital DataListOrbital {
           accepts: @config.accepts
           sortable: @config.sortable
           dropEvent: @config.dropEvent
-          reorderEvent: REORDER
+          reorderEvent: @config.reorderEvent
           positionEvent: @config.positionEvent
           dndItemIdField: @config.dndItemIdField
           dndRoot: @config.dndRoot
@@ -100,7 +100,7 @@ orbital DataListOrbital {
           columns: @config.columns
           itemActions: @config.itemActions
           maxInlineActions: @config.maxInlineActions
-          itemClickEvent: ITEM_CLICK
+          itemClickEvent: @config.itemClickEvent
           gap: @config.gap
           variant: @config.variant
           groupBy: @config.groupBy
@@ -110,13 +110,13 @@ orbital DataListOrbital {
           isLoading: @config.isLoading
           error: @config.error
           reorderable: @config.reorderable
-          swipeLeftEvent: SWIPE_LEFT
+          swipeLeftEvent: @config.swipeLeftEvent
           swipeLeftActions: @config.swipeLeftActions
-          swipeRightEvent: SWIPE_RIGHT
+          swipeRightEvent: @config.swipeRightEvent
           swipeRightActions: @config.swipeRightActions
-          longPressEvent: LONG_PRESS
+          longPressEvent: @config.longPressEvent
           infiniteScroll: @config.infiniteScroll
-          loadMoreEvent: LOAD_MORE
+          loadMoreEvent: @config.loadMoreEvent
           hasMore: @config.hasMore
           pageSize: @config.pageSize
           look: @config.look
@@ -185,6 +185,10 @@ orbital DataListOrbital {
         @label "Drop Event"
         @description "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }"
         @tier "presentation"
+      reorderEvent : string = "REORDER"
+        @label "Reorder Event"
+        @description "Event emitted on reorder: UI:{reorderEvent} with { fromIndex, toIndex }"
+        @tier "presentation"
       positionEvent : string = "Position Event"
         @label "Position Event"
         @description "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }"
@@ -210,6 +214,10 @@ orbital DataListOrbital {
       maxInlineActions : number = 0
         @label "Max Inline Actions"
         @description "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline."
+        @tier "presentation"
+      itemClickEvent : string = "ITEM_CLICK"
+        @label "Item Click Event"
+        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win)."
         @tier "presentation"
       gap : "none" | "sm" | "md" | "lg" = none
         @label "Gap"
@@ -247,17 +255,33 @@ orbital DataListOrbital {
         @label "Reorderable"
         @description "Enable drag-to-reorder with grip handles"
         @tier "presentation"
+      swipeLeftEvent : string = "SWIPE_LEFT"
+        @label "Swipe Left Event"
+        @description "Event emitted on left swipe: UI:{swipeLeftEvent} with { row }"
+        @tier "presentation"
       swipeLeftActions : [DataListSwipeLeftActionsItem] = [{ label: "Label", icon: "circle", variant: primary }, { label: "Label 2", icon: "circle", variant: secondary }]
         @label "Swipe Left Actions"
         @description "Actions revealed on left swipe"
+        @tier "presentation"
+      swipeRightEvent : string = "SWIPE_RIGHT"
+        @label "Swipe Right Event"
+        @description "Event emitted on right swipe: UI:{swipeRightEvent} with { row }"
         @tier "presentation"
       swipeRightActions : [DataListSwipeRightActionsItem] = [{ label: "Label", icon: "circle", variant: primary }, { label: "Label 2", icon: "circle", variant: secondary }]
         @label "Swipe Right Actions"
         @description "Actions revealed on right swipe"
         @tier "presentation"
+      longPressEvent : string = "LONG_PRESS"
+        @label "Long Press Event"
+        @description "Event emitted on long press: UI:{longPressEvent} with { row }"
+        @tier "presentation"
       infiniteScroll : boolean = false
         @label "Infinite Scroll"
         @description "Enable infinite scroll loading"
+        @tier "presentation"
+      loadMoreEvent : string = "LOAD_MORE"
+        @label "Load More Event"
+        @description "Event emitted when more items needed: UI:{loadMoreEvent}"
         @tier "presentation"
       hasMore : boolean = false
         @label "Has More"

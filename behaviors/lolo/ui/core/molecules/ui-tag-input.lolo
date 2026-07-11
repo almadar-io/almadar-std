@@ -12,15 +12,15 @@ orbital TagInputOrbital {
       INIT -> idle
         (render-ui main {
           value: @config.value
-          onChange: CHANGE
+          onChange: @config.onChange
           placeholder: @config.placeholder
           disabled: @config.disabled
           variant: @config.variant
           unique: @config.unique
           helperText: @config.helperText
           className: @config.className
-          addEvent: ADD
-          removeEvent: REMOVE
+          addEvent: @config.addEvent
+          removeEvent: @config.removeEvent
           type: tag-input
         })
     }
@@ -48,6 +48,10 @@ orbital TagInputOrbital {
         @label "Value"
         @description "Current list of tags."
         @tier "presentation"
+      onChange : string = "CHANGE"
+        @label "On Change"
+        @description "Direct callback emitted on every change. Stays as the Storybook / non-trait contract; trait-driven schemas should prefer the bus events below."
+        @tier "presentation"
       placeholder : string = "Placeholder"
         @label "Placeholder"
         @description "Placeholder for the entry input. Default: `'Type and press Enter…'`."
@@ -71,6 +75,14 @@ orbital TagInputOrbital {
       className : string = ""
         @label "Class Name"
         @description "Additional CSS classes applied to the outer container."
+        @tier "presentation"
+      addEvent : string = "ADD"
+        @label "Add Event"
+        @description "Event emitted when a tag is added: `UI:{addEvent}` with payload `{ tag: string, value: string[] }`."
+        @tier "presentation"
+      removeEvent : string = "REMOVE"
+        @label "Remove Event"
+        @description "Event emitted when a tag is removed: `UI:{removeEvent}` with payload `{ tag: string, index: number, value: string[] }`."
         @tier "presentation"
     }
   }
