@@ -1,5 +1,6 @@
 export {
   applyParamsToOrb,
+  applyTraitRenames,
   rebindInlineTraitEntity,
   rewriteEntityInInlineTrait,
   mergeCallSiteConfigOverrides,
