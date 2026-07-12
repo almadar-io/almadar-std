@@ -31,12 +31,18 @@ const ALIAS = 'Browse';
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `"error"` */
-  color?: unknown;
-  /** Default: `"@payload.error"` */
-  content?: unknown;
-  /** Default: `"caption"` */
-  variant?: unknown;
+  /** Default: `"@config.cols"` */
+  cols?: unknown;
+  /** Default: `"@config.fields"` */
+  fields?: unknown;
+  /** Default: `"@config.gap"` */
+  gap?: unknown;
+  /** Default: `"@config.imageField"` */
+  imageField?: unknown;
+  /** Default: `"@config.itemActions"` */
+  itemActions?: unknown;
+  /** Default: `"@config.displayPageSize"` */
+  pageSize?: unknown;
 }
 
 /**
@@ -64,21 +70,6 @@ export interface StdBrowseParams {
   config?: StdBrowseConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
-}
-
-/** Trait descriptor: `Browse.traits.Typography1`. */
-export function stdBrowseTypography1Trait(params: StdBrowseParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Typography1`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
 }
 
 /** Trait descriptor: `Browse.traits.DataGrid1`. */
@@ -148,7 +139,6 @@ export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdBrowseTypography1Trait(params),
       stdBrowseDataGrid1Trait(params),
       stdBrowseDenseTableViewTrait(params),
       stdBrowseBrowseItemBrowseTrait(params),

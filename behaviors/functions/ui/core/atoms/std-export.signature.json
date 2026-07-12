@@ -7,15 +7,7 @@
     "entities": [
       {
         "name": "ExportPanel",
-        "fields": [
-          {
-            "name": "options",
-            "type": "array",
-            "required": false,
-            "description": "Configuration settings for available export formats.",
-            "synonyms": "format, export-types, configurations"
-          }
-        ],
+        "fields": [],
         "persistence": "runtime"
       }
     ],
@@ -55,49 +47,30 @@
         "ref": "Button.traits.ButtonRender"
       },
       {
-        "name": "DataList1",
+        "name": "Menu1",
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
-            "key": "fields",
+            "key": "items",
             "type": "unknown",
-            "default": []
-          },
-          {
-            "key": "look",
-            "type": "unknown",
-            "default": "@config.tableLook"
-          }
-        ],
-        "capabilities": [],
-        "ref": "DataList.traits.DataListRender"
-      },
-      {
-        "name": "Popover1",
-        "emittedEvents": [],
-        "listenedEvents": [],
-        "overridableConfigKeys": [
-          {
-            "key": "children",
-            "type": "unknown",
-            "default": [
-              "@trait.Button1"
-            ]
-          },
-          {
-            "key": "content",
-            "type": "unknown",
-            "default": "@trait.DataList1"
+            "default": "@config.formats"
           },
           {
             "key": "position",
             "type": "unknown",
-            "default": "bottom"
+            "default": "bottom-start"
+          },
+          {
+            "key": "trigger",
+            "type": "unknown",
+            "default": [
+              "@trait.Button1"
+            ]
           }
         ],
         "capabilities": [],
-        "ref": "Popover.traits.PopoverRender"
+        "ref": "Menu.traits.MenuRender"
       },
       {
         "name": "ExportMenu",
@@ -109,7 +82,7 @@
           {
             "name": "EXPORT_REQUESTED",
             "direction": "emit",
-            "description": "Requests export of data in a specified format.",
+            "description": "Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry).",
             "synonyms": "export, save, download, generate",
             "tier": "domain"
           },
@@ -137,7 +110,7 @@
             "type": "string",
             "default": "EXPORT_REQUESTED",
             "label": "Export event",
-            "description": "Event emitted when the user picks a format",
+            "description": "Event emitted when the user picks a format. Each entry in formats[] carries its own literal event field (no per-item templating in .lolo) — overriding this alone does not retarget the click; also set formats[].event to match.",
             "synonyms": "bus event name. internal wiring; users rarely target directly",
             "tier": "internal"
           },
@@ -146,16 +119,19 @@
             "type": "[FormatOption]",
             "default": [
               {
+                "event": "EXPORT_REQUESTED",
                 "format": "csv",
                 "id": "csv",
                 "label": "CSV"
               },
               {
+                "event": "EXPORT_REQUESTED",
                 "format": "xlsx",
                 "id": "xlsx",
                 "label": "XLSX"
               },
               {
+                "event": "EXPORT_REQUESTED",
                 "format": "pdf",
                 "id": "pdf",
                 "label": "PDF"
@@ -167,6 +143,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
                 "format": {
                   "name": "format",
                   "required": true,
@@ -185,21 +166,6 @@
               },
               "type": "object"
             }
-          },
-          {
-            "key": "tableLook",
-            "type": "string",
-            "default": "dense",
-            "label": "Table look",
-            "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-            "tier": "presentation",
-            "enumValues": [
-              "dense",
-              "spacious",
-              "striped",
-              "borderless",
-              "card-rows"
-            ]
           },
           {
             "key": "tileId",
@@ -227,7 +193,7 @@
     "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
-    "substrateSignature": "d44aaf56471a13de",
+    "substrateSignature": "a2eb27c4cbc90e80",
     "sourceValid": true
   }
 ]

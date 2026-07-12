@@ -1602,6 +1602,10 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
             },
             'type': 'unknown',
           },
+          'extraAddonEvent': {
+            'default': 'PRODUCE',
+            'type': 'unknown',
+          },
           'extraAddons': {
             'default': [
               {

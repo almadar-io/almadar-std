@@ -1622,6 +1622,1961 @@
     "exposure": "both",
     "provenance": "authored",
     "substrateSignature": "e161d846110e1aee",
-    "sourceValid": true
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for ui-space-station-board / SpaceStationBoardOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "CrewAuthority": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for CrewAuthority.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "gridHeight": {
+                      "type": "object",
+                      "default": 7
+                    },
+                    "gridWidth": {
+                      "type": "object",
+                      "default": 7
+                    },
+                    "moveBudget": {
+                      "type": "object",
+                      "default": 999999
+                    },
+                    "running": {
+                      "type": "object",
+                      "default": true
+                    },
+                    "tiles": {
+                      "type": "object",
+                      "default": [
+                        {
+                          "id": "t-0-0",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-1-0",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-2-0",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-3-0",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-4-0",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-5-0",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-6-0",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 6,
+                          "y": 0
+                        },
+                        {
+                          "id": "t-0-1",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-1-1",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-2-1",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-3-1",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-4-1",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-5-1",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-6-1",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 6,
+                          "y": 1
+                        },
+                        {
+                          "id": "t-0-2",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-1-2",
+                          "passable": false,
+                          "terrain": "console",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "tile",
+                            "sprite": "abstractTile_03.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-2-2",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-3-2",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-4-2",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-5-2",
+                          "passable": false,
+                          "terrain": "console",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "tile",
+                            "sprite": "abstractTile_03.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-6-2",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 6,
+                          "y": 2
+                        },
+                        {
+                          "id": "t-0-3",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-1-3",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-2-3",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-3-3",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-4-3",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-5-3",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-6-3",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 6,
+                          "y": 3
+                        },
+                        {
+                          "id": "t-0-4",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-1-4",
+                          "passable": false,
+                          "terrain": "console",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "tile",
+                            "sprite": "abstractTile_03.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-2-4",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-3-4",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-4-4",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-5-4",
+                          "passable": false,
+                          "terrain": "console",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "tile",
+                            "sprite": "abstractTile_03.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-6-4",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 6,
+                          "y": 4
+                        },
+                        {
+                          "id": "t-0-5",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-1-5",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-2-5",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-3-5",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-4-5",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-5-5",
+                          "passable": true,
+                          "terrain": "floor",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-6-5",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 6,
+                          "y": 5
+                        },
+                        {
+                          "id": "t-0-6",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 0,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-1-6",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 1,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-2-6",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 2,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-3-6",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 3,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-4-6",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 4,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-5-6",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 5,
+                          "y": 6
+                        },
+                        {
+                          "id": "t-6-6",
+                          "passable": false,
+                          "terrain": "wall",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "x": 6,
+                          "y": 6
+                        }
+                      ]
+                    },
+                    "units": {
+                      "type": "object",
+                      "default": [
+                        {
+                          "health": 10,
+                          "id": "u1",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.json",
+                            "category": "crew",
+                            "dimension": "2d",
+                            "name": "crew",
+                            "role": "npc",
+                            "sprite": "robot_blue.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.png"
+                          },
+                          "name": "Commander",
+                          "position": {
+                            "x": 2,
+                            "y": 3
+                          },
+                          "team": "player",
+                          "unitType": "crew",
+                          "x": 2,
+                          "y": 3,
+                          "z": 0
+                        },
+                        {
+                          "health": 10,
+                          "id": "u2",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.json",
+                            "category": "crew",
+                            "dimension": "2d",
+                            "name": "crew",
+                            "role": "npc",
+                            "sprite": "robot_blue.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.png"
+                          },
+                          "name": "Engineer",
+                          "position": {
+                            "x": 4,
+                            "y": 3
+                          },
+                          "team": "player",
+                          "unitType": "crew",
+                          "x": 4,
+                          "y": 3,
+                          "z": 0
+                        },
+                        {
+                          "health": 10,
+                          "id": "u3",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.json",
+                            "category": "crew",
+                            "dimension": "2d",
+                            "name": "crew",
+                            "role": "npc",
+                            "sprite": "robot_blue.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.png"
+                          },
+                          "name": "Technician",
+                          "position": {
+                            "x": 3,
+                            "y": 5
+                          },
+                          "team": "player",
+                          "unitType": "crew",
+                          "x": 3,
+                          "y": 5,
+                          "z": 0
+                        }
+                      ]
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "FxDecay": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for FxDecay.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "running": {
+                      "type": "object",
+                      "default": true
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "Crew": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for Crew.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "assetManifest": {
+                      "type": "object",
+                      "default": {
+                        "effects": {},
+                        "features": {
+                          "console": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "decoration",
+                            "sprite": "satellite_A.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.png"
+                          }
+                        },
+                        "terrains": {
+                          "console": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "tile",
+                            "sprite": "abstractTile_03.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "floor": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "floor",
+                            "dimension": "2d",
+                            "name": "floor",
+                            "role": "tile",
+                            "sprite": "abstractTile_02.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          },
+                          "wall": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.json",
+                            "category": "wall",
+                            "dimension": "2d",
+                            "name": "wall",
+                            "role": "tile",
+                            "sprite": "abstractTile_01.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-isometric-blocks/terrain/allTiles_sheet.png"
+                          }
+                        },
+                        "units": {
+                          "crew": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.json",
+                            "category": "crew",
+                            "dimension": "2d",
+                            "name": "crew",
+                            "role": "npc",
+                            "sprite": "robot_blue.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-robot-pack/units/spritesheet_robotsTop.png"
+                          }
+                        }
+                      }
+                    },
+                    "backgroundAsset": {
+                      "type": "object",
+                      "default": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "metalPanel.png",
+                        "style": "sci-fi",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png"
+                      }
+                    },
+                    "cancelIcon": {
+                      "type": "object",
+                      "default": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "icon-cancel",
+                        "role": "ui",
+                        "sprite": "icon_cross",
+                        "style": "sci-fi",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png"
+                      }
+                    },
+                    "crewCount": {
+                      "type": "object",
+                      "default": 3
+                    },
+                    "crewIcon": {
+                      "type": "object",
+                      "default": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "icon-crew",
+                        "role": "ui",
+                        "sprite": "icon_hand",
+                        "style": "sci-fi",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png"
+                      }
+                    },
+                    "features": {
+                      "type": "object",
+                      "default": [
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "decoration",
+                            "sprite": "satellite_A.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.png"
+                          },
+                          "id": "f1",
+                          "type": "console",
+                          "x": 1,
+                          "y": 2
+                        },
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "decoration",
+                            "sprite": "satellite_B.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.png"
+                          },
+                          "id": "f2",
+                          "type": "console",
+                          "x": 5,
+                          "y": 2
+                        },
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "decoration",
+                            "sprite": "satellite_C.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.png"
+                          },
+                          "id": "f3",
+                          "type": "console",
+                          "x": 1,
+                          "y": 4
+                        },
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.json",
+                            "category": "console",
+                            "dimension": "2d",
+                            "name": "console",
+                            "role": "decoration",
+                            "sprite": "satellite_D.png",
+                            "style": "sci-fi",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/kenney-simple-space/features/simpleSpace_sheet.png"
+                          },
+                          "id": "f4",
+                          "type": "console",
+                          "x": 5,
+                          "y": 4
+                        }
+                      ]
+                    },
+                    "gridHeight": {
+                      "type": "object",
+                      "default": 7
+                    },
+                    "gridWidth": {
+                      "type": "object",
+                      "default": 7
+                    },
+                    "hudBackgroundAsset": {
+                      "type": "object",
+                      "default": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "metalPanel.png",
+                        "style": "sci-fi",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png"
+                      }
+                    },
+                    "movementRange": {
+                      "type": "object",
+                      "default": 2
+                    },
+                    "oxygen": {
+                      "type": "object",
+                      "default": 100
+                    },
+                    "oxygenIcon": {
+                      "type": "object",
+                      "default": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "icon-oxygen",
+                        "role": "ui",
+                        "sprite": "icon_shield",
+                        "style": "sci-fi",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png"
+                      }
+                    },
+                    "projection": {
+                      "type": "object",
+                      "default": "isometric"
+                    },
+                    "scale": {
+                      "type": "object",
+                      "default": 0.45
+                    },
+                    "showMinimap": {
+                      "type": "object",
+                      "default": true
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": true
   }
 ]

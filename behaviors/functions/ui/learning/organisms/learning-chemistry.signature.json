@@ -30,7 +30,7 @@
         "overridableConfigKeys": [
           {
             "key": "atoms",
-            "type": "unknown",
+            "type": "[ChemAtom]",
             "default": [
               {
                 "color": "#dc2626",
@@ -160,26 +160,89 @@
                 "x": 500,
                 "y": 340
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "element": {
+                  "name": "element",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Atoms",
+            "description": "16 particles — 8 red gas A on the left, 8 blue gas B on the right — random-walk and mix over time.",
+            "tier": "domain"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
           },
           {
             "key": "height",
-            "type": "unknown",
-            "default": 400
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Simulation height in pixels; bounds the random walk.",
+            "tier": "presentation"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick random-walks every atom; toggle to start/pause diffusion.",
+            "tier": "domain"
           },
           {
             "key": "width",
-            "type": "unknown",
-            "default": 600
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Simulation width in pixels; bounds the random walk.",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
-        "ref": "ChemDiffusion.traits.ChemDiffusionSim"
+        "ref": "ChemDiffusion.traits.ChemDiffusionSim",
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "atoms",
+            "running"
+          ]
+        }
       }
     ],
     "pages": [
@@ -193,192 +256,507 @@
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",
-    "sourceValid": true
-  },
-  {
-    "organism": "learning-chemistry",
-    "orbital": "ReactionOrbital",
-    "tier": "organisms",
-    "factoryPath": "behaviors/functions/ui/learning/organisms/learning-chemistry.ts",
-    "entities": [
-      {
-        "name": "ReactionScene",
-        "fields": [
-          {
-            "name": "phase",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "atoms",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "running",
-            "type": "boolean",
-            "required": false
-          }
-        ],
-        "persistence": "runtime"
-      }
-    ],
-    "traits": [
-      {
-        "name": "ReactionEngine",
-        "emittedEvents": [],
-        "listenedEvents": [],
-        "overridableConfigKeys": [
-          {
-            "key": "atoms",
-            "type": "unknown",
-            "default": [
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for learning-chemistry / DiffusionOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
               {
-                "color": "#dc2626",
-                "element": "A",
-                "home": 150,
-                "id": "a1",
-                "radius": 12,
-                "x": 150,
-                "y": 90
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
               },
               {
-                "color": "#2563eb",
-                "element": "B",
-                "home": 450,
-                "id": "b1",
-                "radius": 12,
-                "x": 450,
-                "y": 90
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
               },
               {
-                "color": "#dc2626",
-                "element": "A",
-                "home": 150,
-                "id": "a2",
-                "radius": 12,
-                "x": 150,
-                "y": 170
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
               },
               {
-                "color": "#2563eb",
-                "element": "B",
-                "home": 450,
-                "id": "b2",
-                "radius": 12,
-                "x": 450,
-                "y": 170
-              },
-              {
-                "color": "#dc2626",
-                "element": "A",
-                "home": 150,
-                "id": "a3",
-                "radius": 12,
-                "x": 150,
-                "y": 250
-              },
-              {
-                "color": "#2563eb",
-                "element": "B",
-                "home": 450,
-                "id": "b3",
-                "radius": 12,
-                "x": 450,
-                "y": 250
-              },
-              {
-                "color": "#dc2626",
-                "element": "A",
-                "home": 150,
-                "id": "a4",
-                "radius": 12,
-                "x": 150,
-                "y": 330
-              },
-              {
-                "color": "#2563eb",
-                "element": "B",
-                "home": 450,
-                "id": "b4",
-                "radius": 12,
-                "x": 450,
-                "y": 330
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
               }
             ]
-          },
-          {
-            "key": "backgroundColor",
-            "type": "unknown",
-            "default": "#f8fafc"
-          },
-          {
-            "key": "bonds",
-            "type": "unknown",
-            "default": [
-              {
-                "color": "#94a3b8",
-                "from": "a1",
-                "to": "b1",
-                "type": "single"
-              },
-              {
-                "color": "#94a3b8",
-                "from": "a2",
-                "to": "b2",
-                "type": "single"
-              },
-              {
-                "color": "#94a3b8",
-                "from": "a3",
-                "to": "b3",
-                "type": "single"
-              },
-              {
-                "color": "#94a3b8",
-                "from": "a4",
-                "to": "b4",
-                "type": "single"
-              }
-            ]
-          },
-          {
-            "key": "height",
-            "type": "unknown",
-            "default": 400
-          },
-          {
-            "key": "period",
-            "type": "unknown",
-            "default": 200
-          },
-          {
-            "key": "running",
-            "type": "unknown",
-            "default": true
-          },
-          {
-            "key": "width",
-            "type": "unknown",
-            "default": 600
           }
-        ],
-        "capabilities": [],
-        "ref": "ChemReaction.traits.ChemReactionSim"
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "DiffusionEngine": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for DiffusionEngine.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "atoms": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "id": "a1",
+                          "radius": 10,
+                          "x": 60,
+                          "y": 60
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "id": "a2",
+                          "radius": 10,
+                          "x": 100,
+                          "y": 100
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "id": "a3",
+                          "radius": 10,
+                          "x": 60,
+                          "y": 140
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "id": "a4",
+                          "radius": 10,
+                          "x": 100,
+                          "y": 180
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "id": "a5",
+                          "radius": 10,
+                          "x": 60,
+                          "y": 220
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "id": "a6",
+                          "radius": 10,
+                          "x": 100,
+                          "y": 260
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "id": "a7",
+                          "radius": 10,
+                          "x": 60,
+                          "y": 300
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "id": "a8",
+                          "radius": 10,
+                          "x": 100,
+                          "y": 340
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "id": "b1",
+                          "radius": 10,
+                          "x": 540,
+                          "y": 60
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "id": "b2",
+                          "radius": 10,
+                          "x": 500,
+                          "y": 100
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "id": "b3",
+                          "radius": 10,
+                          "x": 540,
+                          "y": 140
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "id": "b4",
+                          "radius": 10,
+                          "x": 500,
+                          "y": 180
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "id": "b5",
+                          "radius": 10,
+                          "x": 540,
+                          "y": 220
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "id": "b6",
+                          "radius": 10,
+                          "x": 500,
+                          "y": 260
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "id": "b7",
+                          "radius": 10,
+                          "x": 540,
+                          "y": 300
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "id": "b8",
+                          "radius": 10,
+                          "x": 500,
+                          "y": 340
+                        }
+                      ],
+                      "description": "16 particles — 8 red gas A on the left, 8 blue gas B on the right — random-walk and mix over time.",
+                      "x-label": "Atoms",
+                      "x-tier": "domain"
+                    },
+                    "backgroundColor": {
+                      "type": "string",
+                      "default": "#f8fafc",
+                      "description": "Canvas background color.",
+                      "x-label": "Background Color",
+                      "x-tier": "presentation"
+                    },
+                    "height": {
+                      "type": "number",
+                      "default": 400,
+                      "description": "Simulation height in pixels; bounds the random walk.",
+                      "x-label": "Height",
+                      "x-tier": "presentation"
+                    },
+                    "running": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "When true the tick random-walks every atom; toggle to start/pause diffusion.",
+                      "x-label": "Running",
+                      "x-tier": "domain"
+                    },
+                    "width": {
+                      "type": "number",
+                      "default": 600,
+                      "description": "Simulation width in pixels; bounds the random walk.",
+                      "x-label": "Width",
+                      "x-tier": "presentation"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
       }
-    ],
-    "pages": [
-      {
-        "name": "ReactionPage",
-        "defaultPath": "/chem/reaction",
-        "primaryEntity": "ReactionScene"
-      }
-    ],
-    "emittedEvents": [],
-    "listenedEvents": [],
-    "exposure": "palette",
-    "provenance": "generated",
-    "sourceValid": true
+    },
+    "factoryReady": true
   },
   {
     "organism": "learning-chemistry",
@@ -411,7 +789,7 @@
         "overridableConfigKeys": [
           {
             "key": "atoms",
-            "type": "unknown",
+            "type": "[ChemAtom]",
             "default": [
               {
                 "color": "#7c3aed",
@@ -557,26 +935,73 @@
                 "x": 400,
                 "y": 60
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "element": {
+                  "name": "element",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Atoms",
+            "description": "Six large purple solute (S) atoms confined right of the membrane plus twelve small blue water (W) atoms that cross freely; water biases rightward each tick, so it accumulates on the solute side.",
+            "tier": "domain"
           },
           {
             "key": "backgroundColor",
-            "type": "unknown",
-            "default": "#f8fafc"
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
           },
           {
             "key": "height",
-            "type": "unknown",
-            "default": 400
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Simulation height in pixels; bounds the random walk.",
+            "tier": "presentation"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick random-walks every atom; toggle to start/pause osmosis.",
+            "tier": "domain"
           },
           {
             "key": "shapes",
-            "type": "unknown",
+            "type": "[ChemShape]",
             "default": [
               {
                 "color": "#64748b",
@@ -588,16 +1013,86 @@
                 "y1": 20,
                 "y2": 380
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Shapes",
+            "description": "The vertical semipermeable membrane down the canvas middle (x=width/2); solute cannot cross it, water can.",
+            "tier": "domain"
           },
           {
             "key": "width",
-            "type": "unknown",
-            "default": 600
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Simulation width in pixels; the membrane sits at width/2.",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
-        "ref": "ChemOsmosis.traits.ChemOsmosisSim"
+        "ref": "ChemOsmosis.traits.ChemOsmosisSim",
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "atoms",
+            "running"
+          ]
+        }
       }
     ],
     "pages": [
@@ -611,6 +1106,1314 @@
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",
-    "sourceValid": true
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for learning-chemistry / OsmosisOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "OsmosisEngine": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for OsmosisEngine.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "atoms": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "color": "#7c3aed",
+                          "element": "S",
+                          "id": "s1",
+                          "radius": 13,
+                          "x": 360,
+                          "y": 80
+                        },
+                        {
+                          "color": "#7c3aed",
+                          "element": "S",
+                          "id": "s2",
+                          "radius": 13,
+                          "x": 480,
+                          "y": 130
+                        },
+                        {
+                          "color": "#7c3aed",
+                          "element": "S",
+                          "id": "s3",
+                          "radius": 13,
+                          "x": 400,
+                          "y": 200
+                        },
+                        {
+                          "color": "#7c3aed",
+                          "element": "S",
+                          "id": "s4",
+                          "radius": 13,
+                          "x": 520,
+                          "y": 260
+                        },
+                        {
+                          "color": "#7c3aed",
+                          "element": "S",
+                          "id": "s5",
+                          "radius": 13,
+                          "x": 360,
+                          "y": 320
+                        },
+                        {
+                          "color": "#7c3aed",
+                          "element": "S",
+                          "id": "s6",
+                          "radius": 13,
+                          "x": 470,
+                          "y": 360
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w1",
+                          "radius": 6,
+                          "x": 60,
+                          "y": 60
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w2",
+                          "radius": 6,
+                          "x": 140,
+                          "y": 120
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w3",
+                          "radius": 6,
+                          "x": 90,
+                          "y": 200
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w4",
+                          "radius": 6,
+                          "x": 200,
+                          "y": 280
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w5",
+                          "radius": 6,
+                          "x": 120,
+                          "y": 340
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w6",
+                          "radius": 6,
+                          "x": 240,
+                          "y": 80
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w7",
+                          "radius": 6,
+                          "x": 260,
+                          "y": 180
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w8",
+                          "radius": 6,
+                          "x": 180,
+                          "y": 360
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w9",
+                          "radius": 6,
+                          "x": 360,
+                          "y": 120
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w10",
+                          "radius": 6,
+                          "x": 440,
+                          "y": 300
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w11",
+                          "radius": 6,
+                          "x": 520,
+                          "y": 180
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "W",
+                          "id": "w12",
+                          "radius": 6,
+                          "x": 400,
+                          "y": 60
+                        }
+                      ],
+                      "description": "Six large purple solute (S) atoms confined right of the membrane plus twelve small blue water (W) atoms that cross freely; water biases rightward each tick, so it accumulates on the solute side.",
+                      "x-label": "Atoms",
+                      "x-tier": "domain"
+                    },
+                    "backgroundColor": {
+                      "type": "string",
+                      "default": "#f8fafc",
+                      "description": "Canvas background color.",
+                      "x-label": "Background Color",
+                      "x-tier": "presentation"
+                    },
+                    "height": {
+                      "type": "number",
+                      "default": 400,
+                      "description": "Simulation height in pixels; bounds the random walk.",
+                      "x-label": "Height",
+                      "x-tier": "presentation"
+                    },
+                    "running": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "When true the tick random-walks every atom; toggle to start/pause osmosis.",
+                      "x-label": "Running",
+                      "x-tier": "domain"
+                    },
+                    "shapes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "color": "#64748b",
+                          "id": "membrane",
+                          "lineWidth": 4,
+                          "type": "line",
+                          "x1": 300,
+                          "x2": 300,
+                          "y1": 20,
+                          "y2": 380
+                        }
+                      ],
+                      "description": "The vertical semipermeable membrane down the canvas middle (x=width/2); solute cannot cross it, water can.",
+                      "x-label": "Shapes",
+                      "x-tier": "domain"
+                    },
+                    "width": {
+                      "type": "number",
+                      "default": 600,
+                      "description": "Simulation width in pixels; the membrane sits at width/2.",
+                      "x-label": "Width",
+                      "x-tier": "presentation"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": true
+  },
+  {
+    "organism": "learning-chemistry",
+    "orbital": "ReactionOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/learning/organisms/learning-chemistry.ts",
+    "entities": [
+      {
+        "name": "ReactionScene",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "atoms",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ReactionEngine",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "atoms",
+            "type": "[ChemAtom]",
+            "default": [
+              {
+                "color": "#dc2626",
+                "element": "A",
+                "home": 150,
+                "id": "a1",
+                "radius": 12,
+                "x": 150,
+                "y": 90
+              },
+              {
+                "color": "#2563eb",
+                "element": "B",
+                "home": 450,
+                "id": "b1",
+                "radius": 12,
+                "x": 450,
+                "y": 90
+              },
+              {
+                "color": "#dc2626",
+                "element": "A",
+                "home": 150,
+                "id": "a2",
+                "radius": 12,
+                "x": 150,
+                "y": 170
+              },
+              {
+                "color": "#2563eb",
+                "element": "B",
+                "home": 450,
+                "id": "b2",
+                "radius": 12,
+                "x": 450,
+                "y": 170
+              },
+              {
+                "color": "#dc2626",
+                "element": "A",
+                "home": 150,
+                "id": "a3",
+                "radius": 12,
+                "x": 150,
+                "y": 250
+              },
+              {
+                "color": "#2563eb",
+                "element": "B",
+                "home": 450,
+                "id": "b3",
+                "radius": 12,
+                "x": 450,
+                "y": 250
+              },
+              {
+                "color": "#dc2626",
+                "element": "A",
+                "home": 150,
+                "id": "a4",
+                "radius": 12,
+                "x": 150,
+                "y": 330
+              },
+              {
+                "color": "#2563eb",
+                "element": "B",
+                "home": 450,
+                "id": "b4",
+                "radius": 12,
+                "x": 450,
+                "y": 330
+              }
+            ],
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "element": {
+                  "name": "element",
+                  "required": false,
+                  "type": "string"
+                },
+                "home": {
+                  "name": "home",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Atoms",
+            "description": "Eight atoms — four red A on the left and four blue B on the right; each pair slides to the center (width/2) to bond, then back to its home to dissociate.",
+            "tier": "domain"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "bonds",
+            "type": "[ChemBond]",
+            "default": [
+              {
+                "color": "#94a3b8",
+                "from": "a1",
+                "to": "b1",
+                "type": "single"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "a2",
+                "to": "b2",
+                "type": "single"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "a3",
+                "to": "b3",
+                "type": "single"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "a4",
+                "to": "b4",
+                "type": "single"
+              }
+            ],
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "single",
+                    "double",
+                    "triple"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "label": "Bonds",
+            "description": "Four A-B bonds — the canvas draws a line between each pair whose length shrinks as the atoms converge and grows as they separate.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "period",
+            "type": "number",
+            "default": 200,
+            "label": "Period",
+            "description": "Phase units per full bond form-and-break cycle; larger is slower.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick oscillates each pair between dissociated and bonded; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels; the bond center is width/2.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "ref": "ChemReaction.traits.ChemReactionSim",
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "atoms",
+            "phase",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ReactionPage",
+        "defaultPath": "/chem/reaction",
+        "primaryEntity": "ReactionScene"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for learning-chemistry / ReactionOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "ReactionEngine": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for ReactionEngine.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "atoms": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "home": 150,
+                          "id": "a1",
+                          "radius": 12,
+                          "x": 150,
+                          "y": 90
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "home": 450,
+                          "id": "b1",
+                          "radius": 12,
+                          "x": 450,
+                          "y": 90
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "home": 150,
+                          "id": "a2",
+                          "radius": 12,
+                          "x": 150,
+                          "y": 170
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "home": 450,
+                          "id": "b2",
+                          "radius": 12,
+                          "x": 450,
+                          "y": 170
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "home": 150,
+                          "id": "a3",
+                          "radius": 12,
+                          "x": 150,
+                          "y": 250
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "home": 450,
+                          "id": "b3",
+                          "radius": 12,
+                          "x": 450,
+                          "y": 250
+                        },
+                        {
+                          "color": "#dc2626",
+                          "element": "A",
+                          "home": 150,
+                          "id": "a4",
+                          "radius": 12,
+                          "x": 150,
+                          "y": 330
+                        },
+                        {
+                          "color": "#2563eb",
+                          "element": "B",
+                          "home": 450,
+                          "id": "b4",
+                          "radius": 12,
+                          "x": 450,
+                          "y": 330
+                        }
+                      ],
+                      "description": "Eight atoms — four red A on the left and four blue B on the right; each pair slides to the center (width/2) to bond, then back to its home to dissociate.",
+                      "x-label": "Atoms",
+                      "x-tier": "domain"
+                    },
+                    "backgroundColor": {
+                      "type": "string",
+                      "default": "#f8fafc",
+                      "description": "Canvas background color.",
+                      "x-label": "Background Color",
+                      "x-tier": "presentation"
+                    },
+                    "bonds": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "default": [
+                        {
+                          "color": "#94a3b8",
+                          "from": "a1",
+                          "to": "b1",
+                          "type": "single"
+                        },
+                        {
+                          "color": "#94a3b8",
+                          "from": "a2",
+                          "to": "b2",
+                          "type": "single"
+                        },
+                        {
+                          "color": "#94a3b8",
+                          "from": "a3",
+                          "to": "b3",
+                          "type": "single"
+                        },
+                        {
+                          "color": "#94a3b8",
+                          "from": "a4",
+                          "to": "b4",
+                          "type": "single"
+                        }
+                      ],
+                      "description": "Four A-B bonds — the canvas draws a line between each pair whose length shrinks as the atoms converge and grows as they separate.",
+                      "x-label": "Bonds",
+                      "x-tier": "domain"
+                    },
+                    "height": {
+                      "type": "number",
+                      "default": 400,
+                      "description": "Canvas height in pixels.",
+                      "x-label": "Height",
+                      "x-tier": "presentation"
+                    },
+                    "period": {
+                      "type": "number",
+                      "default": 200,
+                      "description": "Phase units per full bond form-and-break cycle; larger is slower.",
+                      "x-label": "Period",
+                      "x-tier": "domain"
+                    },
+                    "running": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "When true the tick oscillates each pair between dissociated and bonded; toggle to start/pause.",
+                      "x-label": "Running",
+                      "x-tier": "domain"
+                    },
+                    "width": {
+                      "type": "number",
+                      "default": 600,
+                      "description": "Canvas width in pixels; the bond center is width/2.",
+                      "x-label": "Width",
+                      "x-tier": "presentation"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "description": "Local state-machine event fired when the subscription matches."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": true
   }
 ]

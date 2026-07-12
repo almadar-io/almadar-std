@@ -83,6 +83,8 @@ export interface StdUiCanvasConfig {
   backgroundImage?: unknown;
   /** Default: `{}` */
   camera?: unknown;
+  /** Default: `[]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */
