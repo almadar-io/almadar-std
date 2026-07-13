@@ -29,7 +29,34 @@ export interface BehaviorEmbeddingsManifest {
   vectors: Record<string, readonly number[]>;
 }
 
+/** Int8-quantized vector: `d` = base64 of one signed byte per dimension,
+ *  `s` = per-vector max-abs scale; value = byte × s ÷ 127. */
+interface QuantizedVector {
+  s: number;
+  d: string;
+}
+
+type StoredVector = readonly number[] | QuantizedVector;
+
+interface StoredBehaviorEmbeddingsFile {
+  version: string;
+  model: string;
+  dimensions: number;
+  encoding?: 'int8-b64';
+  vectors: Record<string, StoredVector>;
+}
+
 let cache: BehaviorEmbeddingsManifest | null = null;
+
+function decodeVector(stored: StoredVector): readonly number[] {
+  if (!('d' in stored)) return stored;
+  const bytes = Buffer.from(stored.d, 'base64');
+  const out = new Array<number>(bytes.length);
+  for (let i = 0; i < bytes.length; i++) {
+    out[i] = (bytes.readInt8(i) * stored.s) / 127;
+  }
+  return out;
+}
 
 async function loadManifest(): Promise<BehaviorEmbeddingsManifest | null> {
   if (cache) return cache;
@@ -38,7 +65,7 @@ async function loadManifest(): Promise<BehaviorEmbeddingsManifest | null> {
     const { resolve } = await import('path');
     const dir = await resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'behaviors-embeddings.json'), 'utf-8');
-    const parsed = JSON.parse(raw) as BehaviorEmbeddingsManifest;
+    const parsed = JSON.parse(raw) as StoredBehaviorEmbeddingsFile;
     if (
       typeof parsed?.version !== 'string' ||
       typeof parsed?.model !== 'string' ||
@@ -48,7 +75,11 @@ async function loadManifest(): Promise<BehaviorEmbeddingsManifest | null> {
     ) {
       return null;
     }
-    cache = parsed;
+    const vectors: Record<string, readonly number[]> = {};
+    for (const [key, stored] of Object.entries(parsed.vectors)) {
+      vectors[key] = decodeVector(stored);
+    }
+    cache = { version: parsed.version, model: parsed.model, dimensions: parsed.dimensions, vectors };
     return cache;
   } catch {
     return null;

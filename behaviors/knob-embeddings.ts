@@ -36,12 +36,18 @@ export interface QuantizedKnobVector {
 
 export type StoredKnobVector = ReadonlyArray<number> | QuantizedKnobVector;
 
+/** On-disk knob file. Two shapes are accepted:
+ *  - non-interned (legacy): one stored vector per knob key in `vectors`.
+ *  - interned: a `table` of unique stored vectors + a `keys` map from knob
+ *    key to its table index (many identical-text knobs share one vector). */
 export interface StoredKnobEmbeddingsFile {
   version: string;
   model: string;
   dimensions: number;
   encoding?: 'int8-b64';
-  vectors: Record<string, StoredKnobVector>;
+  vectors?: Record<string, StoredKnobVector>;
+  table?: StoredKnobVector[];
+  keys?: Record<string, number>;
 }
 
 let cache: KnobEmbeddingsManifest | null = null;
@@ -56,6 +62,25 @@ function decodeVector(stored: StoredKnobVector): ReadonlyArray<number> {
   return out;
 }
 
+/** Reconstruct the public `key → vector` map from either on-disk shape.
+ *  Interned table entries are decoded ONCE and shared across every key that
+ *  points at them. */
+function reconstructVectors(parsed: StoredKnobEmbeddingsFile): Record<string, ReadonlyArray<number>> {
+  const vectors: Record<string, ReadonlyArray<number>> = {};
+  if (parsed.table && parsed.keys) {
+    const decoded = parsed.table.map(decodeVector);
+    for (const [key, idx] of Object.entries(parsed.keys)) {
+      const vec = decoded[idx];
+      if (vec) vectors[key] = vec;
+    }
+    return vectors;
+  }
+  for (const [key, stored] of Object.entries(parsed.vectors ?? {})) {
+    vectors[key] = decodeVector(stored);
+  }
+  return vectors;
+}
+
 async function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
   if (cache) return cache;
   try {
@@ -64,23 +89,16 @@ async function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
     const dir = await resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'knob-embeddings.json'), 'utf-8');
     const parsed = JSON.parse(raw) as StoredKnobEmbeddingsFile;
-    if (
-      typeof parsed?.model !== 'string' ||
-      typeof parsed?.dimensions !== 'number' ||
-      typeof parsed?.vectors !== 'object' ||
-      parsed.vectors === null
-    ) {
+    const interned = typeof parsed?.table === 'object' && typeof parsed?.keys === 'object';
+    const nonInterned = typeof parsed?.vectors === 'object' && parsed.vectors !== null;
+    if (typeof parsed?.model !== 'string' || typeof parsed?.dimensions !== 'number' || (!interned && !nonInterned)) {
       return null;
-    }
-    const vectors: Record<string, ReadonlyArray<number>> = {};
-    for (const [key, stored] of Object.entries(parsed.vectors)) {
-      vectors[key] = decodeVector(stored);
     }
     cache = {
       version: parsed.version,
       model: parsed.model,
       dimensions: parsed.dimensions,
-      vectors,
+      vectors: reconstructVectors(parsed),
     };
     return cache;
   } catch {
