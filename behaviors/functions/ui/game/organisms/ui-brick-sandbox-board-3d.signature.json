@@ -793,6 +793,939 @@
     "exposure": "both",
     "provenance": "authored",
     "substrateSignature": "e3b0c44298fc1c14",
-    "sourceValid": true
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for ui-brick-sandbox-board-3d / BrickSandboxBoard3DOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "BrickSandboxBoard3DRender": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for BrickSandboxBoard3DRender.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "baseplateModel": {
+                      "properties": {
+                        "animations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "aspect": {
+                          "type": "string"
+                        },
+                        "category": {
+                          "type": "string"
+                        },
+                        "dimension": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "style": {
+                          "type": "string"
+                        },
+                        "thumbnailUrl": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object",
+                      "default": {
+                        "animations": [
+                          "static"
+                        ],
+                        "aspect": "1:1",
+                        "category": "baseplate",
+                        "dimension": "3d",
+                        "name": "square-hq-plate-1x1",
+                        "role": "tile",
+                        "style": "lowpoly-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb"
+                      },
+                      "description": "Passable baseplate tile, tiled across the 12x12 build plate.",
+                      "x-label": "Baseplate Model",
+                      "x-tier": "presentation"
+                    },
+                    "bgColor": {
+                      "type": "string",
+                      "default": "#FFD966",
+                      "description": "Bright playful canvas background color",
+                      "x-label": "Bg Color",
+                      "x-tier": "presentation"
+                    },
+                    "blueprint": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "brickModel": {
+                            "type": "object",
+                            "properties": {
+                              "animations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "aspect": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "dimension": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "style": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "filled": {
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "default": [
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-square",
+                            "dimension": "3d",
+                            "name": "square-hq-brick-1x1",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb"
+                          },
+                          "filled": false,
+                          "id": "bp1",
+                          "x": 4,
+                          "y": 3
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-round",
+                            "dimension": "3d",
+                            "name": "round-hq-brick-1x1-round",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb"
+                          },
+                          "filled": false,
+                          "id": "bp2",
+                          "x": 5,
+                          "y": 3
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-bevel",
+                            "dimension": "3d",
+                            "name": "bevel-hq-brick-2x2",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/bevel-hq-brick-2x2.glb"
+                          },
+                          "filled": false,
+                          "id": "bp3",
+                          "x": 6,
+                          "y": 3
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-square",
+                            "dimension": "3d",
+                            "name": "square-hq-brick-1x1",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb"
+                          },
+                          "filled": false,
+                          "id": "bp4",
+                          "x": 7,
+                          "y": 3
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-round",
+                            "dimension": "3d",
+                            "name": "round-hq-brick-1x1-round",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb"
+                          },
+                          "filled": false,
+                          "id": "bp5",
+                          "x": 4,
+                          "y": 4
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-bevel",
+                            "dimension": "3d",
+                            "name": "bevel-hq-brick-2x2",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/bevel-hq-brick-2x2.glb"
+                          },
+                          "filled": false,
+                          "id": "bp6",
+                          "x": 5,
+                          "y": 4
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-square",
+                            "dimension": "3d",
+                            "name": "square-hq-brick-1x1",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb"
+                          },
+                          "filled": false,
+                          "id": "bp7",
+                          "x": 6,
+                          "y": 4
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-round",
+                            "dimension": "3d",
+                            "name": "round-hq-brick-1x1-round",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb"
+                          },
+                          "filled": false,
+                          "id": "bp8",
+                          "x": 7,
+                          "y": 4
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-bevel",
+                            "dimension": "3d",
+                            "name": "bevel-hq-brick-2x2",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/bevel-hq-brick-2x2.glb"
+                          },
+                          "filled": false,
+                          "id": "bp9",
+                          "x": 4,
+                          "y": 5
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-square",
+                            "dimension": "3d",
+                            "name": "square-hq-brick-1x1",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb"
+                          },
+                          "filled": false,
+                          "id": "bp10",
+                          "x": 5,
+                          "y": 5
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-round",
+                            "dimension": "3d",
+                            "name": "round-hq-brick-1x1-round",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb"
+                          },
+                          "filled": false,
+                          "id": "bp11",
+                          "x": 6,
+                          "y": 5
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-bevel",
+                            "dimension": "3d",
+                            "name": "bevel-hq-brick-2x2",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/bevel-hq-brick-2x2.glb"
+                          },
+                          "filled": false,
+                          "id": "bp12",
+                          "x": 7,
+                          "y": 5
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-square",
+                            "dimension": "3d",
+                            "name": "square-hq-brick-1x1",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb"
+                          },
+                          "filled": false,
+                          "id": "bp13",
+                          "x": 4,
+                          "y": 6
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-round",
+                            "dimension": "3d",
+                            "name": "round-hq-brick-1x1-round",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb"
+                          },
+                          "filled": false,
+                          "id": "bp14",
+                          "x": 5,
+                          "y": 6
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-bevel",
+                            "dimension": "3d",
+                            "name": "bevel-hq-brick-2x2",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/bevel-hq-brick-2x2.glb"
+                          },
+                          "filled": false,
+                          "id": "bp15",
+                          "x": 6,
+                          "y": 6
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-square",
+                            "dimension": "3d",
+                            "name": "square-hq-brick-1x1",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb"
+                          },
+                          "filled": false,
+                          "id": "bp16",
+                          "x": 7,
+                          "y": 6
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-round",
+                            "dimension": "3d",
+                            "name": "round-hq-brick-1x1-round",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb"
+                          },
+                          "filled": false,
+                          "id": "bp17",
+                          "x": 4,
+                          "y": 7
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-bevel",
+                            "dimension": "3d",
+                            "name": "bevel-hq-brick-2x2",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/bevel-hq-brick-2x2.glb"
+                          },
+                          "filled": false,
+                          "id": "bp18",
+                          "x": 5,
+                          "y": 7
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-square",
+                            "dimension": "3d",
+                            "name": "square-hq-brick-1x1",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb"
+                          },
+                          "filled": false,
+                          "id": "bp19",
+                          "x": 6,
+                          "y": 7
+                        },
+                        {
+                          "brickModel": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "brick-round",
+                            "dimension": "3d",
+                            "name": "round-hq-brick-1x1-round",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb"
+                          },
+                          "filled": false,
+                          "id": "bp20",
+                          "x": 7,
+                          "y": 7
+                        }
+                      ],
+                      "description": "20 target cells forming a 4x5 build blueprint within the 12x12 plate, cycling 3 brick models.",
+                      "x-label": "Blueprint",
+                      "x-tier": "presentation"
+                    },
+                    "className": {
+                      "type": "string",
+                      "default": "",
+                      "description": "className prop",
+                      "x-label": "Class Name",
+                      "x-tier": "presentation"
+                    },
+                    "error": {
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "stack": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object",
+                      "description": "Error state (UiError)",
+                      "x-label": "Error",
+                      "x-tier": "presentation"
+                    },
+                    "isLoading": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Loading state indicator",
+                      "x-label": "Is Loading",
+                      "x-tier": "presentation"
+                    },
+                    "markerModel": {
+                      "properties": {
+                        "animations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "aspect": {
+                          "type": "string"
+                        },
+                        "category": {
+                          "type": "string"
+                        },
+                        "dimension": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "style": {
+                          "type": "string"
+                        },
+                        "thumbnailUrl": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object",
+                      "default": {
+                        "animations": [
+                          "static"
+                        ],
+                        "aspect": "1:1",
+                        "category": "marker",
+                        "dimension": "3d",
+                        "name": "round-hq-plate-1x1-round",
+                        "role": "decoration",
+                        "style": "lowpoly-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/round-hq-plate-1x1-round.glb"
+                      },
+                      "description": "Subtle stud marker shown on unfilled blueprint cells.",
+                      "x-label": "Marker Model",
+                      "x-tier": "presentation"
+                    },
+                    "scale": {
+                      "type": "number",
+                      "default": 0.5,
+                      "description": "Canvas render scale",
+                      "x-label": "Scale",
+                      "x-tier": "presentation"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "enum": [
+                          "INIT",
+                          "PLAY_AGAIN",
+                          "TILE_CLICK"
+                        ],
+                        "description": "Local state-machine event fired when the subscription matches. Must be one of the events this trait's own transitions already react to."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": true
   }
 ]

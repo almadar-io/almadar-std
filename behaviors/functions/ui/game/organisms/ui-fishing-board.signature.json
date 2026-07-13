@@ -2507,6 +2507,2185 @@
     "exposure": "both",
     "provenance": "authored",
     "substrateSignature": "e3b0c44298fc1c14",
-    "sourceValid": true
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for ui-fishing-board / FishingBoardOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "FishingBoardRender": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for FishingBoardRender.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "assetManifest": {
+                      "properties": {
+                        "effects": {
+                          "type": "object"
+                        },
+                        "features": {
+                          "type": "object"
+                        },
+                        "terrains": {
+                          "type": "object"
+                        },
+                        "units": {
+                          "type": "object"
+                        }
+                      },
+                      "type": "object",
+                      "default": {
+                        "effects": {
+                          "bite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                            "category": "bite",
+                            "dimension": "2d",
+                            "name": "bite",
+                            "role": "effect",
+                            "sprite": "emote_exclamation.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                            "variant": ""
+                          },
+                          "splash": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.json",
+                            "category": "splash",
+                            "dimension": "2d",
+                            "name": "splash",
+                            "role": "effect",
+                            "sprite": "burst.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.png",
+                            "variant": ""
+                          }
+                        },
+                        "features": {
+                          "fish": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "fish",
+                            "dimension": "2d",
+                            "name": "fish",
+                            "role": "decoration",
+                            "sprite": "fish_blue",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "rock": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "rock",
+                            "dimension": "2d",
+                            "name": "rock",
+                            "role": "decoration",
+                            "sprite": "rock_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "seaweed": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seaweed",
+                            "dimension": "2d",
+                            "name": "seaweed",
+                            "role": "decoration",
+                            "sprite": "seaweed_green_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          }
+                        },
+                        "terrains": {
+                          "seabed": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seabed",
+                            "dimension": "2d",
+                            "name": "seabed",
+                            "role": "tile",
+                            "sprite": "terrain_sand_top_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "surface": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "surface",
+                            "dimension": "2d",
+                            "name": "surface",
+                            "role": "tile",
+                            "sprite": "background_terrain_top",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "water": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          }
+                        },
+                        "units": {
+                          "boat": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                            "category": "boat",
+                            "dimension": "2d",
+                            "name": "boat",
+                            "role": "npc",
+                            "sprite": "ship.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                            "variant": ""
+                          },
+                          "hook": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "hook",
+                            "dimension": "2d",
+                            "name": "hook",
+                            "role": "npc",
+                            "sprite": "bubble_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          }
+                        }
+                      },
+                      "description": "Asset sprite manifest",
+                      "x-label": "Asset Manifest",
+                      "x-tier": "presentation"
+                    },
+                    "biteChance": {
+                      "type": "number",
+                      "default": 0.35,
+                      "description": "Per-tick probability of a bite while waiting",
+                      "x-label": "Bite Chance",
+                      "x-tier": "domain"
+                    },
+                    "catchTarget": {
+                      "type": "number",
+                      "default": 5,
+                      "description": "Fish landed to win the session",
+                      "x-label": "Catch Target",
+                      "x-tier": "domain"
+                    },
+                    "className": {
+                      "type": "string",
+                      "default": "",
+                      "description": "Additional CSS classes",
+                      "x-label": "Class Name",
+                      "x-tier": "presentation"
+                    },
+                    "error": {
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "stack": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object",
+                      "description": "Error state (UiError)",
+                      "x-label": "Error",
+                      "x-tier": "presentation"
+                    },
+                    "features": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "assetUrl": {
+                            "type": "object",
+                            "properties": {
+                              "animations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "aspect": {
+                                "type": "string"
+                              },
+                              "atlas": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "dimension": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "sprite": {
+                                "type": "string"
+                              },
+                              "style": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "variant": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "color": {
+                            "type": "string"
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "sprite": {
+                            "type": "object",
+                            "properties": {
+                              "animations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "aspect": {
+                                "type": "string"
+                              },
+                              "atlas": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "dimension": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "sprite": {
+                                "type": "string"
+                              },
+                              "style": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "variant": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          },
+                          "z": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "default": [
+                        {
+                          "id": "f1",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "fish",
+                            "dimension": "2d",
+                            "name": "fish_blue",
+                            "role": "decoration",
+                            "sprite": "fish_blue",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "fish",
+                          "x": 1,
+                          "y": 2
+                        },
+                        {
+                          "id": "f2",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "fish",
+                            "dimension": "2d",
+                            "name": "fish_orange",
+                            "role": "decoration",
+                            "sprite": "fish_orange",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "fish",
+                          "x": 5,
+                          "y": 2
+                        },
+                        {
+                          "id": "f3",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "fish",
+                            "dimension": "2d",
+                            "name": "fish_pink",
+                            "role": "decoration",
+                            "sprite": "fish_pink",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "fish",
+                          "x": 6,
+                          "y": 2
+                        },
+                        {
+                          "id": "f4",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "fish",
+                            "dimension": "2d",
+                            "name": "fish_green",
+                            "role": "decoration",
+                            "sprite": "fish_green",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "fish",
+                          "x": 2,
+                          "y": 3
+                        },
+                        {
+                          "id": "f5",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "fish",
+                            "dimension": "2d",
+                            "name": "fish_red",
+                            "role": "decoration",
+                            "sprite": "fish_red",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "fish",
+                          "x": 4,
+                          "y": 3
+                        },
+                        {
+                          "id": "f6",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seaweed",
+                            "dimension": "2d",
+                            "name": "seaweed_green_a",
+                            "role": "decoration",
+                            "sprite": "seaweed_green_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "seaweed",
+                          "x": 0,
+                          "y": 4
+                        },
+                        {
+                          "id": "f7",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seaweed",
+                            "dimension": "2d",
+                            "name": "seaweed_pink_a",
+                            "role": "decoration",
+                            "sprite": "seaweed_pink_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "seaweed",
+                          "x": 2,
+                          "y": 4
+                        },
+                        {
+                          "id": "f8",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seaweed",
+                            "dimension": "2d",
+                            "name": "seaweed_green_c",
+                            "role": "decoration",
+                            "sprite": "seaweed_green_c",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "seaweed",
+                          "x": 5,
+                          "y": 4
+                        },
+                        {
+                          "id": "f9",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "rock",
+                            "dimension": "2d",
+                            "name": "rock_a",
+                            "role": "decoration",
+                            "sprite": "rock_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "rock",
+                          "x": 3,
+                          "y": 4
+                        },
+                        {
+                          "id": "f10",
+                          "sprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "rock",
+                            "dimension": "2d",
+                            "name": "rock_b",
+                            "role": "decoration",
+                            "sprite": "rock_b",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "type": "rock",
+                          "x": 6,
+                          "y": 4
+                        }
+                      ],
+                      "description": "Features on the board (fish, seaweed, rocks)",
+                      "x-label": "Features",
+                      "x-tier": "presentation"
+                    },
+                    "isLoading": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Loading state indicator",
+                      "x-label": "Is Loading",
+                      "x-tier": "presentation"
+                    },
+                    "reelWindowTicks": {
+                      "type": "number",
+                      "default": 4,
+                      "description": "500ms ticks the player has to reel a hooked fish",
+                      "x-label": "Reel Window Ticks",
+                      "x-tier": "domain"
+                    },
+                    "scale": {
+                      "type": "number",
+                      "default": 0.5,
+                      "description": "Render scale",
+                      "x-label": "Scale",
+                      "x-tier": "presentation"
+                    },
+                    "tiles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "modelUrl": {
+                            "type": "object",
+                            "properties": {
+                              "animations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "aspect": {
+                                "type": "string"
+                              },
+                              "atlas": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "dimension": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "sprite": {
+                                "type": "string"
+                              },
+                              "style": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "variant": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "movementCost": {
+                            "type": "number"
+                          },
+                          "passable": {
+                            "type": "boolean"
+                          },
+                          "terrain": {
+                            "type": "string"
+                          },
+                          "terrainSprite": {
+                            "type": "object",
+                            "properties": {
+                              "animations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "aspect": {
+                                "type": "string"
+                              },
+                              "atlas": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "dimension": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "sprite": {
+                                "type": "string"
+                              },
+                              "style": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "variant": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "tileType": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          },
+                          "z": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "default": [
+                        {
+                          "passable": true,
+                          "terrain": "surface",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "surface",
+                            "dimension": "2d",
+                            "name": "surface",
+                            "role": "tile",
+                            "sprite": "background_terrain_top",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 0,
+                          "y": 0
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "surface",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "surface",
+                            "dimension": "2d",
+                            "name": "surface",
+                            "role": "tile",
+                            "sprite": "background_terrain_top",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 1,
+                          "y": 0
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "surface",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "surface",
+                            "dimension": "2d",
+                            "name": "surface",
+                            "role": "tile",
+                            "sprite": "background_terrain_top",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 2,
+                          "y": 0
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "surface",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "surface",
+                            "dimension": "2d",
+                            "name": "surface",
+                            "role": "tile",
+                            "sprite": "background_terrain_top",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 3,
+                          "y": 0
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "surface",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "surface",
+                            "dimension": "2d",
+                            "name": "surface",
+                            "role": "tile",
+                            "sprite": "background_terrain_top",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 4,
+                          "y": 0
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "surface",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "surface",
+                            "dimension": "2d",
+                            "name": "surface",
+                            "role": "tile",
+                            "sprite": "background_terrain_top",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 5,
+                          "y": 0
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "surface",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "surface",
+                            "dimension": "2d",
+                            "name": "surface",
+                            "role": "tile",
+                            "sprite": "background_terrain_top",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 6,
+                          "y": 0
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 0,
+                          "y": 1
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 1,
+                          "y": 1
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 2,
+                          "y": 1
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 3,
+                          "y": 1
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 4,
+                          "y": 1
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 5,
+                          "y": 1
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 6,
+                          "y": 1
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 0,
+                          "y": 2
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 1,
+                          "y": 2
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 2,
+                          "y": 2
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 3,
+                          "y": 2
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 4,
+                          "y": 2
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 5,
+                          "y": 2
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 6,
+                          "y": 2
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 0,
+                          "y": 3
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 1,
+                          "y": 3
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 2,
+                          "y": 3
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 3,
+                          "y": 3
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 4,
+                          "y": 3
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 5,
+                          "y": 3
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "water",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "water",
+                            "dimension": "2d",
+                            "name": "water",
+                            "role": "tile",
+                            "sprite": "background_terrain",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 6,
+                          "y": 3
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "seabed",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seabed",
+                            "dimension": "2d",
+                            "name": "seabed",
+                            "role": "tile",
+                            "sprite": "terrain_sand_top_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 0,
+                          "y": 4
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "seabed",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seabed",
+                            "dimension": "2d",
+                            "name": "seabed",
+                            "role": "tile",
+                            "sprite": "terrain_sand_top_b",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 1,
+                          "y": 4
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "seabed",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seabed",
+                            "dimension": "2d",
+                            "name": "seabed",
+                            "role": "tile",
+                            "sprite": "terrain_sand_top_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 2,
+                          "y": 4
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "seabed",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seabed",
+                            "dimension": "2d",
+                            "name": "seabed",
+                            "role": "tile",
+                            "sprite": "terrain_sand_top_b",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 3,
+                          "y": 4
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "seabed",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seabed",
+                            "dimension": "2d",
+                            "name": "seabed",
+                            "role": "tile",
+                            "sprite": "terrain_sand_top_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 4,
+                          "y": 4
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "seabed",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seabed",
+                            "dimension": "2d",
+                            "name": "seabed",
+                            "role": "tile",
+                            "sprite": "terrain_sand_top_b",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 5,
+                          "y": 4
+                        },
+                        {
+                          "passable": true,
+                          "terrain": "seabed",
+                          "terrainSprite": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "seabed",
+                            "dimension": "2d",
+                            "name": "seabed",
+                            "role": "tile",
+                            "sprite": "terrain_sand_top_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "x": 6,
+                          "y": 4
+                        }
+                      ],
+                      "description": "Pond cross-section tiles (surface, open water, sandy seabed)",
+                      "x-label": "Tiles",
+                      "x-tier": "presentation"
+                    },
+                    "units": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "animation": {
+                            "type": "string"
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "faction": {
+                            "type": "string",
+                            "enum": [
+                              "player",
+                              "enemy",
+                              "neutral"
+                            ]
+                          },
+                          "frame": {
+                            "type": "number"
+                          },
+                          "health": {
+                            "type": "number"
+                          },
+                          "heroId": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "maxHealth": {
+                            "type": "number"
+                          },
+                          "modelUrl": {
+                            "type": "object",
+                            "properties": {
+                              "animations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "aspect": {
+                                "type": "string"
+                              },
+                              "atlas": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "dimension": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "sprite": {
+                                "type": "string"
+                              },
+                              "style": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "variant": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "position": {
+                            "type": "object",
+                            "properties": {
+                              "x": {
+                                "type": "number"
+                              },
+                              "y": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "x",
+                              "y"
+                            ]
+                          },
+                          "previousPosition": {
+                            "type": "object",
+                            "properties": {
+                              "x": {
+                                "type": "number"
+                              },
+                              "y": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "x",
+                              "y"
+                            ]
+                          },
+                          "sprite": {
+                            "type": "object",
+                            "properties": {
+                              "animations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "aspect": {
+                                "type": "string"
+                              },
+                              "atlas": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "dimension": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "sprite": {
+                                "type": "string"
+                              },
+                              "style": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "variant": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "spriteSheet": {
+                            "type": "object",
+                            "properties": {
+                              "animations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "aspect": {
+                                "type": "string"
+                              },
+                              "atlas": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "dimension": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "sprite": {
+                                "type": "string"
+                              },
+                              "style": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "variant": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "team": {
+                            "type": "string",
+                            "enum": [
+                              "player",
+                              "enemy",
+                              "neutral"
+                            ]
+                          },
+                          "traits": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "cooldown": {
+                                  "type": "number"
+                                },
+                                "currentState": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "states": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "cooldown",
+                                "currentState",
+                                "name",
+                                "states"
+                              ]
+                            }
+                          },
+                          "unitType": {
+                            "type": "string"
+                          },
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          },
+                          "z": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      },
+                      "default": [
+                        {
+                          "animation": "idle",
+                          "frame": 0,
+                          "health": 10,
+                          "id": "boat",
+                          "maxHealth": 10,
+                          "name": "Fishing Boat",
+                          "position": {
+                            "x": 3,
+                            "y": 0
+                          },
+                          "sprite": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                            "category": "boat",
+                            "dimension": "2d",
+                            "name": "boat",
+                            "role": "npc",
+                            "sprite": "ship.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                            "variant": ""
+                          },
+                          "team": "player",
+                          "unitType": "boat"
+                        },
+                        {
+                          "animation": "idle",
+                          "frame": 0,
+                          "health": 10,
+                          "id": "hook",
+                          "maxHealth": 10,
+                          "name": "Hook",
+                          "position": {
+                            "x": 3,
+                            "y": 1
+                          },
+                          "sprite": {
+                            "animations": [
+                              "idle",
+                              "walk",
+                              "attack",
+                              "hit",
+                              "death"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                            "category": "hook",
+                            "dimension": "2d",
+                            "name": "hook",
+                            "role": "npc",
+                            "sprite": "bubble_a",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                            "variant": ""
+                          },
+                          "team": "player",
+                          "unitType": "hook"
+                        }
+                      ],
+                      "description": "Units on the board (boat, hook)",
+                      "x-label": "Units",
+                      "x-tier": "presentation"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "enum": [
+                          "CAST",
+                          "GAME_END",
+                          "INIT",
+                          "PLAY_AGAIN",
+                          "REEL"
+                        ],
+                        "description": "Local state-machine event fired when the subscription matches. Must be one of the events this trait's own transitions already react to."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": true
   }
 ]
