@@ -7987,11 +7987,6 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     ],
                                     'creep',
                                   ],
-                                  'frame': [
-                                    'object/get',
-                                    '@u',
-                                    'frame',
-                                  ],
                                   'id': [
                                     'object/get',
                                     '@u',
@@ -8288,6 +8283,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'array/concat',
                     '@entity.towers',
                     [
+                      'list',
                       {
                         'cooldown': '@config.towerCooldown',
                         'damage': '@config.towerDamage',
@@ -8494,11 +8490,6 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                       'units',
                                     ],
                                     'creep',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@u',
-                                    'frame',
                                   ],
                                   'id': [
                                     'object/get',
@@ -9121,11 +9112,6 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     ],
                                     'creep',
                                   ],
-                                  'frame': [
-                                    'object/get',
-                                    '@u',
-                                    'frame',
-                                  ],
                                   'id': [
                                     'object/get',
                                     '@u',
@@ -9586,11 +9572,6 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                       'units',
                                     ],
                                     'creep',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@u',
-                                    'frame',
                                   ],
                                   'id': [
                                     'object/get',
@@ -10169,11 +10150,6 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     ],
                                     'creep',
                                   ],
-                                  'frame': [
-                                    'object/get',
-                                    '@u',
-                                    'frame',
-                                  ],
                                   'id': [
                                     'object/get',
                                     '@u',
@@ -10718,11 +10694,6 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     'units',
                                   ],
                                   'creep',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@u',
-                                  'frame',
                                 ],
                                 'id': [
                                   'object/get',
@@ -11579,11 +11550,6 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                   ],
                                   'creep',
                                 ],
-                                'frame': [
-                                  'object/get',
-                                  '@u',
-                                  'frame',
-                                ],
                                 'id': [
                                   'object/get',
                                   '@u',
@@ -12345,11 +12311,6 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     'units',
                                   ],
                                   'creep',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@u',
-                                  'frame',
                                 ],
                                 'id': [
                                   'object/get',

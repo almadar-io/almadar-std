@@ -5224,25 +5224,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5256,9 +5285,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -5670,25 +5716,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5702,9 +5777,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -6130,25 +6222,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -6162,9 +6283,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -6699,25 +6837,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -6731,9 +6898,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -7235,25 +7419,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7267,9 +7480,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -7707,25 +7937,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7739,9 +7998,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -8353,25 +8629,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8385,9 +8690,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -8890,25 +9212,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8922,9 +9273,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -9349,25 +9717,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9381,9 +9778,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -9817,25 +10231,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9849,9 +10292,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -10328,25 +10788,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10360,9 +10849,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -10834,25 +11340,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10866,9 +11401,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'frame': [
                                     'object/get',
@@ -11273,25 +11825,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.units',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                  ],
+                                  'opacity': 0.25,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'previousPosition',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'u',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
-                                ],
-                                'opacity': 0.25,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'previousPosition',
-                                ],
-                                'type': 'draw-sprite',
-                              },
+                              's',
+                              [
+                                'object/get',
+                                '@s',
+                                'position',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -11305,9 +11886,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                               'u',
                               {
                                 'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
+                                  'if',
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    'url',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'modelUrl',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'sprite',
+                                  ],
                                 ],
                                 'frame': [
                                   'object/get',
@@ -11742,25 +12340,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.units',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                  ],
+                                  'opacity': 0.25,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'previousPosition',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'u',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
-                                ],
-                                'opacity': 0.25,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'previousPosition',
-                                ],
-                                'type': 'draw-sprite',
-                              },
+                              's',
+                              [
+                                'object/get',
+                                '@s',
+                                'position',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -11774,9 +12401,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                               'u',
                               {
                                 'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
+                                  'if',
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    'url',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'modelUrl',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'sprite',
+                                  ],
                                 ],
                                 'frame': [
                                   'object/get',
@@ -12363,25 +13007,54 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.units',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                  ],
+                                  'opacity': 0.25,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'previousPosition',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'u',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
-                                ],
-                                'opacity': 0.25,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'previousPosition',
-                                ],
-                                'type': 'draw-sprite',
-                              },
+                              's',
+                              [
+                                'object/get',
+                                '@s',
+                                'position',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -12395,9 +13068,26 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                               'u',
                               {
                                 'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
+                                  'if',
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    'url',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'modelUrl',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'sprite',
+                                  ],
                                 ],
                                 'frame': [
                                   'object/get',

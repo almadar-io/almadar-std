@@ -1336,12 +1336,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'backgroundImage': [
-                          'object/get',
-                          '@config.assetManifest',
-                          'background',
-                        ],
+                        'backgroundColor': '#10131c',
                         'camera': {
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@config.width',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@config.height',
+                              2,
+                            ],
+                          },
                           'zoom': '@config.scale',
                         },
                         'children': [
@@ -1977,12 +1985,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'backgroundImage': [
-                          'object/get',
-                          '@config.assetManifest',
-                          'background',
-                        ],
+                        'backgroundColor': '#10131c',
                         'camera': {
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@config.width',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@config.height',
+                              2,
+                            ],
+                          },
                           'zoom': '@config.scale',
                         },
                         'children': [
@@ -2544,12 +2560,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'backgroundImage': [
-                          'object/get',
-                          '@config.assetManifest',
-                          'background',
-                        ],
+                        'backgroundColor': '#10131c',
                         'camera': {
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@config.width',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@config.height',
+                              2,
+                            ],
+                          },
                           'zoom': '@config.scale',
                         },
                         'children': [
@@ -3068,12 +3092,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'backgroundImage': [
-                          'object/get',
-                          '@config.assetManifest',
-                          'background',
-                        ],
+                        'backgroundColor': '#10131c',
                         'camera': {
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@config.width',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@config.height',
+                              2,
+                            ],
+                          },
                           'zoom': '@config.scale',
                         },
                         'children': [
@@ -3592,12 +3624,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'backgroundImage': [
-                          'object/get',
-                          '@config.assetManifest',
-                          'background',
-                        ],
+                        'backgroundColor': '#10131c',
                         'camera': {
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@config.width',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@config.height',
+                              2,
+                            ],
+                          },
                           'zoom': '@config.scale',
                         },
                         'children': [
@@ -4106,12 +4146,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'backgroundImage': [
-                          'object/get',
-                          '@config.assetManifest',
-                          'background',
-                        ],
+                        'backgroundColor': '#10131c',
                         'camera': {
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@config.width',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@config.height',
+                              2,
+                            ],
+                          },
                           'zoom': '@config.scale',
                         },
                         'children': [
@@ -4736,12 +4784,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'backgroundImage': [
-                          'object/get',
-                          '@config.assetManifest',
-                          'background',
-                        ],
+                        'backgroundColor': '#10131c',
                         'camera': {
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@config.width',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@config.height',
+                              2,
+                            ],
+                          },
                           'zoom': '@config.scale',
                         },
                         'children': [
@@ -5345,12 +5401,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   },
                   'children': [
                     {
-                      'backgroundImage': [
-                        'object/get',
-                        '@config.assetManifest',
-                        'background',
-                      ],
+                      'backgroundColor': '#10131c',
                       'camera': {
+                        'pos': {
+                          'x': [
+                            '/',
+                            '@config.width',
+                            2,
+                          ],
+                          'y': [
+                            '/',
+                            '@config.height',
+                            2,
+                          ],
+                        },
                         'zoom': '@config.scale',
                       },
                       'children': [
@@ -6474,12 +6538,20 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   },
                   'children': [
                     {
-                      'backgroundImage': [
-                        'object/get',
-                        '@config.assetManifest',
-                        'background',
-                      ],
+                      'backgroundColor': '#10131c',
                       'camera': {
+                        'pos': {
+                          'x': [
+                            '/',
+                            '@config.width',
+                            2,
+                          ],
+                          'y': [
+                            '/',
+                            '@config.height',
+                            2,
+                          ],
+                        },
                         'zoom': '@config.scale',
                       },
                       'children': [

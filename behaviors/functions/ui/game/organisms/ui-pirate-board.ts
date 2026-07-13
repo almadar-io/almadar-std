@@ -111,7 +111,7 @@ export interface StdUiPirateBoardConfig {
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `[{"id":"f1","sprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json","category":"port","dimension":"2d","name":"port","role":"decoration","sprite":"1,5","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png","variant":""},"type":"port","x":4,"y":1},{"id":"f2","sprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json","category":"treasure","dimension":"2d","name":"treasure","role":"decoration","sprite":"14,7","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png","variant":""},"type":"treasure","x":5,"y":5}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json","category":"port","dimension":"2d","name":"port","role":"decoration","sprite":"1,5","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png","variant":""},"id":"f1","type":"port","x":4,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json","category":"treasure","dimension":"2d","name":"treasure","role":"decoration","sprite":"14,7","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png","variant":""},"id":"f2","type":"treasure","x":5,"y":5}]` */
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
@@ -135,7 +135,7 @@ export interface StdUiPirateBoardConfig {
   totalCount?: number;
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u1","maxHealth":10,"name":"Galleon","position":{"x":1,"y":4},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-galleon","dimension":"2d","name":"ship-galleon","role":"npc","sprite":"ship (5).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"team":"player","unitType":"ship"},{"animation":"idle","frame":0,"health":8,"id":"u2","maxHealth":10,"name":"Corsair","position":{"x":6,"y":2},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-corsair","dimension":"2d","name":"ship-corsair","role":"npc","sprite":"ship (2).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"team":"enemy","unitType":"ship"},{"animation":"idle","frame":0,"health":6,"id":"u3","maxHealth":6,"name":"Scout","position":{"x":4,"y":0},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-scout","dimension":"2d","name":"ship-scout","role":"npc","sprite":"ship (1).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"team":"neutral","unitType":"ship"}]` */
+  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-galleon","dimension":"2d","name":"ship-galleon","role":"npc","sprite":"ship (5).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"name":"Galleon","position":{"x":1,"y":4},"team":"player","unitType":"ship"},{"animation":"idle","frame":0,"health":8,"id":"u2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-corsair","dimension":"2d","name":"ship-corsair","role":"npc","sprite":"ship (2).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"name":"Corsair","position":{"x":6,"y":2},"team":"enemy","unitType":"ship"},{"animation":"idle","frame":0,"health":6,"id":"u3","maxHealth":6,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-scout","dimension":"2d","name":"ship-scout","role":"npc","sprite":"ship (1).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"name":"Scout","position":{"x":4,"y":0},"team":"neutral","unitType":"ship"}]` */
   units?: EntityRow[];
 }
 
@@ -1082,8 +1082,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           'features': {
             'default': [
               {
-                'id': 'f1',
-                'sprite': {
+                'assetUrl': {
                   'animations': [
                     'static',
                   ],
@@ -1099,13 +1098,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
                   'variant': '',
                 },
+                'id': 'f1',
                 'type': 'port',
                 'x': 4,
                 'y': 1,
               },
               {
-                'id': 'f2',
-                'sprite': {
+                'assetUrl': {
                   'animations': [
                     'static',
                   ],
@@ -1121,6 +1120,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
                   'variant': '',
                 },
+                'id': 'f2',
                 'type': 'treasure',
                 'x': 5,
                 'y': 5,
@@ -3008,12 +3008,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 'health': 10,
                 'id': 'u1',
                 'maxHealth': 10,
-                'name': 'Galleon',
-                'position': {
-                  'x': 1,
-                  'y': 4,
-                },
-                'sprite': {
+                'modelUrl': {
                   'animations': [
                     'idle',
                     'walk',
@@ -3033,6 +3028,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
                   'variant': '',
                 },
+                'name': 'Galleon',
+                'position': {
+                  'x': 1,
+                  'y': 4,
+                },
                 'team': 'player',
                 'unitType': 'ship',
               },
@@ -3042,12 +3042,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 'health': 8,
                 'id': 'u2',
                 'maxHealth': 10,
-                'name': 'Corsair',
-                'position': {
-                  'x': 6,
-                  'y': 2,
-                },
-                'sprite': {
+                'modelUrl': {
                   'animations': [
                     'idle',
                     'walk',
@@ -3067,6 +3062,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
                   'variant': '',
                 },
+                'name': 'Corsair',
+                'position': {
+                  'x': 6,
+                  'y': 2,
+                },
                 'team': 'enemy',
                 'unitType': 'ship',
               },
@@ -3076,12 +3076,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 'health': 6,
                 'id': 'u3',
                 'maxHealth': 6,
-                'name': 'Scout',
-                'position': {
-                  'x': 4,
-                  'y': 0,
-                },
-                'sprite': {
+                'modelUrl': {
                   'animations': [
                     'idle',
                     'walk',
@@ -3100,6 +3095,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
                   'variant': '',
+                },
+                'name': 'Scout',
+                'position': {
+                  'x': 4,
+                  'y': 0,
                 },
                 'team': 'neutral',
                 'unitType': 'ship',
@@ -3891,31 +3891,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -3990,29 +4006,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -4109,39 +4166,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -4375,31 +4448,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -4474,29 +4563,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -4593,39 +4723,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5030,31 +5176,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5129,29 +5291,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5248,39 +5451,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5625,31 +5844,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5724,29 +5959,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5843,39 +6119,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -6483,31 +6775,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -6582,29 +6890,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -6701,39 +7050,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7202,31 +7567,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7301,29 +7682,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7420,39 +7842,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7758,31 +8196,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7857,29 +8311,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7976,39 +8471,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8250,31 +8761,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8349,29 +8876,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8468,39 +9036,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8763,31 +9347,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8862,29 +9462,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8981,39 +9622,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9257,31 +9914,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9356,29 +10029,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9475,39 +10189,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9782,31 +10512,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9881,29 +10627,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10000,39 +10787,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10409,31 +11212,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@config.features',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@config.features',
+                                [
+                                  'fn',
+                                  'f',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@f',
+                                      'assetUrl',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'f',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@f',
-                                    'assetUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10508,29 +11327,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.ships',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10627,39 +11487,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.effects',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.effects',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'e',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@e',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@e',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10886,31 +11762,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@config.features',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'f',
-                              {
-                                'asset': [
+                              's',
+                              [
+                                'object/get',
+                                [
                                   'object/get',
-                                  '@f',
-                                  'assetUrl',
+                                  '@s',
+                                  'asset',
                                 ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
+                                'url',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -10985,29 +11877,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.ships',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'unitType',
+                                      ],
+                                    ],
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'u',
-                              {
-                                'asset': [
+                              's',
+                              [
+                                'object/get',
+                                [
                                   'object/get',
-                                  '@u',
-                                  'modelUrl',
+                                  '@s',
+                                  'asset',
                                 ],
-                                'id': [
-                                  'object/get',
-                                  '@u',
-                                  'id',
-                                ],
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'type': 'draw-sprite',
-                              },
+                                'url',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -11104,39 +12037,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.effects',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'e',
-                              {
-                                'asset': [
+                              's',
+                              [
+                                'object/get',
+                                [
                                   'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'effects',
-                                  ],
-                                  [
-                                    'object/get',
-                                    '@e',
-                                    'key',
-                                  ],
+                                  '@s',
+                                  'asset',
                                 ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
+                                'url',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -11867,31 +12816,47 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@config.features',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'f',
-                              {
-                                'asset': [
+                              's',
+                              [
+                                'object/get',
+                                [
                                   'object/get',
-                                  '@f',
-                                  'assetUrl',
+                                  '@s',
+                                  'asset',
                                 ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
+                                'url',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -11966,29 +12931,70 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.ships',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'unitType',
+                                      ],
+                                    ],
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'u',
-                              {
-                                'asset': [
+                              's',
+                              [
+                                'object/get',
+                                [
                                   'object/get',
-                                  '@u',
-                                  'modelUrl',
+                                  '@s',
+                                  'asset',
                                 ],
-                                'id': [
-                                  'object/get',
-                                  '@u',
-                                  'id',
-                                ],
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'type': 'draw-sprite',
-                              },
+                                'url',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -12085,39 +13091,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.effects',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'e',
-                              {
-                                'asset': [
+                              's',
+                              [
+                                'object/get',
+                                [
                                   'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'effects',
-                                  ],
-                                  [
-                                    'object/get',
-                                    '@e',
-                                    'key',
-                                  ],
+                                  '@s',
+                                  'asset',
                                 ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
+                                'url',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',

@@ -39,7 +39,7 @@ export interface StdUiTacticsDemo3dConfig {
   gridWidth?: unknown;
   /** Default: `true` */
   running?: unknown;
-  /** Default: `[{"health":3,"id":"p1","maxHealth":3,"name":"Marine A","position":{"x":0,"y":0},"team":"player","unitType":"marine","x":0,"y":0,"z":0},{"health":3,"id":"p2","maxHealth":3,"name":"Marine B","position":{"x":0,"y":2},"team":"player","unitType":"marine","x":0,"y":2,"z":0},{"health":2,"id":"e1","maxHealth":2,"name":"Raider","position":{"x":2,"y":1},"team":"enemy","unitType":"raider","x":2,"y":1,"z":0}]` */
+  /** Default: `[{"health":3,"id":"p1","maxHealth":3,"modelUrl":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"player-unit","role":"player","sprite":"blue_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Marine A","position":{"x":0,"y":0},"team":"player","unitType":"marine","x":0,"y":0,"z":0},{"health":3,"id":"p2","maxHealth":3,"modelUrl":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"player-unit","role":"player","sprite":"blue_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Marine B","position":{"x":0,"y":2},"team":"player","unitType":"marine","x":0,"y":2,"z":0},{"health":2,"id":"e1","maxHealth":2,"modelUrl":{"animations":["idle"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"unit","dimension":"2d","name":"enemy-unit","role":"enemy","sprite":"red_body_square.png","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png"},"name":"Raider","position":{"x":2,"y":1},"team":"enemy","unitType":"raider","x":2,"y":1,"z":0}]` */
   units?: unknown;
 }
 
@@ -373,6 +373,21 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
                 'health': 3,
                 'id': 'p1',
                 'maxHealth': 3,
+                'modelUrl': {
+                  'animations': [
+                    'idle',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
+                  'category': 'unit',
+                  'dimension': '2d',
+                  'name': 'player-unit',
+                  'role': 'player',
+                  'sprite': 'blue_body_square.png',
+                  'style': 'vector',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                },
                 'name': 'Marine A',
                 'position': {
                   'x': 0,
@@ -388,6 +403,21 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
                 'health': 3,
                 'id': 'p2',
                 'maxHealth': 3,
+                'modelUrl': {
+                  'animations': [
+                    'idle',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
+                  'category': 'unit',
+                  'dimension': '2d',
+                  'name': 'player-unit',
+                  'role': 'player',
+                  'sprite': 'blue_body_square.png',
+                  'style': 'vector',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                },
                 'name': 'Marine B',
                 'position': {
                   'x': 0,
@@ -403,6 +433,21 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
                 'health': 2,
                 'id': 'e1',
                 'maxHealth': 2,
+                'modelUrl': {
+                  'animations': [
+                    'idle',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
+                  'category': 'unit',
+                  'dimension': '2d',
+                  'name': 'enemy-unit',
+                  'role': 'enemy',
+                  'sprite': 'red_body_square.png',
+                  'style': 'vector',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                },
                 'name': 'Raider',
                 'position': {
                   'x': 2,

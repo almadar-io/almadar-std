@@ -1238,6 +1238,19 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         'backgroundImage': '@config.backgroundImage',
                         'camera': {
                           'mode': 'follow',
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@entity.worldWidth',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@entity.worldHeight',
+                              2,
+                            ],
+                          },
+                          'zoom': 1,
                         },
                         'children': [
                           {
@@ -1716,6 +1729,19 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         'backgroundImage': '@config.backgroundImage',
                         'camera': {
                           'mode': 'follow',
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@entity.worldWidth',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@entity.worldHeight',
+                              2,
+                            ],
+                          },
+                          'zoom': 1,
                         },
                         'children': [
                           {
@@ -2031,6 +2057,19 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         'backgroundImage': '@config.backgroundImage',
                         'camera': {
                           'mode': 'follow',
+                          'pos': {
+                            'x': [
+                              '/',
+                              '@entity.worldWidth',
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              '@entity.worldHeight',
+                              2,
+                            ],
+                          },
+                          'zoom': 1,
                         },
                         'children': [
                           {
@@ -2834,6 +2873,19 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'backgroundImage': '@config.backgroundImage',
                       'camera': {
                         'mode': 'follow',
+                        'pos': {
+                          'x': [
+                            '/',
+                            '@entity.worldWidth',
+                            2,
+                          ],
+                          'y': [
+                            '/',
+                            '@entity.worldHeight',
+                            2,
+                          ],
+                        },
+                        'zoom': 1,
                       },
                       'children': [
                         {

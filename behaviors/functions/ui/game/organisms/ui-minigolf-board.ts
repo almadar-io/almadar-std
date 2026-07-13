@@ -5149,13 +5149,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           'animation': 'idle',
                           'frame': 0,
                           'id': 'ball',
-                          'name': 'Ball',
-                          'position': [
-                            'object/get',
-                            '@h',
-                            'ballStart',
-                          ],
-                          'sprite': {
+                          'modelUrl': {
                             'animations': [
                               'idle',
                               'roll',
@@ -5172,6 +5166,12 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png',
                             'variant': '',
                           },
+                          'name': 'Ball',
+                          'position': [
+                            'object/get',
+                            '@h',
+                            'ballStart',
+                          ],
                           'team': 'player',
                           'unitType': 'ball',
                         },
@@ -5251,29 +5251,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5918,29 +5959,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -6590,29 +6672,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7262,29 +7385,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -7934,29 +8098,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8358,29 +8563,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -8746,29 +8992,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9122,13 +9409,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'animation': 'idle',
                             'frame': 0,
                             'id': 'ball',
-                            'name': 'Ball',
-                            'position': [
-                              'object/get',
-                              '@h',
-                              'ballStart',
-                            ],
-                            'sprite': {
+                            'modelUrl': {
                               'animations': [
                                 'idle',
                                 'roll',
@@ -9145,6 +9426,12 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                               'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png',
                               'variant': '',
                             },
+                            'name': 'Ball',
+                            'position': [
+                              'object/get',
+                              '@h',
+                              'ballStart',
+                            ],
                             'team': 'player',
                             'unitType': 'ball',
                           },
@@ -9225,29 +9512,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -9607,13 +9935,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           'animation': 'idle',
                           'frame': 0,
                           'id': 'ball',
-                          'name': 'Ball',
-                          'position': [
-                            'object/get',
-                            '@h',
-                            'ballStart',
-                          ],
-                          'sprite': {
+                          'modelUrl': {
                             'animations': [
                               'idle',
                               'roll',
@@ -9630,6 +9952,12 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png',
                             'variant': '',
                           },
+                          'name': 'Ball',
+                          'position': [
+                            'object/get',
+                            '@h',
+                            'ballStart',
+                          ],
                           'team': 'player',
                           'unitType': 'ball',
                         },
@@ -9709,29 +10037,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10091,13 +10460,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           'animation': 'idle',
                           'frame': 0,
                           'id': 'ball',
-                          'name': 'Ball',
-                          'position': [
-                            'object/get',
-                            '@h',
-                            'ballStart',
-                          ],
-                          'sprite': {
+                          'modelUrl': {
                             'animations': [
                               'idle',
                               'roll',
@@ -10114,6 +10477,12 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png',
                             'variant': '',
                           },
+                          'name': 'Ball',
+                          'position': [
+                            'object/get',
+                            '@h',
+                            'ballStart',
+                          ],
                           'team': 'player',
                           'unitType': 'ball',
                         },
@@ -10193,29 +10562,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'unitType',
+                                        ],
+                                      ],
+                                    ],
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
+                                's',
+                                [
+                                  'object/get',
+                                  [
                                     'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                    '@s',
+                                    'asset',
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  'url',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -10558,29 +10968,70 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.units',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'unitType',
+                                      ],
+                                    ],
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'u',
-                              {
-                                'asset': [
+                              's',
+                              [
+                                'object/get',
+                                [
                                   'object/get',
-                                  '@u',
-                                  'modelUrl',
+                                  '@s',
+                                  'asset',
                                 ],
-                                'id': [
-                                  'object/get',
-                                  '@u',
-                                  'id',
-                                ],
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'type': 'draw-sprite',
-                              },
+                                'url',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',

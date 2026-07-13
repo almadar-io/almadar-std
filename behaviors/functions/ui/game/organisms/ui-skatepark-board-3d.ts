@@ -1531,6 +1531,10 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                         'backgroundColor': '@config.bgColor',
                         'camera': {
                           'mode': 'follow',
+                          'target': {
+                            'x': '@entity.player.x',
+                            'y': '@entity.player.y',
+                          },
                         },
                         'children': [
                           {
@@ -1546,11 +1550,21 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                                     '@config.tileSprites',
                                     '@p.type',
                                   ],
+                                  'height': [
+                                    'object/get',
+                                    '@p',
+                                    'height',
+                                  ],
                                   'position': {
                                     'x': '@p.x',
                                     'y': '@p.y',
                                   },
                                   'type': 'draw-sprite',
+                                  'width': [
+                                    'object/get',
+                                    '@p',
+                                    'width',
+                                  ],
                                 },
                               ],
                             ],
@@ -1617,11 +1631,13 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                               {
                                 'asset': '@config.playerSprite',
                                 'frame': '@entity.player.frame',
+                                'height': '@entity.player.height',
                                 'position': {
                                   'x': '@entity.player.x',
                                   'y': '@entity.player.y',
                                 },
                                 'type': 'draw-sprite',
+                                'width': '@entity.player.width',
                               },
                             ],
                             'type': 'draw-sprite-layer',
@@ -2018,6 +2034,10 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                         'backgroundColor': '@config.bgColor',
                         'camera': {
                           'mode': 'follow',
+                          'target': {
+                            'x': '@entity.player.x',
+                            'y': '@entity.player.y',
+                          },
                         },
                         'children': [
                           {
@@ -2033,11 +2053,21 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                                     '@config.tileSprites',
                                     '@p.type',
                                   ],
+                                  'height': [
+                                    'object/get',
+                                    '@p',
+                                    'height',
+                                  ],
                                   'position': {
                                     'x': '@p.x',
                                     'y': '@p.y',
                                   },
                                   'type': 'draw-sprite',
+                                  'width': [
+                                    'object/get',
+                                    '@p',
+                                    'width',
+                                  ],
                                 },
                               ],
                             ],
@@ -2104,11 +2134,13 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                               {
                                 'asset': '@config.playerSprite',
                                 'frame': '@entity.player.frame',
+                                'height': '@entity.player.height',
                                 'position': {
                                   'x': '@entity.player.x',
                                   'y': '@entity.player.y',
                                 },
                                 'type': 'draw-sprite',
+                                'width': '@entity.player.width',
                               },
                             ],
                             'type': 'draw-sprite-layer',
@@ -2308,6 +2340,10 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                         'backgroundColor': '@config.bgColor',
                         'camera': {
                           'mode': 'follow',
+                          'target': {
+                            'x': '@entity.player.x',
+                            'y': '@entity.player.y',
+                          },
                         },
                         'children': [
                           {
@@ -2323,11 +2359,21 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                                     '@config.tileSprites',
                                     '@p.type',
                                   ],
+                                  'height': [
+                                    'object/get',
+                                    '@p',
+                                    'height',
+                                  ],
                                   'position': {
                                     'x': '@p.x',
                                     'y': '@p.y',
                                   },
                                   'type': 'draw-sprite',
+                                  'width': [
+                                    'object/get',
+                                    '@p',
+                                    'width',
+                                  ],
                                 },
                               ],
                             ],
@@ -2394,11 +2440,13 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                               {
                                 'asset': '@config.playerSprite',
                                 'frame': '@entity.player.frame',
+                                'height': '@entity.player.height',
                                 'position': {
                                   'x': '@entity.player.x',
                                   'y': '@entity.player.y',
                                 },
                                 'type': 'draw-sprite',
+                                'width': '@entity.player.width',
                               },
                             ],
                             'type': 'draw-sprite-layer',
@@ -3597,6 +3645,10 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                       'backgroundColor': '@config.bgColor',
                       'camera': {
                         'mode': 'follow',
+                        'target': {
+                          'x': '@entity.player.x',
+                          'y': '@entity.player.y',
+                        },
                       },
                       'children': [
                         {
@@ -3612,11 +3664,21 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                                   '@config.tileSprites',
                                   '@p.type',
                                 ],
+                                'height': [
+                                  'object/get',
+                                  '@p',
+                                  'height',
+                                ],
                                 'position': {
                                   'x': '@p.x',
                                   'y': '@p.y',
                                 },
                                 'type': 'draw-sprite',
+                                'width': [
+                                  'object/get',
+                                  '@p',
+                                  'width',
+                                ],
                               },
                             ],
                           ],
@@ -3683,11 +3745,13 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                             {
                               'asset': '@config.playerSprite',
                               'frame': '@entity.player.frame',
+                              'height': '@entity.player.height',
                               'position': {
                                 'x': '@entity.player.x',
                                 'y': '@entity.player.y',
                               },
                               'type': 'draw-sprite',
+                              'width': '@entity.player.width',
                             },
                           ],
                           'type': 'draw-sprite-layer',

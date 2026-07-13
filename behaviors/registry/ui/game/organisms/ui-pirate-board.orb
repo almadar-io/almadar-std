@@ -901,8 +901,7 @@
             "features": {
               "default": [
                 {
-                  "id": "f1",
-                  "sprite": {
+                  "assetUrl": {
                     "animations": [
                       "static"
                     ],
@@ -918,13 +917,13 @@
                     "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png",
                     "variant": ""
                   },
+                  "id": "f1",
                   "type": "port",
                   "x": 4.0,
                   "y": 1.0
                 },
                 {
-                  "id": "f2",
-                  "sprite": {
+                  "assetUrl": {
                     "animations": [
                       "static"
                     ],
@@ -940,6 +939,7 @@
                     "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png",
                     "variant": ""
                   },
+                  "id": "f2",
                   "type": "treasure",
                   "x": 5.0,
                   "y": 5.0
@@ -2827,12 +2827,7 @@
                   "health": 10.0,
                   "id": "u1",
                   "maxHealth": 10.0,
-                  "name": "Galleon",
-                  "position": {
-                    "x": 1.0,
-                    "y": 4.0
-                  },
-                  "sprite": {
+                  "modelUrl": {
                     "animations": [
                       "idle",
                       "walk",
@@ -2852,6 +2847,11 @@
                     "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png",
                     "variant": ""
                   },
+                  "name": "Galleon",
+                  "position": {
+                    "x": 1.0,
+                    "y": 4.0
+                  },
                   "team": "player",
                   "unitType": "ship"
                 },
@@ -2861,12 +2861,7 @@
                   "health": 8.0,
                   "id": "u2",
                   "maxHealth": 10.0,
-                  "name": "Corsair",
-                  "position": {
-                    "x": 6.0,
-                    "y": 2.0
-                  },
-                  "sprite": {
+                  "modelUrl": {
                     "animations": [
                       "idle",
                       "walk",
@@ -2886,6 +2881,11 @@
                     "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png",
                     "variant": ""
                   },
+                  "name": "Corsair",
+                  "position": {
+                    "x": 6.0,
+                    "y": 2.0
+                  },
                   "team": "enemy",
                   "unitType": "ship"
                 },
@@ -2895,12 +2895,7 @@
                   "health": 6.0,
                   "id": "u3",
                   "maxHealth": 6.0,
-                  "name": "Scout",
-                  "position": {
-                    "x": 4.0,
-                    "y": 0.0
-                  },
-                  "sprite": {
+                  "modelUrl": {
                     "animations": [
                       "idle",
                       "walk",
@@ -2919,6 +2914,11 @@
                     "thumbnailUrl": "",
                     "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png",
                     "variant": ""
+                  },
+                  "name": "Scout",
+                  "position": {
+                    "x": 4.0,
+                    "y": 0.0
                   },
                   "team": "neutral",
                   "unitType": "ship"
@@ -3710,31 +3710,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -3809,29 +3825,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -3928,39 +3985,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -4194,31 +4267,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -4293,29 +4382,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -4412,39 +4542,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -4849,31 +4995,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -4948,29 +5110,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -5067,39 +5270,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -5444,31 +5663,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -5543,29 +5778,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -5662,39 +5938,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -6302,31 +6594,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -6401,29 +6709,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -6520,39 +6869,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -7021,31 +7386,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -7120,29 +7501,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -7239,39 +7661,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -7577,31 +8015,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -7676,29 +8130,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -7795,39 +8290,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -8069,31 +8580,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -8168,29 +8695,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -8287,39 +8855,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -8582,31 +9166,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -8681,29 +9281,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -8800,39 +9441,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -9076,31 +9733,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -9175,29 +9848,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -9294,39 +10008,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -9601,31 +10331,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -9700,29 +10446,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -9819,39 +10606,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -10228,31 +11031,47 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@config.features",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@config.features",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        "@f",
+                                        "assetUrl"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "f",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@f",
-                                      "assetUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -10327,29 +11146,70 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.ships",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.ships",
+                                  [
+                                    "fn",
+                                    "u",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "units"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "unitType"
+                                          ]
+                                        ]
+                                      ],
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "u",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -10446,39 +11306,55 @@
                             },
                             {
                               "items": [
-                                "array/map",
-                                "@entity.effects",
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.effects",
+                                  [
+                                    "fn",
+                                    "e",
+                                    {
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "key"
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
                                   "fn",
-                                  "e",
-                                  {
-                                    "asset": [
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
                                       "object/get",
-                                      [
-                                        "object/get",
-                                        "@config.assetManifest",
-                                        "effects"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@e",
-                                        "key"
-                                      ]
+                                      "@s",
+                                      "asset"
                                     ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@e",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@e",
-                                        "y"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
+                                    "url"
+                                  ]
                                 ]
                               ],
                               "type": "draw-sprite-layer"
@@ -10705,31 +11581,47 @@
                           },
                           {
                             "items": [
-                              "array/map",
-                              "@config.features",
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@config.features",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@f",
+                                      "assetUrl"
+                                    ],
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@f",
+                                        "y"
+                                      ]
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
                               [
                                 "fn",
-                                "f",
-                                {
-                                  "asset": [
+                                "s",
+                                [
+                                  "object/get",
+                                  [
                                     "object/get",
-                                    "@f",
-                                    "assetUrl"
+                                    "@s",
+                                    "asset"
                                   ],
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@f",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@f",
-                                      "y"
-                                    ]
-                                  },
-                                  "type": "draw-sprite"
-                                }
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"
@@ -10804,29 +11696,70 @@
                           },
                           {
                             "items": [
-                              "array/map",
-                              "@entity.ships",
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@entity.ships",
+                                [
+                                  "fn",
+                                  "u",
+                                  {
+                                    "asset": [
+                                      "if",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        "url"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "modelUrl"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "units"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "unitType"
+                                        ]
+                                      ]
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@u",
+                                      "id"
+                                    ],
+                                    "position": [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
                               [
                                 "fn",
-                                "u",
-                                {
-                                  "asset": [
+                                "s",
+                                [
+                                  "object/get",
+                                  [
                                     "object/get",
-                                    "@u",
-                                    "modelUrl"
+                                    "@s",
+                                    "asset"
                                   ],
-                                  "id": [
-                                    "object/get",
-                                    "@u",
-                                    "id"
-                                  ],
-                                  "position": [
-                                    "object/get",
-                                    "@u",
-                                    "position"
-                                  ],
-                                  "type": "draw-sprite"
-                                }
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"
@@ -10923,39 +11856,55 @@
                           },
                           {
                             "items": [
-                              "array/map",
-                              "@entity.effects",
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@entity.effects",
+                                [
+                                  "fn",
+                                  "e",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@config.assetManifest",
+                                        "effects"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@e",
+                                        "key"
+                                      ]
+                                    ],
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@e",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@e",
+                                        "y"
+                                      ]
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
                               [
                                 "fn",
-                                "e",
-                                {
-                                  "asset": [
+                                "s",
+                                [
+                                  "object/get",
+                                  [
                                     "object/get",
-                                    [
-                                      "object/get",
-                                      "@config.assetManifest",
-                                      "effects"
-                                    ],
-                                    [
-                                      "object/get",
-                                      "@e",
-                                      "key"
-                                    ]
+                                    "@s",
+                                    "asset"
                                   ],
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@e",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@e",
-                                      "y"
-                                    ]
-                                  },
-                                  "type": "draw-sprite"
-                                }
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"
@@ -11686,31 +12635,47 @@
                           },
                           {
                             "items": [
-                              "array/map",
-                              "@config.features",
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@config.features",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@f",
+                                      "assetUrl"
+                                    ],
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@f",
+                                        "y"
+                                      ]
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
                               [
                                 "fn",
-                                "f",
-                                {
-                                  "asset": [
+                                "s",
+                                [
+                                  "object/get",
+                                  [
                                     "object/get",
-                                    "@f",
-                                    "assetUrl"
+                                    "@s",
+                                    "asset"
                                   ],
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@f",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@f",
-                                      "y"
-                                    ]
-                                  },
-                                  "type": "draw-sprite"
-                                }
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"
@@ -11785,29 +12750,70 @@
                           },
                           {
                             "items": [
-                              "array/map",
-                              "@entity.ships",
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@entity.ships",
+                                [
+                                  "fn",
+                                  "u",
+                                  {
+                                    "asset": [
+                                      "if",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "modelUrl"
+                                        ],
+                                        "url"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "modelUrl"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "units"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "unitType"
+                                        ]
+                                      ]
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@u",
+                                      "id"
+                                    ],
+                                    "position": [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
                               [
                                 "fn",
-                                "u",
-                                {
-                                  "asset": [
+                                "s",
+                                [
+                                  "object/get",
+                                  [
                                     "object/get",
-                                    "@u",
-                                    "modelUrl"
+                                    "@s",
+                                    "asset"
                                   ],
-                                  "id": [
-                                    "object/get",
-                                    "@u",
-                                    "id"
-                                  ],
-                                  "position": [
-                                    "object/get",
-                                    "@u",
-                                    "position"
-                                  ],
-                                  "type": "draw-sprite"
-                                }
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"
@@ -11904,39 +12910,55 @@
                           },
                           {
                             "items": [
-                              "array/map",
-                              "@entity.effects",
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@entity.effects",
+                                [
+                                  "fn",
+                                  "e",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@config.assetManifest",
+                                        "effects"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@e",
+                                        "key"
+                                      ]
+                                    ],
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@e",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@e",
+                                        "y"
+                                      ]
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
                               [
                                 "fn",
-                                "e",
-                                {
-                                  "asset": [
+                                "s",
+                                [
+                                  "object/get",
+                                  [
                                     "object/get",
-                                    [
-                                      "object/get",
-                                      "@config.assetManifest",
-                                      "effects"
-                                    ],
-                                    [
-                                      "object/get",
-                                      "@e",
-                                      "key"
-                                    ]
+                                    "@s",
+                                    "asset"
                                   ],
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@e",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@e",
-                                      "y"
-                                    ]
-                                  },
-                                  "type": "draw-sprite"
-                                }
+                                  "url"
+                                ]
                               ]
                             ],
                             "type": "draw-sprite-layer"

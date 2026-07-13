@@ -1691,6 +1691,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             'items': [
                               'array/concat',
                               [
+                                'list',
                                 {
                                   'animation': [
                                     'object/get',
@@ -1705,11 +1706,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'player',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@entity.player',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [
@@ -1746,11 +1742,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                         'units',
                                       ],
                                       'enemy',
-                                    ],
-                                    'frame': [
-                                      'object/get',
-                                      '@e',
-                                      'frame',
                                     ],
                                     'position': {
                                       'x': [
@@ -2085,6 +2076,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                     'array/concat',
                     '@entity.projectiles',
                     [
+                      'list',
                       {
                         'id': [
                           'str/concat',
@@ -2296,6 +2288,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             'items': [
                               'array/concat',
                               [
+                                'list',
                                 {
                                   'animation': [
                                     'object/get',
@@ -2310,11 +2303,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'player',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@entity.player',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [
@@ -2351,11 +2339,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                         'units',
                                       ],
                                       'enemy',
-                                    ],
-                                    'frame': [
-                                      'object/get',
-                                      '@e',
-                                      'frame',
                                     ],
                                     'position': {
                                       'x': [
@@ -2714,6 +2697,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             'items': [
                               'array/concat',
                               [
+                                'list',
                                 {
                                   'animation': [
                                     'object/get',
@@ -2728,11 +2712,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'player',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@entity.player',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [
@@ -2769,11 +2748,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                         'units',
                                       ],
                                       'enemy',
-                                    ],
-                                    'frame': [
-                                      'object/get',
-                                      '@e',
-                                      'frame',
                                     ],
                                     'position': {
                                       'x': [
@@ -3141,6 +3115,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             'items': [
                               'array/concat',
                               [
+                                'list',
                                 {
                                   'animation': [
                                     'object/get',
@@ -3155,11 +3130,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'player',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@entity.player',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [
@@ -3196,11 +3166,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                         'units',
                                       ],
                                       'enemy',
-                                    ],
-                                    'frame': [
-                                      'object/get',
-                                      '@e',
-                                      'frame',
                                     ],
                                     'position': {
                                       'x': [
@@ -3590,6 +3555,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             'items': [
                               'array/concat',
                               [
+                                'list',
                                 {
                                   'animation': [
                                     'object/get',
@@ -3604,11 +3570,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'player',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@entity.player',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [
@@ -3645,11 +3606,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                         'units',
                                       ],
                                       'enemy',
-                                    ],
-                                    'frame': [
-                                      'object/get',
-                                      '@e',
-                                      'frame',
                                     ],
                                     'position': {
                                       'x': [
@@ -4106,6 +4062,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             'items': [
                               'array/concat',
                               [
+                                'list',
                                 {
                                   'animation': [
                                     'object/get',
@@ -4120,11 +4077,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'player',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@entity.player',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [
@@ -4161,11 +4113,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                         'units',
                                       ],
                                       'enemy',
-                                    ],
-                                    'frame': [
-                                      'object/get',
-                                      '@e',
-                                      'frame',
                                     ],
                                     'position': {
                                       'x': [
@@ -4622,6 +4569,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             'items': [
                               'array/concat',
                               [
+                                'list',
                                 {
                                   'animation': [
                                     'object/get',
@@ -4636,11 +4584,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'player',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@entity.player',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [
@@ -4677,11 +4620,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                         'units',
                                       ],
                                       'enemy',
-                                    ],
-                                    'frame': [
-                                      'object/get',
-                                      '@e',
-                                      'frame',
                                     ],
                                     'position': {
                                       'x': [
@@ -5130,6 +5068,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'items': [
                             'array/concat',
                             [
+                              'list',
                               {
                                 'animation': [
                                   'object/get',
@@ -5144,11 +5083,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     'units',
                                   ],
                                   'player',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'frame',
                                 ],
                                 'position': {
                                   'x': [
@@ -5185,11 +5119,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'enemy',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@e',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [
@@ -6490,6 +6419,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'items': [
                             'array/concat',
                             [
+                              'list',
                               {
                                 'animation': [
                                   'object/get',
@@ -6504,11 +6434,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     'units',
                                   ],
                                   'player',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'frame',
                                 ],
                                 'position': {
                                   'x': [
@@ -6545,11 +6470,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'units',
                                     ],
                                     'enemy',
-                                  ],
-                                  'frame': [
-                                    'object/get',
-                                    '@e',
-                                    'frame',
                                   ],
                                   'position': {
                                     'x': [

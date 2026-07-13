@@ -2911,7 +2911,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                   'role': 'decoration',
                   'style': 'lowpoly-flat',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/commercial',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb',
                 },
                 'intersection': {
                   'animations': [
@@ -2924,7 +2924,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                   'role': 'tile',
                   'style': 'lowpoly-flat',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/roads',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-crossroad.glb',
                 },
                 'road': {
                   'animations': [
@@ -2937,7 +2937,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                   'role': 'tile',
                   'style': 'lowpoly-flat',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/roads',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
                 },
               },
               'units': {},

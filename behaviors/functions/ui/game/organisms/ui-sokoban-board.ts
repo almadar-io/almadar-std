@@ -2298,7 +2298,67 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -2309,11 +2369,43 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2327,6 +2419,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -2340,6 +2433,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 'fn',
                                 'c',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'if',
                                     [
@@ -2402,6 +2496,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                       'crate',
                                     ],
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2415,6 +2510,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -2423,6 +2519,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                           {
                             'items': [
                               {
+                                'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   [
@@ -2432,6 +2529,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                   'pusher',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -2445,6 +2543,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                             'type': 'draw-sprite-layer',
@@ -4203,7 +4302,67 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -4214,11 +4373,43 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4232,6 +4423,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4245,6 +4437,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 'fn',
                                 'c',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'if',
                                     [
@@ -4307,6 +4500,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                       'crate',
                                     ],
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4320,6 +4514,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4328,6 +4523,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                           {
                             'items': [
                               {
+                                'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   [
@@ -4337,6 +4533,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                   'pusher',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -4350,6 +4547,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                             'type': 'draw-sprite-layer',
@@ -4570,7 +4768,67 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -4581,11 +4839,43 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4599,6 +4889,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4612,6 +4903,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 'fn',
                                 'c',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'if',
                                     [
@@ -4674,6 +4966,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                       'crate',
                                     ],
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4687,6 +4980,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4695,6 +4989,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                           {
                             'items': [
                               {
+                                'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   [
@@ -4704,6 +4999,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                   'pusher',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -4717,6 +5013,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                             'type': 'draw-sprite-layer',
@@ -4993,7 +5290,67 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -5004,11 +5361,43 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -5022,6 +5411,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -5035,6 +5425,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 'fn',
                                 'c',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'if',
                                     [
@@ -5097,6 +5488,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                       'crate',
                                     ],
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -5110,6 +5502,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -5118,6 +5511,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                           {
                             'items': [
                               {
+                                'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   [
@@ -5127,6 +5521,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                   'pusher',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -5140,6 +5535,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                             'type': 'draw-sprite-layer',
@@ -5363,7 +5759,67 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                   'children': [
                     {
                       'camera': {
-                        'zoom': '@config.scale',
+                        'pos': {
+                          'x': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'x',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'x',
+                              ],
+                            ],
+                            2,
+                          ],
+                          'y': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'y',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'y',
+                              ],
+                            ],
+                            2,
+                          ],
+                        },
+                        'zoom': [
+                          'math/min',
+                          1,
+                          [
+                            '/',
+                            5,
+                            [
+                              '+',
+                              1,
+                              [
+                                'math/max',
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
                       },
                       'children': [
                         {
@@ -5374,11 +5830,43 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                               'fn',
                               't',
                               {
+                                'fill': '#5c94fc',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'stroke': 'rgba(255,255,255,0.35)',
+                                'strokeWidth': 1,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@t',
                                   'terrainSprite',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -5392,6 +5880,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -5405,6 +5894,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                               'fn',
                               'c',
                               {
+                                'anchor': 'center',
                                 'asset': [
                                   'if',
                                   [
@@ -5467,6 +5957,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     'crate',
                                   ],
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -5480,6 +5971,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -5488,6 +5980,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                         {
                           'items': [
                             {
+                              'anchor': 'ground',
                               'asset': [
                                 'object/get',
                                 [
@@ -5497,6 +5990,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 ],
                                 'pusher',
                               ],
+                              'height': 0.5,
                               'position': {
                                 'x': [
                                   'object/get',
@@ -5510,6 +6004,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                 ],
                               },
                               'type': 'draw-sprite',
+                              'width': 0.5,
                             },
                           ],
                           'type': 'draw-sprite-layer',

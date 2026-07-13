@@ -3181,7 +3181,67 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -3192,11 +3252,43 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3210,6 +3302,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -3223,11 +3316,13 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3241,6 +3336,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -3254,17 +3350,20 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@u',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -3278,8 +3377,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -3288,7 +3389,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -3302,8 +3403,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -3314,7 +3417,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -3594,7 +3697,67 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -3605,11 +3768,43 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3623,6 +3818,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -3636,11 +3832,13 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3654,6 +3852,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -3667,17 +3866,20 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@u',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -3691,8 +3893,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -3701,7 +3905,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -3715,8 +3919,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -3727,7 +3933,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -4139,7 +4345,67 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -4150,11 +4416,43 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4168,6 +4466,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4181,11 +4480,13 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4199,6 +4500,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4212,17 +4514,20 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@u',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4236,8 +4541,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -4246,7 +4553,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4260,8 +4567,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -4272,7 +4581,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -4506,7 +4815,67 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -4517,11 +4886,43 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4535,6 +4936,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4548,11 +4950,13 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4566,6 +4970,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4579,17 +4984,20 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@u',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4603,8 +5011,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -4613,7 +5023,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4627,8 +5037,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -4639,7 +5051,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -4925,7 +5337,67 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     'children': [
                       {
                         'camera': {
-                          'zoom': '@config.scale',
+                          'pos': {
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                          'zoom': [
+                            'math/min',
+                            1,
+                            [
+                              '/',
+                              5,
+                              [
+                                '+',
+                                1,
+                                [
+                                  'math/max',
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'x',
+                                  ],
+                                  [
+                                    'array/max',
+                                    '@config.tiles',
+                                    'y',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         },
                         'children': [
                           {
@@ -4936,11 +5408,43 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 't',
                                 {
+                                  'fill': '#5c94fc',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'strokeWidth': 1,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4954,6 +5458,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4967,11 +5472,13 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4985,6 +5492,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4998,17 +5506,20 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@u',
                                     'sprite',
                                   ],
+                                  'height': 0.5,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
                                   'type': 'draw-sprite',
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -5022,8 +5533,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -5032,7 +5545,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -5046,8 +5559,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -5058,7 +5573,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -5479,7 +5994,67 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'children': [
                     {
                       'camera': {
-                        'zoom': '@config.scale',
+                        'pos': {
+                          'x': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'x',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'x',
+                              ],
+                            ],
+                            2,
+                          ],
+                          'y': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'y',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'y',
+                              ],
+                            ],
+                            2,
+                          ],
+                        },
+                        'zoom': [
+                          'math/min',
+                          1,
+                          [
+                            '/',
+                            5,
+                            [
+                              '+',
+                              1,
+                              [
+                                'math/max',
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
                       },
                       'children': [
                         {
@@ -5490,11 +6065,43 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               't',
                               {
+                                'fill': '#5c94fc',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'stroke': 'rgba(255,255,255,0.35)',
+                                'strokeWidth': 1,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@t',
                                   'terrainSprite',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -5508,6 +6115,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -5521,11 +6129,13 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'f',
                               {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@f',
                                   'sprite',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -5539,6 +6149,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -5552,17 +6163,20 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   '@u',
                                   'sprite',
                                 ],
+                                'height': 0.5,
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -5576,8 +6190,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': 'rgba(0,0,0,0.6)',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -5586,7 +6202,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 ],
                                 'shape': 'rect',
                                 'type': 'draw-shape',
-                                'width': 0.8,
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -5600,8 +6216,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': '#22c55e',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -5612,7 +6230,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'type': 'draw-shape',
                                 'width': [
                                   '*',
-                                  0.8,
+                                  0.5,
                                   [
                                     '/',
                                     [
@@ -5980,7 +6598,67 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'children': [
                     {
                       'camera': {
-                        'zoom': '@config.scale',
+                        'pos': {
+                          'x': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'x',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'x',
+                              ],
+                            ],
+                            2,
+                          ],
+                          'y': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'y',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'y',
+                              ],
+                            ],
+                            2,
+                          ],
+                        },
+                        'zoom': [
+                          'math/min',
+                          1,
+                          [
+                            '/',
+                            5,
+                            [
+                              '+',
+                              1,
+                              [
+                                'math/max',
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
                       },
                       'children': [
                         {
@@ -5991,11 +6669,43 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               't',
                               {
+                                'fill': '#5c94fc',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'stroke': 'rgba(255,255,255,0.35)',
+                                'strokeWidth': 1,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@t',
                                   'terrainSprite',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -6009,6 +6719,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -6022,11 +6733,13 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'f',
                               {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@f',
                                   'sprite',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -6040,6 +6753,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -6053,17 +6767,20 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   '@u',
                                   'sprite',
                                 ],
+                                'height': 0.5,
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -6077,8 +6794,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': 'rgba(0,0,0,0.6)',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -6087,7 +6806,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 ],
                                 'shape': 'rect',
                                 'type': 'draw-shape',
-                                'width': 0.8,
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -6101,8 +6820,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': '#22c55e',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -6113,7 +6834,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'type': 'draw-shape',
                                 'width': [
                                   '*',
-                                  0.8,
+                                  0.5,
                                   [
                                     '/',
                                     [
@@ -6354,7 +7075,67 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'children': [
                     {
                       'camera': {
-                        'zoom': '@config.scale',
+                        'pos': {
+                          'x': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'x',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'x',
+                              ],
+                            ],
+                            2,
+                          ],
+                          'y': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'y',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'y',
+                              ],
+                            ],
+                            2,
+                          ],
+                        },
+                        'zoom': [
+                          'math/min',
+                          1,
+                          [
+                            '/',
+                            5,
+                            [
+                              '+',
+                              1,
+                              [
+                                'math/max',
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
                       },
                       'children': [
                         {
@@ -6365,11 +7146,43 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               't',
                               {
+                                'fill': '#5c94fc',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'stroke': 'rgba(255,255,255,0.35)',
+                                'strokeWidth': 1,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@t',
                                   'terrainSprite',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -6383,6 +7196,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -6396,11 +7210,13 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'f',
                               {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@f',
                                   'sprite',
                                 ],
+                                'height': 0.5,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -6414,6 +7230,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -6427,17 +7244,20 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   '@u',
                                   'sprite',
                                 ],
+                                'height': 0.5,
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
                                 'type': 'draw-sprite',
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -6451,8 +7271,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': 'rgba(0,0,0,0.6)',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -6461,7 +7283,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 ],
                                 'shape': 'rect',
                                 'type': 'draw-shape',
-                                'width': 0.8,
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -6475,8 +7297,10 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': '#22c55e',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -6487,7 +7311,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                                 'type': 'draw-shape',
                                 'width': [
                                   '*',
-                                  0.8,
+                                  0.5,
                                   [
                                     '/',
                                     [

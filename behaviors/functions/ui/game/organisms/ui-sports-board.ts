@@ -3313,25 +3313,37 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -3790,25 +3802,37 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -4272,25 +4296,37 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -4781,25 +4817,37 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5289,25 +5337,37 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -5786,25 +5846,37 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                           },
                           {
                             'items': [
-                              'array/map',
-                              '@entity.units',
+                              'array/filter',
+                              [
+                                'array/map',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  {
+                                    'asset': [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    'opacity': 0.25,
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'previousPosition',
+                                    ],
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
                               [
                                 'fn',
-                                'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
-                                  ],
-                                  'opacity': 0.25,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'previousPosition',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                's',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'position',
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -6251,25 +6323,37 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                         },
                         {
                           'items': [
-                            'array/map',
-                            '@entity.units',
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@u',
+                                    'sprite',
+                                  ],
+                                  'opacity': 0.25,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'previousPosition',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
                             [
                               'fn',
-                              'u',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'sprite',
-                                ],
-                                'opacity': 0.25,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'previousPosition',
-                                ],
-                                'type': 'draw-sprite',
-                              },
+                              's',
+                              [
+                                'object/get',
+                                '@s',
+                                'position',
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',

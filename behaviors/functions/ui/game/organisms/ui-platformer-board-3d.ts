@@ -1482,6 +1482,10 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                         'backgroundColor': '@config.bgColor',
                         'camera': {
                           'mode': 'follow',
+                          'target': {
+                            'x': '@entity.player.x',
+                            'y': '@entity.player.y',
+                          },
                         },
                         'children': [
                           {
@@ -1935,6 +1939,10 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                         'backgroundColor': '@config.bgColor',
                         'camera': {
                           'mode': 'follow',
+                          'target': {
+                            'x': '@entity.player.x',
+                            'y': '@entity.player.y',
+                          },
                         },
                         'children': [
                           {
@@ -2261,6 +2269,10 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                         'backgroundColor': '@config.bgColor',
                         'camera': {
                           'mode': 'follow',
+                          'target': {
+                            'x': '@entity.player.x',
+                            'y': '@entity.player.y',
+                          },
                         },
                         'children': [
                           {
@@ -3586,6 +3598,10 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                       'backgroundColor': '@config.bgColor',
                       'camera': {
                         'mode': 'follow',
+                        'target': {
+                          'x': '@entity.player.x',
+                          'y': '@entity.player.y',
+                        },
                       },
                       'children': [
                         {
