@@ -1693,6 +1693,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                               [
                                 'list',
                                 {
+                                  'asset': [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'fire0',
+                                        [
+                                          'object/get',
+                                          '@entity.player',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'x',
+                                      ],
+                                      41,
+                                    ],
+                                    'y': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'y',
+                                      ],
+                                      75,
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                                {
                                   'animation': [
                                     'object/get',
                                     '@entity.player',
@@ -1735,13 +1781,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'animation',
                                     ],
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'enemyRed',
+                                          [
+                                            '+',
+                                            [
+                                              '%',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                              5,
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -2290,6 +2358,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                               [
                                 'list',
                                 {
+                                  'asset': [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'fire0',
+                                        [
+                                          'object/get',
+                                          '@entity.player',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'x',
+                                      ],
+                                      41,
+                                    ],
+                                    'y': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'y',
+                                      ],
+                                      75,
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                                {
                                   'animation': [
                                     'object/get',
                                     '@entity.player',
@@ -2332,13 +2446,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'animation',
                                     ],
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'enemyRed',
+                                          [
+                                            '+',
+                                            [
+                                              '%',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                              5,
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -2699,6 +2835,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                               [
                                 'list',
                                 {
+                                  'asset': [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'fire0',
+                                        [
+                                          'object/get',
+                                          '@entity.player',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'x',
+                                      ],
+                                      41,
+                                    ],
+                                    'y': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'y',
+                                      ],
+                                      75,
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                                {
                                   'animation': [
                                     'object/get',
                                     '@entity.player',
@@ -2741,13 +2923,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'animation',
                                     ],
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'enemyRed',
+                                          [
+                                            '+',
+                                            [
+                                              '%',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                              5,
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -3117,6 +3321,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                               [
                                 'list',
                                 {
+                                  'asset': [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'fire0',
+                                        [
+                                          'object/get',
+                                          '@entity.player',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'x',
+                                      ],
+                                      41,
+                                    ],
+                                    'y': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'y',
+                                      ],
+                                      75,
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                                {
                                   'animation': [
                                     'object/get',
                                     '@entity.player',
@@ -3159,13 +3409,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'animation',
                                     ],
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'enemyRed',
+                                          [
+                                            '+',
+                                            [
+                                              '%',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                              5,
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -3557,6 +3829,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                               [
                                 'list',
                                 {
+                                  'asset': [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'fire0',
+                                        [
+                                          'object/get',
+                                          '@entity.player',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'x',
+                                      ],
+                                      41,
+                                    ],
+                                    'y': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'y',
+                                      ],
+                                      75,
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                                {
                                   'animation': [
                                     'object/get',
                                     '@entity.player',
@@ -3599,13 +3917,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'animation',
                                     ],
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'enemyRed',
+                                          [
+                                            '+',
+                                            [
+                                              '%',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                              5,
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -4064,6 +4404,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                               [
                                 'list',
                                 {
+                                  'asset': [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'fire0',
+                                        [
+                                          'object/get',
+                                          '@entity.player',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'x',
+                                      ],
+                                      41,
+                                    ],
+                                    'y': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'y',
+                                      ],
+                                      75,
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                                {
                                   'animation': [
                                     'object/get',
                                     '@entity.player',
@@ -4106,13 +4492,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'animation',
                                     ],
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'enemyRed',
+                                          [
+                                            '+',
+                                            [
+                                              '%',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                              5,
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -4571,6 +4979,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                               [
                                 'list',
                                 {
+                                  'asset': [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'fire0',
+                                        [
+                                          'object/get',
+                                          '@entity.player',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'x',
+                                      ],
+                                      41,
+                                    ],
+                                    'y': [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'y',
+                                      ],
+                                      75,
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                                {
                                   'animation': [
                                     'object/get',
                                     '@entity.player',
@@ -4613,13 +5067,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'animation',
                                     ],
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'enemyRed',
+                                          [
+                                            '+',
+                                            [
+                                              '%',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                              5,
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -5070,6 +5546,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             [
                               'list',
                               {
+                                'asset': [
+                                  'object/merge',
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  {
+                                    'sprite': [
+                                      'str/concat',
+                                      'fire0',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'frame',
+                                      ],
+                                    ],
+                                  },
+                                ],
+                                'position': {
+                                  'x': [
+                                    '+',
+                                    [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    41,
+                                  ],
+                                  'y': [
+                                    '+',
+                                    [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                    75,
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                              {
                                 'animation': [
                                   'object/get',
                                   '@entity.player',
@@ -5112,13 +5634,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     'animation',
                                   ],
                                   'asset': [
-                                    'object/get',
+                                    'object/merge',
                                     [
                                       'object/get',
-                                      '@config.assetManifest',
-                                      'units',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
                                     ],
-                                    'enemy',
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'enemyRed',
+                                        [
+                                          '+',
+                                          [
+                                            '%',
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'frame',
+                                            ],
+                                            5,
+                                          ],
+                                          1,
+                                        ],
+                                      ],
+                                    },
                                   ],
                                   'position': {
                                     'x': [
@@ -6421,6 +6965,52 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                             [
                               'list',
                               {
+                                'asset': [
+                                  'object/merge',
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  {
+                                    'sprite': [
+                                      'str/concat',
+                                      'fire0',
+                                      [
+                                        'object/get',
+                                        '@entity.player',
+                                        'frame',
+                                      ],
+                                    ],
+                                  },
+                                ],
+                                'position': {
+                                  'x': [
+                                    '+',
+                                    [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    41,
+                                  ],
+                                  'y': [
+                                    '+',
+                                    [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                    75,
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                              {
                                 'animation': [
                                   'object/get',
                                   '@entity.player',
@@ -6463,13 +7053,35 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     'animation',
                                   ],
                                   'asset': [
-                                    'object/get',
+                                    'object/merge',
                                     [
                                       'object/get',
-                                      '@config.assetManifest',
-                                      'units',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
                                     ],
-                                    'enemy',
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'enemyRed',
+                                        [
+                                          '+',
+                                          [
+                                            '%',
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'frame',
+                                            ],
+                                            5,
+                                          ],
+                                          1,
+                                        ],
+                                      ],
+                                    },
                                   ],
                                   'position': {
                                     'x': [

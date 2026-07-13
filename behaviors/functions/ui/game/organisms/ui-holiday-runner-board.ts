@@ -3928,23 +3928,86 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                     'fn',
                     'u',
                     [
-                      'object/merge',
-                      '@u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
+                      'if',
+                      [
+                        '==',
+                        [
+                          'object/get',
+                          '@u',
+                          'unitType',
+                        ],
+                        'runner',
+                      ],
+                      [
+                        'object/merge',
+                        '@u',
+                        {
+                          'frame': [
+                            '%',
+                            [
+                              '+',
+                              [
+                                'object/get',
+                                '@u',
+                                'frame',
+                              ],
+                              1,
+                            ],
+                            8,
+                          ],
+                          'sprite': [
+                            'object/merge',
                             [
                               'object/get',
                               '@u',
-                              'frame',
+                              'sprite',
                             ],
-                            1,
+                            {
+                              'sprite': [
+                                'if',
+                                [
+                                  '==',
+                                  [
+                                    '%',
+                                    [
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'frame',
+                                      ],
+                                      1,
+                                    ],
+                                    2,
+                                  ],
+                                  0,
+                                ],
+                                'alienBeige_walk1.png',
+                                'alienBeige_walk2.png',
+                              ],
+                            },
                           ],
-                          8,
-                        ],
-                      },
+                        },
+                      ],
+                      [
+                        'object/merge',
+                        '@u',
+                        {
+                          'frame': [
+                            '%',
+                            [
+                              '+',
+                              [
+                                'object/get',
+                                '@u',
+                                'frame',
+                              ],
+                              1,
+                            ],
+                            8,
+                          ],
+                        },
+                      ],
                     ],
                   ],
                 ],
