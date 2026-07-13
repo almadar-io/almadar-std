@@ -1,5 +1,5 @@
 {
-  "description": "std-anim-tick — sprite/effects animation clock atom. Advances every unit's frame (mod frameCount) and ages @entity.effects (decrement ttl, drop expired) every tick. Boards compose it via `uses` + a sibling trait-ref rebound (linkedEntity) to a board entity that carries `units` + `effects`, replacing the inlined animTick that was duplicated across 8+ game boards.",
+  "description": "std-anim-tick — sprite animation clock atom. Owns a global animation counter and exposes the current frame NAME (@entity.frameName = frames[counter % len]) every 100ms tick. Boards compose it via `uses` + a trait-ref rebound (linkedEntity) to the board entity; render-ui merges @entity.frameName onto the animated sprite's asset, replacing the inlined animTick frame counters that were duplicated across game boards. 1.1.0 redesign: the 1.0.0 units-frame-advance / effects-aging sets were removed — numeric unit frames served the pre-animation-contract regime (draw-sprite paints atlas sub-texture NAMES, which is exactly what frameName now exposes; zero consumers existed), effects aging is owned by std-fx-particles, and the shared-entity one-writer rule (ORB_SHARED_ENTITY_FIELD_CONFLICT) forbids a shared atom co-writing fields a board's own ticks also write. Tick interval is a language-level literal (100ms); the config surface is `frames`.",
   "name": "std-anim-tick",
   "orbitals": [
     {
@@ -11,59 +11,14 @@
             "type": "string"
           },
           {
-            "default": [],
-            "items": {
-              "properties": {
-                "animation": {
-                  "name": "animation",
-                  "required": false,
-                  "type": "string"
-                },
-                "frame": {
-                  "name": "frame",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            },
-            "name": "units",
-            "type": "array"
+            "default": 0.0,
+            "name": "animCounter",
+            "type": "number"
           },
           {
-            "default": [],
-            "items": {
-              "properties": {
-                "key": {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                },
-                "ttl": {
-                  "name": "ttl",
-                  "required": true,
-                  "type": "number"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "effects",
-            "type": "array"
+            "default": "",
+            "name": "frameName",
+            "type": "string"
           }
         ],
         "name": "AnimTickItem",
@@ -85,19 +40,22 @@
         {
           "category": "game-core",
           "config": {
-            "frameCount": {
-              "default": 8.0,
-              "description": "Number of sprite frames a unit cycles through before the animation loops.",
-              "label": "Frame count",
-              "synonyms": "frames, sheet length, animation length",
+            "frames": {
+              "default": [],
+              "description": "Atlas sub-texture names cycled into @entity.frameName, one per tick; empty disables name cycling.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Frame names",
+              "synonyms": "sprite names, atlas frames, animation frames",
               "tier": "domain",
-              "type": "number"
+              "type": "[string]"
             }
           },
           "entityContract": {
             "provides": [
-              "effects",
-              "units"
+              "animCounter",
+              "frameName"
             ],
             "requires": []
           },
@@ -123,13 +81,29 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.units",
-                    "@entity.units"
+                    "@entity.animCounter",
+                    0.0
                   ],
                   [
                     "set",
-                    "@entity.effects",
-                    "@entity.effects"
+                    "@entity.frameName",
+                    [
+                      "if",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@config.frames"
+                        ],
+                        0.0
+                      ],
+                      [
+                        "array/nth",
+                        "@config.frames",
+                        0.0
+                      ],
+                      "@entity.frameName"
+                    ]
                   ]
                 ],
                 "event": "INIT",
@@ -143,76 +117,39 @@
               "effects": [
                 [
                   "set",
-                  "@entity.units",
+                  "@entity.animCounter",
                   [
-                    "array/map",
-                    "@entity.units",
-                    [
-                      "fn",
-                      "u",
-                      [
-                        "object/merge",
-                        "@u",
-                        {
-                          "frame": [
-                            "%",
-                            [
-                              "+",
-                              [
-                                "object/get",
-                                "@u",
-                                "frame"
-                              ],
-                              1.0
-                            ],
-                            "@config.frameCount"
-                          ]
-                        }
-                      ]
-                    ]
+                    "+",
+                    "@entity.animCounter",
+                    1.0
                   ]
                 ],
                 [
                   "set",
-                  "@entity.effects",
+                  "@entity.frameName",
                   [
-                    "array/filter",
+                    "if",
                     [
-                      "array/map",
-                      "@entity.effects",
+                      ">",
                       [
-                        "fn",
-                        "e",
+                        "array/len",
+                        "@config.frames"
+                      ],
+                      0.0
+                    ],
+                    [
+                      "array/nth",
+                      "@config.frames",
+                      [
+                        "%",
+                        "@entity.animCounter",
                         [
-                          "object/merge",
-                          "@e",
-                          {
-                            "ttl": [
-                              "-",
-                              [
-                                "object/get",
-                                "@e",
-                                "ttl"
-                              ],
-                              1.0
-                            ]
-                          }
+                          "array/len",
+                          "@config.frames"
                         ]
                       ]
                     ],
-                    [
-                      "fn",
-                      "e",
-                      [
-                        ">",
-                        [
-                          "object/get",
-                          "@e",
-                          "ttl"
-                        ],
-                        0.0
-                      ]
-                    ]
+                    "@entity.frameName"
                   ]
                 ]
               ],
@@ -224,5 +161,5 @@
       ]
     }
   ],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

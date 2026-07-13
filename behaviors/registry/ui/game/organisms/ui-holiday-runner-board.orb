@@ -220,10 +220,21 @@
             },
             "name": "validMoves",
             "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "animCounter",
+            "type": "number"
+          },
+          {
+            "default": "alienBeige_walk1.png",
+            "name": "frameName",
+            "type": "string"
           }
         ],
         "name": "HolidayRunnerBoardItem",
-        "persistence": "runtime"
+        "persistence": "runtime",
+        "shared": true
       },
       "name": "HolidayRunnerBoardOrbital",
       "pages": [
@@ -233,6 +244,9 @@
           "traits": [
             {
               "ref": "HolidayRunnerBoardRender"
+            },
+            {
+              "ref": "AnimClock"
             }
           ]
         }
@@ -1929,7 +1943,9 @@
               "units",
               "validMoves"
             ],
-            "requires": []
+            "requires": [
+              "frameName"
+            ]
           },
           "entityRebindable": true,
           "linkedEntity": "HolidayRunnerBoardItem",
@@ -2193,9 +2209,32 @@
                                   "u",
                                   {
                                     "asset": [
-                                      "object/get",
-                                      "@u",
-                                      "sprite"
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "unitType"
+                                        ],
+                                        "runner"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "sprite"
+                                        ],
+                                        {
+                                          "sprite": "@entity.frameName"
+                                        }
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "sprite"
+                                      ]
                                     ],
                                     "id": [
                                       "object/get",
@@ -2627,9 +2666,32 @@
                                   "u",
                                   {
                                     "asset": [
-                                      "object/get",
-                                      "@u",
-                                      "sprite"
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "unitType"
+                                        ],
+                                        "runner"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "sprite"
+                                        ],
+                                        {
+                                          "sprite": "@entity.frameName"
+                                        }
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "sprite"
+                                      ]
                                     ],
                                     "id": [
                                       "object/get",
@@ -3066,9 +3128,32 @@
                                   "u",
                                   {
                                     "asset": [
-                                      "object/get",
-                                      "@u",
-                                      "sprite"
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "unitType"
+                                        ],
+                                        "runner"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "sprite"
+                                        ],
+                                        {
+                                          "sprite": "@entity.frameName"
+                                        }
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "sprite"
+                                      ]
                                     ],
                                     "id": [
                                       "object/get",
@@ -3523,9 +3608,32 @@
                                   "u",
                                   {
                                     "asset": [
-                                      "object/get",
-                                      "@u",
-                                      "sprite"
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "unitType"
+                                        ],
+                                        "runner"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "sprite"
+                                        ],
+                                        {
+                                          "sprite": "@entity.frameName"
+                                        }
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "sprite"
+                                      ]
                                     ],
                                     "id": [
                                       "object/get",
@@ -3798,100 +3906,6 @@
               "effects": [
                 [
                   "set",
-                  "@entity.units",
-                  [
-                    "array/map",
-                    "@entity.units",
-                    [
-                      "fn",
-                      "u",
-                      [
-                        "if",
-                        [
-                          "==",
-                          [
-                            "object/get",
-                            "@u",
-                            "unitType"
-                          ],
-                          "runner"
-                        ],
-                        [
-                          "object/merge",
-                          "@u",
-                          {
-                            "frame": [
-                              "%",
-                              [
-                                "+",
-                                [
-                                  "object/get",
-                                  "@u",
-                                  "frame"
-                                ],
-                                1.0
-                              ],
-                              8.0
-                            ],
-                            "sprite": [
-                              "object/merge",
-                              [
-                                "object/get",
-                                "@u",
-                                "sprite"
-                              ],
-                              {
-                                "sprite": [
-                                  "if",
-                                  [
-                                    "==",
-                                    [
-                                      "%",
-                                      [
-                                        "+",
-                                        [
-                                          "object/get",
-                                          "@u",
-                                          "frame"
-                                        ],
-                                        1.0
-                                      ],
-                                      2.0
-                                    ],
-                                    0.0
-                                  ],
-                                  "alienBeige_walk1.png",
-                                  "alienBeige_walk2.png"
-                                ]
-                              }
-                            ]
-                          }
-                        ],
-                        [
-                          "object/merge",
-                          "@u",
-                          {
-                            "frame": [
-                              "%",
-                              [
-                                "+",
-                                [
-                                  "object/get",
-                                  "@u",
-                                  "frame"
-                                ],
-                                1.0
-                              ],
-                              8.0
-                            ]
-                          }
-                        ]
-                      ]
-                    ]
-                  ]
-                ],
-                [
-                  "set",
                   "@entity.effects",
                   [
                     "array/filter",
@@ -4106,9 +4120,32 @@
                                 "u",
                                 {
                                   "asset": [
-                                    "object/get",
-                                    "@u",
-                                    "sprite"
+                                    "if",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "unitType"
+                                      ],
+                                      "runner"
+                                    ],
+                                    [
+                                      "object/merge",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "sprite"
+                                      ],
+                                      {
+                                        "sprite": "@entity.frameName"
+                                      }
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "sprite"
+                                    ]
                                   ],
                                   "id": [
                                     "object/get",
@@ -4366,9 +4403,29 @@
                 ]
               ],
               "interval": 100.0,
-              "name": "animTick"
+              "name": "renderTick"
             }
           ]
+        },
+        {
+          "config": {
+            "frames": {
+              "default": [
+                "alienBeige_walk1.png",
+                "alienBeige_walk2.png"
+              ],
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "HolidayRunnerBoardItem",
+          "name": "AnimClock",
+          "ref": "AnimTick.traits.AnimTick"
+        }
+      ],
+      "uses": [
+        {
+          "as": "AnimTick",
+          "from": "std/behaviors/std-anim-tick"
         }
       ]
     }

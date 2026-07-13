@@ -1,6 +1,8 @@
 app ui-space-shmup-board "1.0.0"
 "SpaceShmupBoard — sci-fi shmup: dodge enemy lasers, blast descending waves with Space/Fire, clear every wave to win."
 orbital SpaceShmupBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type SpaceShmupBoardError = {
     message : string!
     name : string
@@ -65,7 +67,7 @@ orbital SpaceShmupBoardOrbital {
     effects : Map string Asset
   }
 
-  entity SpaceShmupBoardItem [runtime] {
+  entity SpaceShmupBoardItem [runtime, shared] {
     id : string!
     player : SpaceShmupBoardPlayer
     enemies : [SpaceShmupBoardEnemiesItem]
@@ -79,6 +81,8 @@ orbital SpaceShmupBoardOrbital {
     nextId : number = 0
     paused : boolean = false
     effects : [SpaceShmupBoardEffectItem] = []
+    animCounter : number = 0
+    frameName : string = "fire00.png"
   }
 
   trait SpaceShmupBoardRender -> @rebindable SpaceShmupBoardItem [interaction, instance] {
@@ -110,7 +114,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -143,7 +147,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -163,7 +167,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -182,7 +186,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -203,7 +207,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -233,7 +237,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -265,7 +269,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -274,7 +278,6 @@ orbital SpaceShmupBoardOrbital {
     ticks {
       animTick every 100ms
         when (and (== @entity.paused false) (== @entity.result "none"))
-        (set @entity.player (object/merge @entity.player { frame: (% (+ (object/get @entity.player frame) 1) 8) }))
         (set @entity.enemies (array/map @entity.enemies (fn e (object/merge @e { frame: (% (+ (object/get @e frame) 1) 8) }))))
         (set @entity.effects (array/filter (array/map @entity.effects (fn ef (object/merge @ef { ttl: (- (object/get @ef ttl) 1) }))) (fn ef (> (object/get @ef ttl) 0))))
         (render-ui main {
@@ -289,7 +292,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -330,7 +333,7 @@ orbital SpaceShmupBoardOrbital {
     { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f sprite) })) }
     { type: draw-sprite-layer, items: (array/map @entity.projectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) playerLaser) })) }
     { type: draw-sprite-layer, items: (array/map @entity.enemyProjectiles (fn p { type: draw-sprite, position: { x: (object/get @p x), y: (object/get @p y) }, asset: (object/get (object/get @config.assetManifest features) enemyLaser) })) }
-    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation) }))) }
+    { type: draw-sprite-layer, items: (array/concat (list { type: draw-sprite, position: { x: (+ (object/get @entity.player x) 41), y: (+ (object/get @entity.player y) 75) }, asset: (object/merge (object/get (object/get @config.assetManifest units) player) { sprite: @entity.frameName }) } { type: draw-sprite, position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, asset: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation) }) (array/map @entity.enemies (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/merge (object/get (object/get @config.assetManifest units) enemy) { sprite: (str/concat "enemyRed" (+ (% (object/get @e frame) 5) 1) ".png") }), animation: (object/get @e animation) }))) }
     { type: draw-sprite-layer, items: (array/map @entity.effects (fn ef { type: draw-sprite, position: { x: (object/get @ef x), y: (object/get @ef y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @ef key)) })) }
   ] } ]
         })
@@ -473,5 +476,11 @@ orbital SpaceShmupBoardOrbital {
     }
   }
 
-  page "/space-shmup-board" as SpaceShmupBoardPage -> SpaceShmupBoardRender
+  trait ThrusterClock = AnimTick.traits.AnimTick -> SpaceShmupBoardItem {
+    config {
+      frames: ["fire00.png", "fire01.png", "fire02.png", "fire03.png", "fire04.png", "fire05.png", "fire06.png", "fire07.png"]
+    }
+  }
+
+  page "/space-shmup-board" as SpaceShmupBoardPage -> SpaceShmupBoardRender, ThrusterClock
 }
