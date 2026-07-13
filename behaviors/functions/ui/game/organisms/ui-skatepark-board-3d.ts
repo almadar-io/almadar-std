@@ -1629,6 +1629,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                           {
                             'items': [
                               {
+                                'animation': '@entity.player.animation',
                                 'asset': '@config.playerSprite',
                                 'frame': '@entity.player.frame',
                                 'height': '@entity.player.height',
@@ -2132,6 +2133,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                           {
                             'items': [
                               {
+                                'animation': '@entity.player.animation',
                                 'asset': '@config.playerSprite',
                                 'frame': '@entity.player.frame',
                                 'height': '@entity.player.height',
@@ -2438,6 +2440,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                           {
                             'items': [
                               {
+                                'animation': '@entity.player.animation',
                                 'asset': '@config.playerSprite',
                                 'frame': '@entity.player.frame',
                                 'height': '@entity.player.height',
@@ -3743,6 +3746,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                         {
                           'items': [
                             {
+                              'animation': '@entity.player.animation',
                               'asset': '@config.playerSprite',
                               'frame': '@entity.player.frame',
                               'height': '@entity.player.height',

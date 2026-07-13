@@ -1578,6 +1578,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                             'type': 'draw-sprite-layer',
                           },
                           {
+                            'animation': '@entity.player.animation',
                             'asset': '@config.playerSprite',
                             'height': '@entity.player.height',
                             'position': {
@@ -2035,6 +2036,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                             'type': 'draw-sprite-layer',
                           },
                           {
+                            'animation': '@entity.player.animation',
                             'asset': '@config.playerSprite',
                             'height': '@entity.player.height',
                             'position': {
@@ -2365,6 +2367,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                             'type': 'draw-sprite-layer',
                           },
                           {
+                            'animation': '@entity.player.animation',
                             'asset': '@config.playerSprite',
                             'height': '@entity.player.height',
                             'position': {
@@ -3694,6 +3697,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                           'type': 'draw-sprite-layer',
                         },
                         {
+                          'animation': '@entity.player.animation',
                           'asset': '@config.playerSprite',
                           'height': '@entity.player.height',
                           'position': {

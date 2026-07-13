@@ -7,7 +7,6 @@ orbital GalleryItemOrbital {
   uses Divider from "std/behaviors/ui-divider"
   uses MediaGallery from "std/behaviors/ui-media-gallery"
   uses Alert from "std/behaviors/ui-alert"
-  uses Lightbox from "std/behaviors/ui-lightbox"
 
     type GalleryItemLoaded = Event { data : [GalleryItem] } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
 
@@ -60,20 +59,6 @@ orbital GalleryItemOrbital {
     config {
       message: "Failed to load gallery items"
       variant: error
-    }
-  }
-
-  trait ImageLightbox = Lightbox.traits.LightboxRender -> GalleryItem {
-    config {
-      closeAction: CLOSE
-      currentIndex: 0
-      images: [{
-        alt: @entity.name
-        caption: @entity.name
-        src: @entity.imageUrl
-      }]
-      isOpen: true
-      showCounter: true
     }
   }
 
@@ -136,11 +121,19 @@ orbital GalleryItemOrbital {
     state browsing {
       VIEW -> viewing
         (set @entity.id ?id)
-        (set @entity.name ?row.name)
-        (set @entity.description ?row.description)
-        (set @entity.imageUrl ?row.imageUrl)
         (render-ui modal {
-          children: [@trait.ImageLightbox]
+          children: [{
+            closeAction: CLOSE
+            currentIndex: 0
+            images: [{
+              alt: (object/get ?row @config.nameField)
+              caption: (object/get ?row @config.nameField)
+              src: (object/get ?row @config.imageField)
+            }]
+            isOpen: true
+            showCounter: true
+            type: lightbox
+          }]
           type: box
         })
     }
@@ -231,8 +224,18 @@ orbital GalleryItemOrbital {
         @label "Section title"
         @description "Heading shown above the image gallery"
         @tier "presentation"
+      nameField : string = name
+        @label "Name field"
+        @description "Entity field providing the lightbox alt text and caption for the selected item"
+        @synonyms "title field, label field"
+        @tier "presentation"
+      imageField : string = imageUrl
+        @label "Image field"
+        @description "Entity field holding the image URL shown in the lightbox for the selected item"
+        @synonyms "image url field, thumbnail field, src field"
+        @tier "presentation"
     }
   }
 
-  page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery, LoadingSpinner, LoadingCaption, GalleryIcon, TitleHeading, TitleDivider, MediaGalleryGrid, ErrorAlert, ImageLightbox, ReloadSpinner, ReloadCaption, RetrySpinner
+  page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery, LoadingSpinner, LoadingCaption, GalleryIcon, TitleHeading, TitleDivider, MediaGalleryGrid, ErrorAlert, ReloadSpinner, ReloadCaption, RetrySpinner
 }

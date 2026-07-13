@@ -82,9 +82,6 @@
               "ref": "ErrorAlert"
             },
             {
-              "ref": "ImageLightbox"
-            },
-            {
               "ref": "ReloadSpinner"
             },
             {
@@ -174,39 +171,6 @@
         },
         {
           "config": {
-            "closeAction": {
-              "default": "CLOSE",
-              "type": "unknown"
-            },
-            "currentIndex": {
-              "default": 0.0,
-              "type": "unknown"
-            },
-            "images": {
-              "default": [
-                {
-                  "alt": "@entity.name",
-                  "caption": "@entity.name",
-                  "src": "@entity.imageUrl"
-                }
-              ],
-              "type": "unknown"
-            },
-            "isOpen": {
-              "default": true,
-              "type": "unknown"
-            },
-            "showCounter": {
-              "default": true,
-              "type": "unknown"
-            }
-          },
-          "linkedEntity": "GalleryItem",
-          "name": "ImageLightbox",
-          "ref": "Lightbox.traits.LightboxRender"
-        },
-        {
-          "config": {
             "size": {
               "default": "sm",
               "type": "unknown"
@@ -249,6 +213,22 @@
         {
           "category": "interaction",
           "config": {
+            "imageField": {
+              "default": "imageUrl",
+              "description": "Entity field holding the image URL shown in the lightbox for the selected item",
+              "label": "Image field",
+              "synonyms": "image url field, thumbnail field, src field",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "nameField": {
+              "default": "name",
+              "description": "Entity field providing the lightbox alt text and caption for the selected item",
+              "label": "Name field",
+              "synonyms": "title field, label field",
+              "tier": "presentation",
+              "type": "string"
+            },
             "title": {
               "default": "Gallery",
               "description": "Heading shown above the image gallery",
@@ -334,11 +314,7 @@
             }
           ],
           "entityContract": {
-            "provides": [
-              "description",
-              "imageUrl",
-              "name"
-            ],
+            "provides": [],
             "requires": []
           },
           "entityRebindable": true,
@@ -510,26 +486,36 @@
                     "@payload.id"
                   ],
                   [
-                    "set",
-                    "@entity.name",
-                    "@payload.row.name"
-                  ],
-                  [
-                    "set",
-                    "@entity.description",
-                    "@payload.row.description"
-                  ],
-                  [
-                    "set",
-                    "@entity.imageUrl",
-                    "@payload.row.imageUrl"
-                  ],
-                  [
                     "render-ui",
                     "modal",
                     {
                       "children": [
-                        "@trait.ImageLightbox"
+                        {
+                          "closeAction": "CLOSE",
+                          "currentIndex": 0.0,
+                          "images": [
+                            {
+                              "alt": [
+                                "object/get",
+                                "@payload.row",
+                                "@config.nameField"
+                              ],
+                              "caption": [
+                                "object/get",
+                                "@payload.row",
+                                "@config.nameField"
+                              ],
+                              "src": [
+                                "object/get",
+                                "@payload.row",
+                                "@config.imageField"
+                              ]
+                            }
+                          ],
+                          "isOpen": true,
+                          "showCounter": true,
+                          "type": "lightbox"
+                        }
                       ],
                       "type": "box"
                     }
@@ -635,10 +621,6 @@
         {
           "as": "Alert",
           "from": "std/behaviors/ui-alert"
-        },
-        {
-          "as": "Lightbox",
-          "from": "std/behaviors/ui-lightbox"
         }
       ]
     }
