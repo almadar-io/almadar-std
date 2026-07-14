@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-pirate-board-3d';
@@ -543,7 +542,6 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04YFJ81X5ZECRHDPVEM59'),
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef),
       }),
@@ -555,7 +553,6 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04YFJ81X5ZECRHDPVEM59'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef),
       }),
@@ -567,7 +564,6 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04YFJ81X5ZECRHDPVEM59'),
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef),
       }),
@@ -817,14 +813,12 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04YFJ81X5ZECRHDPVEM59'),
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04YFJ4VRAXZCV67DN0778'),
         'name': 'PirateBoard3DPage',
         'path': '/pirate-board-3d',
         'traits': [

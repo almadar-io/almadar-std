@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-racing-board-3d';
@@ -1250,7 +1249,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Throttle held down (keyboard keyUp/Down or d-pad press/release)',
             'event': 'THROTTLE_ON',
-            'eventId': asEventId('evt_01KXG04YRW4Z75Z9GV0ZMNBXFJ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1263,7 +1261,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Throttle released — car coasts',
             'event': 'THROTTLE_OFF',
-            'eventId': asEventId('evt_01KXG04YRW15FDD81MMQFTBKFC'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1276,7 +1273,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Brake held down',
             'event': 'BRAKE_ON',
-            'eventId': asEventId('evt_01KXG04YRWSVABJCQYTE78MJV7'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1289,7 +1285,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Brake released',
             'event': 'BRAKE_OFF',
-            'eventId': asEventId('evt_01KXG04YRWH6PMC2K87EVC33X0'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1302,7 +1297,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Steer left held',
             'event': 'STEER_LEFT',
-            'eventId': asEventId('evt_01KXG04YRWDA2HCYCA9Q05KBM2'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1315,7 +1309,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Steer right held',
             'event': 'STEER_RIGHT',
-            'eventId': asEventId('evt_01KXG04YRWHHMZ06Z6XMKYS7PV'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1328,7 +1321,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Steering released — wheels straighten',
             'event': 'STEER_STOP',
-            'eventId': asEventId('evt_01KXG04YRWXW5BGKJDAFTNVFA7'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1341,7 +1333,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Called when the lap race ends',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG04YRWW5K09QA1RPRMEANZ'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1354,7 +1345,6 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04YRWSRX5FMKNQZQNY2N2'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1392,9 +1382,7 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04YRS3Q1K8GNPB8V2XC2G'),
         'linkedEntity': 'RacingBoard3DItem',
-        'linkedEntityId': asEntityId('ent_01KXG04YRS0GZM0RJCNAEGQG9F'),
         'name': 'RacingBoard3DRender',
         'scope': 'instance',
         'stateMachine': {
@@ -4373,13 +4361,11 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04YRWR8RFN7WJ3HNGSPEJ'),
         'name': 'RacingBoard3DPage',
         'path': '/racing-board-3d',
         'traits': [
           {
             'ref': 'RacingBoard3DRender',
-            'refId': asTraitId('trt_01KXG04YRS3Q1K8GNPB8V2XC2G'),
           },
         ],
       } satisfies Page,

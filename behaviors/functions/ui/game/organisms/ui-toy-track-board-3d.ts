@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-toy-track-board-3d';
@@ -1383,7 +1382,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Throttle held down (keyboard keyUp/Down or d-pad press/release)',
             'event': 'THROTTLE_ON',
-            'eventId': asEventId('evt_01KXG050610QKVD4JY92ZZCTR0'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1396,7 +1394,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Throttle released — car coasts',
             'event': 'THROTTLE_OFF',
-            'eventId': asEventId('evt_01KXG05061T0QERJSBJ1CRX1S8'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1409,7 +1406,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Brake held down',
             'event': 'BRAKE_ON',
-            'eventId': asEventId('evt_01KXG05061ATTRQ150E3K3NGQH'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1422,7 +1418,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Brake released',
             'event': 'BRAKE_OFF',
-            'eventId': asEventId('evt_01KXG05061G0AEX3X4GCKTPC3P'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1435,7 +1430,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Steer left held',
             'event': 'STEER_LEFT',
-            'eventId': asEventId('evt_01KXG050615V9QMNAXR9M3PA7Z'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1448,7 +1442,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Steer right held',
             'event': 'STEER_RIGHT',
-            'eventId': asEventId('evt_01KXG05061VECP4SGGP8T31ZD1'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1461,7 +1454,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Steering released — wheels straighten',
             'event': 'STEER_STOP',
-            'eventId': asEventId('evt_01KXG05061TS0W77S63PCG3TC5'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1474,7 +1466,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Called when the lap race ends',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG0506147WY43PXN6392YNZ'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1487,7 +1478,6 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG05061PS6BS3RHEM84K48V'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1525,9 +1515,7 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG0505ZKSXBQCJT1VJECTQ2'),
         'linkedEntity': 'ToyTrackBoard3DItem',
-        'linkedEntityId': asEntityId('ent_01KXG0505Z5ND8QD6130M7KGPQ'),
         'name': 'ToyTrackBoard3DRender',
         'scope': 'instance',
         'stateMachine': {
@@ -4506,13 +4494,11 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG050610P5X5Y7SH5YZKME1'),
         'name': 'ToyTrackBoard3DPage',
         'path': '/toy-track-board-3d',
         'traits': [
           {
             'ref': 'ToyTrackBoard3DRender',
-            'refId': asTraitId('trt_01KXG0505ZKSXBQCJT1VJECTQ2'),
           },
         ],
       } satisfies Page,

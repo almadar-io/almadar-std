@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-event-handler-board';
@@ -666,7 +665,6 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
           {
             'description': 'Emitted by the component when the animated chain resolves (success or failure).',
             'event': 'COMPLETE',
-            'eventId': asEventId('evt_01KXG04X9N5SRE8DEF28VEVZT6'),
             'payloadSchema': [
               {
                 'name': 'success',
@@ -680,7 +678,6 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
           {
             'description': 'Player hits Play; component runs the animated simulation and fires COMPLETE.',
             'event': 'PLAY',
-            'eventId': asEventId('evt_01KXG04X9N8AQ5WJ8RYNY7MX1V'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -693,7 +690,6 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
           {
             'description': 'Player saves a WHEN/THEN rule set for one object.',
             'event': 'EDIT_RULE',
-            'eventId': asEventId('evt_01KXG04X9NK0YWWJ80K2MS9K76'),
             'payloadSchema': [
               {
                 'name': 'objectId',
@@ -711,7 +707,6 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
           {
             'description': 'Reset to menu after completing the puzzle.',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04X9NJ1X0VP1AV58E1WEE'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -737,9 +732,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04X9K33GJCS3SXDVPH04F'),
         'linkedEntity': 'EventHandlerBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04X9KKJ3AEM1662YA8E38'),
         'name': 'EventHandlerBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -4917,13 +4910,11 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04X9NS8G8706JGG8NNW2F'),
         'name': 'EventHandlerBoardPage',
         'path': '/event-handler-board',
         'traits': [
           {
             'ref': 'EventHandlerBoardRender',
-            'refId': asTraitId('trt_01KXG04X9K33GJCS3SXDVPH04F'),
           },
         ],
       } satisfies Page,

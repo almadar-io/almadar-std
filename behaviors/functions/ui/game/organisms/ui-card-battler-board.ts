@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-card-battler-board';
@@ -1319,7 +1318,6 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
           {
             'description': 'Emits UI:{playCardEvent} with {cardId} when the player plays a card from hand',
             'event': 'PLAY_CARD',
-            'eventId': asEventId('evt_01KXG04WV2TF6N8DKSV1WGBKHY'),
             'payloadSchema': [
               {
                 'name': 'cardId',
@@ -1333,7 +1331,6 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
           {
             'description': 'Emits UI:{endTurnEvent} with {} when the player ends the turn',
             'event': 'END_TURN',
-            'eventId': asEventId('evt_01KXG04WV2N21Q4JPA8RKXZC9X'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1346,7 +1343,6 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
           {
             'description': 'Emits UI:{gameEndEvent} with {result} when the match reaches won or lost',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG04WV26NCHF2P565B8HJME'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1360,7 +1356,6 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04WV2ZRKSSD49KT1VYXPY'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1384,9 +1379,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04WV0DZZPB0MTR42CSYAN'),
         'linkedEntity': 'CardBattlerBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04WV04AH9KTZBXK3VWQAJ'),
         'name': 'CardBattlerBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -2887,13 +2880,11 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04WV2BFZMJC0B07SJ2X01'),
         'name': 'CardBattlerBoardPage',
         'path': '/card-battler-board',
         'traits': [
           {
             'ref': 'CardBattlerBoardRender',
-            'refId': asTraitId('trt_01KXG04WV0DZZPB0MTR42CSYAN'),
           },
         ],
       } satisfies Page,

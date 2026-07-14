@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-classifier-board';
@@ -527,7 +526,6 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
           {
             'description': 'completeEvent prop',
             'event': 'COMPLETE',
-            'eventId': asEventId('evt_01KXG04X6AVMDGP5YG93PNEWWW'),
             'payloadSchema': [
               {
                 'name': 'success',
@@ -546,7 +544,6 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
           {
             'description': 'Emits UI:{assignEvent} with { itemId, categoryId } when an item is dropped into a category',
             'event': 'ASSIGN',
-            'eventId': asEventId('evt_01KXG04X6AWXH008JK3AVMF1RP'),
             'payloadSchema': [
               {
                 'name': 'itemId',
@@ -565,7 +562,6 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
           {
             'description': 'Emits UI:{checkEvent} with {} when the player submits their assignments',
             'event': 'CHECK',
-            'eventId': asEventId('evt_01KXG04X6A0B6QPJE34RME3Y74'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -578,7 +574,6 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04X6AHNK9DN93FM9KNNM6'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -602,9 +597,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04X6746B8EKANC2CHPCCT'),
         'linkedEntity': 'ClassifierBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04X6708D6BEV0FV8W21NK'),
         'name': 'ClassifierBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -1791,13 +1784,11 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04X6AX36TF4CZV9TV6B0K'),
         'name': 'ClassifierBoardPage',
         'path': '/classifier-board',
         'traits': [
           {
             'ref': 'ClassifierBoardRender',
-            'refId': asTraitId('trt_01KXG04X6746B8EKANC2CHPCCT'),
           },
         ],
       } satisfies Page,

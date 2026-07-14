@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-visual-novel-board';
@@ -736,7 +735,6 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
           {
             'description': 'Emits UI:{chooseEvent} with {nextId} when the player selects a branching choice',
             'event': 'CHOOSE',
-            'eventId': asEventId('evt_01KXG0508ZXGQ0JXW2BQWWJHDX'),
             'payloadSchema': [
               {
                 'name': 'nextId',
@@ -750,7 +748,6 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
           {
             'description': 'Emits UI:{advanceEvent} with {} to advance to the next node',
             'event': 'ADVANCE',
-            'eventId': asEventId('evt_01KXG0508ZGTFMBWS30SDNJRVX'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -763,7 +760,6 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
           {
             'description': 'Emits UI:{restartEvent} with {} to reset the scene to the start node',
             'event': 'RESTART',
-            'eventId': asEventId('evt_01KXG0508Z04D5S5HF0VKRSCSD'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -786,9 +782,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG0508WQGBFK0KYZ2MWB42N'),
         'linkedEntity': 'VisualNovelBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG0508WXESGXZHCMTS6V4QG'),
         'name': 'VisualNovelBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -1605,13 +1599,11 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG0508ZM0SMV88CCS6ANTSH'),
         'name': 'VisualNovelBoardPage',
         'path': '/visual-novel-board',
         'traits': [
           {
             'ref': 'VisualNovelBoardRender',
-            'refId': asTraitId('trt_01KXG0508WQGBFK0KYZ2MWB42N'),
           },
         ],
       } satisfies Page,

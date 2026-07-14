@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-brick-sandbox-board-3d';
@@ -1145,7 +1144,6 @@ export function stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital(params: StdUi
           {
             'description': 'Emits UI:{tileClickEvent} with {tileId,x,z} on grid cell click',
             'event': 'TILE_CLICK',
-            'eventId': asEventId('evt_01KXG04WRA7X7FCSX403DA513X'),
             'payloadSchema': [
               {
                 'name': 'tileId',
@@ -1167,7 +1165,6 @@ export function stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital(params: StdUi
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04WRATBWBP8R5TG69KHZT'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1193,9 +1190,7 @@ export function stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital(params: StdUi
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04WR8NG1AV7KH4YBMSM13'),
         'linkedEntity': 'BrickSandboxBoard3DItem',
-        'linkedEntityId': asEntityId('ent_01KXG04WR8H474SN2BVND72PC0'),
         'name': 'BrickSandboxBoard3DRender',
         'scope': 'instance',
         'stateMachine': {
@@ -2241,13 +2236,11 @@ export function stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital(params: StdUi
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04WRAKR69WC9Z617W2HP8'),
         'name': 'BrickSandboxBoard3DPage',
         'path': '/brick-sandbox-board-3d',
         'traits': [
           {
             'ref': 'BrickSandboxBoard3DRender',
-            'refId': asTraitId('trt_01KXG04WR8NG1AV7KH4YBMSM13'),
           },
         ],
       } satisfies Page,

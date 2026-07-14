@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-probability';
@@ -212,14 +211,12 @@ export function stdLearningProbabilityGaltonBoardOrbital(params: StdLearningProb
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG053FAEWSZY9R411H0G7T5'),
         'name': 'GaltonEngine',
         'ref': ('ProbGalton.traits.GaltonSim' satisfies _StdLearningProbabilityGaltonBoardOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053FA6YAAN1FM5D9PKB8Y'),
         'name': 'GaltonBoardPage',
         'path': '/prob/galton',
         'traits': [
@@ -443,14 +440,12 @@ export function stdLearningProbabilityRandomWalkOrbital(params: StdLearningProba
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG053FAHFBGAXYWEET1F7DY'),
         'name': 'WalkEngine',
         'ref': ('ProbWalk.traits.WalkSim' satisfies _StdLearningProbabilityRandomWalkOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053FAC9PJ3QJ853ANKGDQ'),
         'name': 'RandomWalkPage',
         'path': '/prob/walk',
         'traits': [
@@ -670,14 +665,12 @@ export function stdLearningProbabilityMonteCarloOrbital(params: StdLearningProba
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG053FASPSJHYZ84TT2QBHW'),
         'name': 'MonteCarloEngine',
         'ref': ('MonteCarlo.traits.MonteCarloSim' satisfies _StdLearningProbabilityMonteCarloOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053FA4QM9KTGPTB4VN7RQ'),
         'name': 'MonteCarloPage',
         'path': '/prob/montecarlo',
         'traits': [

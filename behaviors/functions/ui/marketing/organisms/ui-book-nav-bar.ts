@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-book-nav-bar';
@@ -169,9 +168,7 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG0552Q9CBRD2JA7C61H08H'),
         'linkedEntity': 'BookNavBarItem',
-        'linkedEntityId': asEntityId('ent_01KXG0552QNT3ZDTYQJAQ6J2W8'),
         'name': 'BookNavBarRender',
         'scope': 'instance',
         'stateMachine': {
@@ -213,13 +210,11 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG0552S8EDVHG5Y1C5BPEHK'),
         'name': 'BookNavBarPage',
         'path': '/book-nav-bar',
         'traits': [
           {
             'ref': 'BookNavBarRender',
-            'refId': asTraitId('trt_01KXG0552Q9CBRD2JA7C61H08H'),
           },
         ],
       } satisfies Page,

@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-code-runner-panel';
@@ -165,9 +164,7 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04SB34B5NJKVX95PGBA7R'),
         'linkedEntity': 'CodeRunnerPanelItem',
-        'linkedEntityId': asEntityId('ent_01KXG04SB3ZCZ4APVXKZAAWYFS'),
         'name': 'CodeRunnerPanelRender',
         'scope': 'instance',
         'stateMachine': {
@@ -209,13 +206,11 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04SB5NM8WD1KNA1W0YPGN'),
         'name': 'CodeRunnerPanelPage',
         'path': '/code-runner-panel',
         'traits': [
           {
             'ref': 'CodeRunnerPanelRender',
-            'refId': asTraitId('trt_01KXG04SB34B5NJKVX95PGBA7R'),
           },
         ],
       } satisfies Page,

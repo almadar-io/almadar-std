@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-entity-table';
@@ -573,7 +572,6 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
           {
             'description': 'User opened a record from the list.',
             'event': 'VIEW',
-            'eventId': asEventId('evt_01KXG04SJJ648J6B44Z4MCR8KK'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -586,7 +584,6 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
           {
             'description': 'EntityTable rows finished loading; payload.data holds the collection.',
             'event': 'EntityTableLoaded',
-            'eventId': asEventId('evt_01KXG04SJJDJHTKN6PP74YNPWJ'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -603,9 +600,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04SJF04WRRXPKM7PJD93N'),
         'linkedEntity': 'EntityTableItem',
-        'linkedEntityId': asEntityId('ent_01KXG04SJF4VZ34Z74R0FKCDZW'),
         'name': 'EntityTableRender',
         'scope': 'instance',
         'stateMachine': {
@@ -756,13 +751,11 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04SJJRM3148JEH8E94DKD'),
         'name': 'EntityTablePage',
         'path': '/entity-table',
         'traits': [
           {
             'ref': 'EntityTableRender',
-            'refId': asTraitId('trt_01KXG04SJF04WRRXPKM7PJD93N'),
           },
         ],
       } satisfies Page,

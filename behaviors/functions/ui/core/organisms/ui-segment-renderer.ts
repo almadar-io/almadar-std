@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-segment-renderer';
@@ -209,9 +208,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04SYNY0B326SBBN7KCRAW'),
         'linkedEntity': 'SegmentRendererItem',
-        'linkedEntityId': asEntityId('ent_01KXG04SYN06XHEZN12SMFF8VV'),
         'name': 'SegmentRendererRender',
         'scope': 'instance',
         'stateMachine': {
@@ -252,13 +249,11 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04SYQJTKCBEXDCD8332NJ'),
         'name': 'SegmentRendererPage',
         'path': '/segment-renderer',
         'traits': [
           {
             'ref': 'SegmentRendererRender',
-            'refId': asTraitId('trt_01KXG04SYNY0B326SBBN7KCRAW'),
           },
         ],
       } satisfies Page,

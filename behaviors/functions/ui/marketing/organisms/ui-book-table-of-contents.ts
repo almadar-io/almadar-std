@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-book-table-of-contents';
@@ -157,7 +156,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
           {
             'description': 'BookTableOfContents rows finished loading; payload.data holds the collection.',
             'event': 'BookTableOfContentsLoaded',
-            'eventId': asEventId('evt_01KXG05543M5W9TV4RYCSCJYT2'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -174,9 +172,7 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG0554131EW1HYW8FBJZS2N'),
         'linkedEntity': 'BookTableOfContentsItem',
-        'linkedEntityId': asEntityId('ent_01KXG05541FRAAF0ESHSKKXCAM'),
         'name': 'BookTableOfContentsRender',
         'scope': 'instance',
         'stateMachine': {
@@ -257,13 +253,11 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05543EBC3QQRK6GWWEEDX'),
         'name': 'BookTableOfContentsPage',
         'path': '/book-table-of-contents',
         'traits': [
           {
             'ref': 'BookTableOfContentsRender',
-            'refId': asTraitId('trt_01KXG0554131EW1HYW8FBJZS2N'),
           },
         ],
       } satisfies Page,

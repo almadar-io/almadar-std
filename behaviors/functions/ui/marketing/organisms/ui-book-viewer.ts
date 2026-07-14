@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-book-viewer';
@@ -346,7 +345,6 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
           {
             'description': 'BookViewer rows finished loading; payload.data holds the collection.',
             'event': 'BookViewerLoaded',
-            'eventId': asEventId('evt_01KXG05556YDD0EJN9YZADF01P'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -363,9 +361,7 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG05554F37VKF7916D87T55'),
         'linkedEntity': 'BookViewerItem',
-        'linkedEntityId': asEntityId('ent_01KXG055548NSATY902RCSRHKX'),
         'name': 'BookViewerRender',
         'scope': 'instance',
         'stateMachine': {
@@ -466,13 +462,11 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05556889HGRWVAK43PEHP'),
         'name': 'BookViewerPage',
         'path': '/book-viewer',
         'traits': [
           {
             'ref': 'BookViewerRender',
-            'refId': asTraitId('trt_01KXG05554F37VKF7916D87T55'),
           },
         ],
       } satisfies Page,

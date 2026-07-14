@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-toast-slot';
@@ -223,9 +222,7 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04T7ACKG4F5RXZE1WTW5S'),
         'linkedEntity': 'ToastSlotItem',
-        'linkedEntityId': asEntityId('ent_01KXG04T7A8ZSBTNW5KPRASTYS'),
         'name': 'ToastSlotRender',
         'scope': 'instance',
         'stateMachine': {
@@ -276,13 +273,11 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04T7E6Z0RTQ36GFBGMQD9'),
         'name': 'ToastSlotPage',
         'path': '/toast-slot',
         'traits': [
           {
             'ref': 'ToastSlotRender',
-            'refId': asTraitId('trt_01KXG04T7ACKG4F5RXZE1WTW5S'),
           },
         ],
       } satisfies Page,

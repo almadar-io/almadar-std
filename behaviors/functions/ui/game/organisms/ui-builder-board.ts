@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-builder-board';
@@ -755,7 +754,6 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
           {
             'description': 'completeEvent prop',
             'event': 'COMPLETE',
-            'eventId': asEventId('evt_01KXG04WSNZA7F3A1ZM1MYBBXZ'),
             'payloadSchema': [
               {
                 'name': 'success',
@@ -774,7 +772,6 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
           {
             'description': 'Emits UI:{placeEvent} with { slotId, componentId } on component placement',
             'event': 'PLACE',
-            'eventId': asEventId('evt_01KXG04WSNC63SM7CA07RCV41P'),
             'payloadSchema': [
               {
                 'name': 'slotId',
@@ -793,7 +790,6 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
           {
             'description': 'Emits UI:{checkEvent} with {} when the player checks the build',
             'event': 'CHECK',
-            'eventId': asEventId('evt_01KXG04WSNH4F3BXGSJ3DQS1ET'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -806,7 +802,6 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04WSNARM64TKS94ZYP954'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -830,9 +825,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04WSJK7538267REVQZCW0'),
         'linkedEntity': 'BuilderBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04WSJCM84VMC4QS56WES5'),
         'name': 'BuilderBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -2020,13 +2013,11 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04WSNXYCAX8H509A1JHDA'),
         'name': 'BuilderBoardPage',
         'path': '/builder-board',
         'traits': [
           {
             'ref': 'BuilderBoardRender',
-            'refId': asTraitId('trt_01KXG04WSJK7538267REVQZCW0'),
           },
         ],
       } satisfies Page,

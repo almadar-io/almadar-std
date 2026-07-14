@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-skatepark-board-3d';
@@ -1080,7 +1079,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Tile click passthrough — skatepark is keyboard-driven; click coordinates for jump target',
             'event': 'TILE_CLICK',
-            'eventId': asEventId('evt_01KXG04Z457EEZ6ZHE42BA7GRW'),
             'payloadSchema': [
               {
                 'name': 'tileId',
@@ -1102,7 +1100,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Unit click passthrough',
             'event': 'UNIT_CLICK',
-            'eventId': asEventId('evt_01KXG04Z4584S5ZV0S3G8JB15T'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -1124,7 +1121,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Emitted when result becomes won or lost',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG04Z45PT4DWZK50JX6EJ8N'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1138,7 +1134,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Move-left intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'LEFT',
-            'eventId': asEventId('evt_01KXG04Z453T9FRJT8X5N67GD8'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1151,7 +1146,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Move-right intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'RIGHT',
-            'eventId': asEventId('evt_01KXG04Z45X57EPEPKQKHGVYQA'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1164,7 +1158,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Jump intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'JUMP',
-            'eventId': asEventId('evt_01KXG04Z45QWQHSJFM3F5Z3S2E'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1177,7 +1170,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Grab-trick intent while airborne (keyboard KeyJ/KeyK or d-pad Trick button) — awards score + fx',
             'event': 'TRICK',
-            'eventId': asEventId('evt_01KXG04Z45JB7YV8FEFM7CX6MQ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1190,7 +1182,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Stop-horizontal intent (keyboard keyUpMap or d-pad directionReleaseEvents)',
             'event': 'STOP',
-            'eventId': asEventId('evt_01KXG04Z451BVN2NSPSJY4FWRS'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1203,7 +1194,6 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           {
             'description': 'Emits UI:{playAgainEvent} on restart',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04Z45X415KHNFFQ69FE9S'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1232,9 +1222,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04Z4365PJVH8PJ2XA5TDQ'),
         'linkedEntity': 'SkateparkBoard3DItem',
-        'linkedEntityId': asEntityId('ent_01KXG04Z43FTFFQCXNF07H24CW'),
         'name': 'SkateparkBoard3DRender',
         'scope': 'instance',
         'stateMachine': {
@@ -3935,13 +3923,11 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04Z45RD6T6BFZBJQTS1M4'),
         'name': 'SkateparkBoard3DPage',
         'path': '/skatepark-board-3d',
         'traits': [
           {
             'ref': 'SkateparkBoard3DRender',
-            'refId': asTraitId('trt_01KXG04Z4365PJVH8PJ2XA5TDQ'),
           },
         ],
       } satisfies Page,

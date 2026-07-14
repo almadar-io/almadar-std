@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-chemistry';
@@ -309,14 +308,12 @@ export function stdLearningChemistryDiffusionOrbital(params: StdLearningChemistr
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05376C1Z200AHHM67A6S6'),
         'name': 'DiffusionEngine',
         'ref': ('ChemDiffusion.traits.ChemDiffusionSim' satisfies _StdLearningChemistryDiffusionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05376ZGT0184RV86M8KAY'),
         'name': 'DiffusionPage',
         'path': '/chem/diffusion',
         'traits': [
@@ -665,14 +662,12 @@ export function stdLearningChemistryReactionOrbital(params: StdLearningChemistry
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05376H82B3F5MFFH84Z6G'),
         'name': 'ReactionEngine',
         'ref': ('ChemReaction.traits.ChemReactionSim' satisfies _StdLearningChemistryReactionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053766N14BYV6EXSN38V2'),
         'name': 'ReactionPage',
         'path': '/chem/reaction',
         'traits': [
@@ -1065,14 +1060,12 @@ export function stdLearningChemistryOsmosisOrbital(params: StdLearningChemistryO
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG0537697E2FC5YG928PRN3'),
         'name': 'OsmosisEngine',
         'ref': ('ChemOsmosis.traits.ChemOsmosisSim' satisfies _StdLearningChemistryOsmosisOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053769KJG4W72KN6QE047'),
         'name': 'OsmosisPage',
         'path': '/chem/osmosis',
         'traits': [

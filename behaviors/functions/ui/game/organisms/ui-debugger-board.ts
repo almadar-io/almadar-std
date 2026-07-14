@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-debugger-board';
@@ -432,7 +431,6 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
           {
             'description': 'completeEvent prop',
             'event': 'COMPLETE',
-            'eventId': asEventId('evt_01KXG04X7S7JH820PKCB2FNX7J'),
             'payloadSchema': [
               {
                 'name': 'success',
@@ -451,7 +449,6 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
           {
             'description': 'Flip the flag on a reviewed code line',
             'event': 'TOGGLE_FLAG',
-            'eventId': asEventId('evt_01KXG04X7SKBJV51X38GF8YNFR'),
             'payloadSchema': [
               {
                 'name': 'lineId',
@@ -465,7 +462,6 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
           {
             'description': 'Submit the current flag set for scoring',
             'event': 'CHECK',
-            'eventId': asEventId('evt_01KXG04X7SJSEZYZQVRJNP9FYP'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -478,7 +474,6 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
           {
             'description': 'Reset the puzzle and play again',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04X7SSVQSX36HNYPMTQT3'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -501,9 +496,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04X7N0Y86G39P41PH02EP'),
         'linkedEntity': 'DebuggerBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04X7NRG9K8JEYQK05FAGN'),
         'name': 'DebuggerBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -1497,13 +1490,11 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04X7S3DCEHA9DP29RV6HY'),
         'name': 'DebuggerBoardPage',
         'path': '/debugger-board',
         'traits': [
           {
             'ref': 'DebuggerBoardRender',
-            'refId': asTraitId('trt_01KXG04X7N0Y86G39P41PH02EP'),
           },
         ],
       } satisfies Page,

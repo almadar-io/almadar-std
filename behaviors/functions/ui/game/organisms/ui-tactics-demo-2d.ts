@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tactics-demo-2d';
@@ -1089,7 +1088,6 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZND3BZV3J851BYAVEKK'),
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
@@ -1101,7 +1099,6 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZND3BZV3J851BYAVEKK'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
@@ -1113,7 +1110,6 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZND3BZV3J851BYAVEKK'),
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
@@ -1129,7 +1125,6 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZND3BZV3J851BYAVEKK'),
         'name': 'ScoreKeeper',
         'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
@@ -1174,14 +1169,12 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZND3BZV3J851BYAVEKK'),
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04ZNDM4S7X5TJ8E9TA39C'),
         'name': 'TacticsDemo2DPage',
         'path': '/tactics-demo-2d',
         'traits': [

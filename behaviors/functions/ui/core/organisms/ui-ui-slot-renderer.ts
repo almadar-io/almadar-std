@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-ui-slot-renderer';
@@ -224,9 +223,7 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04T8Y0PCR5ZWMSKZ8MPSS'),
         'linkedEntity': 'UiSlotRendererItem',
-        'linkedEntityId': asEntityId('ent_01KXG04T8YZXJRBMSTZJ82JFBZ'),
         'name': 'UiSlotRendererRender',
         'scope': 'instance',
         'stateMachine': {
@@ -276,13 +273,11 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04T91SDQ0E89CNS4NZF7E'),
         'name': 'UiSlotRendererPage',
         'path': '/ui-slot-renderer',
         'traits': [
           {
             'ref': 'UiSlotRendererRender',
-            'refId': asTraitId('trt_01KXG04T8Y0PCR5ZWMSKZ8MPSS'),
           },
         ],
       } satisfies Page,

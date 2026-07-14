@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-algorithms';
@@ -306,14 +305,12 @@ export function stdLearningAlgorithmsAstargraphOrbital(params: StdLearningAlgori
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329NW4F9JM739GCXRWX'),
         'name': 'AstargraphEngine',
         'ref': ('Astargraph.traits.AstarSim' satisfies _StdLearningAlgorithmsAstargraphOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329R6ZS1Z477NDBYEVG'),
         'name': 'AstargraphPage',
         'path': '/algorithms/astargraph',
         'traits': [
@@ -579,14 +576,12 @@ export function stdLearningAlgorithmsAstargridOrbital(params: StdLearningAlgorit
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329M1XC5JZP92XKFGT2'),
         'name': 'AstargridEngine',
         'ref': ('Astargrid.traits.AstarGridSim' satisfies _StdLearningAlgorithmsAstargridOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329TNB52Y9VB1WB4VFM'),
         'name': 'AstargridPage',
         'path': '/algorithms/astargrid',
         'traits': [
@@ -881,14 +876,12 @@ export function stdLearningAlgorithmsBfsOrbital(params: StdLearningAlgorithmsBfs
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329XJ1SXH8WTAWJYQGY'),
         'name': 'BfsEngine',
         'ref': ('Bfs.traits.BfsSim' satisfies _StdLearningAlgorithmsBfsOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053293Z9BK426SJFE40TW'),
         'name': 'BfsPage',
         'path': '/algorithms/bfs',
         'traits': [
@@ -1144,14 +1137,12 @@ export function stdLearningAlgorithmsBinarysearchOrbital(params: StdLearningAlgo
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329KKMSKYMC0YH2E3TY'),
         'name': 'BinarysearchEngine',
         'ref': ('Binarysearch.traits.BinarySearchSim' satisfies _StdLearningAlgorithmsBinarysearchOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053298F2TKE403KQRFE8N'),
         'name': 'BinarysearchPage',
         'path': '/algorithms/binarysearch',
         'traits': [
@@ -1373,14 +1364,12 @@ export function stdLearningAlgorithmsBubblesortOrbital(params: StdLearningAlgori
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329S5B5FGQ6FKJV1KMH'),
         'name': 'BubblesortEngine',
         'ref': ('Bubblesort.traits.BubbleSortSim' satisfies _StdLearningAlgorithmsBubblesortOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053297487MXK2XYGWHBK3'),
         'name': 'BubblesortPage',
         'path': '/algorithms/bubblesort',
         'traits': [
@@ -1675,14 +1664,12 @@ export function stdLearningAlgorithmsDfsOrbital(params: StdLearningAlgorithmsDfs
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329GYQS8VGKE4BXAVMY'),
         'name': 'DfsEngine',
         'ref': ('Dfs.traits.DfsSim' satisfies _StdLearningAlgorithmsDfsOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053295NPXTC742D6DT5VX'),
         'name': 'DfsPage',
         'path': '/algorithms/dfs',
         'traits': [
@@ -2009,14 +1996,12 @@ export function stdLearningAlgorithmsDijkstraOrbital(params: StdLearningAlgorith
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329435VNVDHMFVX9VDN'),
         'name': 'DijkstraEngine',
         'ref': ('Dijkstra.traits.DijkstraSim' satisfies _StdLearningAlgorithmsDijkstraOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329QSF3EQ2HSMGES77K'),
         'name': 'DijkstraPage',
         'path': '/algorithms/dijkstra',
         'traits': [
@@ -2276,14 +2261,12 @@ export function stdLearningAlgorithmsFloodfillOrbital(params: StdLearningAlgorit
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG053298YE97WJSXHWR9K2S'),
         'name': 'FloodfillEngine',
         'ref': ('Floodfill.traits.FloodFillSim' satisfies _StdLearningAlgorithmsFloodfillOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053296A8NR137YSVD656N'),
         'name': 'FloodfillPage',
         'path': '/algorithms/floodfill',
         'traits': [
@@ -2495,14 +2478,12 @@ export function stdLearningAlgorithmsGameoflifeOrbital(params: StdLearningAlgori
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329HW70AXWFPE7WKREK'),
         'name': 'GameoflifeEngine',
         'ref': ('Gameoflife.traits.GameOfLifeSim' satisfies _StdLearningAlgorithmsGameoflifeOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329V5GJNWY1FVHG0YAR'),
         'name': 'GameoflifePage',
         'path': '/algorithms/gameoflife',
         'traits': [
@@ -2757,14 +2738,12 @@ export function stdLearningAlgorithmsGridbfsOrbital(params: StdLearningAlgorithm
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG053299ZMHN1ZE92NA8VKP'),
         'name': 'GridbfsEngine',
         'ref': ('Gridbfs.traits.GridBfsSim' satisfies _StdLearningAlgorithmsGridbfsOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329M39BPMP6QG61N4KE'),
         'name': 'GridbfsPage',
         'path': '/algorithms/gridbfs',
         'traits': [
@@ -3036,14 +3015,12 @@ export function stdLearningAlgorithmsHeapsortOrbital(params: StdLearningAlgorith
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329PVH6WS32QXY7SJPK'),
         'name': 'HeapsortEngine',
         'ref': ('Heapsort.traits.HeapSortSim' satisfies _StdLearningAlgorithmsHeapsortOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329DQXERGSXQBAR8JTF'),
         'name': 'HeapsortPage',
         'path': '/algorithms/heapsort',
         'traits': [
@@ -3265,14 +3242,12 @@ export function stdLearningAlgorithmsInsertionsortOrbital(params: StdLearningAlg
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG053299WTFNGWRSQY2QHC2'),
         'name': 'InsertionsortEngine',
         'ref': ('Insertionsort.traits.InsertionSortSim' satisfies _StdLearningAlgorithmsInsertionsortOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329GDYTC6ACH1Z0CMGE'),
         'name': 'InsertionsortPage',
         'path': '/algorithms/insertionsort',
         'traits': [
@@ -3523,14 +3498,12 @@ export function stdLearningAlgorithmsMazegenOrbital(params: StdLearningAlgorithm
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329JG8SC01R2NZ95XP6'),
         'name': 'MazegenEngine',
         'ref': ('Mazegen.traits.MazeGenSim' satisfies _StdLearningAlgorithmsMazegenOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG053292DGXEMBSMQG10A4H'),
         'name': 'MazegenPage',
         'path': '/algorithms/mazegen',
         'traits': [
@@ -3846,14 +3819,12 @@ export function stdLearningAlgorithmsMergesortOrbital(params: StdLearningAlgorit
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329B34YEGASN22PKQZ5'),
         'name': 'MergesortEngine',
         'ref': ('Mergesort.traits.MergeSortSim' satisfies _StdLearningAlgorithmsMergesortOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329WVM9NHZ773QFGJCJ'),
         'name': 'MergesortPage',
         'path': '/algorithms/mergesort',
         'traits': [
@@ -4180,14 +4151,12 @@ export function stdLearningAlgorithmsMstOrbital(params: StdLearningAlgorithmsMst
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329N40CCC3EN4G5YPR5'),
         'name': 'MstEngine',
         'ref': ('Mst.traits.MstSim' satisfies _StdLearningAlgorithmsMstOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329XNTCGWWAKPV8YKCA'),
         'name': 'MstPage',
         'path': '/algorithms/mst',
         'traits': [
@@ -4478,14 +4447,12 @@ export function stdLearningAlgorithmsQuicksortOrbital(params: StdLearningAlgorit
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329V70BWSAX7PZNC2W5'),
         'name': 'QuicksortEngine',
         'ref': ('Quicksort.traits.QuickSortSim' satisfies _StdLearningAlgorithmsQuicksortOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329CR3KQ0ZVZDCGH9G4'),
         'name': 'QuicksortPage',
         'path': '/algorithms/quicksort',
         'traits': [
@@ -4712,14 +4679,12 @@ export function stdLearningAlgorithmsSelectionsortOrbital(params: StdLearningAlg
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG053298RH888SANJ72XPJ2'),
         'name': 'SelectionsortEngine',
         'ref': ('Selectionsort.traits.SelectionSortSim' satisfies _StdLearningAlgorithmsSelectionsortOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329V5EYKM7Y1AY4K8KX'),
         'name': 'SelectionsortPage',
         'path': '/algorithms/selectionsort',
         'traits': [
@@ -4975,14 +4940,12 @@ export function stdLearningAlgorithmsSlidingwindowOrbital(params: StdLearningAlg
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329F9458X8VSSCMYYJE'),
         'name': 'SlidingwindowEngine',
         'ref': ('Slidingwindow.traits.SlidingWindowSim' satisfies _StdLearningAlgorithmsSlidingwindowOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329B5P4F6XA58YP67P1'),
         'name': 'SlidingwindowPage',
         'path': '/algorithms/slidingwindow',
         'traits': [
@@ -5263,14 +5226,12 @@ export function stdLearningAlgorithmsToposortOrbital(params: StdLearningAlgorith
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329EFWZ8KM2V04HFSR9'),
         'name': 'ToposortEngine',
         'ref': ('Toposort.traits.ToposortSim' satisfies _StdLearningAlgorithmsToposortOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329WP5GYAC64835NT9M'),
         'name': 'ToposortPage',
         'path': '/algorithms/toposort',
         'traits': [
@@ -5521,14 +5482,12 @@ export function stdLearningAlgorithmsTwopointerOrbital(params: StdLearningAlgori
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG05329MY2HYP3HDP96HJ6H'),
         'name': 'TwopointerEngine',
         'ref': ('Twopointer.traits.TwoPointerSim' satisfies _StdLearningAlgorithmsTwopointerOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG05329YY8XFEPBTFMXCABW'),
         'name': 'TwopointerPage',
         'path': '/algorithms/twopointer',
         'traits': [

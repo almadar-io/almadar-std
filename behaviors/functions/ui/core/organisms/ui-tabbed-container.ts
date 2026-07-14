@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tabbed-container';
@@ -236,7 +235,6 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
           {
             'description': 'Callback when tab changes',
             'event': '@config.onTabChange',
-            'eventId': asEventId('evt_01KXG04T45ABQXZ1JSDXS2CCNQ'),
             'payloadSchema': [
               {
                 'name': 'tabId',
@@ -252,9 +250,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04T43WPV68FXFKXXZ4KXB'),
         'linkedEntity': 'TabbedContainerItem',
-        'linkedEntityId': asEntityId('ent_01KXG04T43X575SS6JFXH5S5BZ'),
         'name': 'TabbedContainerRender',
         'scope': 'instance',
         'stateMachine': {
@@ -309,13 +305,11 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04T455XVD8FEA463H7W6S'),
         'name': 'TabbedContainerPage',
         'path': '/tabbed-container',
         'traits': [
           {
             'ref': 'TabbedContainerRender',
-            'refId': asTraitId('trt_01KXG04T43WPV68FXFKXXZ4KXB'),
           },
         ],
       } satisfies Page,

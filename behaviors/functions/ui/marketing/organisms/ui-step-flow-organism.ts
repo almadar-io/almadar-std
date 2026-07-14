@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-step-flow-organism';
@@ -313,7 +312,6 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
           {
             'description': 'StepFlowOrganism rows finished loading; payload.data holds the collection.',
             'event': 'StepFlowOrganismLoaded',
-            'eventId': asEventId('evt_01KXG055C49H6FKS2GHFXV39NH'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -330,9 +328,7 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG055C336KJTBGBNPA8HD77'),
         'linkedEntity': 'StepFlowOrganismItem',
-        'linkedEntityId': asEntityId('ent_01KXG055C3FXVA5Q5SXJ8SNKRF'),
         'name': 'StepFlowOrganismRender',
         'scope': 'instance',
         'stateMachine': {
@@ -437,13 +433,11 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG055C4EVRC2VE500WG7Z04'),
         'name': 'StepFlowOrganismPage',
         'path': '/step-flow-organism',
         'traits': [
           {
             'ref': 'StepFlowOrganismRender',
-            'refId': asTraitId('trt_01KXG055C336KJTBGBNPA8HD77'),
           },
         ],
       } satisfies Page,

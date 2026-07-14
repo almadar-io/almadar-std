@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-state-architect-board';
@@ -576,7 +575,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
           {
             'description': 'Player clicks a state node; FSM either selects it, cancels a pending connect, or wires a transition from the pending source.',
             'event': 'SELECT_NODE',
-            'eventId': asEventId('evt_01KXG04ZKRVMNCR33FSV66V6YY'),
             'payloadSchema': [
               {
                 'name': 'stateId',
@@ -590,7 +588,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
           {
             'description': 'Player begins wiring a transition from the currently selected state node.',
             'event': 'START_CONNECT',
-            'eventId': asEventId('evt_01KXG04ZKR3AP9F76R26KZG0VP'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -603,7 +600,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
           {
             'description': 'Player removes a transition, identified by its (from, to, event) triple.',
             'event': 'REMOVE_TRANSITION',
-            'eventId': asEventId('evt_01KXG04ZKRAPRS0MGMRHYVGPR1'),
             'payloadSchema': [
               {
                 'name': 'from',
@@ -627,7 +623,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
           {
             'description': 'Player runs the test suite; the FSM simulates each test case through the transition graph and scores passes.',
             'event': 'RUN_TESTS',
-            'eventId': asEventId('evt_01KXG04ZKRYVJ7FBQY9A3H3JA3'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -640,7 +635,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
           {
             'description': 'Reset the puzzle back to the menu.',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04ZKRDEXS54Y6JJK03S0M'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -674,9 +668,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04ZKN862T1S61YFCBAWVA'),
         'linkedEntity': 'StateArchitectBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04ZKNR13NRD2VW9QV4PVZ'),
         'name': 'StateArchitectBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -3872,13 +3864,11 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04ZKRPP7HK06VTPAK2MQJ'),
         'name': 'StateArchitectBoardPage',
         'path': '/state-architect-board',
         'traits': [
           {
             'ref': 'StateArchitectBoardRender',
-            'refId': asTraitId('trt_01KXG04ZKN862T1S61YFCBAWVA'),
           },
         ],
       } satisfies Page,

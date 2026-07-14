@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-topdown-rts-board';
@@ -1403,7 +1402,6 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZZ5SX0MBP8BY8JYMC2W'),
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1415,7 +1413,6 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZZ5SX0MBP8BY8JYMC2W'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1427,7 +1424,6 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZZ5SX0MBP8BY8JYMC2W'),
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1451,7 +1447,6 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZZ5SX0MBP8BY8JYMC2W'),
         'name': 'ScoreKeeper',
         'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1495,7 +1490,6 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZZ5SX0MBP8BY8JYMC2W'),
         'name': 'Producer',
         'ref': ('Production.traits.Producer' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1760,14 +1754,12 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZZ5SX0MBP8BY8JYMC2W'),
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04ZZ5CMFTZ9C0BY65F263'),
         'name': 'TopdownRtsBoardPage',
         'path': '/topdown-rts-board',
         'traits': [

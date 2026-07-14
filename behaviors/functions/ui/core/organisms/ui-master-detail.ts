@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-master-detail';
@@ -289,7 +288,6 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
           {
             'description': 'MasterDetail rows finished loading; payload.data holds the collection.',
             'event': 'MasterDetailLoaded',
-            'eventId': asEventId('evt_01KXG04SSGZSRCAJ2K416B723C'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -306,9 +304,7 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04SSDTR7D2BFFF40YYJ3C'),
         'linkedEntity': 'MasterDetailItem',
-        'linkedEntityId': asEntityId('ent_01KXG04SSD2RWS8B4Q3XSKSMAN'),
         'name': 'MasterDetailRender',
         'scope': 'instance',
         'stateMachine': {
@@ -411,13 +407,11 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04SSGGA2NTKH3WHPRTZN7'),
         'name': 'MasterDetailPage',
         'path': '/master-detail',
         'traits': [
           {
             'ref': 'MasterDetailRender',
-            'refId': asTraitId('trt_01KXG04SSDTR7D2BFFF40YYJ3C'),
           },
         ],
       } satisfies Page,

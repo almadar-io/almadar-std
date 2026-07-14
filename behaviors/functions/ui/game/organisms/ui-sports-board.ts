@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-sports-board';
@@ -2981,7 +2980,6 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
           {
             'description': 'Emits UI:{tileClickEvent} with { x, y } on tile click',
             'event': 'TILE_CLICK',
-            'eventId': asEventId('evt_01KXG04ZHJWXBF0VWZNEPC204W'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -3000,7 +2998,6 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
             'event': 'UNIT_CLICK',
-            'eventId': asEventId('evt_01KXG04ZHJPQQSEWHB4PK72Z71'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -3014,7 +3011,6 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
           {
             'description': 'Fired when a goal is scored; team is \'player\' or \'enemy\'',
             'event': 'GOAL',
-            'eventId': asEventId('evt_01KXG04ZHJ2CZ7KCATJDGESJWR'),
             'payloadSchema': [
               {
                 'name': 'team',
@@ -3028,7 +3024,6 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
           {
             'description': 'Resets the match to initial state',
             'event': 'RESET',
-            'eventId': asEventId('evt_01KXG04ZHJQDMT462S19HR2DFX'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3052,9 +3047,7 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04ZHGTCKYBMEMRPACPGBB'),
         'linkedEntity': 'SportsBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04ZHGR2XAKAYCB3KR1DPC'),
         'name': 'SportsBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -6650,13 +6643,11 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04ZHJDGGS261SMA3X1CEP'),
         'name': 'SportsBoardPage',
         'path': '/sports-board',
         'traits': [
           {
             'ref': 'SportsBoardRender',
-            'refId': asTraitId('trt_01KXG04ZHGTCKYBMEMRPACPGBB'),
           },
         ],
       } satisfies Page,

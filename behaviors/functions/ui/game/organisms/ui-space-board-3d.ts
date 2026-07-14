@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-space-board-3d';
@@ -543,7 +542,6 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04Z7K5CHGJY38G4HEDKDY'),
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
@@ -555,7 +553,6 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04Z7K5CHGJY38G4HEDKDY'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
@@ -567,7 +564,6 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04Z7K5CHGJY38G4HEDKDY'),
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
@@ -918,14 +914,12 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04Z7K5CHGJY38G4HEDKDY'),
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04Z7KS6BACETTD3JRYP2K'),
         'name': 'SpaceBoard3DPage',
         'path': '/space-board-3d',
         'traits': [

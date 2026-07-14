@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-hex-strategy-board';
@@ -2437,7 +2436,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XSJ1XMQ94BEZ52NPGMT'),
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
@@ -2449,7 +2447,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XSJ1XMQ94BEZ52NPGMT'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
@@ -2461,7 +2458,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XSJ1XMQ94BEZ52NPGMT'),
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
@@ -2485,7 +2481,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XSJ1XMQ94BEZ52NPGMT'),
         'name': 'ScoreKeeper',
         'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
@@ -2773,14 +2768,12 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XSJ1XMQ94BEZ52NPGMT'),
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04XSJFP6VXGTK345JG0PE'),
         'name': 'HexStrategyBoardPage',
         'path': '/hex-strategy-board',
         'traits': [

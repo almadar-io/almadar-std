@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-detail-panel';
@@ -559,7 +558,6 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
           {
             'description': 'DetailPanel rows finished loading; payload.data holds the collection.',
             'event': 'DetailPanelLoaded',
-            'eventId': asEventId('evt_01KXG04SDBVHXJR39FQKJ2R4F9'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -576,9 +574,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04SD9CXEV12B2DCF8KYGK'),
         'linkedEntity': 'DetailPanelItem',
-        'linkedEntityId': asEntityId('ent_01KXG04SD9ADPQX22B0HZPWPTA'),
         'name': 'DetailPanelRender',
         'scope': 'instance',
         'stateMachine': {
@@ -707,13 +703,11 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04SDBG0XZ8KC703B163FS'),
         'name': 'DetailPanelPage',
         'path': '/detail-panel',
         'traits': [
           {
             'ref': 'DetailPanelRender',
-            'refId': asTraitId('trt_01KXG04SD9CXEV12B2DCF8KYGK'),
           },
         ],
       } satisfies Page,

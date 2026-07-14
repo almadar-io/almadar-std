@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-math';
@@ -210,14 +209,12 @@ export function stdLearningMathVectorAdditionOrbital(params: StdLearningMathVect
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG0539S49CWZ1QWAJWC3DQ9'),
         'name': 'VectorEngine',
         'ref': ('MathVectors.traits.MathVectorsSim' satisfies _StdLearningMathVectorAdditionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG0539SYAVS1E0SQNXTM5TZ'),
         'name': 'VectorAdditionPage',
         'path': '/math/vectors',
         'traits': [
@@ -530,14 +527,12 @@ export function stdLearningMathLinearSystemsOrbital(params: StdLearningMathLinea
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG0539SD2N5JK564ZE1RTQX'),
         'name': 'LinearEngine',
         'ref': ('MathLinear.traits.MathLinearSim' satisfies _StdLearningMathLinearSystemsOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG0539SPY1MH8CN4QEGTPQZ'),
         'name': 'LinearSystemsPage',
         'path': '/math/linear',
         'traits': [
@@ -965,14 +960,12 @@ export function stdLearningMathNumberLineOrbital(params: StdLearningMathNumberLi
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG0539S73K02GWYXJJXF0HV'),
         'name': 'NumberlineEngine',
         'ref': ('MathNumberline.traits.MathNumberlineSim' satisfies _StdLearningMathNumberLineOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG0539S0FJQ72ZKXNH986ZD'),
         'name': 'NumberLinePage',
         'path': '/math/numberline',
         'traits': [
@@ -1359,14 +1352,12 @@ export function stdLearningMathArithmeticSequenceOrbital(params: StdLearningMath
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG0539S0DFK7F62R1SKZDGF'),
         'name': 'SequenceEngine',
         'ref': ('MathSequence.traits.MathSequenceSim' satisfies _StdLearningMathArithmeticSequenceOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG0539SY1BW19H3JTFD8589'),
         'name': 'ArithmeticSequencePage',
         'path': '/math/sequence',
         'traits': [
@@ -1630,14 +1621,12 @@ export function stdLearningMathUnitCircleOrbital(params: StdLearningMathUnitCirc
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG0539SCRHSTP4G9FSSBJC6'),
         'name': 'UnitCircleEngine',
         'ref': ('MathUnitCircle.traits.MathUnitCircleSim' satisfies _StdLearningMathUnitCircleOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG0539S1D25BTZE8J5S4N1G'),
         'name': 'UnitCirclePage',
         'path': '/math/unitcircle',
         'traits': [
@@ -1862,14 +1851,12 @@ export function stdLearningMathSineWaveOrbital(params: StdLearningMathSineWaveOr
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG0539S370KWD4G8YHWGJBM'),
         'name': 'SineWaveEngine',
         'ref': ('MathSineWave.traits.MathSineWaveSim' satisfies _StdLearningMathSineWaveOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG0539S2RCMYMFX9TEV16NK'),
         'name': 'SineWavePage',
         'path': '/math/sinewave',
         'traits': [

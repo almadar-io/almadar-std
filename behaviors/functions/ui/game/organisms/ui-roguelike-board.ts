@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-roguelike-board';
@@ -7309,7 +7308,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           {
             'description': 'Step north (keyboard keyMap or d-pad directionEvents)',
             'event': 'MOVE_UP',
-            'eventId': asEventId('evt_01KXG04YZM2DYM9437026XWHHF'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -7322,7 +7320,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           {
             'description': 'Step south (keyboard keyMap or d-pad directionEvents)',
             'event': 'MOVE_DOWN',
-            'eventId': asEventId('evt_01KXG04YZMD9MJEQ5C1VV1N6NA'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -7335,7 +7332,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           {
             'description': 'Step west (keyboard keyMap or d-pad directionEvents)',
             'event': 'MOVE_LEFT',
-            'eventId': asEventId('evt_01KXG04YZM5F7988NSH34F1BMZ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -7348,7 +7344,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           {
             'description': 'Step east (keyboard keyMap or d-pad directionEvents)',
             'event': 'MOVE_RIGHT',
-            'eventId': asEventId('evt_01KXG04YZMXXDZFPYMCBBV86F4'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -7361,7 +7356,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           {
             'description': 'Resets the dungeon to depth 1',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04YZM0R4MTBWF18P3GZ4M'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -7374,7 +7368,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           {
             'description': 'Emitted when result transitions to won or lost',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG04YZMZCHEX0KGXQHNF64S'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -7387,7 +7380,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           {
             'description': 'Player clicked a tile (fires selection clear)',
             'event': 'TILE_CLICK',
-            'eventId': asEventId('evt_01KXG04YZMTKMQ4KK422JTPZGY'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -7406,7 +7398,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           {
             'description': 'Player clicked a unit (sets selectedUnitId)',
             'event': 'UNIT_CLICK',
-            'eventId': asEventId('evt_01KXG04YZMDE7PA41WNB9Z5QME'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -7447,9 +7438,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04YZHHAHXG436DZBXSPEX'),
         'linkedEntity': 'RoguelikeBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04YZH85KPB58RQZXEAJ3S'),
         'name': 'RoguelikeBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -15739,13 +15728,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04YZMB1CKVPGG4CZV3BH0'),
         'name': 'RoguelikeBoardPage',
         'path': '/roguelike-board',
         'traits': [
           {
             'ref': 'RoguelikeBoardRender',
-            'refId': asTraitId('trt_01KXG04YZHHAHXG436DZBXSPEX'),
           },
         ],
       } satisfies Page,

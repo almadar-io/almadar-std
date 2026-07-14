@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-sequencer-board';
@@ -885,7 +884,6 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           {
             'description': 'slotDropEvent prop — emitted when the player drops an action into a slot',
             'event': 'PLACE',
-            'eventId': asEventId('evt_01KXG04Z191ZYSKH1RE7DQNC07'),
             'payloadSchema': [
               {
                 'name': 'slotNumber',
@@ -904,7 +902,6 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           {
             'description': 'slotRemoveEvent prop — emitted when the player clears a slot',
             'event': 'REMOVE',
-            'eventId': asEventId('evt_01KXG04Z19NRRDNEQCR5NAV7VD'),
             'payloadSchema': [
               {
                 'name': 'slotNumber',
@@ -918,7 +915,6 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           {
             'description': 'playEvent prop — starts step-by-step playback of the current sequence',
             'event': 'PLAY',
-            'eventId': asEventId('evt_01KXG04Z1984DGBJ5JM3A4DKQ5'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -931,7 +927,6 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           {
             'description': 'checkEvent prop — submits the sequence for validation',
             'event': 'CHECK',
-            'eventId': asEventId('evt_01KXG04Z19TG2MYYD0ZXGJ7FT8'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -944,7 +939,6 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           {
             'description': 'playAgainEvent prop — reset slots and restart',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04Z19YD7CMT0K71RXZJVY'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -976,9 +970,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04Z163H7B5YF693W7WQF8'),
         'linkedEntity': 'SequencerBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04Z16A4JABR7RY4ZHMN7M'),
         'name': 'SequencerBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -2355,13 +2347,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04Z19ZWK4D6BVYHRT8WYH'),
         'name': 'SequencerBoardPage',
         'path': '/sequencer-board',
         'traits': [
           {
             'ref': 'SequencerBoardRender',
-            'refId': asTraitId('trt_01KXG04Z163H7B5YF693W7WQF8'),
           },
         ],
       } satisfies Page,

@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-pinball-board';
@@ -940,7 +939,6 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
           {
             'description': 'Left flipper flick (KeyZ / ArrowLeft / Left Flipper button)',
             'event': 'LEFT_FLIPPER',
-            'eventId': asEventId('evt_01KXG04YDKTQKX0RD5YJQRDAF4'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -953,7 +951,6 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
           {
             'description': 'Right flipper flick (KeySlash / ArrowRight / Right Flipper button)',
             'event': 'RIGHT_FLIPPER',
-            'eventId': asEventId('evt_01KXG04YDKND5FKGG0AV1NXKV9'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -966,7 +963,6 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
           {
             'description': 'Launches the ball from the plunger lane (Space / Launch button)',
             'event': 'LAUNCH',
-            'eventId': asEventId('evt_01KXG04YDK8BZSZRTR6R0KG102'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -979,7 +975,6 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
           {
             'description': 'Emits when the last ball drains',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG04YDKDV8T404TMNVKE84Y'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -992,7 +987,6 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
           {
             'description': 'Emits UI:{playAgainEvent} on reset',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04YDKPVWBD3VXX60C3KQN'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1005,7 +999,6 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
           {
             'description': 'Emits when the audio toggle is pressed',
             'event': 'TOGGLE_AUDIO',
-            'eventId': asEventId('evt_01KXG04YDKTSGCYRVCRXV4VYJK'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1031,9 +1024,7 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04YDH904SM88FPC8KPFAW'),
         'linkedEntity': 'PinballBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04YDG9KNFPJMN6DDFE9XF'),
         'name': 'PinballBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -4314,13 +4305,11 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04YDKJN32FBHXBWT70SDG'),
         'name': 'PinballBoardPage',
         'path': '/pinball-board',
         'traits': [
           {
             'ref': 'PinballBoardRender',
-            'refId': asTraitId('trt_01KXG04YDH904SM88FPC8KPFAW'),
           },
         ],
       } satisfies Page,

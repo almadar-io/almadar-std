@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-graveyard-board-3d';
@@ -561,7 +560,6 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XENG063S6X8G7T1M4RX'),
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
@@ -573,7 +571,6 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XENG063S6X8G7T1M4RX'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
@@ -585,7 +582,6 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XENG063S6X8G7T1M4RX'),
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
@@ -835,14 +831,12 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04XENG063S6X8G7T1M4RX'),
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04XEN7P1VZ5XZ7BKZST3T'),
         'name': 'GraveyardBoard3DPage',
         'path': '/graveyard-board-3d',
         'traits': [

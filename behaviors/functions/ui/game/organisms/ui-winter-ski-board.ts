@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-winter-ski-board';
@@ -4636,7 +4635,6 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
           {
             'description': 'Steer the skier one cell left (keyboard keyMap or d-pad)',
             'event': 'STEER_LEFT',
-            'eventId': asEventId('evt_01KXG050AY8TD3XB7YEYKE3Z5X'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4649,7 +4647,6 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
           {
             'description': 'Steer the skier one cell right (keyboard keyMap or d-pad)',
             'event': 'STEER_RIGHT',
-            'eventId': asEventId('evt_01KXG050AYAEBDBQ2Y47867BBS'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4662,7 +4659,6 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
           {
             'description': 'Fires when the run ends in defeat or three runs are completed.',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG050AYNACV7SDKF6C8B4HC'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -4675,7 +4671,6 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset.',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG050AYA8YW0YTPG3JZZRA0'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4703,9 +4698,7 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG050AWYFS7AGW4BMW4M31Q'),
         'linkedEntity': 'WinterSkiBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG050AWZC49HGEN5EYA53N2'),
         'name': 'WinterSkiBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -8876,13 +8869,11 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG050AYBWK7RRQ3BYE8RZEG'),
         'name': 'WinterSkiBoardPage',
         'path': '/winter-ski-board',
         'traits': [
           {
             'ref': 'WinterSkiBoardRender',
-            'refId': asTraitId('trt_01KXG050AWYFS7AGW4BMW4M31Q'),
           },
         ],
       } satisfies Page,

@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tanks-board';
@@ -1389,7 +1388,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZRA218F7ST1G2EA78FF'),
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
@@ -1401,7 +1399,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZRA218F7ST1G2EA78FF'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
@@ -1413,7 +1410,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZRA218F7ST1G2EA78FF'),
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
@@ -1437,7 +1433,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZRA218F7ST1G2EA78FF'),
         'name': 'ScoreKeeper',
         'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
@@ -1724,14 +1719,12 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG04ZRA218F7ST1G2EA78FF'),
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTanksBoardTanksBoardOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04ZRACHY56AMH9TJAV6F8'),
         'name': 'TanksBoardPage',
         'path': '/tanks-board',
         'traits': [

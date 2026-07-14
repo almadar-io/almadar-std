@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-fishing-board';
@@ -2960,7 +2959,6 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
           {
             'description': 'Emitted when the catch target is reached and the session ends.',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG04XD5RV434SGSVJM11QXA'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -2973,7 +2971,6 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
           {
             'description': 'Emits UI:CAST when the cast button is pressed.',
             'event': 'CAST',
-            'eventId': asEventId('evt_01KXG04XD50KNZAYPF99RNX228'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2986,7 +2983,6 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
           {
             'description': 'Emits UI:REEL when the reel button is pressed.',
             'event': 'REEL',
-            'eventId': asEventId('evt_01KXG04XD5QWD1P99ZQ57SA1A3'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2999,7 +2995,6 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
           {
             'description': 'Emits UI:PLAY_AGAIN from the gameover menu.',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04XD5NQ9KPVBP2TT7WXAC'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3023,9 +3018,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04XD235GKN45SEBSJ3968'),
         'linkedEntity': 'FishingBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04XD2462D03PJKPY4N6SX'),
         'name': 'FishingBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -7496,13 +7489,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04XD5EHBF7A26QM2THTBS'),
         'name': 'FishingBoardPage',
         'path': '/fishing-board',
         'traits': [
           {
             'ref': 'FishingBoardRender',
-            'refId': asTraitId('trt_01KXG04XD235GKN45SEBSJ3968'),
           },
         ],
       } satisfies Page,

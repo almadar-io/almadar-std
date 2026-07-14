@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-boardgame-board';
@@ -2777,7 +2776,6 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
           {
             'description': 'Emits UI:ROLL_DICE when the roll-dice button (or Space) is pressed.',
             'event': 'ROLL_DICE',
-            'eventId': asEventId('evt_01KXG04WPPWNCXRVJG5M7SF5Z1'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2790,7 +2788,6 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
           {
             'description': 'Emitted when a token reaches the final track cell.',
             'event': 'GAME_END',
-            'eventId': asEventId('evt_01KXG04WPP7GNRRBCPGD08WCFG'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -2803,7 +2800,6 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
           {
             'description': 'Emits UI:PLAY_AGAIN from the gameover menu.',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04WPPQ3EVRCWCJERZGYWP'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2833,9 +2829,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04WPJ6YENC3PQ4VE3BCZD'),
         'linkedEntity': 'BoardgameBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04WPJ1WN2K6W3J5PVNFAY'),
         'name': 'BoardgameBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -5807,13 +5801,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04WPP6Z7NH9GYM48Y97N7'),
         'name': 'BoardgameBoardPage',
         'path': '/boardgame-board',
         'traits': [
           {
             'ref': 'BoardgameBoardRender',
-            'refId': asTraitId('trt_01KXG04WPJ6YENC3PQ4VE3BCZD'),
           },
         ],
       } satisfies Page,

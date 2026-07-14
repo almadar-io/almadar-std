@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-world-map-board';
@@ -6670,7 +6669,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG050D6RF9BSNCDEFMT8RKF'),
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
@@ -6682,7 +6680,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG050D6RF9BSNCDEFMT8RKF'),
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
@@ -6702,7 +6699,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG050D6RF9BSNCDEFMT8RKF'),
         'name': 'GoldAuthority',
         'ref': ('Frame.traits.GoldAuthority' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
@@ -7030,14 +7026,12 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
           },
         },
         'linkedEntity': canonicalName,
-        'linkedEntityId': asEntityId('ent_01KXG050D6RF9BSNCDEFMT8RKF'),
         'name': 'Hero',
         'ref': ('Frame.traits.WorldMapIntent' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG050D658S58KG8B07FWHFA'),
         'name': 'WorldMapBoardPage',
         'path': '/world-map-board',
         'traits': [

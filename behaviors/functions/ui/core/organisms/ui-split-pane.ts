@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-split-pane';
@@ -215,9 +214,7 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04SZQZQTYV05GPN6HEPVA'),
         'linkedEntity': 'SplitPaneItem',
-        'linkedEntityId': asEntityId('ent_01KXG04SZQ7G8R7PH46DZWE8P9'),
         'name': 'SplitPaneRender',
         'scope': 'instance',
         'stateMachine': {
@@ -263,13 +260,11 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04SZSKHYVCJ4N9ZTGHV1R'),
         'name': 'SplitPanePage',
         'path': '/split-pane',
         'traits': [
           {
             'ref': 'SplitPaneRender',
-            'refId': asTraitId('trt_01KXG04SZQZQTYV05GPN6HEPVA'),
           },
         ],
       } satisfies Page,

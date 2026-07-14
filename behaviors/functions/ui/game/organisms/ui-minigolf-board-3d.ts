@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-minigolf-board-3d';
@@ -1653,7 +1652,6 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
           {
             'description': 'Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball one adjacent cell toward the target tile',
             'event': 'TILE_CLICK',
-            'eventId': asEventId('evt_01KXG04Y4F1Y1PJ05YXTVF97AP'),
             'payloadSchema': [
               {
                 'name': 'tileId',
@@ -1675,7 +1673,6 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId, x, z } on ball click',
             'event': 'UNIT_CLICK',
-            'eventId': asEventId('evt_01KXG04Y4FYRSS6E88ER4PTCWM'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -1697,7 +1694,6 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
           {
             'description': 'Emits UI:{cancelEvent} with {} on cancel / deselect',
             'event': 'CANCEL',
-            'eventId': asEventId('evt_01KXG04Y4FGK9FNT91KFT46Z1H'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1710,7 +1706,6 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
-            'eventId': asEventId('evt_01KXG04Y4FSFJDD9R49BHT1TJ9'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1737,9 +1732,7 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04Y4DENXWJDVQERNTABZ2'),
         'linkedEntity': 'MinigolfBoard3DItem',
-        'linkedEntityId': asEntityId('ent_01KXG04Y4DJD1RR6WBGPV7Z7WR'),
         'name': 'MinigolfBoard3DRender',
         'scope': 'instance',
         'stateMachine': {
@@ -4802,13 +4795,11 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04Y4FK9B5A8N9KDK3QGVC'),
         'name': 'MinigolfBoard3DPage',
         'path': '/minigolf-board-3d',
         'traits': [
           {
             'ref': 'MinigolfBoard3DRender',
-            'refId': asTraitId('trt_01KXG04Y4DENXWJDVQERNTABZ2'),
           },
         ],
       } satisfies Page,

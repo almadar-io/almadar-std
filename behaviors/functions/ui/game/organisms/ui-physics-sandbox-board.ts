@@ -19,7 +19,6 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-physics-sandbox-board';
@@ -2072,7 +2071,6 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
           {
             'description': 'Drops a new block of the selected kind into a random top column (Spawn button / Space key).',
             'event': 'SPAWN',
-            'eventId': asEventId('evt_01KXG04YBNWFPTE4N48EAVPM24'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2085,7 +2083,6 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
           {
             'description': 'Cycles the selected block kind through grass/dirt/rock/sand.',
             'event': 'CYCLE_KIND',
-            'eventId': asEventId('evt_01KXG04YBNW9R0ZCZKVE11JR6C'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2098,7 +2095,6 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
           {
             'description': 'Clears every block and resets the sandbox.',
             'event': 'CLEAR',
-            'eventId': asEventId('evt_01KXG04YBNR1EH9HEKMAXFYWXZ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2123,9 +2119,7 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
           'requires': [],
         },
         'entityRebindable': true,
-        'id': asTraitId('trt_01KXG04YBMY850292K1QNDZET7'),
         'linkedEntity': 'PhysicsSandboxBoardItem',
-        'linkedEntityId': asEntityId('ent_01KXG04YBM4ESGTM2ACFQB3PYZ'),
         'name': 'PhysicsSandboxBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -4394,13 +4388,11 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
     ],
     pages: [
       {
-        'id': asPageId('pag_01KXG04YBNQ78GG9BNBTRBR6Z5'),
         'name': 'PhysicsSandboxBoardPage',
         'path': '/physics-sandbox-board',
         'traits': [
           {
             'ref': 'PhysicsSandboxBoardRender',
-            'refId': asTraitId('trt_01KXG04YBMY850292K1QNDZET7'),
           },
         ],
       } satisfies Page,
