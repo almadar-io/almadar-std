@@ -48,6 +48,14 @@ export interface RegistryEntry {
   layer: string;
   description: string;
   /**
+   * Organism-level `;; @capabilities` header tag — a closed, author-declared
+   * list of what the organism DOES (comma-separated phrases), stamped by
+   * `tools/almadar-pattern-sync` from `.lolo` metadata (V4-P6a §3.1). Embedded
+   * as a SEPARATE `<name>#capabilities` vector for the grounded organism pick.
+   * Optional: only app-pickable organisms carry it.
+   */
+  capabilities?: string;
+  /**
    * Default orbital class name (`^[A-Z][A-Za-z0-9]+Orbital$`) stamped by
    * `tools/almadar-pattern-sync` (`behaviors` command); every generated
    * entry in `behaviors-registry.json` carries it.

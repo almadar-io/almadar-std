@@ -47,8 +47,26 @@ interface RegistryEntry {
   family?: string;
   layer?: string;
   description?: string;
+  /** Organism-level `;; @capabilities` header tag (comma-separated phrases). */
+  capabilities?: string;
   defaultEntity?: { name?: string };
   connectableEvents?: string[];
+}
+
+/**
+ * V4-P6a (§3.1) — key suffix for an organism's SEPARATE capabilities vector.
+ * The live bake path is `@almadar/calibrate`; this reference script mirrors it.
+ */
+const CAPABILITY_KEY_SUFFIX = '#capabilities';
+
+/**
+ * V4-P6a — standalone capabilities text for the `<name>#capabilities` vector:
+ * ONLY the org-level `@capabilities` phrases, so a similar-named organism does
+ * not score high here. Returns `null` when no capabilities are declared.
+ */
+export function buildCapabilityText(entry: RegistryEntry): string | null {
+  if (!entry.capabilities) return null;
+  return `Capabilities (organism): ${entry.capabilities}`;
 }
 
 interface RegistryFile {
@@ -107,6 +125,7 @@ export function buildEntryText(
 ): string {
   const parts: string[] = [entry.name];
   if (entry.description) parts.push(entry.description);
+  if (entry.capabilities) parts.push(`Capabilities (organism): ${entry.capabilities}`);
   if (entry.defaultEntity?.name) parts.push(`Entity: ${entry.defaultEntity.name}`);
   if (entry.connectableEvents && entry.connectableEvents.length > 0) {
     parts.push(`Events: ${entry.connectableEvents.join(' ')}`);
@@ -155,6 +174,14 @@ async function main(): Promise<void> {
   for (const [name, entry] of entries) {
     names.push(name);
     texts.push(buildEntryText(entry, traitsByOrganism.get(name)));
+  }
+  // V4-P6a — SEPARATE org-level capability texts, keyed `<name>#capabilities`,
+  // appended AFTER every main entry (entries without capabilities are unchanged).
+  for (const [name, entry] of entries) {
+    const capText = buildCapabilityText(entry);
+    if (capText === null) continue;
+    names.push(`${name}${CAPABILITY_KEY_SUFFIX}`);
+    texts.push(capText);
   }
 
   const client = new EmbeddingClient({ provider: EMBEDDING_PROVIDER, model: EMBEDDING_MODEL });
