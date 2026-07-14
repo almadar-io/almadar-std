@@ -121,6 +121,8 @@ export interface StdUiPlatformerBoard3dConfig {
   platforms?: EntityRow[];
   /** Default: `{"animations":["idle","walk","sprint","jump","fall"],"aspect":"1:1","category":"player","dimension":"3d","name":"player","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/units/character-oobi.glb","variant":""}` */
   playerSprite?: EntityRow;
+  /** Default: `{"goal":0,"ground":0.924,"hazard":0,"platform":0.231}` */
+  tileRenderDepths?: Record<string, TraitConfig>;
   /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","category":"goal","dimension":"3d","name":"goal","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/features/flag.glb","variant":""},"ground":{"animations":["static"],"aspect":"1:1","category":"ground","dimension":"3d","name":"ground","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/terrain/block-grass.glb","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","category":"hazard","dimension":"3d","name":"hazard","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/features/trap-spikes.glb","variant":""},"platform":{"animations":["static"],"aspect":"1:1","category":"platform","dimension":"3d","name":"platform","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/terrain/block-grass-low.glb","variant":""}}` */
   tileSprites?: Record<string, TraitConfig>;
   /** Default: `400` */
@@ -903,6 +905,21 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
             'tier': 'presentation',
             'type': 'Asset',
           },
+          'tileRenderDepths': {
+            'default': {
+              'goal': 0,
+              'ground': 0.924,
+              'hazard': 0,
+              'platform': 0.231,
+            },
+            'description': 'Render-only world-Y drop per platform type so domed block tops sit flush with the walk plane (block-grass: natural height 1.0 / max-dim 1.082 at 32px authored; block-grass-low: 0.5 / 1.082 at 16px). Spikes and flag stand UP from the plane',
+            'items': {
+              'type': 'number',
+            },
+            'label': 'Tile Render Depths',
+            'tier': 'presentation',
+            'type': 'Map<string,number>',
+          },
           'tileSprites': {
             'default': {
               'goal': {
@@ -1512,14 +1529,39 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                                   ],
                                   'position': {
                                     'x': [
-                                      'object/get',
-                                      '@p',
-                                      'x',
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@p',
+                                        'x',
+                                      ],
+                                      [
+                                        '/',
+                                        [
+                                          'object/get',
+                                          '@p',
+                                          'width',
+                                        ],
+                                        2,
+                                      ],
                                     ],
                                     'y': [
                                       'object/get',
                                       '@p',
                                       'y',
+                                    ],
+                                    'z': [
+                                      '-',
+                                      0,
+                                      [
+                                        'object/get',
+                                        '@config.tileRenderDepths',
+                                        [
+                                          'object/get',
+                                          '@p',
+                                          'type',
+                                        ],
+                                      ],
                                     ],
                                   },
                                   'type': 'draw-sprite',
@@ -1970,14 +2012,39 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                                   ],
                                   'position': {
                                     'x': [
-                                      'object/get',
-                                      '@p',
-                                      'x',
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@p',
+                                        'x',
+                                      ],
+                                      [
+                                        '/',
+                                        [
+                                          'object/get',
+                                          '@p',
+                                          'width',
+                                        ],
+                                        2,
+                                      ],
                                     ],
                                     'y': [
                                       'object/get',
                                       '@p',
                                       'y',
+                                    ],
+                                    'z': [
+                                      '-',
+                                      0,
+                                      [
+                                        'object/get',
+                                        '@config.tileRenderDepths',
+                                        [
+                                          'object/get',
+                                          '@p',
+                                          'type',
+                                        ],
+                                      ],
                                     ],
                                   },
                                   'type': 'draw-sprite',
@@ -2301,14 +2368,39 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                                   ],
                                   'position': {
                                     'x': [
-                                      'object/get',
-                                      '@p',
-                                      'x',
+                                      '+',
+                                      [
+                                        'object/get',
+                                        '@p',
+                                        'x',
+                                      ],
+                                      [
+                                        '/',
+                                        [
+                                          'object/get',
+                                          '@p',
+                                          'width',
+                                        ],
+                                        2,
+                                      ],
                                     ],
                                     'y': [
                                       'object/get',
                                       '@p',
                                       'y',
+                                    ],
+                                    'z': [
+                                      '-',
+                                      0,
+                                      [
+                                        'object/get',
+                                        '@config.tileRenderDepths',
+                                        [
+                                          'object/get',
+                                          '@p',
+                                          'type',
+                                        ],
+                                      ],
                                     ],
                                   },
                                   'type': 'draw-sprite',
@@ -3631,14 +3723,39 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                                 ],
                                 'position': {
                                   'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
+                                    '+',
+                                    [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@p',
+                                        'width',
+                                      ],
+                                      2,
+                                    ],
                                   ],
                                   'y': [
                                     'object/get',
                                     '@p',
                                     'y',
+                                  ],
+                                  'z': [
+                                    '-',
+                                    0,
+                                    [
+                                      'object/get',
+                                      '@config.tileRenderDepths',
+                                      [
+                                        'object/get',
+                                        '@p',
+                                        'type',
+                                      ],
+                                    ],
                                   ],
                                 },
                                 'type': 'draw-sprite',

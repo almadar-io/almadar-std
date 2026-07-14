@@ -206,6 +206,11 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
             'type': 'boolean',
           },
           {
+            'default': 0,
+            'name': 'frame',
+            'type': 'number',
+          },
+          {
             'default': [],
             'items': {
               'properties': {
@@ -4680,6 +4685,7 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
           'provides': [
             'effects',
             'features',
+            'frame',
             'gridHeight',
             'gridWidth',
             'hero',
@@ -4970,9 +4976,81 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                                 {
                                   'anchor': 'center',
                                   'asset': [
-                                    'object/get',
-                                    '@f',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'type',
+                                      ],
+                                      'gate_red',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              '%',
+                                              '@entity.frame',
+                                              2,
+                                            ],
+                                            0,
+                                          ],
+                                          '8,0',
+                                          '8,1',
+                                        ],
+                                      },
+                                    ],
+                                    [
+                                      'if',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'type',
+                                        ],
+                                        'gate_blue',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'sprite',
+                                        ],
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                '%',
+                                                '@entity.frame',
+                                                2,
+                                              ],
+                                              0,
+                                            ],
+                                            '9,0',
+                                            '9,1',
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                    ],
                                   ],
                                   'height': 0.5,
                                   'position': {
@@ -5524,9 +5602,81 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                                 {
                                   'anchor': 'center',
                                   'asset': [
-                                    'object/get',
-                                    '@f',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'type',
+                                      ],
+                                      'gate_red',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              '%',
+                                              '@entity.frame',
+                                              2,
+                                            ],
+                                            0,
+                                          ],
+                                          '8,0',
+                                          '8,1',
+                                        ],
+                                      },
+                                    ],
+                                    [
+                                      'if',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'type',
+                                        ],
+                                        'gate_blue',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'sprite',
+                                        ],
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                '%',
+                                                '@entity.frame',
+                                                2,
+                                              ],
+                                              0,
+                                            ],
+                                            '9,0',
+                                            '9,1',
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                    ],
                                   ],
                                   'height': 0.5,
                                   'position': {
@@ -6096,9 +6246,81 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                                 {
                                   'anchor': 'center',
                                   'asset': [
-                                    'object/get',
-                                    '@f',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'type',
+                                      ],
+                                      'gate_red',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              '%',
+                                              '@entity.frame',
+                                              2,
+                                            ],
+                                            0,
+                                          ],
+                                          '8,0',
+                                          '8,1',
+                                        ],
+                                      },
+                                    ],
+                                    [
+                                      'if',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'type',
+                                        ],
+                                        'gate_blue',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'sprite',
+                                        ],
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                '%',
+                                                '@entity.frame',
+                                                2,
+                                              ],
+                                              0,
+                                            ],
+                                            '9,0',
+                                            '9,1',
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                    ],
                                   ],
                                   'height': 0.5,
                                   'position': {
@@ -6518,9 +6740,81 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                                 {
                                   'anchor': 'center',
                                   'asset': [
-                                    'object/get',
-                                    '@f',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'type',
+                                      ],
+                                      'gate_red',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              '%',
+                                              '@entity.frame',
+                                              2,
+                                            ],
+                                            0,
+                                          ],
+                                          '8,0',
+                                          '8,1',
+                                        ],
+                                      },
+                                    ],
+                                    [
+                                      'if',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'type',
+                                        ],
+                                        'gate_blue',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'sprite',
+                                        ],
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                '%',
+                                                '@entity.frame',
+                                                2,
+                                              ],
+                                              0,
+                                            ],
+                                            '9,0',
+                                            '9,1',
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                    ],
                                   ],
                                   'height': 0.5,
                                   'position': {
@@ -6950,9 +7244,81 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                                 {
                                   'anchor': 'center',
                                   'asset': [
-                                    'object/get',
-                                    '@f',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'type',
+                                      ],
+                                      'gate_red',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              '%',
+                                              '@entity.frame',
+                                              2,
+                                            ],
+                                            0,
+                                          ],
+                                          '8,0',
+                                          '8,1',
+                                        ],
+                                      },
+                                    ],
+                                    [
+                                      'if',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'type',
+                                        ],
+                                        'gate_blue',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@f',
+                                          'sprite',
+                                        ],
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                '%',
+                                                '@entity.frame',
+                                                2,
+                                              ],
+                                              0,
+                                            ],
+                                            '9,0',
+                                            '9,1',
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                    ],
                                   ],
                                   'height': 0.5,
                                   'position': {
@@ -7704,9 +8070,81 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                               {
                                 'anchor': 'center',
                                 'asset': [
-                                  'object/get',
-                                  '@f',
-                                  'sprite',
+                                  'if',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'type',
+                                    ],
+                                    'gate_red',
+                                  ],
+                                  [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'sprite',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            '%',
+                                            '@entity.frame',
+                                            2,
+                                          ],
+                                          0,
+                                        ],
+                                        '8,0',
+                                        '8,1',
+                                      ],
+                                    },
+                                  ],
+                                  [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'type',
+                                      ],
+                                      'gate_blue',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              '%',
+                                              '@entity.frame',
+                                              2,
+                                            ],
+                                            0,
+                                          ],
+                                          '9,0',
+                                          '9,1',
+                                        ],
+                                      },
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'sprite',
+                                    ],
+                                  ],
                                 ],
                                 'height': 0.5,
                                 'position': {
@@ -7952,6 +8390,479 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
             ],
             'interval': 600,
             'name': 'descentTick',
+          },
+          {
+            'effects': [
+              [
+                'set',
+                '@entity.frame',
+                [
+                  '%',
+                  [
+                    '+',
+                    '@entity.frame',
+                    1,
+                  ],
+                  8,
+                ],
+              ],
+              [
+                'render-ui',
+                'main',
+                {
+                  'backgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'sprite': 'blue_panel.png',
+                    'style': 'pixel',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png',
+                    'variant': '',
+                  },
+                  'children': [
+                    {
+                      'camera': {
+                        'pos': {
+                          'x': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'x',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'x',
+                              ],
+                            ],
+                            2,
+                          ],
+                          'y': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@config.tiles',
+                                'y',
+                              ],
+                              [
+                                'array/max',
+                                '@config.tiles',
+                                'y',
+                              ],
+                            ],
+                            2,
+                          ],
+                        },
+                        'zoom': [
+                          'math/min',
+                          1,
+                          [
+                            '/',
+                            5,
+                            [
+                              '+',
+                              1,
+                              [
+                                'math/max',
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@config.tiles',
+                                  'y',
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'fill': '#5c94fc',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'stroke': 'rgba(255,255,255,0.35)',
+                                'strokeWidth': 1,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'anchor': 'center',
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'height': 0.5,
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.features',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'anchor': 'center',
+                                'asset': [
+                                  'if',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'type',
+                                    ],
+                                    'gate_red',
+                                  ],
+                                  [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'sprite',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            '%',
+                                            '@entity.frame',
+                                            2,
+                                          ],
+                                          0,
+                                        ],
+                                        '8,0',
+                                        '8,1',
+                                      ],
+                                    },
+                                  ],
+                                  [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'type',
+                                      ],
+                                      'gate_blue',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@f',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              '%',
+                                              '@entity.frame',
+                                              2,
+                                            ],
+                                            0,
+                                          ],
+                                          '9,0',
+                                          '9,1',
+                                        ],
+                                      },
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'sprite',
+                                    ],
+                                  ],
+                                ],
+                                'height': 0.5,
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            {
+                              'anchor': 'ground',
+                              'asset': [
+                                'object/get',
+                                [
+                                  'object/get',
+                                  '@config.assetManifest',
+                                  'units',
+                                ],
+                                'hero',
+                              ],
+                              'height': 0.5,
+                              'position': {
+                                'x': '@entity.hero.x',
+                                'y': '@entity.hero.y',
+                              },
+                              'type': 'draw-sprite',
+                              'width': 0.5,
+                            },
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                      ],
+                      'keyMap': {
+                        'ArrowLeft': 'STEER_LEFT',
+                        'ArrowRight': 'STEER_RIGHT',
+                        'KeyA': 'STEER_LEFT',
+                        'KeyD': 'STEER_RIGHT',
+                      },
+                      'projection': 'flat',
+                      'showMinimap': false,
+                      'type': 'canvas',
+                    },
+                  ],
+                  'controls': {
+                    'directionAssets': {
+                      'left': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts-pixel-16/terrain/Tilemap_tilemap_packed.tiles.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'key-left',
+                        'role': 'ui',
+                        'sprite': '33,4',
+                        'style': 'pixel',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts-pixel-16/terrain/tilemap_packed.png',
+                        'variant': '',
+                      },
+                      'right': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts-pixel-16/terrain/Tilemap_tilemap_packed.tiles.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'key-right',
+                        'role': 'ui',
+                        'sprite': '31,4',
+                        'style': 'pixel',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts-pixel-16/terrain/tilemap_packed.png',
+                        'variant': '',
+                      },
+                    },
+                    'directionEvents': {
+                      'left': 'STEER_LEFT',
+                      'right': 'STEER_RIGHT',
+                    },
+                    'kind': 'dpad',
+                    'type': 'control-grid',
+                  },
+                  'fontFamily': 'pixel',
+                  'hud': {
+                    'stats': [
+                      {
+                        'format': 'hearts',
+                        'iconUrl': {
+                          'animations': [],
+                          'aspect': '1:1',
+                          'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/pixel_style1.json',
+                          'category': 'ui',
+                          'dimension': '2d',
+                          'name': 'icon-lives',
+                          'role': 'ui',
+                          'sprite': 'emote_heart.png',
+                          'style': 'pixel',
+                          'thumbnailUrl': '',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/pixel_style1.png',
+                          'variant': '',
+                        },
+                        'label': 'Lives',
+                        'max': 3,
+                        'value': '@entity.lives',
+                      },
+                      {
+                        'iconUrl': {
+                          'animations': [],
+                          'aspect': '1:1',
+                          'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/pixel_style1.json',
+                          'category': 'ui',
+                          'dimension': '2d',
+                          'name': 'icon-score',
+                          'role': 'ui',
+                          'sprite': 'emote_star.png',
+                          'style': 'pixel',
+                          'thumbnailUrl': '',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/pixel_style1.png',
+                          'variant': '',
+                        },
+                        'label': 'Score',
+                        'value': '@entity.score',
+                      },
+                      {
+                        'iconUrl': {
+                          'animations': [
+                            'static',
+                          ],
+                          'aspect': '1:1',
+                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json',
+                          'category': 'ui',
+                          'dimension': '2d',
+                          'name': 'icon-distance',
+                          'role': 'ui',
+                          'sprite': '8,4',
+                          'style': 'pixel',
+                          'thumbnailUrl': '',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png',
+                          'variant': '',
+                        },
+                        'label': 'Distance',
+                        'max': '@entity.gridHeight',
+                        'value': '@entity.hero.y',
+                      },
+                    ],
+                    'type': 'game-hud',
+                  },
+                  'hudBackgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'sprite': 'blue_panel.png',
+                    'style': 'pixel',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png',
+                    'variant': '',
+                  },
+                  'type': 'game-shell',
+                },
+              ],
+            ],
+            'guard': [
+              '==',
+              '@entity.result',
+              'none',
+            ],
+            'interval': 100,
+            'name': 'animTick',
           },
         ],
       } satisfies Trait, 'WinterSkiBoardItem', canonicalName),

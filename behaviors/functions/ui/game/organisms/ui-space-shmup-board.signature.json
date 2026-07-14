@@ -67,6 +67,16 @@
             "name": "effects",
             "type": "array",
             "required": false
+          },
+          {
+            "name": "animCounter",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "frameName",
+            "type": "string",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -910,7 +920,9 @@
         ],
         "entityRebindable": true,
         "entityContract": {
-          "requires": [],
+          "requires": [
+            "frameName"
+          ],
           "provides": [
             "effects",
             "enemies",
@@ -924,6 +936,47 @@
             "score",
             "tick",
             "wave"
+          ]
+        }
+      },
+      {
+        "name": "ThrusterClock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "frames",
+            "type": "[string]",
+            "default": [
+              "fire00.png",
+              "fire01.png",
+              "fire02.png",
+              "fire03.png",
+              "fire04.png",
+              "fire05.png",
+              "fire06.png",
+              "fire07.png"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "label": "Frame names",
+            "description": "Atlas sub-texture names cycled into @entity.frameName, one per tick; empty disables name cycling.",
+            "synonyms": "sprite names, atlas frames, animation frames",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AnimTick.traits.AnimTick",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "animCounter",
+            "frameName"
           ]
         }
       }
@@ -949,7 +1002,7 @@
     "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
-    "substrateSignature": "e3b0c44298fc1c14",
+    "substrateSignature": "1460a750c8e18e17",
     "sourceValid": true,
     "paramsSchema": {
       "type": "object",
@@ -1645,6 +1698,95 @@
                           "PLAY_AGAIN",
                           "RESUME",
                           "SHOOT"
+                        ],
+                        "description": "Local state-machine event fired when the subscription matches. Must be one of the events this trait's own transitions already react to."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "ThrusterClock": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for ThrusterClock.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "frames": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": [
+                        "fire00.png",
+                        "fire01.png",
+                        "fire02.png",
+                        "fire03.png",
+                        "fire04.png",
+                        "fire05.png",
+                        "fire06.png",
+                        "fire07.png"
+                      ],
+                      "description": "Atlas sub-texture names cycled into @entity.frameName, one per tick; empty disables name cycling.",
+                      "x-label": "Frame names",
+                      "x-synonyms": "sprite names, atlas frames, animation frames",
+                      "x-tier": "domain"
+                    }
+                  }
+                },
+                "linkedEntity": {
+                  "type": "string",
+                  "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "enum": [
+                          "INIT"
                         ],
                         "description": "Local state-machine event fired when the subscription matches. Must be one of the events this trait's own transitions already react to."
                       },

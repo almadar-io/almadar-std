@@ -1299,7 +1299,44 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             'type': 'draw-sprite-layer',
                           },
                           {
-                            'asset': '@config.playerSprite',
+                            'asset': [
+                              'object/merge',
+                              '@config.playerSprite',
+                              {
+                                'sprite': [
+                                  'if',
+                                  [
+                                    '==',
+                                    '@entity.player.animation',
+                                    'walk',
+                                  ],
+                                  [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        '%',
+                                        '@entity.player.frame',
+                                        2,
+                                      ],
+                                      0,
+                                    ],
+                                    'adventurer_walk1.png',
+                                    'adventurer_walk2.png',
+                                  ],
+                                  [
+                                    'if',
+                                    [
+                                      '==',
+                                      '@entity.player.animation',
+                                      'jump',
+                                    ],
+                                    'adventurer_jump.png',
+                                    'adventurer_idle.png',
+                                  ],
+                                ],
+                              },
+                            ],
                             'flipX': [
                               'not',
                               '@entity.player.facingRight',
@@ -1790,7 +1827,44 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             'type': 'draw-sprite-layer',
                           },
                           {
-                            'asset': '@config.playerSprite',
+                            'asset': [
+                              'object/merge',
+                              '@config.playerSprite',
+                              {
+                                'sprite': [
+                                  'if',
+                                  [
+                                    '==',
+                                    '@entity.player.animation',
+                                    'walk',
+                                  ],
+                                  [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        '%',
+                                        '@entity.player.frame',
+                                        2,
+                                      ],
+                                      0,
+                                    ],
+                                    'adventurer_walk1.png',
+                                    'adventurer_walk2.png',
+                                  ],
+                                  [
+                                    'if',
+                                    [
+                                      '==',
+                                      '@entity.player.animation',
+                                      'jump',
+                                    ],
+                                    'adventurer_jump.png',
+                                    'adventurer_idle.png',
+                                  ],
+                                ],
+                              },
+                            ],
                             'flipX': [
                               'not',
                               '@entity.player.facingRight',
@@ -2118,7 +2192,44 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             'type': 'draw-sprite-layer',
                           },
                           {
-                            'asset': '@config.playerSprite',
+                            'asset': [
+                              'object/merge',
+                              '@config.playerSprite',
+                              {
+                                'sprite': [
+                                  'if',
+                                  [
+                                    '==',
+                                    '@entity.player.animation',
+                                    'walk',
+                                  ],
+                                  [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        '%',
+                                        '@entity.player.frame',
+                                        2,
+                                      ],
+                                      0,
+                                    ],
+                                    'adventurer_walk1.png',
+                                    'adventurer_walk2.png',
+                                  ],
+                                  [
+                                    'if',
+                                    [
+                                      '==',
+                                      '@entity.player.animation',
+                                      'jump',
+                                    ],
+                                    'adventurer_jump.png',
+                                    'adventurer_idle.png',
+                                  ],
+                                ],
+                              },
+                            ],
                             'flipX': [
                               'not',
                               '@entity.player.facingRight',
@@ -2934,7 +3045,44 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           'type': 'draw-sprite-layer',
                         },
                         {
-                          'asset': '@config.playerSprite',
+                          'asset': [
+                            'object/merge',
+                            '@config.playerSprite',
+                            {
+                              'sprite': [
+                                'if',
+                                [
+                                  '==',
+                                  '@entity.player.animation',
+                                  'walk',
+                                ],
+                                [
+                                  'if',
+                                  [
+                                    '==',
+                                    [
+                                      '%',
+                                      '@entity.player.frame',
+                                      2,
+                                    ],
+                                    0,
+                                  ],
+                                  'adventurer_walk1.png',
+                                  'adventurer_walk2.png',
+                                ],
+                                [
+                                  'if',
+                                  [
+                                    '==',
+                                    '@entity.player.animation',
+                                    'jump',
+                                  ],
+                                  'adventurer_jump.png',
+                                  'adventurer_idle.png',
+                                ],
+                              ],
+                            },
+                          ],
                           'flipX': [
                             'not',
                             '@entity.player.facingRight',

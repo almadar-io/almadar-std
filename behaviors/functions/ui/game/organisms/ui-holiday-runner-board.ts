@@ -81,7 +81,7 @@ export interface StdUiHolidayRunnerBoardConfig {
 }
 
 type _StdUiHolidayRunnerBoardEntityName = 'HolidayRunnerBoardItem';
-type _StdUiHolidayRunnerBoardListenTraitName = 'HolidayRunnerBoardRender';
+type _StdUiHolidayRunnerBoardListenTraitName = 'HolidayRunnerBoardRender' | 'AnimClock';
 
 /**
  * Tunable params for the HolidayRunnerBoardOrbital orbital.
@@ -117,20 +117,25 @@ export interface StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'HolidayRunnerBoardRender',
+    'AnimClock' | 'HolidayRunnerBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait HolidayRunnerBoardOrbital's `uses[]` exports. */
-type _StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalUsesRef = never;
+type _StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalUsesRef = 'AnimTick.traits.AnimTick';
 
 /** Per-orbital factory: builds the HolidayRunnerBoardOrbital orbital with consumer params. */
 export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'HolidayRunnerBoardItem';
   const built = makeOrbitalWithUses({
     name: 'HolidayRunnerBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -351,6 +356,16 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             },
             'name': 'validMoves',
             'type': 'array',
+          },
+          {
+            'default': 0,
+            'name': 'animCounter',
+            'type': 'number',
+          },
+          {
+            'default': 'alienBeige_walk1.png',
+            'name': 'frameName',
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -2051,7 +2066,9 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'units',
             'validMoves',
           ],
-          'requires': [],
+          'requires': [
+            'frameName',
+          ],
         },
         'entityRebindable': true,
         'linkedEntity': 'HolidayRunnerBoardItem',
@@ -2315,9 +2332,32 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'unitType',
+                                      ],
+                                      'runner',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': '@entity.frameName',
+                                      },
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'id': [
                                     'object/get',
@@ -2749,9 +2789,32 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'unitType',
+                                      ],
+                                      'runner',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': '@entity.frameName',
+                                      },
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'id': [
                                     'object/get',
@@ -3188,9 +3251,32 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'unitType',
+                                      ],
+                                      'runner',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': '@entity.frameName',
+                                      },
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'id': [
                                     'object/get',
@@ -3645,9 +3731,32 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'unitType',
+                                      ],
+                                      'runner',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'sprite',
+                                      ],
+                                      {
+                                        'sprite': '@entity.frameName',
+                                      },
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
                                   ],
                                   'id': [
                                     'object/get',
@@ -3920,100 +4029,6 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'effects': [
               [
                 'set',
-                '@entity.units',
-                [
-                  'array/map',
-                  '@entity.units',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'if',
-                      [
-                        '==',
-                        [
-                          'object/get',
-                          '@u',
-                          'unitType',
-                        ],
-                        'runner',
-                      ],
-                      [
-                        'object/merge',
-                        '@u',
-                        {
-                          'frame': [
-                            '%',
-                            [
-                              '+',
-                              [
-                                'object/get',
-                                '@u',
-                                'frame',
-                              ],
-                              1,
-                            ],
-                            8,
-                          ],
-                          'sprite': [
-                            'object/merge',
-                            [
-                              'object/get',
-                              '@u',
-                              'sprite',
-                            ],
-                            {
-                              'sprite': [
-                                'if',
-                                [
-                                  '==',
-                                  [
-                                    '%',
-                                    [
-                                      '+',
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'frame',
-                                      ],
-                                      1,
-                                    ],
-                                    2,
-                                  ],
-                                  0,
-                                ],
-                                'alienBeige_walk1.png',
-                                'alienBeige_walk2.png',
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                      [
-                        'object/merge',
-                        '@u',
-                        {
-                          'frame': [
-                            '%',
-                            [
-                              '+',
-                              [
-                                'object/get',
-                                '@u',
-                                'frame',
-                              ],
-                              1,
-                            ],
-                            8,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
                 '@entity.effects',
                 [
                   'array/filter',
@@ -4228,9 +4243,32 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                               'u',
                               {
                                 'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'sprite',
+                                  'if',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'unitType',
+                                    ],
+                                    'runner',
+                                  ],
+                                  [
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    {
+                                      'sprite': '@entity.frameName',
+                                    },
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'sprite',
+                                  ],
                                 ],
                                 'id': [
                                   'object/get',
@@ -4488,10 +4526,24 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
         ],
       } satisfies Trait, 'HolidayRunnerBoardItem', canonicalName),
+      makeTraitRef({
+        'config': {
+          'frames': {
+            'default': [
+              'alienBeige_walk1.png',
+              'alienBeige_walk2.png',
+            ],
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'AnimClock',
+        'ref': ('AnimTick.traits.AnimTick' satisfies _StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalUsesRef),
+      }),
     ],
     pages: [
       {
@@ -4500,6 +4552,9 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
         'traits': [
           {
             'ref': 'HolidayRunnerBoardRender',
+          },
+          {
+            'ref': 'AnimClock',
           },
         ],
       } satisfies Page,
@@ -4565,6 +4620,7 @@ export const StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'AnimClock',
   ] as const,
   inlineTraitNames: [
     'HolidayRunnerBoardRender',

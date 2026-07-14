@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-07-13T16:25:08.118Z",
+  "$generated": "2026-07-14T04:24:01.307Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
   "totalBehaviors": 489,
@@ -1064,7 +1064,7 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-anim-tick — sprite/effects animation clock atom. Advances every unit's frame (mod frameCount) and ages @entity.effects (decrement ttl, drop expired) every tick. Boards compose it via `uses` + a sibling trait-ref rebound (linkedEntity) to a board entity that carries `units` + `effects`, replacing the inlined animTick that was duplicated across 8+ game boards.",
+      "description": "std-anim-tick — sprite animation clock atom. Owns a global animation counter and exposes the current frame NAME (@entity.frameName = frames[counter % len]) every 100ms tick. Boards compose it via `uses` + a trait-ref rebound (linkedEntity) to the board entity; render-ui merges @entity.frameName onto the animated sprite's asset, replacing the inlined animTick frame counters that were duplicated across game boards. 1.1.0 redesign: the 1.0.0 units-frame-advance / effects-aging sets were removed — numeric unit frames served the pre-animation-contract regime (draw-sprite paints atlas sub-texture NAMES, which is exactly what frameName now exposes; zero consumers existed), effects aging is owned by std-fx-particles, and the shared-entity one-writer rule (ORB_SHARED_ENTITY_FIELD_CONFLICT) forbids a shared atom co-writing fields a board's own ticks also write. Tick interval is a language-level literal (100ms); the config surface is `frames`.",
       "defaultOrbitalName": "AnimTickOrbital",
       "statePattern": "running",
       "complexity": {
@@ -1082,14 +1082,14 @@
             "required": true
           },
           {
-            "name": "units",
-            "type": "array",
-            "default": []
+            "name": "animCounter",
+            "type": "number",
+            "default": 0
           },
           {
-            "name": "effects",
-            "type": "array",
-            "default": []
+            "name": "frameName",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -83271,6 +83271,11 @@
             "default": 0
           },
           {
+            "name": "diceFrame",
+            "type": "number",
+            "default": 0
+          },
+          {
             "name": "rolled",
             "type": "boolean",
             "default": false
@@ -87987,6 +87992,16 @@
             "name": "validMoves",
             "type": "array",
             "default": []
+          },
+          {
+            "name": "animCounter",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "frameName",
+            "type": "string",
+            "default": "alienBeige_walk1.png"
           }
         ]
       },
@@ -93054,6 +93069,16 @@
             "name": "effects",
             "type": "array",
             "default": []
+          },
+          {
+            "name": "animCounter",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "frameName",
+            "type": "string",
+            "default": "fire00.png"
           }
         ]
       },
@@ -97700,6 +97725,11 @@
             "name": "running",
             "type": "boolean",
             "default": true
+          },
+          {
+            "name": "frame",
+            "type": "number",
+            "default": 0
           },
           {
             "name": "features",

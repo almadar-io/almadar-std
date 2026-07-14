@@ -4175,17 +4175,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -4732,17 +4751,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -5460,17 +5498,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -6128,17 +6185,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -7059,17 +7135,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -7398,7 +7493,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     '@entity.effects',
                     {
                       'key': 'explosion',
-                      'ttl': 5,
+                      'ttl': 9,
                       'x': [
                         'object/get',
                         [
@@ -7851,17 +7946,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -8480,17 +8594,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -9045,17 +9178,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -9631,17 +9783,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -10198,17 +10369,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -10796,17 +10986,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -11496,17 +11705,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'e',
                                   {
                                     'asset': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'key',
+                                        ],
                                       ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      {
+                                        'sprite': [
+                                          'str/concat',
+                                          'regularExplosion0',
+                                          [
+                                            '-',
+                                            9,
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'ttl',
+                                            ],
+                                          ],
+                                          '.png',
+                                        ],
+                                      },
                                     ],
                                     'position': {
                                       'x': [
@@ -12046,17 +12274,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'e',
                                 {
                                   'asset': [
-                                    'object/get',
+                                    'object/merge',
                                     [
                                       'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'regularExplosion0',
+                                        [
+                                          '-',
+                                          9,
+                                          [
+                                            'object/get',
+                                            '@e',
+                                            'ttl',
+                                          ],
+                                        ],
+                                        '.png',
+                                      ],
+                                    },
                                   ],
                                   'position': {
                                     'x': [
@@ -12211,6 +12458,55 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
             'effects': [
               [
                 'set',
+                '@entity.effects',
+                [
+                  'array/filter',
+                  [
+                    'array/map',
+                    '@entity.effects',
+                    [
+                      'fn',
+                      'e',
+                      [
+                        'object/merge',
+                        '@e',
+                        {
+                          'ttl': [
+                            '-',
+                            [
+                              'object/get',
+                              '@e',
+                              'ttl',
+                            ],
+                            1,
+                          ],
+                        },
+                      ],
+                    ],
+                  ],
+                  [
+                    'fn',
+                    'e',
+                    [
+                      '>',
+                      [
+                        'object/get',
+                        '@e',
+                        'ttl',
+                      ],
+                      0,
+                    ],
+                  ],
+                ],
+              ],
+            ],
+            'interval': 100,
+            'name': 'fxDecayTick',
+          },
+          {
+            'effects': [
+              [
+                'set',
                 '@entity.ships',
                 [
                   'array/map',
@@ -12331,7 +12627,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   '@entity.effects',
                   {
                     'key': 'explosion',
-                    'ttl': 5,
+                    'ttl': 9,
                     'x': [
                       'object/get',
                       [
@@ -13100,17 +13396,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'e',
                                 {
                                   'asset': [
-                                    'object/get',
+                                    'object/merge',
                                     [
                                       'object/get',
-                                      '@config.assetManifest',
-                                      'effects',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'effects',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
-                                    [
-                                      'object/get',
-                                      '@e',
-                                      'key',
-                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'regularExplosion0',
+                                        [
+                                          '-',
+                                          9,
+                                          [
+                                            'object/get',
+                                            '@e',
+                                            'ttl',
+                                          ],
+                                        ],
+                                        '.png',
+                                      ],
+                                    },
                                   ],
                                   'position': {
                                     'x': [

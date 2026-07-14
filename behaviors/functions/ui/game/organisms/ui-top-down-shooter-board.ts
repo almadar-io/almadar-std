@@ -1449,13 +1449,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'player',
                                         ],
-                                        'player',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'player',
                                     },
@@ -1491,13 +1518,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                           ],
                                         },
                                         'sprite': [
-                                          'object/get',
+                                          'object/merge',
                                           [
                                             'object/get',
-                                            '@config.assetManifest',
-                                            'units',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'enemy',
                                           ],
-                                          'enemy',
+                                          {
+                                            'sprite': [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'animation',
+                                                ],
+                                                'walk',
+                                              ],
+                                              [
+                                                'str/concat',
+                                                'walk',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'frame',
+                                                ],
+                                              ],
+                                              'idle',
+                                            ],
+                                          },
                                         ],
                                         'team': 'enemy',
                                       },
@@ -1569,13 +1623,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -1611,13 +1692,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -2098,13 +2206,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'player',
                                         ],
-                                        'player',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'player',
                                     },
@@ -2140,13 +2275,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                           ],
                                         },
                                         'sprite': [
-                                          'object/get',
+                                          'object/merge',
                                           [
                                             'object/get',
-                                            '@config.assetManifest',
-                                            'units',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'enemy',
                                           ],
-                                          'enemy',
+                                          {
+                                            'sprite': [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'animation',
+                                                ],
+                                                'walk',
+                                              ],
+                                              [
+                                                'str/concat',
+                                                'walk',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'frame',
+                                                ],
+                                              ],
+                                              'idle',
+                                            ],
+                                          },
                                         ],
                                         'team': 'enemy',
                                       },
@@ -2218,13 +2380,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -2260,13 +2449,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -2673,13 +2889,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'player',
                                         ],
-                                        'player',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'player',
                                     },
@@ -2715,13 +2958,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                           ],
                                         },
                                         'sprite': [
-                                          'object/get',
+                                          'object/merge',
                                           [
                                             'object/get',
-                                            '@config.assetManifest',
-                                            'units',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'enemy',
                                           ],
-                                          'enemy',
+                                          {
+                                            'sprite': [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'animation',
+                                                ],
+                                                'walk',
+                                              ],
+                                              [
+                                                'str/concat',
+                                                'walk',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'frame',
+                                                ],
+                                              ],
+                                              'idle',
+                                            ],
+                                          },
                                         ],
                                         'team': 'enemy',
                                       },
@@ -2793,13 +3063,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -2835,13 +3132,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -3205,13 +3529,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'player',
                                         ],
-                                        'player',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'player',
                                     },
@@ -3247,13 +3598,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                           ],
                                         },
                                         'sprite': [
-                                          'object/get',
+                                          'object/merge',
                                           [
                                             'object/get',
-                                            '@config.assetManifest',
-                                            'units',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'enemy',
                                           ],
-                                          'enemy',
+                                          {
+                                            'sprite': [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'animation',
+                                                ],
+                                                'walk',
+                                              ],
+                                              [
+                                                'str/concat',
+                                                'walk',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'frame',
+                                                ],
+                                              ],
+                                              'idle',
+                                            ],
+                                          },
                                         ],
                                         'team': 'enemy',
                                       },
@@ -3325,13 +3703,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -3367,13 +3772,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -3737,13 +4169,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'player',
                                         ],
-                                        'player',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'player',
                                     },
@@ -3779,13 +4238,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                           ],
                                         },
                                         'sprite': [
-                                          'object/get',
+                                          'object/merge',
                                           [
                                             'object/get',
-                                            '@config.assetManifest',
-                                            'units',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'enemy',
                                           ],
-                                          'enemy',
+                                          {
+                                            'sprite': [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'animation',
+                                                ],
+                                                'walk',
+                                              ],
+                                              [
+                                                'str/concat',
+                                                'walk',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'frame',
+                                                ],
+                                              ],
+                                              'idle',
+                                            ],
+                                          },
                                         ],
                                         'team': 'enemy',
                                       },
@@ -3857,13 +4343,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -3899,13 +4412,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -4259,13 +4799,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'player',
                                         ],
-                                        'player',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'player',
                                     },
@@ -4301,13 +4868,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                           ],
                                         },
                                         'sprite': [
-                                          'object/get',
+                                          'object/merge',
                                           [
                                             'object/get',
-                                            '@config.assetManifest',
-                                            'units',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'enemy',
                                           ],
-                                          'enemy',
+                                          {
+                                            'sprite': [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'animation',
+                                                ],
+                                                'walk',
+                                              ],
+                                              [
+                                                'str/concat',
+                                                'walk',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'frame',
+                                                ],
+                                              ],
+                                              'idle',
+                                            ],
+                                          },
                                         ],
                                         'team': 'enemy',
                                       },
@@ -4379,13 +4973,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -4421,13 +5042,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -4897,13 +5545,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'player',
                                         ],
-                                        'player',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@entity.player',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'player',
                                     },
@@ -4939,13 +5614,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                           ],
                                         },
                                         'sprite': [
-                                          'object/get',
+                                          'object/merge',
                                           [
                                             'object/get',
-                                            '@config.assetManifest',
-                                            'units',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'enemy',
                                           ],
-                                          'enemy',
+                                          {
+                                            'sprite': [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'animation',
+                                                ],
+                                                'walk',
+                                              ],
+                                              [
+                                                'str/concat',
+                                                'walk',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'frame',
+                                                ],
+                                              ],
+                                              'idle',
+                                            ],
+                                          },
                                         ],
                                         'team': 'enemy',
                                       },
@@ -5017,13 +5719,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -5059,13 +5788,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -5514,13 +6270,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -5556,13 +6339,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -5634,13 +6444,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     ],
                                   },
                                   'sprite': [
-                                    'object/get',
+                                    'object/merge',
                                     [
                                       'object/get',
-                                      '@config.assetManifest',
-                                      'units',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
                                     ],
-                                    'player',
+                                    {
+                                      'sprite': [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            'object/get',
+                                            '@entity.player',
+                                            'animation',
+                                          ],
+                                          'walk',
+                                        ],
+                                        [
+                                          'str/concat',
+                                          'walk',
+                                          [
+                                            'object/get',
+                                            '@entity.player',
+                                            'frame',
+                                          ],
+                                        ],
+                                        'idle',
+                                      ],
+                                    },
                                   ],
                                   'team': 'player',
                                 },
@@ -5676,13 +6513,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'enemy',
                                   },
@@ -6651,13 +7515,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'player',
                                       ],
-                                      'player',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@entity.player',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'player',
                                   },
@@ -6693,13 +7584,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                         ],
                                       },
                                       'sprite': [
-                                        'object/get',
+                                        'object/merge',
                                         [
                                           'object/get',
-                                          '@config.assetManifest',
-                                          'units',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'enemy',
                                         ],
-                                        'enemy',
+                                        {
+                                          'sprite': [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'animation',
+                                              ],
+                                              'walk',
+                                            ],
+                                            [
+                                              'str/concat',
+                                              'walk',
+                                              [
+                                                'object/get',
+                                                '@e',
+                                                'frame',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                        },
                                       ],
                                       'team': 'enemy',
                                     },
@@ -6771,13 +7689,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     ],
                                   },
                                   'sprite': [
-                                    'object/get',
+                                    'object/merge',
                                     [
                                       'object/get',
-                                      '@config.assetManifest',
-                                      'units',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'player',
                                     ],
-                                    'player',
+                                    {
+                                      'sprite': [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            'object/get',
+                                            '@entity.player',
+                                            'animation',
+                                          ],
+                                          'walk',
+                                        ],
+                                        [
+                                          'str/concat',
+                                          'walk',
+                                          [
+                                            'object/get',
+                                            '@entity.player',
+                                            'frame',
+                                          ],
+                                        ],
+                                        'idle',
+                                      ],
+                                    },
                                   ],
                                   'team': 'player',
                                 },
@@ -6813,13 +7758,40 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                       ],
                                     },
                                     'sprite': [
-                                      'object/get',
+                                      'object/merge',
                                       [
                                         'object/get',
-                                        '@config.assetManifest',
-                                        'units',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'enemy',
                                       ],
-                                      'enemy',
+                                      {
+                                        'sprite': [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'animation',
+                                            ],
+                                            'walk',
+                                          ],
+                                          [
+                                            'str/concat',
+                                            'walk',
+                                            [
+                                              'object/get',
+                                              '@e',
+                                              'frame',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                      },
                                     ],
                                     'team': 'enemy',
                                   },

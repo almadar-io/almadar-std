@@ -146,7 +146,7 @@ export interface StdUiSpaceShmupBoardConfig {
 }
 
 type _StdUiSpaceShmupBoardEntityName = 'SpaceShmupBoardItem';
-type _StdUiSpaceShmupBoardListenTraitName = 'SpaceShmupBoardRender';
+type _StdUiSpaceShmupBoardListenTraitName = 'SpaceShmupBoardRender' | 'ThrusterClock';
 
 /**
  * Tunable params for the SpaceShmupBoardOrbital orbital.
@@ -182,20 +182,25 @@ export interface StdUiSpaceShmupBoardSpaceShmupBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SpaceShmupBoardRender',
+    'ThrusterClock' | 'SpaceShmupBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait SpaceShmupBoardOrbital's `uses[]` exports. */
-type _StdUiSpaceShmupBoardSpaceShmupBoardOrbitalUsesRef = never;
+type _StdUiSpaceShmupBoardSpaceShmupBoardOrbitalUsesRef = 'AnimTick.traits.AnimTick';
 
 /** Per-orbital factory: builds the SpaceShmupBoardOrbital orbital with consumer params. */
 export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShmupBoardSpaceShmupBoardOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = params.entityName ?? 'SpaceShmupBoardItem';
   const built = makeOrbitalWithUses({
     name: 'SpaceShmupBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -408,6 +413,16 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
             },
             'name': 'effects',
             'type': 'array',
+          },
+          {
+            'default': 0,
+            'name': 'animCounter',
+            'type': 'number',
+          },
+          {
+            'default': 'fire00.png',
+            'name': 'frameName',
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -1271,7 +1286,9 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
             'tick',
             'wave',
           ],
-          'requires': [],
+          'requires': [
+            'frameName',
+          ],
         },
         'entityRebindable': true,
         'linkedEntity': 'SpaceShmupBoardItem',
@@ -1705,16 +1722,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'player',
                                     ],
                                     {
-                                      'sprite': [
-                                        'str/concat',
-                                        'fire0',
-                                        [
-                                          'object/get',
-                                          '@entity.player',
-                                          'frame',
-                                        ],
-                                        '.png',
-                                      ],
+                                      'sprite': '@entity.frameName',
                                     },
                                   ],
                                   'position': {
@@ -2372,16 +2380,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'player',
                                     ],
                                     {
-                                      'sprite': [
-                                        'str/concat',
-                                        'fire0',
-                                        [
-                                          'object/get',
-                                          '@entity.player',
-                                          'frame',
-                                        ],
-                                        '.png',
-                                      ],
+                                      'sprite': '@entity.frameName',
                                     },
                                   ],
                                   'position': {
@@ -2851,16 +2850,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'player',
                                     ],
                                     {
-                                      'sprite': [
-                                        'str/concat',
-                                        'fire0',
-                                        [
-                                          'object/get',
-                                          '@entity.player',
-                                          'frame',
-                                        ],
-                                        '.png',
-                                      ],
+                                      'sprite': '@entity.frameName',
                                     },
                                   ],
                                   'position': {
@@ -3339,16 +3329,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'player',
                                     ],
                                     {
-                                      'sprite': [
-                                        'str/concat',
-                                        'fire0',
-                                        [
-                                          'object/get',
-                                          '@entity.player',
-                                          'frame',
-                                        ],
-                                        '.png',
-                                      ],
+                                      'sprite': '@entity.frameName',
                                     },
                                   ],
                                   'position': {
@@ -3849,16 +3830,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'player',
                                     ],
                                     {
-                                      'sprite': [
-                                        'str/concat',
-                                        'fire0',
-                                        [
-                                          'object/get',
-                                          '@entity.player',
-                                          'frame',
-                                        ],
-                                        '.png',
-                                      ],
+                                      'sprite': '@entity.frameName',
                                     },
                                   ],
                                   'position': {
@@ -4426,16 +4398,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'player',
                                     ],
                                     {
-                                      'sprite': [
-                                        'str/concat',
-                                        'fire0',
-                                        [
-                                          'object/get',
-                                          '@entity.player',
-                                          'frame',
-                                        ],
-                                        '.png',
-                                      ],
+                                      'sprite': '@entity.frameName',
                                     },
                                   ],
                                   'position': {
@@ -5003,16 +4966,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                       'player',
                                     ],
                                     {
-                                      'sprite': [
-                                        'str/concat',
-                                        'fire0',
-                                        [
-                                          'object/get',
-                                          '@entity.player',
-                                          'frame',
-                                        ],
-                                        '.png',
-                                      ],
+                                      'sprite': '@entity.frameName',
                                     },
                                   ],
                                   'position': {
@@ -5287,29 +5241,6 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
             'effects': [
               [
                 'set',
-                '@entity.player',
-                [
-                  'object/merge',
-                  '@entity.player',
-                  {
-                    'frame': [
-                      '%',
-                      [
-                        '+',
-                        [
-                          'object/get',
-                          '@entity.player',
-                          'frame',
-                        ],
-                        1,
-                      ],
-                      8,
-                    ],
-                  },
-                ],
-              ],
-              [
-                'set',
                 '@entity.enemies',
                 [
                   'array/map',
@@ -5572,16 +5503,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     'player',
                                   ],
                                   {
-                                    'sprite': [
-                                      'str/concat',
-                                      'fire0',
-                                      [
-                                        'object/get',
-                                        '@entity.player',
-                                        'frame',
-                                      ],
-                                      '.png',
-                                    ],
+                                    'sprite': '@entity.frameName',
                                   },
                                 ],
                                 'position': {
@@ -6993,16 +6915,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     'player',
                                   ],
                                   {
-                                    'sprite': [
-                                      'str/concat',
-                                      'fire0',
-                                      [
-                                        'object/get',
-                                        '@entity.player',
-                                        'frame',
-                                      ],
-                                      '.png',
-                                    ],
+                                    'sprite': '@entity.frameName',
                                   },
                                 ],
                                 'position': {
@@ -7300,6 +7213,26 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           },
         ],
       } satisfies Trait, 'SpaceShmupBoardItem', canonicalName),
+      makeTraitRef({
+        'config': {
+          'frames': {
+            'default': [
+              'fire00.png',
+              'fire01.png',
+              'fire02.png',
+              'fire03.png',
+              'fire04.png',
+              'fire05.png',
+              'fire06.png',
+              'fire07.png',
+            ],
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'ThrusterClock',
+        'ref': ('AnimTick.traits.AnimTick' satisfies _StdUiSpaceShmupBoardSpaceShmupBoardOrbitalUsesRef),
+      }),
     ],
     pages: [
       {
@@ -7308,6 +7241,9 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
         'traits': [
           {
             'ref': 'SpaceShmupBoardRender',
+          },
+          {
+            'ref': 'ThrusterClock',
           },
         ],
       } satisfies Page,
@@ -7373,6 +7309,7 @@ export const StdUiSpaceShmupBoardSpaceShmupBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'ThrusterClock',
   ] as const,
   inlineTraitNames: [
     'SpaceShmupBoardRender',

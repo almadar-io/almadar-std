@@ -5623,9 +5623,23 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'walk',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
                                   ],
                                   'position': [
                                     'object/get',
@@ -5993,9 +6007,23 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'walk',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
                                   ],
                                   'position': [
                                     'object/get',
@@ -6456,9 +6484,23 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'walk',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
                                   ],
                                   'position': [
                                     'object/get',
@@ -6951,9 +6993,23 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'walk',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
                                   ],
                                   'position': [
                                     'object/get',
@@ -7384,9 +7440,23 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
                                 'u',
                                 {
                                   'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
+                                    'object/merge',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    {
+                                      'sprite': [
+                                        'str/concat',
+                                        'walk',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'frame',
+                                        ],
+                                      ],
+                                    },
                                   ],
                                   'position': [
                                     'object/get',
@@ -7826,9 +7896,23 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
                               'u',
                               {
                                 'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'sprite',
+                                  'object/merge',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'sprite',
+                                  ],
+                                  {
+                                    'sprite': [
+                                      'str/concat',
+                                      'walk',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'frame',
+                                      ],
+                                    ],
+                                  },
                                 ],
                                 'position': [
                                   'object/get',
@@ -8357,9 +8441,23 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
                               'u',
                               {
                                 'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'sprite',
+                                  'object/merge',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'sprite',
+                                  ],
+                                  {
+                                    'sprite': [
+                                      'str/concat',
+                                      'walk',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'frame',
+                                      ],
+                                    ],
+                                  },
                                 ],
                                 'position': [
                                   'object/get',
