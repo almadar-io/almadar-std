@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-agent-builder';
@@ -177,6 +178,7 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
         'emits': [
           {
             'event': 'BUILD_COMPLETE',
+            'eventId': asEventId('evt_01KXG04ERRHFSTKHKQK2KVQHWQ'),
             'payloadSchema': [
               {
                 'name': 'orbitalName',
@@ -192,6 +194,7 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
           },
           {
             'event': 'PLANNED',
+            'eventId': asEventId('evt_01KXG04ERR2NKRATKARCHX4DT3'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -201,7 +204,9 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             ],
           },
         ],
+        'id': asTraitId('trt_01KXG04ERRSH2Z6RSJRJ297BQJ'),
         'linkedEntity': 'BuilderProcess',
+        'linkedEntityId': asEntityId('ent_01KXG04ERRVA2AHCJ4BR9BBY0H'),
         'name': 'BuilderPipeline',
         'scope': 'instance',
         'stateMachine': {
@@ -465,15 +470,20 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
       } satisfies Trait, 'BuilderProcess', canonicalName),
       rebindInlineTraitEntity({
         'category': 'lifecycle',
+        'id': asTraitId('trt_01KXG04ERR39DZ1Q873EM9ACPH'),
         'linkedEntity': 'BuilderProcess',
+        'linkedEntityId': asEntityId('ent_01KXG04ERRVA2AHCJ4BR9BBY0H'),
         'listens': [
           {
             'event': 'BUILD_COMPLETE',
+            'eventId': asEventId('evt_01KXG04ERRHFSTKHKQK2KVQHWQ'),
             'source': {
               'kind': 'trait',
               'trait': ('BuilderPipeline' satisfies _StdAgentBuilderListenTraitName),
+              'traitId': asTraitId('trt_01KXG04ERRSH2Z6RSJRJ297BQJ'),
             },
             'triggers': 'BUILD_COMPLETE',
+            'triggersId': asEventId('evt_01KXG04ERSZPS1B50D2P4Q1B7X'),
           },
         ],
         'name': 'BuilderListener',
@@ -557,14 +567,17 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04ERS37CK3CR3DX1WWHCN'),
         'name': 'AgentBuilderPage',
         'path': '/agent-builder',
         'traits': [
           {
             'ref': 'BuilderPipeline',
+            'refId': asTraitId('trt_01KXG04ERRSH2Z6RSJRJ297BQJ'),
           },
           {
             'ref': 'BuilderListener',
+            'refId': asTraitId('trt_01KXG04ERR39DZ1Q873EM9ACPH'),
           },
         ],
       } satisfies Page,

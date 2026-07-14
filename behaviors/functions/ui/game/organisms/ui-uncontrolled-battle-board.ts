@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-uncontrolled-battle-board';
@@ -2101,6 +2102,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
           {
             'description': 'Emitted when one side is wiped out; drives the terminal transition',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG0507S0F2G73A1BXK72EBN'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -2113,6 +2115,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
           {
             'description': 'playAgainEvent prop — reset + restart the battle',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG0507SECVBJHBR1T9JBN2S'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2125,6 +2128,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
           {
             'description': 'tileClickEvent prop — emitted when a tile is clicked on the canvas',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG0507S56H104WE41K2Y6J8'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -2143,6 +2147,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
           {
             'description': 'unitClickEvent prop — emitted when a unit is clicked on the canvas',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG0507SHKD52NQGH7J7CJTP'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -2168,7 +2173,9 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG0507RVK8NT6HN6Q4B3HC2'),
         'linkedEntity': 'UncontrolledBattleBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG0507RRAHSSAHDXMS674SD'),
         'name': 'UncontrolledBattleBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -5637,11 +5644,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0507S026Y0F1AWX5V8XKW'),
         'name': 'UncontrolledBattleBoardPage',
         'path': '/uncontrolled-battle-board',
         'traits': [
           {
             'ref': 'UncontrolledBattleBoardRender',
+            'refId': asTraitId('trt_01KXG0507RVK8NT6HN6Q4B3HC2'),
           },
         ],
       } satisfies Page,

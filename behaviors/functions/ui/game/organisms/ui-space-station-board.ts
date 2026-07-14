@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-space-station-board';
@@ -1661,6 +1662,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04ZEGGXN0935XBQ1T2JVX'),
         'name': 'CrewAuthority',
         'ref': ('Frame.traits.CrewAuthority' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),
@@ -1672,6 +1674,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04ZEGGXN0935XBQ1T2JVX'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),
@@ -1971,12 +1974,14 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04ZEGGXN0935XBQ1T2JVX'),
         'name': 'Crew',
         'ref': ('Frame.traits.CrewIntent' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04ZEGVZNGQ6ZP6CRBBN6T'),
         'name': 'SpaceStationBoardPage',
         'path': '/space-station-board',
         'traits': [

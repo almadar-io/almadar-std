@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-team-organism';
@@ -295,6 +296,7 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
           {
             'description': 'TeamOrganism rows finished loading; payload.data holds the collection.',
             'event': 'TeamOrganismLoaded',
+            'eventId': asEventId('evt_01KXG055D570NYYQQE9QRQABBA'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -311,7 +313,9 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG055D3RKADEM2GAY9318M2'),
         'linkedEntity': 'TeamOrganismItem',
+        'linkedEntityId': asEntityId('ent_01KXG055D3YZKE44CEFR7M6RCX'),
         'name': 'TeamOrganismRender',
         'scope': 'instance',
         'stateMachine': {
@@ -412,11 +416,13 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG055D5H2NS1QNDHXGJXN01'),
         'name': 'TeamOrganismPage',
         'path': '/team-organism',
         'traits': [
           {
             'ref': 'TeamOrganismRender',
+            'refId': asTraitId('trt_01KXG055D3RKADEM2GAY9318M2'),
           },
         ],
       } satisfies Page,

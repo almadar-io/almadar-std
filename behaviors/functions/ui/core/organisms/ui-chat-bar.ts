@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-chat-bar';
@@ -298,7 +299,9 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04S9YKWC6T22MNWFRJEPE'),
         'linkedEntity': 'ChatBarItem',
+        'linkedEntityId': asEntityId('ent_01KXG04S9Y1JVM2M5AR85SXS3W'),
         'name': 'ChatBarRender',
         'scope': 'instance',
         'stateMachine': {
@@ -351,11 +354,13 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04SA029HGBH7CV0VWSZDQ'),
         'name': 'ChatBarPage',
         'path': '/chat-bar',
         'traits': [
           {
             'ref': 'ChatBarRender',
+            'refId': asTraitId('trt_01KXG04S9YKWC6T22MNWFRJEPE'),
           },
         ],
       } satisfies Page,

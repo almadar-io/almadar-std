@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-book-cover-page';
@@ -177,7 +178,9 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG0551DXXQ89BA8AN8HN3HS'),
         'linkedEntity': 'BookCoverPageItem',
+        'linkedEntityId': asEntityId('ent_01KXG0551DYHN1N9S2K2ZH90QF'),
         'name': 'BookCoverPageRender',
         'scope': 'instance',
         'stateMachine': {
@@ -220,11 +223,13 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0551FYZ8X5WD4YZMQ3SAK'),
         'name': 'BookCoverPagePage',
         'path': '/book-cover-page',
         'traits': [
           {
             'ref': 'BookCoverPageRender',
+            'refId': asTraitId('trt_01KXG0551DXXQ89BA8AN8HN3HS'),
           },
         ],
       } satisfies Page,

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-negotiator-board';
@@ -528,6 +529,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           {
             'description': 'Emits one negotiation round; playerAction drives in-model opponent AI and payoff lookup (payoff field is UI-supplied but ignored by model).',
             'event': 'PLAY_ROUND',
+            'eventId': asEventId('evt_01KXG04YA65TSCFN2QWEZSHJ4X'),
             'payloadSchema': [
               {
                 'name': 'playerAction',
@@ -545,6 +547,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           {
             'description': 'Emits when all rounds are spent; routes to win/lose by score vs target.',
             'event': 'FINISH',
+            'eventId': asEventId('evt_01KXG04YA69P2QX0WAVTXFX28S'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -557,6 +560,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04YA6JKV90KBQFKZK8WSV'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -569,6 +573,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           {
             'description': 'completeEvent prop',
             'event': 'COMPLETE',
+            'eventId': asEventId('evt_01KXG04YA67XZMEJKQ6DCRHKSJ'),
             'payloadSchema': [
               {
                 'name': 'success',
@@ -604,7 +609,9 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04YA4JADZSYM20934H93K'),
         'linkedEntity': 'NegotiatorBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04YA4A49DF2C8JD17RJC5'),
         'name': 'NegotiatorBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -1984,11 +1991,13 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04YA64XYC13E308C0MJEA'),
         'name': 'NegotiatorBoardPage',
         'path': '/negotiator-board',
         'traits': [
           {
             'ref': 'NegotiatorBoardRender',
+            'refId': asTraitId('trt_01KXG04YA4JADZSYM20934H93K'),
           },
         ],
       } satisfies Page,

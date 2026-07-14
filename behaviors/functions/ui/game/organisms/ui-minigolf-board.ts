@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-minigolf-board';
@@ -4802,6 +4803,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Roll the ball up (north) until blocked (keyboard keyMap or d-pad)',
             'event': 'PUTT_UP',
+            'eventId': asEventId('evt_01KXG04Y74J1V3EGEE491Q1EWK'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4814,6 +4816,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Roll the ball down (south) until blocked (keyboard keyMap or d-pad)',
             'event': 'PUTT_DOWN',
+            'eventId': asEventId('evt_01KXG04Y74SNRSKTC5T78AW2RS'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4826,6 +4829,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Roll the ball left (west) until blocked (keyboard keyMap or d-pad)',
             'event': 'PUTT_LEFT',
+            'eventId': asEventId('evt_01KXG04Y74B9N05ZY3FAW83T25'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4838,6 +4842,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Roll the ball right (east) until blocked (keyboard keyMap or d-pad)',
             'event': 'PUTT_RIGHT',
+            'eventId': asEventId('evt_01KXG04Y74THEPDGF2FCEFYRWE'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4850,6 +4855,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Emits UI:{tileClickEvent} with { x, y } on tile click',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG04Y7492TS07VF70E9H954'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -4868,6 +4874,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04Y74Z7DS7YX3XKA5E5EP'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -4881,6 +4888,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Emits when the ball rolls onto the cup cell',
             'event': 'HOLE_IN',
+            'eventId': asEventId('evt_01KXG04Y74AVSHHWKAQ6EJ49WC'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4893,6 +4901,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Emits to advance to the next hole',
             'event': 'NEXT_HOLE',
+            'eventId': asEventId('evt_01KXG04Y74VH7WZ81P8Z36E8VV'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4905,6 +4914,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           {
             'description': 'Emits to restart the course from hole 1',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04Y743842YFS3CFQ5ARNX'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4932,7 +4942,9 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04Y72FE9MH6AFF25C4G0T'),
         'linkedEntity': 'MinigolfBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04Y723CWBVCW402CJSF9J'),
         'name': 'MinigolfBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -11321,11 +11333,13 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04Y746CTV7YS2T1WB53RB'),
         'name': 'MinigolfBoardPage',
         'path': '/minigolf-board',
         'traits': [
           {
             'ref': 'MinigolfBoardRender',
+            'refId': asTraitId('trt_01KXG04Y72FE9MH6AFF25C4G0T'),
           },
         ],
       } satisfies Page,

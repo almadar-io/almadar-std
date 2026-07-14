@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-drawer-slot';
@@ -227,7 +228,9 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04SEEH4C62WG1S19KEJ8N'),
         'linkedEntity': 'DrawerSlotItem',
+        'linkedEntityId': asEntityId('ent_01KXG04SEE206C4F02GS26M6P0'),
         'name': 'DrawerSlotRender',
         'scope': 'instance',
         'stateMachine': {
@@ -278,11 +281,13 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04SEHH0YZP80V2W199YYW'),
         'name': 'DrawerSlotPage',
         'path': '/drawer-slot',
         'traits': [
           {
             'ref': 'DrawerSlotRender',
+            'refId': asTraitId('trt_01KXG04SEEH4C62WG1S19KEJ8N'),
           },
         ],
       } satisfies Page,

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-book-chapter-view';
@@ -147,6 +148,7 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           {
             'description': 'BookChapterView rows finished loading; payload.data holds the collection.',
             'event': 'BookChapterViewLoaded',
+            'eventId': asEventId('evt_01KXG054ZY1M9GJMGHBGNR9K2M'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -163,7 +165,9 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG054ZTKHKRCK1GHEQ44MY8'),
         'linkedEntity': 'BookChapterViewItem',
+        'linkedEntityId': asEntityId('ent_01KXG054ZSARA1Z5DBVZM0JPS2'),
         'name': 'BookChapterViewRender',
         'scope': 'instance',
         'stateMachine': {
@@ -242,11 +246,13 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG054ZYTXX05Z3MAWZ2GKJZ'),
         'name': 'BookChapterViewPage',
         'path': '/book-chapter-view',
         'traits': [
           {
             'ref': 'BookChapterViewRender',
+            'refId': asTraitId('trt_01KXG054ZTKHKRCK1GHEQ44MY8'),
           },
         ],
       } satisfies Page,

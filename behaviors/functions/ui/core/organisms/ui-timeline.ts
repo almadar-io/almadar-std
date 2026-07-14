@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-timeline';
@@ -314,6 +315,7 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
           {
             'description': 'User opened a record from the list.',
             'event': 'VIEW',
+            'eventId': asEventId('evt_01KXG04T5Q6H3S155F80B55SFP'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -326,6 +328,7 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
           {
             'description': 'Timeline rows finished loading; payload.data holds the collection.',
             'event': 'TimelineLoaded',
+            'eventId': asEventId('evt_01KXG04T5Q7ZFPSWYBZTKDFZEP'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -342,7 +345,9 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04T5N1KMA8GHRWTFXENVQ'),
         'linkedEntity': 'TimelineItem',
+        'linkedEntityId': asEntityId('ent_01KXG04T5NEAJ5E8NTZY7PJJ26'),
         'name': 'TimelineRender',
         'scope': 'instance',
         'stateMachine': {
@@ -457,11 +462,13 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04T5QHEF1S79SGG2YB4QE'),
         'name': 'TimelinePage',
         'path': '/timeline',
         'traits': [
           {
             'ref': 'TimelineRender',
+            'refId': asTraitId('trt_01KXG04T5N1KMA8GHRWTFXENVQ'),
           },
         ],
       } satisfies Page,

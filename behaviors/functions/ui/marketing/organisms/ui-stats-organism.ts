@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-stats-organism';
@@ -271,6 +272,7 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
           {
             'description': 'StatsOrganism rows finished loading; payload.data holds the collection.',
             'event': 'StatsOrganismLoaded',
+            'eventId': asEventId('evt_01KXG055B15NT54FBM35B4TDG5'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -287,7 +289,9 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG055AZK8N9SXHFQ8YD1AXE'),
         'linkedEntity': 'StatsOrganismItem',
+        'linkedEntityId': asEntityId('ent_01KXG055AZCA4GQG5KS4W36456'),
         'name': 'StatsOrganismRender',
         'scope': 'instance',
         'stateMachine': {
@@ -386,11 +390,13 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG055B1AB64B3RN62SCGWVM'),
         'name': 'StatsOrganismPage',
         'path': '/stats-organism',
         'traits': [
           {
             'ref': 'StatsOrganismRender',
+            'refId': asTraitId('trt_01KXG055AZK8N9SXHFQ8YD1AXE'),
           },
         ],
       } satisfies Page,

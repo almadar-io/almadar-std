@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-state-machine-view';
@@ -166,7 +167,9 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04T1T06NK46N3XNS6A39R'),
         'linkedEntity': 'StateMachineViewItem',
+        'linkedEntityId': asEntityId('ent_01KXG04T1TKXZ1HTD8V6QA822C'),
         'name': 'StateMachineViewRender',
         'scope': 'instance',
         'stateMachine': {
@@ -206,11 +209,13 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04T1VV0DVR110J43XDZ2P'),
         'name': 'StateMachineViewPage',
         'path': '/state-machine-view',
         'traits': [
           {
             'ref': 'StateMachineViewRender',
+            'refId': asTraitId('trt_01KXG04T1T06NK46N3XNS6A39R'),
           },
         ],
       } satisfies Page,

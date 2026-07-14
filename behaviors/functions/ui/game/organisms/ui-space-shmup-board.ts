@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-space-shmup-board';
@@ -1165,6 +1166,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Move-left intent (keyboard keyMap / d-pad)',
             'event': 'MOVE_LEFT',
+            'eventId': asEventId('evt_01KXG04ZBDBA47VTRKGD054HRF'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1177,6 +1179,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Move-right intent (keyboard keyMap / d-pad)',
             'event': 'MOVE_RIGHT',
+            'eventId': asEventId('evt_01KXG04ZBD883A1Q9Z8QSKRBJH'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1189,6 +1192,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Move-up intent (keyboard keyMap / d-pad)',
             'event': 'MOVE_UP',
+            'eventId': asEventId('evt_01KXG04ZBDCQFFBAQB6T55SR34'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1201,6 +1205,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Move-down intent (keyboard keyMap / d-pad)',
             'event': 'MOVE_DOWN',
+            'eventId': asEventId('evt_01KXG04ZBDK2Z924SMN7BGAC6X'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1213,6 +1218,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Fire a laser from the player ship (Space key / Fire button)',
             'event': 'SHOOT',
+            'eventId': asEventId('evt_01KXG04ZBDR3KHKZSEQAJXCGJ4'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1225,6 +1231,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Pause the game and show the pause menu',
             'event': 'PAUSE',
+            'eventId': asEventId('evt_01KXG04ZBDHGN7CR11CEMGA4GQ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1237,6 +1244,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Resume play from the pause menu',
             'event': 'RESUME',
+            'eventId': asEventId('evt_01KXG04ZBDAFK44GJZRZ07NE43'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1249,6 +1257,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Fires when every wave is cleared or lives reach zero',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG04ZBD6JH7HMWP1AYPT1NJ'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1261,6 +1270,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           {
             'description': 'Reset and restart the game',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04ZBD23MWWTPQRFKME5PJ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1291,7 +1301,9 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           ],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04ZBDM82DTCGNYFN012HE'),
         'linkedEntity': 'SpaceShmupBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04ZBDMPDBJPN0NV4PN8V0'),
         'name': 'SpaceShmupBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -7230,17 +7242,20 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04ZBDMPDBJPN0NV4PN8V0'),
         'name': 'ThrusterClock',
         'ref': ('AnimTick.traits.AnimTick' satisfies _StdUiSpaceShmupBoardSpaceShmupBoardOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04ZBDB05ABCT6V2ZYWK72'),
         'name': 'SpaceShmupBoardPage',
         'path': '/space-shmup-board',
         'traits': [
           {
             'ref': 'SpaceShmupBoardRender',
+            'refId': asTraitId('trt_01KXG04ZBDM82DTCGNYFN012HE'),
           },
           {
             'ref': 'ThrusterClock',

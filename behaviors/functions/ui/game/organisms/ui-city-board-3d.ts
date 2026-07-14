@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-city-board-3d';
@@ -2703,6 +2704,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04X1CBF521R4542VP5N37'),
         'name': 'HeroAuthority',
         'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
@@ -2868,6 +2870,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04X1CBF521R4542VP5N37'),
         'name': 'Collector',
         'ref': ('Frame.traits.Collector' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
@@ -2879,6 +2882,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04X1CBF521R4542VP5N37'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
@@ -2890,6 +2894,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04X1CBF521R4542VP5N37'),
         'name': 'RoundGate',
         'ref': ('Frame.traits.RoundGate' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
@@ -2982,12 +2987,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04X1CBF521R4542VP5N37'),
         'name': 'Player',
         'ref': ('Frame.traits.HeroIntent' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04X1C7G3JVC7C7P3KDJ0R'),
         'name': 'CityBoard3DPage',
         'path': '/city-board-3d',
         'traits': [

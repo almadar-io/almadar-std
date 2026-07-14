@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-biology';
@@ -227,12 +228,14 @@ export function stdLearningBiologyPredatorPreyOrbital(params: StdLearningBiology
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG0534JES0MH3R08ZRF638N'),
         'name': 'PopulationEngine',
         'ref': ('BioPopulation.traits.BioPopulationSim' satisfies _StdLearningBiologyPredatorPreyOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0534J5GR9TBDJMHTKXXKY'),
         'name': 'PredatorPreyPage',
         'path': '/bio/population',
         'traits': [
@@ -558,12 +561,14 @@ export function stdLearningBiologyFoodwebOrbital(params: StdLearningBiologyFoodw
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG0534JZJH2X1XDC86WNXNF'),
         'name': 'FoodwebEngine',
         'ref': ('BioFoodweb.traits.BioFoodwebSim' satisfies _StdLearningBiologyFoodwebOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0534J1TE4K9F882ZEZHFF'),
         'name': 'FoodwebPage',
         'path': '/bio/foodweb',
         'traits': [
@@ -835,12 +840,14 @@ export function stdLearningBiologyMitosisOrbital(params: StdLearningBiologyMitos
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG0534JXT2JSBXHCZ704620'),
         'name': 'MitosisEngine',
         'ref': ('BioMitosis.traits.BioMitosisSim' satisfies _StdLearningBiologyMitosisOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0534JE59RXKH7XXRZJEX9'),
         'name': 'MitosisPage',
         'path': '/bio/mitosis',
         'traits': [
@@ -1175,12 +1182,14 @@ export function stdLearningBiologyCellStructureOrbital(params: StdLearningBiolog
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG0534J7AA548KPHFV3MCRZ'),
         'name': 'CellEngine',
         'ref': ('BioCell.traits.BioCellSim' satisfies _StdLearningBiologyCellStructureOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0534J28QZYE78WFMQ7MDA'),
         'name': 'CellStructurePage',
         'path': '/bio/cell',
         'traits': [

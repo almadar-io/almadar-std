@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-market-board-3d';
@@ -2210,6 +2211,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y0DKR9C3344RN5SJ963'),
         'name': 'HeroAuthority',
         'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
@@ -2342,6 +2344,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y0DKR9C3344RN5SJ963'),
         'name': 'Patience',
         'ref': ('Frame.traits.Patience' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
@@ -2353,6 +2356,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y0DKR9C3344RN5SJ963'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
@@ -2372,6 +2376,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y0DKR9C3344RN5SJ963'),
         'name': 'RoundGate',
         'ref': ('Frame.traits.RoundGate' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
@@ -2753,12 +2758,14 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y0DKR9C3344RN5SJ963'),
         'name': 'Player',
         'ref': ('Frame.traits.MarketIntent' satisfies _StdUiMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04Y0DBVG525WAH0B87Y8N'),
         'name': 'MarketBoard3DPage',
         'path': '/market-board-3d',
         'traits': [

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-platformer-board-3d';
@@ -1071,6 +1072,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           {
             'description': 'Tile click passthrough — platformer is keyboard-driven; click coordinates for jump target',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG04YNEAZV757Z4Z1EC26XE'),
             'payloadSchema': [
               {
                 'name': 'tileId',
@@ -1092,6 +1094,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           {
             'description': 'Unit click passthrough',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04YNEQ043SA0ZNQNFP193'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -1113,6 +1116,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           {
             'description': 'Emitted when result becomes won or lost',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG04YNEJT2RABW3KMBTE5YS'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1126,6 +1130,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           {
             'description': 'Move-left intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'LEFT',
+            'eventId': asEventId('evt_01KXG04YNEQ8M3K3GHKPAGAQA2'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1138,6 +1143,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           {
             'description': 'Move-right intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'RIGHT',
+            'eventId': asEventId('evt_01KXG04YNEPDQ97BXBH5R9QV68'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1150,6 +1156,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           {
             'description': 'Jump intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'JUMP',
+            'eventId': asEventId('evt_01KXG04YNEQASKEN5WS735W07Q'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1162,6 +1169,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           {
             'description': 'Stop-horizontal intent (keyboard keyUpMap or d-pad directionReleaseEvents)',
             'event': 'STOP',
+            'eventId': asEventId('evt_01KXG04YNEP27MY6NXCK7FX3GR'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1174,6 +1182,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           {
             'description': 'Emits UI:{playAgainEvent} on restart',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04YNE08S8GBMYRZ5A5TR2'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1202,7 +1211,9 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04YNBZ08RFRX1FCV8C0MK'),
         'linkedEntity': 'PlatformerBoard3DItem',
+        'linkedEntityId': asEntityId('ent_01KXG04YNBXA6K4CVR8EA5ZDV4'),
         'name': 'PlatformerBoard3DRender',
         'scope': 'instance',
         'stateMachine': {
@@ -4011,11 +4022,13 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04YNEKH30DK5PZR73M7BQ'),
         'name': 'PlatformerBoard3DPage',
         'path': '/platformer-board-3d',
         'traits': [
           {
             'ref': 'PlatformerBoard3DRender',
+            'refId': asTraitId('trt_01KXG04YNBZ08RFRX1FCV8C0MK'),
           },
         ],
       } satisfies Page,

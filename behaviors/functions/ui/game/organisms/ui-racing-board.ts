@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-racing-board';
@@ -2960,6 +2961,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           {
             'description': 'Emits UI:{tileClickEvent} with { x, y } on tile click (inert, clears selection only)',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG04YVPRJ1B5R0EACD4XC9K'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -2978,6 +2980,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click (inert, clears selection only)',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04YVP6JDDAC80ASKSZWV5'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -2991,6 +2994,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           {
             'description': 'Steer left one cell (keyboard keyMap or d-pad)',
             'event': 'MOVE_LEFT',
+            'eventId': asEventId('evt_01KXG04YVPPAQGJKJN2ESDRW7Q'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3003,6 +3007,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           {
             'description': 'Steer right one cell (keyboard keyMap or d-pad)',
             'event': 'MOVE_RIGHT',
+            'eventId': asEventId('evt_01KXG04YVPWPECW0ETD28SG04X'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3015,6 +3020,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           {
             'description': 'Steer up one cell and accelerate (speed+1, cap 3)',
             'event': 'MOVE_UP',
+            'eventId': asEventId('evt_01KXG04YVPRSPK0Z0V1S48A94Q'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3027,6 +3033,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           {
             'description': 'Steer down one cell and brake (speed-1, floor 0)',
             'event': 'MOVE_DOWN',
+            'eventId': asEventId('evt_01KXG04YVPMC1ZAQT97VJA2V52'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3039,6 +3046,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           {
             'description': 'Emitted when a car finishes totalLaps (victory) or the rival does (defeat)',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG04YVPA77KZ6AJ12WX50VN'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -3051,6 +3059,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           {
             'description': 'Resets the race to the start line',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04YVPF87M2G54XAD09XSG'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3076,7 +3085,9 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04YVJATP1RXPW8MXN24R6'),
         'linkedEntity': 'RacingBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04YVJ4C8X8R47J2Y6VN2X'),
         'name': 'RacingBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -8474,11 +8485,13 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04YVPG8P6NAP4ZZQWFVYZ'),
         'name': 'RacingBoardPage',
         'path': '/racing-board',
         'traits': [
           {
             'ref': 'RacingBoardRender',
+            'refId': asTraitId('trt_01KXG04YVJATP1RXPW8MXN24R6'),
           },
         ],
       } satisfies Page,

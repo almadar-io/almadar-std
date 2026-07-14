@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-form';
@@ -1060,6 +1061,7 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
           {
             'description': 'Event dispatch props (for trait state machine integration)',
             'event': '@config.submitEvent',
+            'eventId': asEventId('evt_01KXG04SPJ7H96GN6APRSKRCZS'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1072,6 +1074,7 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
           {
             'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
             'event': '@config.cancelEvent',
+            'eventId': asEventId('evt_01KXG04SPJWT4NNHT8EQNRH7NS'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1084,6 +1087,7 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
           {
             'description': 'Callback when any field value changes',
             'event': '@config.onFieldChange',
+            'eventId': asEventId('evt_01KXG04SPJEZNCE021SWHC2TEB'),
             'payloadSchema': [
               {
                 'name': 'change',
@@ -1113,6 +1117,7 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
           {
             'description': 'Form rows finished loading; payload.data holds the collection.',
             'event': 'FormLoaded',
+            'eventId': asEventId('evt_01KXG04SPJ2STJW3Y490CWSZ1M'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -1129,7 +1134,9 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04SPF487TY4K44MXFEENM'),
         'linkedEntity': 'FormItem',
+        'linkedEntityId': asEntityId('ent_01KXG04SPFRDGH8CXQA18QRSHT'),
         'name': 'FormRender',
         'scope': 'instance',
         'stateMachine': {
@@ -1313,11 +1320,13 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04SPJRDD7KMM2PY7CPB0Y'),
         'name': 'FormPage',
         'path': '/form',
         'traits': [
           {
             'ref': 'FormRender',
+            'refId': asTraitId('trt_01KXG04SPF487TY4K44MXFEENM'),
           },
         ],
       } satisfies Page,

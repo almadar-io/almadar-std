@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tower-defense-board';
@@ -7553,6 +7554,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
           {
             'description': 'Emits UI:{placeTowerEvent} with {x,y} on tile click when player places a tower',
             'event': 'PLACE_TOWER',
+            'eventId': asEventId('evt_01KXG05043HRMJZEXKQPKP9VXZ'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -7571,6 +7573,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
           {
             'description': 'Emits UI:{startWaveEvent} with {wave} when player launches a creep wave',
             'event': 'START_WAVE',
+            'eventId': asEventId('evt_01KXG05043X97NANEHWNM9T5YF'),
             'payloadSchema': [
               {
                 'name': 'wave',
@@ -7583,6 +7586,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
           {
             'description': 'Emits UI:{gameEndEvent} with {result} when the game reaches won or lost',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG0504332AQ096SX3MRVGVQ'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -7596,6 +7600,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG05043S3280VTC3FNMT9RZ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -7608,6 +7613,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
           {
             'description': 'unitClickEvent prop — emitted when a creep is clicked on the canvas',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG05043W9FPPRZ741KA2NKQ'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -7639,7 +7645,9 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG05040YH99EEZP903ETGBS'),
         'linkedEntity': 'TowerDefenseBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG0503ZBVKZS8BYN4GQRGN0'),
         'name': 'TowerDefenseBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -12618,11 +12626,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0504396RV8CQKSNPAPNQ8'),
         'name': 'TowerDefenseBoardPage',
         'path': '/tower-defense-board',
         'traits': [
           {
             'ref': 'TowerDefenseBoardRender',
+            'refId': asTraitId('trt_01KXG05040YH99EEZP903ETGBS'),
           },
         ],
       } satisfies Page,

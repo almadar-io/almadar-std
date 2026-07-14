@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-sokoban-board';
@@ -2065,6 +2066,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
           {
             'description': 'Step north (keyboard keyMap or d-pad directionEvents); pushes an adjacent crate when the cell beyond is free',
             'event': 'MOVE_UP',
+            'eventId': asEventId('evt_01KXG04Z60GJSG4J7Z9X8T5QA4'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2077,6 +2079,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
           {
             'description': 'Step south (keyboard keyMap or d-pad directionEvents); pushes an adjacent crate when the cell beyond is free',
             'event': 'MOVE_DOWN',
+            'eventId': asEventId('evt_01KXG04Z60PZVVW8VK3RB1FMHK'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2089,6 +2092,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
           {
             'description': 'Step west (keyboard keyMap or d-pad directionEvents); pushes an adjacent crate when the cell beyond is free',
             'event': 'MOVE_LEFT',
+            'eventId': asEventId('evt_01KXG04Z60M75SA2JKWJJ13CTF'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2101,6 +2105,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
           {
             'description': 'Step east (keyboard keyMap or d-pad directionEvents); pushes an adjacent crate when the cell beyond is free',
             'event': 'MOVE_RIGHT',
+            'eventId': asEventId('evt_01KXG04Z60E8J0Q6NF3HC9WPZW'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2113,6 +2118,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
           {
             'description': 'Resets crates, pusher, and counters to the authored level',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04Z60WDW94VA02610ZH4F'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2125,6 +2131,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
           {
             'description': 'Emitted when every crate sits on a target (result solved)',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG04Z60GNHPQ6DDBM87AG53'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -2147,7 +2154,9 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04Z5XPD50NZG1REYCJ817'),
         'linkedEntity': 'SokobanBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04Z5XT0Z1ZHXGS7B3VEEA'),
         'name': 'SokobanBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -6205,11 +6214,13 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04Z608T3SBN1P17VAKWE3'),
         'name': 'SokobanBoardPage',
         'path': '/sokoban-board',
         'traits': [
           {
             'ref': 'SokobanBoardRender',
+            'refId': asTraitId('trt_01KXG04Z5XPD50NZG1REYCJ817'),
           },
         ],
       } satisfies Page,

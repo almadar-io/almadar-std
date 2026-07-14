@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-grid-tactics-demo-board';
@@ -388,6 +389,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XJQ7RG55JMP44YA5BDE'),
         'name': 'TacticsAuthority',
         'ref': ('Tactics.traits.GridTactics' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
@@ -399,6 +401,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XJQ7RG55JMP44YA5BDE'),
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
@@ -410,6 +413,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XJQ7RG55JMP44YA5BDE'),
         'name': 'RoundLogic',
         'ref': ('Round.traits.RoundFlow' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
@@ -425,6 +429,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           {
             'description': 'Player move intent applied by the grid-tactics authority',
             'event': 'MOVE',
+            'eventId': asEventId('evt_01KXG04XJRMGVXYMS2572DNTQC'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -448,6 +453,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           {
             'description': 'Player attack intent applied by the grid-tactics authority',
             'event': 'ATTACK',
+            'eventId': asEventId('evt_01KXG04XJRHD1KKN9WFTX2Z226'),
             'payloadSchema': [
               {
                 'name': 'targetId',
@@ -461,6 +467,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           {
             'description': 'Ends the player turn; the grid-tactics authority runs the enemy AI pipeline',
             'event': 'AI_TURN',
+            'eventId': asEventId('evt_01KXG04XJRYWADCVJGW4R22P8Y'),
             'payloadSchema': [
               {
                 'name': 'turn',
@@ -474,6 +481,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           {
             'description': 'tileClickEvent prop',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG04XJRK4XRSSG13HMM941Y'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -492,6 +500,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           {
             'description': 'unitClickEvent prop',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04XJR9HQEAJPP1V3Y72FA'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -505,6 +514,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           {
             'description': 'Clears the current selection',
             'event': 'CANCEL',
+            'eventId': asEventId('evt_01KXG04XJRVZPF17MG2RYA2ZCN'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -515,7 +525,9 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
             'tier': 'domain',
           },
         ],
+        'id': asTraitId('trt_01KXG04XJRZZQFY6TA9X3EWPJT'),
         'linkedEntity': 'GameState',
+        'linkedEntityId': asEntityId('ent_01KXG04XJQ7RG55JMP44YA5BDE'),
         'name': 'PlayerIntent',
         'scope': 'instance',
         'stateMachine': {
@@ -1699,6 +1711,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04XJR1NYJZNGKN68PVQQX'),
         'name': 'GridTacticsDemoPage',
         'path': '/grid-tactics-demo',
         'traits': [
@@ -1713,6 +1726,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
           },
           {
             'ref': 'PlayerIntent',
+            'refId': asTraitId('trt_01KXG04XJRZZQFY6TA9X3EWPJT'),
           },
         ],
       } satisfies Page,

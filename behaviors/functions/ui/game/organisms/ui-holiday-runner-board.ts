@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-holiday-runner-board';
@@ -2015,6 +2016,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
           {
             'description': 'Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG04XYBFGX3E0VAWEVTZNMT'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -2033,6 +2035,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
           {
             'description': 'Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04XYB0YC317KAKPJ5Y2MA'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -2046,6 +2049,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
           {
             'description': 'Jump input — tap/click to jump over obstacles',
             'event': 'JUMP',
+            'eventId': asEventId('evt_01KXG04XYBJBTTZF7D6ZY8CV74'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -2071,7 +2075,9 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
           ],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04XYBM2PYBCH0AT80EBKF'),
         'linkedEntity': 'HolidayRunnerBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04XYBZA2FDCD4YHF4KYRZ'),
         'name': 'HolidayRunnerBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -4541,17 +4547,20 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XYBZA2FDCD4YHF4KYRZ'),
         'name': 'AnimClock',
         'ref': ('AnimTick.traits.AnimTick' satisfies _StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04XYB1KHZ2HGXQ4DKMGHX'),
         'name': 'HolidayRunnerBoardPage',
         'path': '/holiday-runner-board',
         'traits': [
           {
             'ref': 'HolidayRunnerBoardRender',
+            'refId': asTraitId('trt_01KXG04XYBM2PYBCH0AT80EBKF'),
           },
           {
             'ref': 'AnimClock',

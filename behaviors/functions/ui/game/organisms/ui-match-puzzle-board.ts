@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-match-puzzle-board';
@@ -1569,6 +1570,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } when a gem is clicked',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04Y2RV34S88PW4SSG1TRV'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -1582,6 +1584,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
           {
             'description': 'Resets gems, score, moves, and combo to the authored layout',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04Y2RAHST3A63F30TKEZ3'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1594,6 +1597,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
           {
             'description': 'Emitted when moves reach zero (result over)',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG04Y2RZY1899FQX1PXKPGV'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1618,7 +1622,9 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04Y2NXT3SBVENV4C4K07Y'),
         'linkedEntity': 'MatchPuzzleBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04Y2NFWQRP47HT3MNB43D'),
         'name': 'MatchPuzzleBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -6313,11 +6319,13 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04Y2R3ZJWG74ST82YDNDP'),
         'name': 'MatchPuzzleBoardPage',
         'path': '/match-puzzle-board',
         'traits': [
           {
             'ref': 'MatchPuzzleBoardRender',
+            'refId': asTraitId('trt_01KXG04Y2NXT3SBVENV4C4K07Y'),
           },
         ],
       } satisfies Page,

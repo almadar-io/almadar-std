@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-form-section';
@@ -1060,6 +1061,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           {
             'description': 'Event dispatch props (for trait state machine integration)',
             'event': '@config.submitEvent',
+            'eventId': asEventId('evt_01KXG04SM2ZFY248KYDK7TMC5J'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1072,6 +1074,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           {
             'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
             'event': '@config.cancelEvent',
+            'eventId': asEventId('evt_01KXG04SM2XDH7XA0BK60F7BAD'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1084,6 +1087,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           {
             'description': 'Callback when any field value changes',
             'event': '@config.onFieldChange',
+            'eventId': asEventId('evt_01KXG04SM2DJX2RVXH6MSEXD6V'),
             'payloadSchema': [
               {
                 'name': 'change',
@@ -1113,6 +1117,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           {
             'description': 'FormSection rows finished loading; payload.data holds the collection.',
             'event': 'FormSectionLoaded',
+            'eventId': asEventId('evt_01KXG04SM2DVNXX31353QRB30A'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -1129,7 +1134,9 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04SKZ5X99D2RX3XSNEEHC'),
         'linkedEntity': 'FormSectionItem',
+        'linkedEntityId': asEntityId('ent_01KXG04SKZNEBQCJMMQ9N7FNF4'),
         'name': 'FormSectionRender',
         'scope': 'instance',
         'stateMachine': {
@@ -1313,11 +1320,13 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04SM2J926ABKRW3NXA775'),
         'name': 'FormSectionPage',
         'path': '/form-section',
         'traits': [
           {
             'ref': 'FormSectionRender',
+            'refId': asTraitId('trt_01KXG04SKZ5X99D2RX3XSNEEHC'),
           },
         ],
       } satisfies Page,

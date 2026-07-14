@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-top-down-shooter-board';
@@ -938,6 +939,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Emits UI:{tileClickEvent} with { x, y } on tile/arena click',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG04ZV8MK2YF3Q13GRHXZNE'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -956,6 +958,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04ZV886V3JWJKMZ72PT9Q'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -969,6 +972,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Move-left intent (keyboard keyMap)',
             'event': 'MOVE_LEFT',
+            'eventId': asEventId('evt_01KXG04ZV88K8K680SA0D6QW68'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -981,6 +985,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Move-right intent (keyboard keyMap)',
             'event': 'MOVE_RIGHT',
+            'eventId': asEventId('evt_01KXG04ZV84BJNNC7TSGYZJ8QQ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -993,6 +998,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Move-up intent (keyboard keyMap)',
             'event': 'MOVE_UP',
+            'eventId': asEventId('evt_01KXG04ZV8M8BBK8FR683G9A5Z'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1005,6 +1011,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Move-down intent (keyboard keyMap)',
             'event': 'MOVE_DOWN',
+            'eventId': asEventId('evt_01KXG04ZV8TE8E9EP623EZEXBS'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1017,6 +1024,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Fire intent (keyboard Space / Fire button)',
             'event': 'FIRE',
+            'eventId': asEventId('evt_01KXG04ZV83T4C9ZK6Y53W909M'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1029,6 +1037,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Emits UI:{gameEndEvent} with {result} when the game reaches won or lost',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG04ZV85ASBECA990G0WE9D'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1042,6 +1051,7 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04ZV8SJRK01WJXW6344MK'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1070,7 +1080,9 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04ZV69FBG174YD4C5HHCT'),
         'linkedEntity': 'TopDownShooterBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04ZV5KR2H8YME5AXSYQXR'),
         'name': 'TopDownShooterBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -8014,11 +8026,13 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04ZV8M3KFJ73QR1JWJSV3'),
         'name': 'TopDownShooterBoardPage',
         'path': '/top-down-shooter-board',
         'traits': [
           {
             'ref': 'TopDownShooterBoardRender',
+            'refId': asTraitId('trt_01KXG04ZV69FBG174YD4C5HHCT'),
           },
         ],
       } satisfies Page,

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-pricing-organism';
@@ -316,6 +317,7 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
           {
             'description': 'PricingOrganism rows finished loading; payload.data holds the collection.',
             'event': 'PricingOrganismLoaded',
+            'eventId': asEventId('evt_01KXG0558YDBTMJBA77E0S87Q6'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -332,7 +334,9 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG0558WX0GS42PFPED9N4DZ'),
         'linkedEntity': 'PricingOrganismItem',
+        'linkedEntityId': asEntityId('ent_01KXG0558WSP8S6QM4SW3AB6XX'),
         'name': 'PricingOrganismRender',
         'scope': 'instance',
         'stateMachine': {
@@ -433,11 +437,13 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0558Y6CQPXGJ9NA8Y2XAP'),
         'name': 'PricingOrganismPage',
         'path': '/pricing-organism',
         'traits': [
           {
             'ref': 'PricingOrganismRender',
+            'refId': asTraitId('trt_01KXG0558WX0GS42PFPED9N4DZ'),
           },
         ],
       } satisfies Page,

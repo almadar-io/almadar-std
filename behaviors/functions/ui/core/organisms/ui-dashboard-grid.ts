@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-dashboard-grid';
@@ -316,7 +317,9 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04SC5HREXNFTRWHXNWHGA'),
         'linkedEntity': 'DashboardGridItem',
+        'linkedEntityId': asEntityId('ent_01KXG04SC5KSMSDYP81NJHJ8BH'),
         'name': 'DashboardGridRender',
         'scope': 'instance',
         'stateMachine': {
@@ -367,11 +370,13 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04SC8D79XP9WJ1Y7FPP2P'),
         'name': 'DashboardGridPage',
         'path': '/dashboard-grid',
         'traits': [
           {
             'ref': 'DashboardGridRender',
+            'refId': asTraitId('trt_01KXG04SC5HREXNFTRWHXNWHGA'),
           },
         ],
       } satisfies Page,

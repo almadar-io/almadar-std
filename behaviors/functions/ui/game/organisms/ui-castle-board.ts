@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-castle-board';
@@ -4319,6 +4320,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           {
             'description': '-- Callbacks --',
             'event': 'ATTACK',
+            'eventId': asEventId('evt_01KXG04WYVNMJ78C19M3RS636N'),
             'payloadSchema': [
               {
                 'name': 'attacker',
@@ -4349,6 +4351,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           {
             'description': 'Called when a unit is clicked',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04WYVNWFKEV7ZS6G5RTBF'),
             'payloadSchema': [
               {
                 'name': 'unit',
@@ -4583,6 +4586,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           {
             'description': 'Called when any tile is clicked',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG04WYVBBGTFB7QCBPBFQF7'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -4599,6 +4603,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           {
             'description': 'Emitted when the player defeats the current wave',
             'event': 'WAVE_DEFEATED',
+            'eventId': asEventId('evt_01KXG04WYVZ6D7S7BVHPFGDR2J'),
             'payloadSchema': [
               {
                 'name': 'wave',
@@ -4612,6 +4617,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           {
             'description': 'Emitted when the castle takes damage from an enemy',
             'event': 'CASTLE_HIT',
+            'eventId': asEventId('evt_01KXG04WYVEYE2M7WHCCXHRD5G'),
             'payloadSchema': [
               {
                 'name': 'damage',
@@ -4625,6 +4631,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04WYV3WHE674TXP8ZEC9T'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -4655,7 +4662,9 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04WYQS9TXXSPSJQXTKQCZ'),
         'linkedEntity': 'CastleBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04WYQ9T7NKNGF8GEJNC98'),
         'name': 'CastleBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -13370,11 +13379,13 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04WYVZS0YDPJ2TJCHBAZW'),
         'name': 'CastleBoardPage',
         'path': '/castle-board',
         'traits': [
           {
             'ref': 'CastleBoardRender',
+            'refId': asTraitId('trt_01KXG04WYQS9TXXSPSJQXTKQCZ'),
           },
         ],
       } satisfies Page,

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-case-study-organism';
@@ -300,6 +301,7 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
           {
             'description': 'CaseStudyOrganism rows finished loading; payload.data holds the collection.',
             'event': 'CaseStudyOrganismLoaded',
+            'eventId': asEventId('evt_01KXG05566FNBJRR4RF7EBM0V7'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -316,7 +318,9 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG05564HSFAB0K8BYQT7V2M'),
         'linkedEntity': 'CaseStudyOrganismItem',
+        'linkedEntityId': asEntityId('ent_01KXG055646BHES2TW39FJ5FHQ'),
         'name': 'CaseStudyOrganismRender',
         'scope': 'instance',
         'stateMachine': {
@@ -417,11 +421,13 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG05566QCFAT3M5E206RNCF'),
         'name': 'CaseStudyOrganismPage',
         'path': '/case-study-organism',
         'traits': [
           {
             'ref': 'CaseStudyOrganismRender',
+            'refId': asTraitId('trt_01KXG05564HSFAB0K8BYQT7V2M'),
           },
         ],
       } satisfies Page,

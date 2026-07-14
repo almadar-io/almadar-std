@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-master-detail-layout';
@@ -199,7 +200,9 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04SR0JENCFW4H6TZM396R'),
         'linkedEntity': 'MasterDetailLayoutItem',
+        'linkedEntityId': asEntityId('ent_01KXG04SR09AFSH5K56T06F1A9'),
         'name': 'MasterDetailLayoutRender',
         'scope': 'instance',
         'stateMachine': {
@@ -244,11 +247,13 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04SR38CCWCVAG1R7K3GR3'),
         'name': 'MasterDetailLayoutPage',
         'path': '/master-detail-layout',
         'traits': [
           {
             'ref': 'MasterDetailLayoutRender',
+            'refId': asTraitId('trt_01KXG04SR0JENCFW4H6TZM396R'),
           },
         ],
       } satisfies Page,

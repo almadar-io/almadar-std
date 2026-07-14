@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-nature-survival-board-3d';
@@ -2689,6 +2690,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y8VD212XYC91FZE07G6'),
         'name': 'HeroAuthority',
         'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
@@ -3045,6 +3047,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y8VD212XYC91FZE07G6'),
         'name': 'Gather',
         'ref': ('Frame.traits.Gather' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
@@ -3056,6 +3059,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y8VD212XYC91FZE07G6'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
@@ -3067,6 +3071,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y8VD212XYC91FZE07G6'),
         'name': 'Flow',
         'ref': ('Frame.traits.Flow' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
@@ -3162,12 +3167,14 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04Y8VD212XYC91FZE07G6'),
         'name': 'Player',
         'ref': ('Frame.traits.SurvivalIntent' satisfies _StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04Y8V74PQQZK8QCWYYBFB'),
         'name': 'NatureSurvivalBoard3DPage',
         'path': '/nature-survival-board-3d',
         'traits': [

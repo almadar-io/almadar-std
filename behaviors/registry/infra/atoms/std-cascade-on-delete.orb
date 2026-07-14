@@ -1,5 +1,105 @@
 {
   "description": "std-cascade-on-delete — relational `owns` cascade. Listens for a parent-deleted sentinel (`ParentDeleted` — rename via traitOverrides.events to the consumer's actual parent-deleted event), then deletes every dependent row whose `foreignKeyField` points at the deleted parent — via a self-driving loop (delete the head of the matching set, re-fetch until none remain). Emits `CascadeRowDeleted` per row and `CascadeCompleted` when done.",
+  "ledger": {
+    "entries": {
+      "ent_01KXG04F628MGXSDK3NH0MDDMJ": {
+        "bakedName": "CascadeLog",
+        "curName": "CascadeLog",
+        "id": "ent_01KXG04F628MGXSDK3NH0MDDMJ",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KXG04F62016GZS5ER2WYSRXW": {
+        "bakedName": "ParentDeleted",
+        "curName": "ParentDeleted",
+        "id": "evt_01KXG04F62016GZS5ER2WYSRXW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04F62Y4JBRC82RK6P338T",
+        "renames": []
+      },
+      "evt_01KXG04F622CD962H4G66FXFD4": {
+        "bakedName": "CascadeRowDeleted",
+        "curName": "CascadeRowDeleted",
+        "id": "evt_01KXG04F622CD962H4G66FXFD4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04F62Y4JBRC82RK6P338T",
+        "renames": []
+      },
+      "evt_01KXG04F624M2CZ0FSEPAZZD39": {
+        "bakedName": "DepsLoaded",
+        "curName": "DepsLoaded",
+        "id": "evt_01KXG04F624M2CZ0FSEPAZZD39",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04F62Y4JBRC82RK6P338T",
+        "renames": []
+      },
+      "evt_01KXG04F6281CRC439K4RVYM4T": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KXG04F6281CRC439K4RVYM4T",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04F62Y4JBRC82RK6P338T",
+        "renames": []
+      },
+      "evt_01KXG04F62CJ2RA14CFCY7R5AD": {
+        "bakedName": "CascadeFailed",
+        "curName": "CascadeFailed",
+        "id": "evt_01KXG04F62CJ2RA14CFCY7R5AD",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04F62Y4JBRC82RK6P338T",
+        "renames": []
+      },
+      "evt_01KXG04F62F2J70RRB8DEF0QM6": {
+        "bakedName": "CascadeStepped",
+        "curName": "CascadeStepped",
+        "id": "evt_01KXG04F62F2J70RRB8DEF0QM6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04F62Y4JBRC82RK6P338T",
+        "renames": []
+      },
+      "evt_01KXG04F62GE7NR5DC9MBPV6PN": {
+        "bakedName": "CascadeCompleted",
+        "curName": "CascadeCompleted",
+        "id": "evt_01KXG04F62GE7NR5DC9MBPV6PN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04F62Y4JBRC82RK6P338T",
+        "renames": []
+      },
+      "orb_01KXG04F624T2ZQ419Q9VM4PJF": {
+        "bakedName": "CascadeOnDeleteOrbital",
+        "curName": "CascadeOnDeleteOrbital",
+        "id": "orb_01KXG04F624T2ZQ419Q9VM4PJF",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KXG04F62A6GAQPJ6M3ESCR8N": {
+        "bakedName": "CascadeOnDeletePage",
+        "curName": "CascadeOnDeletePage",
+        "id": "pag_01KXG04F62A6GAQPJ6M3ESCR8N",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KXG04F62Y4JBRC82RK6P338T": {
+        "bakedName": "CascadeOnDeleteGate",
+        "curName": "CascadeOnDeleteGate",
+        "id": "trt_01KXG04F62Y4JBRC82RK6P338T",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
   "name": "std-cascade-on-delete",
   "orbitals": [
     {
@@ -40,17 +140,21 @@
             "type": "string"
           }
         ],
+        "id": "ent_01KXG04F628MGXSDK3NH0MDDMJ",
         "name": "CascadeLog",
         "persistence": "persistent"
       },
+      "id": "orb_01KXG04F624T2ZQ419Q9VM4PJF",
       "name": "CascadeOnDeleteOrbital",
       "pages": [
         {
+          "id": "pag_01KXG04F62A6GAQPJ6M3ESCR8N",
           "name": "CascadeOnDeletePage",
           "path": "/cascade-on-delete",
           "traits": [
             {
-              "ref": "CascadeOnDeleteGate"
+              "ref": "CascadeOnDeleteGate",
+              "refId": "trt_01KXG04F62Y4JBRC82RK6P338T"
             }
           ]
         }
@@ -95,6 +199,7 @@
           "emits": [
             {
               "event": "CascadeRowDeleted",
+              "eventId": "evt_01KXG04F622CD962H4G66FXFD4",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -105,6 +210,7 @@
             },
             {
               "event": "CascadeCompleted",
+              "eventId": "evt_01KXG04F62GE7NR5DC9MBPV6PN",
               "payloadSchema": [
                 {
                   "name": "parentId",
@@ -115,6 +221,7 @@
             },
             {
               "event": "DepsLoaded",
+              "eventId": "evt_01KXG04F624M2CZ0FSEPAZZD39",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -124,6 +231,7 @@
             },
             {
               "event": "CascadeStepped",
+              "eventId": "evt_01KXG04F62F2J70RRB8DEF0QM6",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -133,6 +241,7 @@
             },
             {
               "event": "CascadeFailed",
+              "eventId": "evt_01KXG04F62CJ2RA14CFCY7R5AD",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -145,7 +254,9 @@
               ]
             }
           ],
+          "id": "trt_01KXG04F62Y4JBRC82RK6P338T",
           "linkedEntity": "CascadeLog",
+          "linkedEntityId": "ent_01KXG04F628MGXSDK3NH0MDDMJ",
           "name": "CascadeOnDeleteGate",
           "scope": "instance",
           "stateMachine": {
@@ -406,5 +517,6 @@
       ]
     }
   ],
+  "schemaVersion": 1,
   "version": "1.1.0"
 }

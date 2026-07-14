@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-city-builder-board';
@@ -5237,6 +5238,7 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
           {
             'description': 'Emits UI:{selectBuildTypeEvent} with {buildType} when player picks a building from the palette',
             'event': 'SELECT_BUILD_TYPE',
+            'eventId': asEventId('evt_01KXG04X4A7KFDXCBBRCDW5TV9'),
             'payloadSchema': [
               {
                 'name': 'buildType',
@@ -5250,6 +5252,7 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
           {
             'description': 'Emits UI:{placeBuildingEvent} with {x,y} on tile click when player places a building',
             'event': 'PLACE_BUILDING',
+            'eventId': asEventId('evt_01KXG04X4A2S9R0DKP8KXSAHJC'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -5268,6 +5271,7 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
           {
             'description': 'Emits UI:{gameEndEvent} with {result} when the city reaches its goal or collapses',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG04X4AHT8ZHYGNCKH7P13Q'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -5296,7 +5300,9 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04X47H3WY2NJ01BX1WR9W'),
         'linkedEntity': 'CityBuilderBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04X47YA341X28YQGKR6D4'),
         'name': 'CityBuilderBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -8625,11 +8631,13 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04X4AT24V58BJA2B02QGB'),
         'name': 'CityBuilderBoardPage',
         'path': '/city-builder-board',
         'traits': [
           {
             'ref': 'CityBuilderBoardRender',
+            'refId': asTraitId('trt_01KXG04X47H3WY2NJ01BX1WR9W'),
           },
         ],
       } satisfies Page,

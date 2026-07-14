@@ -1,5 +1,69 @@
 {
   "description": "Headless win/lose round-resolution mechanic: derives result (victory/defeat/none) from team survivor counts on each UNITS_CHANGED signal and emits GAME_END. Owns only result; boards own their own phase/turn. Renders nothing.",
+  "ledger": {
+    "entries": {
+      "ent_01KXG04TNC4MHVDJM20C3DJKX1": {
+        "bakedName": "RoundState",
+        "curName": "RoundState",
+        "id": "ent_01KXG04TNC4MHVDJM20C3DJKX1",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KXG04TNC7DTY67YA1T49Z41M": {
+        "bakedName": "GAME_END",
+        "curName": "GAME_END",
+        "id": "evt_01KXG04TNC7DTY67YA1T49Z41M",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04TNCJQBQBHH17BMMRPXT",
+        "renames": []
+      },
+      "evt_01KXG04TNCJ6PM96MXCY7E71KQ": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KXG04TNCJ6PM96MXCY7E71KQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04TNCJQBQBHH17BMMRPXT",
+        "renames": []
+      },
+      "evt_01KXG04TNCQAJVK266BC1FPQWM": {
+        "bakedName": "UNITS_CHANGED",
+        "curName": "UNITS_CHANGED",
+        "id": "evt_01KXG04TNCQAJVK266BC1FPQWM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04TNCJQBQBHH17BMMRPXT",
+        "renames": []
+      },
+      "orb_01KXG04TNCH3KS970CPFP6W35Z": {
+        "bakedName": "RoundFlowOrbital",
+        "curName": "RoundFlowOrbital",
+        "id": "orb_01KXG04TNCH3KS970CPFP6W35Z",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KXG04TNCGEGEWAATWQRX9K4J": {
+        "bakedName": "RoundFlowPage",
+        "curName": "RoundFlowPage",
+        "id": "pag_01KXG04TNCGEGEWAATWQRX9K4J",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KXG04TNCJQBQBHH17BMMRPXT": {
+        "bakedName": "RoundFlow",
+        "curName": "RoundFlow",
+        "id": "trt_01KXG04TNCJQBQBHH17BMMRPXT",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
   "name": "std-round-flow",
   "orbitals": [
     {
@@ -16,18 +80,22 @@
             "type": "string"
           }
         ],
+        "id": "ent_01KXG04TNC4MHVDJM20C3DJKX1",
         "name": "RoundState",
         "persistence": "runtime",
         "shared": true
       },
+      "id": "orb_01KXG04TNCH3KS970CPFP6W35Z",
       "name": "RoundFlowOrbital",
       "pages": [
         {
+          "id": "pag_01KXG04TNCGEGEWAATWQRX9K4J",
           "name": "RoundFlowPage",
           "path": "/round-flow",
           "traits": [
             {
-              "ref": "RoundFlow"
+              "ref": "RoundFlow",
+              "refId": "trt_01KXG04TNCJQBQBHH17BMMRPXT"
             }
           ]
         }
@@ -48,6 +116,7 @@
             {
               "description": "Called when the round resolves to a win or loss",
               "event": "GAME_END",
+              "eventId": "evt_01KXG04TNC7DTY67YA1T49Z41M",
               "payloadSchema": [
                 {
                   "name": "result",
@@ -65,7 +134,9 @@
             "requires": []
           },
           "entityRebindable": true,
+          "id": "trt_01KXG04TNCJQBQBHH17BMMRPXT",
           "linkedEntity": "RoundState",
+          "linkedEntityId": "ent_01KXG04TNC4MHVDJM20C3DJKX1",
           "name": "RoundFlow",
           "stateMachine": {
             "events": [
@@ -172,5 +243,6 @@
       ]
     }
   ],
+  "schemaVersion": 1,
   "version": "1.0.0"
 }

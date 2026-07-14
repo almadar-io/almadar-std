@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-holiday-board-3d';
@@ -1791,6 +1792,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XV95B8XSXFRYQ20SH7W'),
         'name': 'HeroAuthority',
         'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
@@ -1959,6 +1961,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XV95B8XSXFRYQ20SH7W'),
         'name': 'Collector',
         'ref': ('Frame.traits.Collector' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
@@ -1970,6 +1973,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XV95B8XSXFRYQ20SH7W'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
@@ -1981,6 +1985,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XV95B8XSXFRYQ20SH7W'),
         'name': 'RoundGate',
         'ref': ('Frame.traits.RoundGate' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
@@ -2058,12 +2063,14 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04XV95B8XSXFRYQ20SH7W'),
         'name': 'Player',
         'ref': ('Frame.traits.HeroIntent' satisfies _StdUiHolidayBoard3dHolidayBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04XV9BFSCKGMKSNTNRZXG'),
         'name': 'HolidayBoard3DPage',
         'path': '/holiday-board-3d',
         'traits': [

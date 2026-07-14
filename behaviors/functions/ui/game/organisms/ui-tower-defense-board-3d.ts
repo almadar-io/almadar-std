@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tower-defense-board-3d';
@@ -1507,6 +1508,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
           {
             'description': 'Emits UI:{tileClickEvent} with { x, z } — builds a tower on a buildable grass cell',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG0500ZAHR6CCACTZ7XH5V4'),
             'payloadSchema': [
               {
                 'name': 'tileId',
@@ -1528,6 +1530,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
           {
             'description': 'Called when lives reach 0 (defeat) or all waves are cleared with lives left (victory)',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG0500Z4RZJRYJN7JV1M41Q'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1540,6 +1543,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG0500ZWHH2VE9DKR4ASNV5'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1567,7 +1571,9 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG0500XCEA0NQ7NDA8YGY2Z'),
         'linkedEntity': 'TowerDefenseBoard3DItem',
+        'linkedEntityId': asEntityId('ent_01KXG0500XZ6PVG81KZNXHKVB4'),
         'name': 'TowerDefenseBoard3DRender',
         'scope': 'instance',
         'stateMachine': {
@@ -5165,11 +5171,13 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG0500ZQC9ZR1579QWPBYMA'),
         'name': 'TowerDefenseBoard3DPage',
         'path': '/tower-defense-board-3d',
         'traits': [
           {
             'ref': 'TowerDefenseBoard3DRender',
+            'refId': asTraitId('trt_01KXG0500XCEA0NQ7NDA8YGY2Z'),
           },
         ],
       } satisfies Page,

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-media-gallery';
@@ -452,6 +453,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
           {
             'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
             'event': '@config.selectionEvent',
+            'eventId': asEventId('evt_01KXG04STWF6EJB6RZPKZEB7ZS'),
             'payloadSchema': [
               {
                 'name': 'selection',
@@ -465,6 +467,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
           {
             'description': 'MediaGallery rows finished loading; payload.data holds the collection.',
             'event': 'MediaGalleryLoaded',
+            'eventId': asEventId('evt_01KXG04STWA91DKSP7J3RGWY7C'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -481,7 +484,9 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04STSKR7RB9HG6V6H19XZ'),
         'linkedEntity': 'MediaGalleryItem',
+        'linkedEntityId': asEntityId('ent_01KXG04STSMPAV51YZFEJ09NCJ'),
         'name': 'MediaGalleryRender',
         'scope': 'instance',
         'stateMachine': {
@@ -609,11 +614,13 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04STWNYYKB6JEWP4GT8Q5'),
         'name': 'MediaGalleryPage',
         'path': '/media-gallery',
         'traits': [
           {
             'ref': 'MediaGalleryRender',
+            'refId': asTraitId('trt_01KXG04STSKR7RB9HG6V6H19XZ'),
           },
         ],
       } satisfies Page,

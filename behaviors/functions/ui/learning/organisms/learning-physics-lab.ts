@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-physics-lab';
@@ -835,6 +836,7 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
           {
             'description': 'startEvent prop — begins the physics integration loop',
             'event': 'START',
+            'eventId': asEventId('evt_01KXG053B6RH7DVBT7C24QS48A'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -847,6 +849,7 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
           {
             'description': 'pauseEvent prop — halts the integration loop, freezing the bodies',
             'event': 'PAUSE',
+            'eventId': asEventId('evt_01KXG053B6WHGPJ0NWBFAEZZEC'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -859,6 +862,7 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
           {
             'description': 'resetEvent prop — restores the bodies to their initial config state',
             'event': 'RESET',
+            'eventId': asEventId('evt_01KXG053B63A1A5PTJBA6MZNJZ'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -880,7 +884,9 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG053B2JDXH1MZM1EV0BQM7'),
         'linkedEntity': 'PhysicsLabItem',
+        'linkedEntityId': asEntityId('ent_01KXG053B2RGZR392C3F04RZ1H'),
         'name': 'PhysicsLabRender',
         'scope': 'instance',
         'stateMachine': {
@@ -1512,11 +1518,13 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053B6YBN2W1YPCWHDYF32'),
         'name': 'PhysicsLabPage',
         'path': '/learning/physics-lab',
         'traits': [
           {
             'ref': 'PhysicsLabRender',
+            'refId': asTraitId('trt_01KXG053B2JDXH1MZM1EV0BQM7'),
           },
         ],
       } satisfies Page,

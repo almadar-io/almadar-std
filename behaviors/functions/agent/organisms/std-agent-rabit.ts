@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-agent-rabit';
@@ -210,6 +211,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
         'emits': [
           {
             'event': 'PLANNED',
+            'eventId': asEventId('evt_01KXG04ET6GWFZYMCF0YVESXZ0'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -220,6 +222,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
           },
           {
             'event': 'COMPOSED',
+            'eventId': asEventId('evt_01KXG04ET6EYJM51XTFQP81GA6'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -230,6 +233,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
           },
           {
             'event': 'DISPATCHED',
+            'eventId': asEventId('evt_01KXG04ET6GNY4GDX86ZHP2BF4'),
             'payloadSchema': [
               {
                 'name': 'plan',
@@ -245,6 +249,7 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
           },
           {
             'event': 'RABIT_DONE',
+            'eventId': asEventId('evt_01KXG04ET65N031BG1KYE9K2JM'),
             'payloadSchema': [
               {
                 'name': 'schema',
@@ -254,7 +259,9 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
             ],
           },
         ],
+        'id': asTraitId('trt_01KXG04ET6EEYB14812TVBQRXY'),
         'linkedEntity': 'Coordinator',
+        'linkedEntityId': asEntityId('ent_01KXG04ET6Y5GGKTRFESK90Z4E'),
         'name': 'CoordinatorPipeline',
         'scope': 'instance',
         'stateMachine': {
@@ -642,9 +649,12 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
         'emits': [
           {
             'event': 'ALL_DONE',
+            'eventId': asEventId('evt_01KXG04ET6DXC8D3Q6W4GJQ49P'),
           },
         ],
+        'id': asTraitId('trt_01KXG04ET6DCAN2YBB3HST3PQS'),
         'linkedEntity': 'Coordinator',
+        'linkedEntityId': asEntityId('ent_01KXG04ET6Y5GGKTRFESK90Z4E'),
         'name': 'CoordinatorMonitor',
         'scope': 'instance',
         'stateMachine': {
@@ -847,15 +857,20 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
       } satisfies Trait, 'Coordinator', canonicalName),
       rebindInlineTraitEntity({
         'category': 'lifecycle',
+        'id': asTraitId('trt_01KXG04ET6E05S3B0A5SEKM8VP'),
         'linkedEntity': 'Coordinator',
+        'linkedEntityId': asEntityId('ent_01KXG04ET6Y5GGKTRFESK90Z4E'),
         'listens': [
           {
             'event': 'RABIT_DONE',
+            'eventId': asEventId('evt_01KXG04ET65N031BG1KYE9K2JM'),
             'source': {
               'kind': 'trait',
               'trait': ('CoordinatorPipeline' satisfies _StdAgentRabitListenTraitName),
+              'traitId': asTraitId('trt_01KXG04ET6EEYB14812TVBQRXY'),
             },
             'triggers': 'RABIT_DONE',
+            'triggersId': asEventId('evt_01KXG04ET6CMFF8FGGV981QV66'),
           },
         ],
         'name': 'CoordinatorListener',
@@ -923,17 +938,21 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04ET6FWHBJZRFACSQM1BA'),
         'name': 'RabitPage',
         'path': '/rabit',
         'traits': [
           {
             'ref': 'CoordinatorPipeline',
+            'refId': asTraitId('trt_01KXG04ET6EEYB14812TVBQRXY'),
           },
           {
             'ref': 'CoordinatorMonitor',
+            'refId': asTraitId('trt_01KXG04ET6DCAN2YBB3HST3PQS'),
           },
           {
             'ref': 'CoordinatorListener',
+            'refId': asTraitId('trt_01KXG04ET6E05S3B0A5SEKM8VP'),
           },
         ],
       } satisfies Page,
@@ -1167,6 +1186,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
         'emits': [
           {
             'event': 'BUILD_STEP',
+            'eventId': asEventId('evt_01KXG04ET6X3BQ1EK1NFQY315F'),
             'payloadSchema': [
               {
                 'name': 'orbitalName',
@@ -1177,6 +1197,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
           },
           {
             'event': 'PROCESS_RETRY',
+            'eventId': asEventId('evt_01KXG04ET6CTZMX21TKRJHV9RK'),
             'payloadSchema': [
               {
                 'name': 'orbitalName',
@@ -1192,6 +1213,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
           },
           {
             'event': 'PROCESS_DONE',
+            'eventId': asEventId('evt_01KXG04ET6NQEJ4XAJM8W6T94X'),
             'payloadSchema': [
               {
                 'name': 'orbitalName',
@@ -1202,6 +1224,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
           },
           {
             'event': 'REBUILD',
+            'eventId': asEventId('evt_01KXG04ET6M8VK6GXY9BMAG6XA'),
             'payloadSchema': [
               {
                 'name': 'orbitalName',
@@ -1212,6 +1235,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
           },
           {
             'event': 'ORBITAL_COMPLETE',
+            'eventId': asEventId('evt_01KXG04ET6FCW0ESNC15ZRMP3M'),
             'payloadSchema': [
               {
                 'name': 'orbitalName',
@@ -1222,6 +1246,7 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
           },
           {
             'event': 'FIX_GENERATED',
+            'eventId': asEventId('evt_01KXG04ET6MDKJ94VGKKXPKQES'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -1231,7 +1256,9 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
             ],
           },
         ],
+        'id': asTraitId('trt_01KXG04ET6T7SWB67P81SB52T6'),
         'linkedEntity': 'OrbitalProcess',
+        'linkedEntityId': asEntityId('ent_01KXG04ET6ZFFAH02D4FZV095G'),
         'name': 'ProcessPipeline',
         'scope': 'instance',
         'stateMachine': {
@@ -1602,16 +1629,20 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
       } satisfies Trait, 'OrbitalProcess', canonicalName),
       rebindInlineTraitEntity({
         'category': 'lifecycle',
+        'id': asTraitId('trt_01KXG04ET6MKY3B40YX4WW0AAP'),
         'linkedEntity': 'OrbitalProcess',
+        'linkedEntityId': asEntityId('ent_01KXG04ET6ZFFAH02D4FZV095G'),
         'listens': [
           {
             'event': 'DISPATCHED',
+            'eventId': asEventId('evt_01KXG04ET6M5RNYVNC8ZSKPXH7'),
             'source': {
               'kind': 'orbital',
               'orbital': 'CoordinatorOrbital',
               'trait': ('CoordinatorPipeline' satisfies _StdAgentRabitListenTraitName),
             },
             'triggers': 'DISPATCHED',
+            'triggersId': asEventId('evt_01KXG04ET6M5RNYVNC8ZSKPXH7'),
           },
         ],
         'name': 'ProcessDispatcher',
@@ -1684,14 +1715,17 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04ET6D53J5QQ3G2CNDNR6'),
         'name': 'OrbitalProcessPage',
         'path': '/rabit/process',
         'traits': [
           {
             'ref': 'ProcessPipeline',
+            'refId': asTraitId('trt_01KXG04ET6T7SWB67P81SB52T6'),
           },
           {
             'ref': 'ProcessDispatcher',
+            'refId': asTraitId('trt_01KXG04ET6MKY3B40YX4WW0AAP'),
           },
         ],
       } satisfies Page,

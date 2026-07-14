@@ -1,5 +1,87 @@
 {
   "description": "std-lifecycle — age-based status lifecycle for a target entity. A periodic tick scans the target for records in `fromStatus` whose `dateField` is older than `ageDays`, and transitions each one to `toStatus` — every matching record, via a self-driving scan loop (process the head of a filtered fetch, persist the status, re-fetch until the set drains). Compose onto any orbital and bind `targetEntity` + the status/date knobs.",
+  "ledger": {
+    "entries": {
+      "ent_01KXG04FCCKS32RCFZJFYY0MPT": {
+        "bakedName": "LifecycleRunLog",
+        "curName": "LifecycleRunLog",
+        "id": "ent_01KXG04FCCKS32RCFZJFYY0MPT",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KXG04FCC287BNRFYBHB5WYMG": {
+        "bakedName": "LifecycleTransitioned",
+        "curName": "LifecycleTransitioned",
+        "id": "evt_01KXG04FCC287BNRFYBHB5WYMG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FCCCW54AQE8ZXE8HZ3R",
+        "renames": []
+      },
+      "evt_01KXG04FCC3E1F9YFC0Q4AXSQV": {
+        "bakedName": "LifecycleStepped",
+        "curName": "LifecycleStepped",
+        "id": "evt_01KXG04FCC3E1F9YFC0Q4AXSQV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FCCCW54AQE8ZXE8HZ3R",
+        "renames": []
+      },
+      "evt_01KXG04FCCCV2S5R5849X2M5ZK": {
+        "bakedName": "ScanFailed",
+        "curName": "ScanFailed",
+        "id": "evt_01KXG04FCCCV2S5R5849X2M5ZK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FCCCW54AQE8ZXE8HZ3R",
+        "renames": []
+      },
+      "evt_01KXG04FCCDZ3HGJ3AA97EYY0P": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KXG04FCCDZ3HGJ3AA97EYY0P",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FCCCW54AQE8ZXE8HZ3R",
+        "renames": []
+      },
+      "evt_01KXG04FCCM9PAS36JGRFE7M0Z": {
+        "bakedName": "ScanRecordsLoaded",
+        "curName": "ScanRecordsLoaded",
+        "id": "evt_01KXG04FCCM9PAS36JGRFE7M0Z",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FCCCW54AQE8ZXE8HZ3R",
+        "renames": []
+      },
+      "orb_01KXG04FCC3HJ9H2JNGNDQCJV2": {
+        "bakedName": "LifecycleOrbital",
+        "curName": "LifecycleOrbital",
+        "id": "orb_01KXG04FCC3HJ9H2JNGNDQCJV2",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KXG04FCCG6CJYK1WMNNQ4BW2": {
+        "bakedName": "LifecycleSchedulerPage",
+        "curName": "LifecycleSchedulerPage",
+        "id": "pag_01KXG04FCCG6CJYK1WMNNQ4BW2",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KXG04FCCCW54AQE8ZXE8HZ3R": {
+        "bakedName": "LifecycleScheduler",
+        "curName": "LifecycleScheduler",
+        "id": "trt_01KXG04FCCCW54AQE8ZXE8HZ3R",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
   "name": "std-lifecycle",
   "orbitals": [
     {
@@ -61,17 +143,21 @@
             "type": "string"
           }
         ],
+        "id": "ent_01KXG04FCCKS32RCFZJFYY0MPT",
         "name": "LifecycleRunLog",
         "persistence": "persistent"
       },
+      "id": "orb_01KXG04FCC3HJ9H2JNGNDQCJV2",
       "name": "LifecycleOrbital",
       "pages": [
         {
+          "id": "pag_01KXG04FCCG6CJYK1WMNNQ4BW2",
           "name": "LifecycleSchedulerPage",
           "path": "/lifecycle/scheduler",
           "traits": [
             {
-              "ref": "LifecycleScheduler"
+              "ref": "LifecycleScheduler",
+              "refId": "trt_01KXG04FCCCW54AQE8ZXE8HZ3R"
             }
           ]
         }
@@ -138,6 +224,7 @@
           "emits": [
             {
               "event": "LifecycleTransitioned",
+              "eventId": "evt_01KXG04FCC287BNRFYBHB5WYMG",
               "payloadSchema": [
                 {
                   "name": "entityId",
@@ -152,6 +239,7 @@
             },
             {
               "event": "ScanRecordsLoaded",
+              "eventId": "evt_01KXG04FCCM9PAS36JGRFE7M0Z",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -161,6 +249,7 @@
             },
             {
               "event": "ScanFailed",
+              "eventId": "evt_01KXG04FCCCV2S5R5849X2M5ZK",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -174,6 +263,7 @@
             },
             {
               "event": "LifecycleStepped",
+              "eventId": "evt_01KXG04FCC3E1F9YFC0Q4AXSQV",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -190,7 +280,9 @@
             "requires": []
           },
           "entityRebindable": true,
+          "id": "trt_01KXG04FCCCW54AQE8ZXE8HZ3R",
           "linkedEntity": "LifecycleRunLog",
+          "linkedEntityId": "ent_01KXG04FCCKS32RCFZJFYY0MPT",
           "name": "LifecycleScheduler",
           "scope": "instance",
           "stateMachine": {
@@ -512,5 +604,6 @@
       ]
     }
   ],
+  "schemaVersion": 1,
   "version": "1.1.0"
 }

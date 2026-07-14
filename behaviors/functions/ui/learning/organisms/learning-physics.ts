@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-physics';
@@ -242,12 +243,14 @@ export function stdLearningPhysicsProjectileMotionOrbital(params: StdLearningPhy
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQWRQHZS1MXKXJZ4W5'),
         'name': 'ProjectileEngine',
         'ref': ('Projectile.traits.ProjectileSim' satisfies _StdLearningPhysicsProjectileMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQ3RA0X2X5YH4M5MY7'),
         'name': 'ProjectileMotionPage',
         'path': '/physics/projectile',
         'traits': [
@@ -545,12 +548,14 @@ export function stdLearningPhysicsFreeFallMotionOrbital(params: StdLearningPhysi
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQ14NS12MSDD139VFR'),
         'name': 'FreeFallEngine',
         'ref': ('FreeFall.traits.FreeFallSim' satisfies _StdLearningPhysicsFreeFallMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQPBYCBHQ4SBEHZEB2'),
         'name': 'FreeFallMotionPage',
         'path': '/physics/freefall',
         'traits': [
@@ -848,12 +853,14 @@ export function stdLearningPhysicsSpringMotionOrbital(params: StdLearningPhysics
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQD5NPY8XACRA7K2AX'),
         'name': 'SpringEngine',
         'ref': ('Spring.traits.SpringSim' satisfies _StdLearningPhysicsSpringMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQT6B1ERRQJ80Z4PVT'),
         'name': 'SpringMotionPage',
         'path': '/physics/spring',
         'traits': [
@@ -1143,12 +1150,14 @@ export function stdLearningPhysicsFrictionMotionOrbital(params: StdLearningPhysi
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQRP7MT2FJZWF5J00Q'),
         'name': 'FrictionEngine',
         'ref': ('Friction.traits.FrictionSim' satisfies _StdLearningPhysicsFrictionMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQC7XDKE18TP00F5Y3'),
         'name': 'FrictionMotionPage',
         'path': '/physics/friction',
         'traits': [
@@ -1434,12 +1443,14 @@ export function stdLearningPhysicsCircularMotionOrbital(params: StdLearningPhysi
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQZADY5G6SMDWVJZXR'),
         'name': 'CircularEngine',
         'ref': ('Circular.traits.CircularSim' satisfies _StdLearningPhysicsCircularMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQ2GBETWBZ8AMA9HMZ'),
         'name': 'CircularMotionPage',
         'path': '/physics/circular',
         'traits': [
@@ -1743,12 +1754,14 @@ export function stdLearningPhysicsPendulumMotionOrbital(params: StdLearningPhysi
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQ57BQ9W89T2M8JY5W'),
         'name': 'PendulumEngine',
         'ref': ('Pendulum.traits.PendulumSim' satisfies _StdLearningPhysicsPendulumMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQMS30QH3BCZWR175V'),
         'name': 'PendulumMotionPage',
         'path': '/physics/pendulum',
         'traits': [
@@ -2046,12 +2059,14 @@ export function stdLearningPhysicsCollisionMotionOrbital(params: StdLearningPhys
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQXVZ58BS902X7JS2D'),
         'name': 'CollisionEngine',
         'ref': ('Collision.traits.CollisionSim' satisfies _StdLearningPhysicsCollisionMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQASRZYZ2P805Y6X6S'),
         'name': 'CollisionMotionPage',
         'path': '/physics/collision',
         'traits': [
@@ -2351,12 +2366,14 @@ export function stdLearningPhysicsInclineMotionOrbital(params: StdLearningPhysic
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQW9G5XRGT4EPW4CV1'),
         'name': 'InclineEngine',
         'ref': ('Incline.traits.InclineSim' satisfies _StdLearningPhysicsInclineMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQEPM3K04BYGB4461D'),
         'name': 'InclineMotionPage',
         'path': '/physics/incline',
         'traits': [
@@ -2654,12 +2671,14 @@ export function stdLearningPhysicsOrbitMotionOrbital(params: StdLearningPhysicsO
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQ2W7T46YK2Y38S6SB'),
         'name': 'OrbitEngine',
         'ref': ('Orbit.traits.OrbitSim' satisfies _StdLearningPhysicsOrbitMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CQDREPPT2EZE8XQYE7'),
         'name': 'OrbitMotionPage',
         'path': '/physics/orbit',
         'traits': [
@@ -3101,12 +3120,14 @@ export function stdLearningPhysicsGasMotionOrbital(params: StdLearningPhysicsGas
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CQTBRTF71QRGYQ9A4C'),
         'name': 'GasEngine',
         'ref': ('Gas.traits.GasSim' satisfies _StdLearningPhysicsGasMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CRD287NQQRZ8DE7FZV'),
         'name': 'GasMotionPage',
         'path': '/physics/gas',
         'traits': [
@@ -3396,12 +3417,14 @@ export function stdLearningPhysicsMagneticMotionOrbital(params: StdLearningPhysi
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CR5SYBQY01CZNRXGY6'),
         'name': 'MagneticEngine',
         'ref': ('Magnetic.traits.MagneticSim' satisfies _StdLearningPhysicsMagneticMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CR4AG0X7Q5XA58KQAV'),
         'name': 'MagneticMotionPage',
         'path': '/physics/magnetic',
         'traits': [
@@ -3919,12 +3942,14 @@ export function stdLearningPhysicsWaveMotionOrbital(params: StdLearningPhysicsWa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CRYXP7Q1A1TET8N26S'),
         'name': 'WaveEngine',
         'ref': ('Wave.traits.WaveSim' satisfies _StdLearningPhysicsWaveMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CRJ923E8A1CPH4877Q'),
         'name': 'WaveMotionPage',
         'path': '/physics/wave',
         'traits': [
@@ -4212,12 +4237,14 @@ export function stdLearningPhysicsReflectionMotionOrbital(params: StdLearningPhy
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG053CRKAFFYHP00T4KST4D'),
         'name': 'ReflectionEngine',
         'ref': ('Reflection.traits.ReflectionSim' satisfies _StdLearningPhysicsReflectionMotionOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG053CRJXFYGET6CPH6Y3E3'),
         'name': 'ReflectionMotionPage',
         'path': '/physics/reflection',
         'traits': [

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-arena-board';
@@ -708,6 +709,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04WJHHVKHWKFWX7TFEEAH'),
         'name': 'ChaseAI',
         'ref': ('Chase.traits.ChaseAi' satisfies _StdUiArenaBoardArenaBoardOrbitalUsesRef),
       }),
@@ -719,6 +721,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04WJHHVKHWKFWX7TFEEAH'),
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdUiArenaBoardArenaBoardOrbitalUsesRef),
       }),
@@ -730,6 +733,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04WJHHVKHWKFWX7TFEEAH'),
         'name': 'RoundLogic',
         'ref': ('Round.traits.RoundFlow' satisfies _StdUiArenaBoardArenaBoardOrbitalUsesRef),
       }),
@@ -1151,7 +1155,9 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
             'type': '[Tile]',
           },
         },
+        'id': asTraitId('trt_01KXG04WJHXGDDQPF0HK4JA56T'),
         'linkedEntity': 'GameState',
+        'linkedEntityId': asEntityId('ent_01KXG04WJHHVKHWKFWX7TFEEAH'),
         'name': 'ArenaView',
         'scope': 'instance',
         'stateMachine': {
@@ -1561,6 +1567,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04WJHRMGTNJFCZSMF7F4K'),
         'name': 'ArenaPage',
         'path': '/arena',
         'traits': [
@@ -1575,6 +1582,7 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
           },
           {
             'ref': 'ArenaView',
+            'refId': asTraitId('trt_01KXG04WJHXGDDQPF0HK4JA56T'),
           },
         ],
       } satisfies Page,

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-entity-list';
@@ -401,6 +402,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
           {
             'description': 'Item actions - schema-driven or function-based',
             'event': 'ITEM_ACTIONS',
+            'eventId': asEventId('evt_01KXG04SH3CDMWPSH39V0BN1TD'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -413,6 +415,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
           {
             'description': 'User opened a record from the list.',
             'event': 'VIEW',
+            'eventId': asEventId('evt_01KXG04SH3R1YPRSCJX64JDKM2'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -425,6 +428,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
           {
             'description': 'EntityList rows finished loading; payload.data holds the collection.',
             'event': 'EntityListLoaded',
+            'eventId': asEventId('evt_01KXG04SH3S1G8MB6C8PAC7PMY'),
             'payloadSchema': [
               {
                 'name': 'data',
@@ -441,7 +445,9 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04SH1BXS9YPS5MGN6Z0YS'),
         'linkedEntity': 'EntityListItem',
+        'linkedEntityId': asEntityId('ent_01KXG04SH12F03D9SCBV5NEE67'),
         'name': 'EntityListRender',
         'scope': 'instance',
         'stateMachine': {
@@ -592,11 +598,13 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04SH3QV17HNEKKE0WKCBE'),
         'name': 'EntityListPage',
         'path': '/entity-list',
         'traits': [
           {
             'ref': 'EntityListRender',
+            'refId': asTraitId('trt_01KXG04SH1BXS9YPS5MGN6Z0YS'),
           },
         ],
       } satisfies Page,

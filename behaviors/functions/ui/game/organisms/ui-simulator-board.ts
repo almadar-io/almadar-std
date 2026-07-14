@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-simulator-board';
@@ -475,6 +476,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           {
             'description': 'completeEvent prop',
             'event': 'COMPLETE',
+            'eventId': asEventId('evt_01KXG04Z2KKD42JYC8XN4YKBE6'),
             'payloadSchema': [
               {
                 'name': 'success',
@@ -493,6 +495,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           {
             'description': 'Sets parameter A from { value } during play.',
             'event': 'SET_A',
+            'eventId': asEventId('evt_01KXG04Z2K6JDNFJEKVKQ7CTZE'),
             'payloadSchema': [
               {
                 'name': 'value',
@@ -506,6 +509,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           {
             'description': 'Sets parameter B from { value } during play.',
             'event': 'SET_B',
+            'eventId': asEventId('evt_01KXG04Z2KX6Q9Q742YCNW8PE5'),
             'payloadSchema': [
               {
                 'name': 'value',
@@ -519,6 +523,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           {
             'description': 'Evaluates output vs target/tolerance; wins or retries.',
             'event': 'CHECK',
+            'eventId': asEventId('evt_01KXG04Z2KA603PMSQSQA26WD2'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -531,6 +536,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           {
             'description': 'Resets the puzzle back to the menu.',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04Z2K4SEGETHTC6KPKQ77'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -557,7 +563,9 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04Z2H7ASPASQ5TF17C46S'),
         'linkedEntity': 'SimulatorBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04Z2H0Y2NYYFFYG43H2M9'),
         'name': 'SimulatorBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -2367,11 +2375,13 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04Z2KPRKE9PR2706VCHGV'),
         'name': 'SimulatorBoardPage',
         'path': '/simulator-board',
         'traits': [
           {
             'ref': 'SimulatorBoardRender',
+            'refId': asTraitId('trt_01KXG04Z2H7ASPASQ5TF17C46S'),
           },
         ],
       } satisfies Page,

@@ -1,5 +1,60 @@
 {
   "description": "std-row-access-control — row-level access control gate / ownership filter / role-based row visibility. Use when a user voices that only certain users should see or edit certain records (only the owner can edit, private to owner, owner-only visibility, only see your own records, role-based visibility, admin-only access, visible to admins only, restricted to role, permission gate, ownership scoping, hide from other users, only show mine). Listens for `RowsLoaded` (rename via traitOverrides.events to the consumer's load event), filters `@payload.data` by `@user.id` (when `ownerField` is set) and/or `@user.role` (when `visibleRoles` is non-empty), re-emits `RowsFiltered` for downstream consumers (rename to wire into the UI atom's listen). Composable via `extraTraits` to interpose between a data fetch and a list/grid UI.",
+  "ledger": {
+    "entries": {
+      "ent_01KXG04FGZ86JBQD8G4N9PG3XE": {
+        "bakedName": "RowAccessGateView",
+        "curName": "RowAccessGateView",
+        "id": "ent_01KXG04FGZ86JBQD8G4N9PG3XE",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KXG04FGZMCPK9QFF1QQABR9N": {
+        "bakedName": "RowsFiltered",
+        "curName": "RowsFiltered",
+        "id": "evt_01KXG04FGZMCPK9QFF1QQABR9N",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FGZ8J9MS9QJ09CDBVNV",
+        "renames": []
+      },
+      "evt_01KXG04FGZQHW4ANY5SSR2PPSP": {
+        "bakedName": "RowsLoaded",
+        "curName": "RowsLoaded",
+        "id": "evt_01KXG04FGZQHW4ANY5SSR2PPSP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FGZ8J9MS9QJ09CDBVNV",
+        "renames": []
+      },
+      "orb_01KXG04FGZMXWC12CKNGPH6091": {
+        "bakedName": "RowAccessControlOrbital",
+        "curName": "RowAccessControlOrbital",
+        "id": "orb_01KXG04FGZMXWC12CKNGPH6091",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KXG04FGZ16D6SXXB8RPH6QXP": {
+        "bakedName": "RowAccessControlPage",
+        "curName": "RowAccessControlPage",
+        "id": "pag_01KXG04FGZ16D6SXXB8RPH6QXP",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KXG04FGZ8J9MS9QJ09CDBVNV": {
+        "bakedName": "RowAccessGate",
+        "curName": "RowAccessGate",
+        "id": "trt_01KXG04FGZ8J9MS9QJ09CDBVNV",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
   "name": "std-row-access-control",
   "orbitals": [
     {
@@ -64,17 +119,21 @@
             "type": "boolean"
           }
         ],
+        "id": "ent_01KXG04FGZ86JBQD8G4N9PG3XE",
         "name": "RowAccessGateView",
         "persistence": "runtime"
       },
+      "id": "orb_01KXG04FGZMXWC12CKNGPH6091",
       "name": "RowAccessControlOrbital",
       "pages": [
         {
+          "id": "pag_01KXG04FGZ16D6SXXB8RPH6QXP",
           "name": "RowAccessControlPage",
           "path": "/row-access-control",
           "traits": [
             {
-              "ref": "RowAccessGate"
+              "ref": "RowAccessGate",
+              "refId": "trt_01KXG04FGZ8J9MS9QJ09CDBVNV"
             }
           ]
         }
@@ -116,6 +175,7 @@
           "emits": [
             {
               "event": "RowsFiltered",
+              "eventId": "evt_01KXG04FGZMCPK9QFF1QQABR9N",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -139,7 +199,9 @@
             "requires": []
           },
           "entityRebindable": true,
+          "id": "trt_01KXG04FGZ8J9MS9QJ09CDBVNV",
           "linkedEntity": "RowAccessGateView",
+          "linkedEntityId": "ent_01KXG04FGZ86JBQD8G4N9PG3XE",
           "name": "RowAccessGate",
           "scope": "instance",
           "stateMachine": {
@@ -278,5 +340,6 @@
       ]
     }
   ],
+  "schemaVersion": 1,
   "version": "1.0.0"
 }

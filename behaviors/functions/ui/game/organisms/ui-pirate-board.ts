@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asEventId, asPageId, asTraitId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-pirate-board';
@@ -3407,6 +3408,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': 'Called when the battle at sea ends',
             'event': 'GAME_END',
+            'eventId': asEventId('evt_01KXG04YK8DA3MWG6ED0DJT2NB'),
             'payloadSchema': [
               {
                 'name': 'result',
@@ -3419,6 +3421,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': 'Called after a ship moves',
             'event': 'UNIT_MOVE',
+            'eventId': asEventId('evt_01KXG04YK8B4B7FBMJJX2V1198'),
             'payloadSchema': [
               {
                 'name': 'unit',
@@ -3447,6 +3450,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': 'Called when gold is collected',
             'event': 'COLLECT_GOLD',
+            'eventId': asEventId('evt_01KXG04YK83VW22600AZFFSTS5'),
             'payloadSchema': [
               {
                 'name': 'amount',
@@ -3460,6 +3464,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': '-- Declarative event props --',
             'event': 'TILE_CLICK',
+            'eventId': asEventId('evt_01KXG04YK8Z6VY4C1YB640BG5W'),
             'payloadSchema': [
               {
                 'name': 'x',
@@ -3478,6 +3483,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on ship click',
             'event': 'UNIT_CLICK',
+            'eventId': asEventId('evt_01KXG04YK8S7FWDXRD49F7VPJJ'),
             'payloadSchema': [
               {
                 'name': 'unitId',
@@ -3491,6 +3497,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': 'Emits UI:{endTurnEvent} with {} on end turn',
             'event': 'END_TURN',
+            'eventId': asEventId('evt_01KXG04YK85QMS49ZVFM7ZGC33'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3503,6 +3510,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': 'Emits UI:{buyCannonsEvent} with {} on buy cannons',
             'event': 'BUY_CANNONS',
+            'eventId': asEventId('evt_01KXG04YK85QCDPEC79PCN72T8'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3515,6 +3523,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': 'Emits UI:{cancelEvent} with {} on cancel',
             'event': 'CANCEL',
+            'eventId': asEventId('evt_01KXG04YK888KYA0J4M16HWX50'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3527,6 +3536,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
             'event': 'PLAY_AGAIN',
+            'eventId': asEventId('evt_01KXG04YK8Y0VVS9KJ9SKNCV7D'),
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3558,7 +3568,9 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           'requires': [],
         },
         'entityRebindable': true,
+        'id': asTraitId('trt_01KXG04YK48VND0RM28MYYWEY6'),
         'linkedEntity': 'PirateBoardItem',
+        'linkedEntityId': asEntityId('ent_01KXG04YK4M08VB88GCD7ZM4GY'),
         'name': 'PirateBoardRender',
         'scope': 'instance',
         'stateMachine': {
@@ -13589,11 +13601,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04YK85VMKKXYERY97R7K1'),
         'name': 'PirateBoardPage',
         'path': '/pirate-board',
         'traits': [
           {
             'ref': 'PirateBoardRender',
+            'refId': asTraitId('trt_01KXG04YK48VND0RM28MYYWEY6'),
           },
         ],
       } satisfies Page,

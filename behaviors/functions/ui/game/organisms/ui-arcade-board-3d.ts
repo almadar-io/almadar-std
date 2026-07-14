@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { asEntityId, asPageId } from '@almadar/core/types';
 import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-arcade-board-3d';
@@ -1343,6 +1344,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04WFBVHNWG5JZYN7QET07'),
         'name': 'HeroAuthority',
         'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
@@ -1425,6 +1427,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04WFBVHNWG5JZYN7QET07'),
         'name': 'PlayEconomy',
         'ref': ('Frame.traits.PlayEconomy' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
@@ -1436,6 +1439,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04WFBVHNWG5JZYN7QET07'),
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
@@ -1451,6 +1455,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04WFBVHNWG5JZYN7QET07'),
         'name': 'RoundGate',
         'ref': ('Frame.traits.RoundGate' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
@@ -1716,12 +1721,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
           },
         },
         'linkedEntity': canonicalName,
+        'linkedEntityId': asEntityId('ent_01KXG04WFBVHNWG5JZYN7QET07'),
         'name': 'Player',
         'ref': ('Frame.traits.ArcadeIntent' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
     ],
     pages: [
       {
+        'id': asPageId('pag_01KXG04WFBYAZS349HQ3RX3DDD'),
         'name': 'ArcadeBoard3DPage',
         'path': '/arcade-board-3d',
         'traits': [

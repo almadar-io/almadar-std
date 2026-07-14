@@ -1,5 +1,87 @@
 {
   "description": "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. Marks each record `remindedAt` so it isn't reminded twice. Compose alongside std-notify-on-event to deliver the reminder.",
+  "ledger": {
+    "entries": {
+      "ent_01KXG04FGHSY7V4DMG7TF0PMW0": {
+        "bakedName": "ReminderRunLog",
+        "curName": "ReminderRunLog",
+        "id": "ent_01KXG04FGHSY7V4DMG7TF0PMW0",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KXG04FGH5F7E7N0HVYQY96SM": {
+        "bakedName": "ReminderDue",
+        "curName": "ReminderDue",
+        "id": "evt_01KXG04FGH5F7E7N0HVYQY96SM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4",
+        "renames": []
+      },
+      "evt_01KXG04FGH9K2WZN1JGR0CWXF0": {
+        "bakedName": "ReminderStepped",
+        "curName": "ReminderStepped",
+        "id": "evt_01KXG04FGH9K2WZN1JGR0CWXF0",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4",
+        "renames": []
+      },
+      "evt_01KXG04FGHB7KFKDMQVDZ6CG15": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KXG04FGHB7KFKDMQVDZ6CG15",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4",
+        "renames": []
+      },
+      "evt_01KXG04FGHD8JW00QXQEBTTMH9": {
+        "bakedName": "ScanFailed",
+        "curName": "ScanFailed",
+        "id": "evt_01KXG04FGHD8JW00QXQEBTTMH9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4",
+        "renames": []
+      },
+      "evt_01KXG04FGHRVC231C15KD26CM7": {
+        "bakedName": "ScanRecordsLoaded",
+        "curName": "ScanRecordsLoaded",
+        "id": "evt_01KXG04FGHRVC231C15KD26CM7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4",
+        "renames": []
+      },
+      "orb_01KXG04FGHBCWA7ETGFC546QNC": {
+        "bakedName": "ReminderSchedulerOrbital",
+        "curName": "ReminderSchedulerOrbital",
+        "id": "orb_01KXG04FGHBCWA7ETGFC546QNC",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KXG04FGH4Z7RP2DDQ8GQ7MH7": {
+        "bakedName": "ReminderSchedulerPage",
+        "curName": "ReminderSchedulerPage",
+        "id": "pag_01KXG04FGH4Z7RP2DDQ8GQ7MH7",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4": {
+        "bakedName": "ReminderScheduler",
+        "curName": "ReminderScheduler",
+        "id": "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
   "name": "std-reminder-scheduler",
   "orbitals": [
     {
@@ -61,17 +143,21 @@
             "type": "string"
           }
         ],
+        "id": "ent_01KXG04FGHSY7V4DMG7TF0PMW0",
         "name": "ReminderRunLog",
         "persistence": "persistent"
       },
+      "id": "orb_01KXG04FGHBCWA7ETGFC546QNC",
       "name": "ReminderSchedulerOrbital",
       "pages": [
         {
+          "id": "pag_01KXG04FGH4Z7RP2DDQ8GQ7MH7",
           "name": "ReminderSchedulerPage",
           "path": "/reminders/scheduler",
           "traits": [
             {
-              "ref": "ReminderScheduler"
+              "ref": "ReminderScheduler",
+              "refId": "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4"
             }
           ]
         }
@@ -132,6 +218,7 @@
           "emits": [
             {
               "event": "ReminderDue",
+              "eventId": "evt_01KXG04FGH5F7E7N0HVYQY96SM",
               "payloadSchema": [
                 {
                   "name": "entityId",
@@ -150,6 +237,7 @@
             },
             {
               "event": "ScanRecordsLoaded",
+              "eventId": "evt_01KXG04FGHRVC231C15KD26CM7",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -159,6 +247,7 @@
             },
             {
               "event": "ScanFailed",
+              "eventId": "evt_01KXG04FGHD8JW00QXQEBTTMH9",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -172,6 +261,7 @@
             },
             {
               "event": "ReminderStepped",
+              "eventId": "evt_01KXG04FGH9K2WZN1JGR0CWXF0",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -187,7 +277,9 @@
             "requires": []
           },
           "entityRebindable": true,
+          "id": "trt_01KXG04FGH4V3PZ6CBKWZ8HXK4",
           "linkedEntity": "ReminderRunLog",
+          "linkedEntityId": "ent_01KXG04FGHSY7V4DMG7TF0PMW0",
           "name": "ReminderScheduler",
           "scope": "instance",
           "stateMachine": {
@@ -523,5 +615,6 @@
       ]
     }
   ],
+  "schemaVersion": 1,
   "version": "1.1.0"
 }
