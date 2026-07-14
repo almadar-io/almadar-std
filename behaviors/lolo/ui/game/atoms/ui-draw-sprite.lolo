@@ -34,6 +34,7 @@ orbital DrawSpriteOrbital {
           width: @config.width
           height: @config.height
           frame: @config.frame
+          animation: @config.animation
           flipX: @config.flipX
           rotation: @config.rotation
           opacity: @config.opacity
@@ -47,7 +48,7 @@ orbital DrawSpriteOrbital {
         @label "Position"
         @description "Logical scene position; the projector maps it to pixels / world."
         @tier "presentation"
-      asset : DrawSpriteAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "asset", animations: ["idle", "walk", "attack", "hit", "death"], style: "pixel", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }
+      asset : DrawSpriteAsset
         @label "Asset"
         @description "The image / atlas reference to blit."
         @tier "presentation"
@@ -57,15 +58,19 @@ orbital DrawSpriteOrbital {
         @tier "presentation"
       width : number = 0
         @label "Width"
-        @description "Draw width in px (2D) / world units (3D); omitted → resolved source width."
+        @description "Draw width in world units (fractions of `projector.tileWidth`); omitted → resolved source width in px."
         @tier "presentation"
       height : number = 0
         @label "Height"
-        @description "Draw height in px (2D) / world units (3D); omitted → resolved source height."
+        @description "Draw height in world units (fractions of `projector.tileWidth`); omitted → resolved source height in px."
         @tier "presentation"
       frame : json = {}
         @label "Frame"
         @description "Explicit atlas sub-rect override (px); omitted → resolved from `asset.atlas`/`asset.sprite`."
+        @tier "presentation"
+      animation : string = ""
+        @label "Animation"
+        @description "Named GLB animation clip to play (3D backend only; the 2D painter animates via `frame`). Matched case-insensitively against the model's clips."
         @tier "presentation"
       flipX : boolean = false
         @label "Flip X"
