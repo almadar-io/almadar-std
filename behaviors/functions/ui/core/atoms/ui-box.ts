@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-box';
 const ALIAS = 'UiBox';
@@ -61,7 +61,6 @@ export interface StdUiBoxConfig {
   bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
   /** Default: `false` */
   border?: boolean;
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
@@ -79,7 +78,7 @@ export interface StdUiBoxConfig {
   marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   /** Default: `"none"` */
   marginY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `"Max Width"` */
+  /** Default: `""` */
   maxWidth?: string;
   /** Default: `"auto"` */
   overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';

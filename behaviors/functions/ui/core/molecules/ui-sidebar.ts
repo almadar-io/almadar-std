@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-sidebar';
 const ALIAS = 'UiSidebar';
@@ -80,7 +80,6 @@ export interface StdUiSidebarConfig {
   isLoading?: boolean;
   /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subItems":[]},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","id":"Id 2","isActive":true,"label":"Label 2","subItems":[]}]` */
   items?: EntityRow[];
-  /** Default: `[{"content":"Logo","type":"typography"}]` */
   logo?: unknown;
   /** Default: `"LOGO_CLICK"` */
   logoClickEvent?: string;

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-document-viewer';
 const ALIAS = 'UiDocumentViewer';
@@ -43,7 +43,7 @@ export interface StdUiDocumentViewerConfig {
   actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `"Content"` */
+  /** Default: `""` */
   content?: string;
   /** Default: `0` */
   currentPage?: number;
@@ -52,7 +52,7 @@ export interface StdUiDocumentViewerConfig {
   /** Default: `[{"content":"Content","documentType":"pdf","label":"Label","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},{"content":"Content 2","documentType":"text","label":"Label 2","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}]` */
   documents?: EntityRow[];
   error?: EntityRow;
-  /** Default: `"Height"` */
+  /** Default: `""` */
   height?: string;
   /** Default: `false` */
   isLoading?: boolean;
@@ -64,7 +64,7 @@ export interface StdUiDocumentViewerConfig {
   showToolbar?: boolean;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   src?: unknown;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `0` */
   totalPages?: number;

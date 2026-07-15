@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-header';
 const ALIAS = 'UiHeader';
@@ -77,7 +77,6 @@ export interface StdUiHeaderConfig {
   isLoading?: boolean;
   /** Default: `false` */
   isMenuOpen?: boolean;
-  /** Default: `[{"content":"Logo","type":"typography"}]` */
   logo?: unknown;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   logoSrc?: unknown;
@@ -93,7 +92,7 @@ export interface StdUiHeaderConfig {
   onSearch?: string;
   /** Default: `"USER_CLICK"` */
   onUserClick?: string;
-  /** Default: `"Search Placeholder"` */
+  /** Default: `""` */
   searchPlaceholder?: string;
   /** Default: `true` */
   showMenuToggle?: boolean;
@@ -103,7 +102,7 @@ export interface StdUiHeaderConfig {
   sticky?: boolean;
   /** Default: `{"alt":"Alt","initials":"Initials","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   userAvatar?: EntityRow;
-  /** Default: `"User Name"` */
+  /** Default: `""` */
   userName?: string;
   /** Default: `"mobile"` */
   variant?: 'mobile' | 'desktop';

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-physics-canvas';
 const ALIAS = 'UiPhysicsCanvas';
@@ -48,7 +48,7 @@ export interface StdUiPhysicsCanvasShapeClickPayload {
 export interface StdUiPhysicsCanvasConfig {
   /** Default: `false` */
   animate?: boolean;
-  /** Default: `"Background Color"` */
+  /** Default: `""` */
   backgroundColor?: string;
   /** Default: `[{"color":"Color","fx":1,"fy":1,"id":"Id","label":"Label","radius":1,"vx":1,"vy":1,"x":1,"y":1},{"color":"Color 2","fx":2,"fy":2,"id":"Id 2","label":"Label 2","radius":2,"vx":2,"vy":2,"x":2,"y":2}]` */
   bodies?: EntityRow[];
@@ -73,7 +73,7 @@ export interface StdUiPhysicsCanvasConfig {
   showForces?: boolean;
   /** Default: `true` */
   showVelocity?: boolean;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `20` */
   velocityScale?: number;

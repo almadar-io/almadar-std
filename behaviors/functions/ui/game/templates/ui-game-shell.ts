@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-game-shell';
 const ALIAS = 'UiGameShell';
@@ -39,25 +39,19 @@ export type StdUiGameShellEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameShellConfig {
-  /** Default: `[{"content":"Addons","type":"typography"}]` */
   addons?: unknown;
   /** Default: `"Game"` */
   appName?: string;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"backgroundAsset","dimension":"2d","name":"backgroundAsset","role":"decoration","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
   backgroundAsset?: EntityRow;
   /** Default: `[{"type":"canvas-2d"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"content":"Controls","type":"typography"}]` */
   controls?: unknown;
   /** Default: `"future"` */
   fontFamily?: string;
-  /** Default: `[{"content":"Hud","type":"typography"}]` */
   hud?: unknown;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"hudBackgroundAsset","dimension":"2d","name":"hudBackgroundAsset","role":"decoration","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
   hudBackgroundAsset?: EntityRow;
-  /** Default: `[{"content":"Overlay","type":"typography"}]` */
   overlay?: unknown;
   /** Default: `true` */
   showTopBar?: boolean;

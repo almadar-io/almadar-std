@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-icon';
 const ALIAS = 'UiIcon';
@@ -47,7 +47,7 @@ export interface StdUiIconConfig {
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `"Name"` */
+  /** Default: `""` */
   name?: string;
   /** Default: `"md"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';

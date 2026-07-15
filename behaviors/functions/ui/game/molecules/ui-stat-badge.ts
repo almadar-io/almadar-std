@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-stat-badge';
 const ALIAS = 'UiStatBadge';
@@ -39,27 +39,25 @@ export type StdUiStatBadgeEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatBadgeConfig {
-  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   assetUrl?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Field"` */
+  /** Default: `""` */
   field?: string;
   /** Default: `"number"` */
   format?: 'number' | 'hearts' | 'bar' | 'text';
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"}` */
   iconUrl?: EntityRow;
-  /** Default: `"Label"` */
+  /** Default: `""` */
   label?: string;
   /** Default: `0` */
   max?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"Source"` */
+  /** Default: `""` */
   source?: string;
-  /** Default: `"Value"` */
+  /** Default: `""` */
   value?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';

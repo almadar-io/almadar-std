@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-table-view';
 const ALIAS = 'UiTableView';
@@ -67,26 +67,26 @@ export interface StdUiTableViewTableViewLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `"Accepts"` */
+  /** Default: `""` */
   accepts?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `[{"align":"left","className":"Class Name","field":"Field","format":"badge","header":"Header","icon":"circle","key":"Key","label":"Label","sortable":false,"weight":"normal","width":"Width"},{"align":"center","className":"Class Name 2","field":"Field 2","format":"date","header":"Header 2","icon":"circle","key":"Key 2","label":"Label 2","sortable":true,"weight":"medium","width":"Width 2"}]` */
   columns?: EntityRow[];
-  /** Default: `"Dnd Item Id Field"` */
+  /** Default: `""` */
   dndItemIdField?: string;
   /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `"Drag Group"` */
+  /** Default: `""` */
   dragGroup?: string;
-  /** Default: `"Drop Event"` */
+  /** Default: `""` */
   dropEvent?: string;
-  /** Default: `"Empty Message"` */
+  /** Default: `""` */
   emptyMessage?: string;
   error?: EntityRow;
   /** Default: `[{"align":"left","className":"Class Name","field":"Field","format":"badge","header":"Header","icon":"circle","key":"Key","label":"Label","sortable":false,"weight":"normal","width":"Width"},{"align":"center","className":"Class Name 2","field":"Field 2","format":"date","header":"Header 2","icon":"circle","key":"Key 2","label":"Label 2","sortable":true,"weight":"medium","width":"Width 2"}]` */
   fields?: EntityRow[];
-  /** Default: `"Group By"` */
+  /** Default: `""` */
   groupBy?: string;
   /** Default: `false` */
   isLoading?: boolean;
@@ -98,9 +98,9 @@ export interface StdUiTableViewConfig {
   maxInlineActions?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `"Position Event"` */
+  /** Default: `""` */
   positionEvent?: string;
-  /** Default: `"Reorder Event"` */
+  /** Default: `""` */
   reorderEvent?: string;
   /** Default: `"SELECT"` */
   selectEvent?: string;
@@ -108,7 +108,7 @@ export interface StdUiTableViewConfig {
   selectable?: boolean;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `"Sort Column"` */
+  /** Default: `""` */
   sortColumn?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';

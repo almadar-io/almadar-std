@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-alert';
 const ALIAS = 'UiAlert';
@@ -54,7 +54,6 @@ export interface StdUiAlertClosePayload {
  */
 export interface StdUiAlertConfig {
   actions?: unknown;
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
@@ -62,13 +61,13 @@ export interface StdUiAlertConfig {
   dismissEvent?: string;
   /** Default: `false` */
   dismissible?: boolean;
-  /** Default: `"Message"` */
+  /** Default: `""` */
   message?: string;
   /** Default: `"CLOSE"` */
   onClose?: string;
   /** Default: `"DISMISS"` */
   onDismiss?: string;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `"info"` */
   variant?: 'info' | 'success' | 'warning' | 'error';

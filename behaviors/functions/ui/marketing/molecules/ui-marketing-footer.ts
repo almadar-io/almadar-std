@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-marketing-footer';
 const ALIAS = 'UiMarketingFooter';
@@ -43,7 +43,7 @@ export interface StdUiMarketingFooterConfig {
   className?: string;
   /** Default: `[{"items":[{"href":"Href","label":"Label"},{"href":"Href 2","label":"Label 2"}],"title":"Title"},{"items":[{"href":"Href","label":"Label"},{"href":"Href 2","label":"Label 2"}],"title":"Title 2"}]` */
   columns?: EntityRow[];
-  /** Default: `"Copyright"` */
+  /** Default: `""` */
   copyright?: string;
   /** Default: `{"alt":"Alt","href":"Href","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   logo?: EntityRow;

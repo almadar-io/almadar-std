@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-notification';
 const ALIAS = 'UiNotification';
@@ -55,9 +55,9 @@ export interface StdUiNotificationActionPayload {
 export interface StdUiNotificationConfig {
   /** Default: `"ACTION"` */
   actionEvent?: string;
-  /** Default: `"Action Label"` */
+  /** Default: `""` */
   actionLabel?: string;
-  /** Default: `"Badge"` */
+  /** Default: `""` */
   badge?: string;
   /** Default: `""` */
   className?: string;
@@ -67,13 +67,13 @@ export interface StdUiNotificationConfig {
   dismissible?: boolean;
   /** Default: `5000` */
   duration?: number;
-  /** Default: `"Message"` */
+  /** Default: `""` */
   message?: string;
   /** Default: `"ACTION"` */
   onAction?: string;
   /** Default: `"DISMISS"` */
   onDismiss?: string;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `"info"` */
   variant?: 'success' | 'error' | 'info' | 'warning';

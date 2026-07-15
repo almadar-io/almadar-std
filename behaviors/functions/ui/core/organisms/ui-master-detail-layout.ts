@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-master-detail-layout';
 const ALIAS = 'UiMasterDetailLayout';
@@ -41,16 +41,14 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
 export interface StdUiMasterDetailLayoutConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"content":"Detail","type":"typography"}]` */
   detail?: unknown;
-  /** Default: `"Detail Class Name"` */
+  /** Default: `""` */
   detailClassName?: string;
   emptyDetail?: unknown;
   /** Default: `false` */
   hasSelection?: boolean;
-  /** Default: `[{"content":"Master","type":"typography"}]` */
   master?: unknown;
-  /** Default: `"Master Class Name"` */
+  /** Default: `""` */
   masterClassName?: string;
   /** Default: `"350px"` */
   masterWidth?: string;
@@ -136,19 +134,13 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'type': 'string',
           },
           'detail': {
-            'default': [
-              {
-                'content': 'Detail',
-                'type': 'typography',
-              },
-            ],
             'description': 'Detail panel content',
             'label': 'Detail',
             'tier': 'presentation',
             'type': 'node',
           },
           'detailClassName': {
-            'default': 'Detail Class Name',
+            'default': '',
             'description': 'Class for detail pane',
             'label': 'Detail Class Name',
             'tier': 'presentation',
@@ -168,19 +160,13 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'type': 'boolean',
           },
           'master': {
-            'default': [
-              {
-                'content': 'Master',
-                'type': 'typography',
-              },
-            ],
             'description': 'Master panel content (usually a list)',
             'label': 'Master',
             'tier': 'presentation',
             'type': 'node',
           },
           'masterClassName': {
-            'default': 'Master Class Name',
+            'default': '',
             'description': 'Class for master pane',
             'label': 'Master Class Name',
             'tier': 'presentation',
@@ -257,7 +243,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
   type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
-  const traitRenames = new Map<string, string>();
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -275,21 +260,10 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
       }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.name !== undefined && override.name !== tr.name) {
-        // A rename must also rewrite page trait refs + @trait.<old> config
-        // tokens (applyTraitRenames below) or the built orbital dangles.
-        traitRenames.set(tr.name, override.name);
-        merged.name = override.name;
-      }
       if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
-  }
-  if (traitRenames.size > 0) {
-    const renamed = applyTraitRenames(built, traitRenames);
-    built.traits = renamed.traits;
-    built.pages = renamed.pages;
   }
   if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {

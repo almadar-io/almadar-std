@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-code-runner-panel';
 const ALIAS = 'UiCodeRunnerPanel';
@@ -41,9 +41,9 @@ export type StdUiCodeRunnerPanelEventKey = 'INIT';
 export interface StdUiCodeRunnerPanelConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Code"` */
+  /** Default: `""` */
   code?: string;
-  /** Default: `"Language"` */
+  /** Default: `""` */
   language?: string;
   /** Default: `"RUN_CODE"` */
   runEvent?: string;
@@ -131,14 +131,14 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
             'type': 'string',
           },
           'code': {
-            'default': 'Code',
+            'default': '',
             'description': 'Initial code content',
             'label': 'Code',
             'tier': 'presentation',
             'type': 'string',
           },
           'language': {
-            'default': 'Language',
+            'default': '',
             'description': 'Programming language for syntax highlighting',
             'label': 'Language',
             'tier': 'presentation',
@@ -219,7 +219,6 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
   type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
-  const traitRenames = new Map<string, string>();
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -237,21 +236,10 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
       }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.name !== undefined && override.name !== tr.name) {
-        // A rename must also rewrite page trait refs + @trait.<old> config
-        // tokens (applyTraitRenames below) or the built orbital dangles.
-        traitRenames.set(tr.name, override.name);
-        merged.name = override.name;
-      }
       if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
-  }
-  if (traitRenames.size > 0) {
-    const renamed = applyTraitRenames(built, traitRenames);
-    built.traits = renamed.traits;
-    built.pages = renamed.pages;
   }
   if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {

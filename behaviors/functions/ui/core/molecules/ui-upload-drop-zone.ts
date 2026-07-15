@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-upload-drop-zone';
 const ALIAS = 'UiUploadDropZone';
@@ -46,7 +46,7 @@ export interface StdUiUploadDropZoneActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiUploadDropZoneConfig {
-  /** Default: `"Accept"` */
+  /** Default: `""` */
   accept?: string;
   /** Default: `"ACTION"` */
   action?: string;
@@ -54,13 +54,13 @@ export interface StdUiUploadDropZoneConfig {
   actionPayload?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Description"` */
+  /** Default: `""` */
   description?: string;
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `"Label"` */
+  /** Default: `""` */
   label?: string;
   /** Default: `1` */
   maxFiles?: number;

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-code-block';
 const ALIAS = 'UiCodeBlock';
@@ -50,7 +50,7 @@ export interface StdUiCodeBlockConfig {
   actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `"Code"` */
+  /** Default: `""` */
   code?: string;
   /** Default: `[{"afterLineNumber":1,"beforeLineNumber":1,"content":"Content","type":"added"},{"afterLineNumber":2,"beforeLineNumber":2,"content":"Content 2","type":"removed"}]` */
   diff?: EntityRow[];
@@ -69,9 +69,9 @@ export interface StdUiCodeBlockConfig {
   maxHeight?: string;
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
-  /** Default: `"New Value"` */
+  /** Default: `""` */
   newValue?: string;
-  /** Default: `"Old Value"` */
+  /** Default: `""` */
   oldValue?: string;
   /** Default: `"CHANGE"` */
   onChange?: string;
@@ -83,7 +83,7 @@ export interface StdUiCodeBlockConfig {
   showLanguageBadge?: boolean;
   /** Default: `false` */
   showLineNumbers?: boolean;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `false` */
   wordWrap?: boolean;

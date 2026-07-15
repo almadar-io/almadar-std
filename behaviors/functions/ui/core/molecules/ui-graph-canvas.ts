@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-graph-canvas';
 const ALIAS = 'UiGraphCanvas';
@@ -87,11 +87,11 @@ export interface StdUiGraphCanvasConfig {
   onNodeDoubleClick?: string;
   /** Default: `800` */
   repulsion?: number;
-  /** Default: `"Selected Node Id"` */
+  /** Default: `""` */
   selectedNodeId?: string;
   /** Default: `true` */
   showLabels?: boolean;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
 }
 

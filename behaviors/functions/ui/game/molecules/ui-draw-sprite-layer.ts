@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-draw-sprite-layer';
 const ALIAS = 'UiDrawSpriteLayer';
@@ -39,7 +39,7 @@ export type StdUiDrawSpriteLayerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawSpriteLayerConfig {
-  /** Default: `[{"asset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"flipX":false,"height":1,"opacity":1,"position":{"x":1,"y":1,"z":1},"rotation":1,"type":"Type","width":1},{"asset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"flipX":true,"height":2,"opacity":2,"position":{"x":2,"y":2,"z":2},"rotation":2,"type":"Type 2","width":2}]` */
+  /** Default: `[{"animation":"Animation","asset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"flipX":false,"height":1,"opacity":1,"position":{"x":1,"y":1,"z":1},"rotation":1,"type":"Type","width":1},{"animation":"Animation 2","asset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"flipX":true,"height":2,"opacity":2,"position":{"x":2,"y":2,"z":2},"rotation":2,"type":"Type 2","width":2}]` */
   items?: EntityRow[];
 }
 

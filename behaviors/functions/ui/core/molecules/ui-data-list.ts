@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-data-list';
 const ALIAS = 'UiDataList';
@@ -95,28 +95,28 @@ export interface StdUiDataListDataListLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `"Accepts"` */
+  /** Default: `""` */
   accepts?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   columns?: EntityRow[];
-  /** Default: `"Current User"` */
+  /** Default: `""` */
   currentUser?: string;
-  /** Default: `"Dnd Item Id Field"` */
+  /** Default: `""` */
   dndItemIdField?: string;
   /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `"Drag Group"` */
+  /** Default: `""` */
   dragGroup?: string;
-  /** Default: `"Drop Event"` */
+  /** Default: `""` */
   dropEvent?: string;
   error?: EntityRow;
   /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   fields?: EntityRow[];
   /** Default: `"none"` */
   gap?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `"Group By"` */
+  /** Default: `""` */
   groupBy?: string;
   /** Default: `false` */
   hasMore?: boolean;
@@ -138,13 +138,13 @@ export interface StdUiDataListConfig {
   maxInlineActions?: number;
   /** Default: `5` */
   pageSize?: number;
-  /** Default: `"Position Event"` */
+  /** Default: `""` */
   positionEvent?: string;
   /** Default: `"REORDER"` */
   reorderEvent?: string;
   /** Default: `false` */
   reorderable?: boolean;
-  /** Default: `"Sender Field"` */
+  /** Default: `""` */
   senderField?: string;
   /** Default: `false` */
   sortable?: boolean;

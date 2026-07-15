@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-animated-reveal';
 const ALIAS = 'UiAnimatedReveal';
@@ -43,7 +43,6 @@ export interface StdUiAnimatedRevealConfig {
   animate?: boolean;
   /** Default: `"fade-up"` */
   animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;

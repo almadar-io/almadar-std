@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-empty-state';
 const ALIAS = 'UiEmptyState';
@@ -48,11 +48,11 @@ export interface StdUiEmptyStateActionPayload {
 export interface StdUiEmptyStateConfig {
   /** Default: `"ACTION"` */
   actionEvent?: string;
-  /** Default: `"Action Label"` */
+  /** Default: `""` */
   actionLabel?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Description"` */
+  /** Default: `""` */
   description?: string;
   /** Default: `false` */
   destructive?: boolean;
@@ -60,11 +60,11 @@ export interface StdUiEmptyStateConfig {
   icon?: unknown;
   /** Default: `"icon-only"` */
   look?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
-  /** Default: `"Message"` */
+  /** Default: `""` */
   message?: string;
   /** Default: `"ACTION"` */
   onAction?: string;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'success' | 'error' | 'warning' | 'info';

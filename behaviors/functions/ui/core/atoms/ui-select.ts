@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-select';
 const ALIAS = 'UiSelect';
@@ -78,7 +78,7 @@ export interface StdUiSelectConfig {
   onValueChange?: string;
   /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
-  /** Default: `"Placeholder"` */
+  /** Default: `""` */
   placeholder?: string;
   /** Default: `false` */
   searchable?: boolean;

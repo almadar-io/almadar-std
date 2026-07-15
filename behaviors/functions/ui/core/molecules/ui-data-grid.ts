@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-data-grid';
 const ALIAS = 'UiDataGrid';
@@ -67,7 +67,7 @@ export interface StdUiDataGridDataGridLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `"Accepts"` */
+  /** Default: `""` */
   accepts?: string;
   /** Default: `""` */
   className?: string;
@@ -75,13 +75,13 @@ export interface StdUiDataGridConfig {
   cols?: number;
   /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   columns?: EntityRow[];
-  /** Default: `"Dnd Item Id Field"` */
+  /** Default: `""` */
   dndItemIdField?: string;
   /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `"Drag Group"` */
+  /** Default: `""` */
   dragGroup?: string;
-  /** Default: `"Drop Event"` */
+  /** Default: `""` */
   dropEvent?: string;
   error?: EntityRow;
   /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
@@ -90,7 +90,7 @@ export interface StdUiDataGridConfig {
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `false` */
   hasMore?: boolean;
-  /** Default: `"Image Field"` */
+  /** Default: `""` */
   imageField?: string;
   /** Default: `false` */
   infiniteScroll?: boolean;
@@ -108,9 +108,9 @@ export interface StdUiDataGridConfig {
   minCardWidth?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `"Position Event"` */
+  /** Default: `""` */
   positionEvent?: string;
-  /** Default: `"Reorder Event"` */
+  /** Default: `""` */
   reorderEvent?: string;
   /** Default: `false` */
   scrollX?: boolean;

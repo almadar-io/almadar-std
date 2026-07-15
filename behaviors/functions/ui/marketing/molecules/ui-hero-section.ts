@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-hero-section';
 const ALIAS = 'UiHeroSection';
@@ -44,7 +44,6 @@ export interface StdUiHeroSectionConfig {
   /** Default: `"subtle"` */
   background?: 'dark' | 'gradient' | 'subtle';
   backgroundElement?: unknown;
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
@@ -52,21 +51,21 @@ export interface StdUiHeroSectionConfig {
   image?: EntityRow;
   /** Default: `"below"` */
   imagePosition?: 'below' | 'right' | 'background';
-  /** Default: `"Install Command"` */
+  /** Default: `""` */
   installCommand?: string;
   /** Default: `{"href":"Href","label":"Label"}` */
   primaryAction?: EntityRow;
   /** Default: `{"href":"Href","label":"Label"}` */
   secondaryAction?: EntityRow;
-  /** Default: `"Subtitle"` */
+  /** Default: `""` */
   subtitle?: string;
-  /** Default: `"Tag"` */
+  /** Default: `""` */
   tag?: string;
   /** Default: `"primary"` */
   tagVariant?: 'primary' | 'secondary' | 'accent';
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
-  /** Default: `"Title Accent"` */
+  /** Default: `""` */
   titleAccent?: string;
 }
 

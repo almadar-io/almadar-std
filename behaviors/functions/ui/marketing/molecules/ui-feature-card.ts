@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-feature-card';
 const ALIAS = 'UiFeatureCard';
@@ -41,9 +41,9 @@ export type StdUiFeatureCardEventKey = 'INIT';
 export interface StdUiFeatureCardConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Description"` */
+  /** Default: `""` */
   description?: string;
-  /** Default: `"Href"` */
+  /** Default: `""` */
   href?: string;
   /** Default: `"circle"` */
   icon?: unknown;
@@ -51,7 +51,7 @@ export interface StdUiFeatureCardConfig {
   linkLabel?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `"bordered"` */
   variant?: 'default' | 'bordered' | 'elevated' | 'interactive';

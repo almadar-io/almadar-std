@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-qr-scanner';
 const ALIAS = 'UiQrScanner';
@@ -51,7 +51,6 @@ export interface StdUiQrScannerConfig {
   className?: string;
   /** Default: `"environment"` */
   facingMode?: 'environment' | 'user';
-  /** Default: `[{"content":"Fallback","type":"typography"}]` */
   fallback?: unknown;
   /** Default: `"SCAN"` */
   onScan?: string;

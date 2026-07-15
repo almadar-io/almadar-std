@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-markdown-content';
 const ALIAS = 'UiMarkdownContent';
@@ -41,7 +41,7 @@ export type StdUiMarkdownContentEventKey = 'INIT';
 export interface StdUiMarkdownContentConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Content"` */
+  /** Default: `""` */
   content?: string;
   /** Default: `"ltr"` */
   direction?: 'ltr' | 'rtl';

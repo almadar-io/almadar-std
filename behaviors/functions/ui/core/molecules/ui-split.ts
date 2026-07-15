@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-split';
 const ALIAS = 'UiSplit';
@@ -41,7 +41,7 @@ export type StdUiSplitEventKey = 'INIT';
 export interface StdUiSplitConfig {
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch';
-  /** Default: `[{"content":"Panel A","type":"typography"},{"content":"Panel B","type":"typography"}]` */
+  /** Default: `[]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
@@ -50,13 +50,13 @@ export interface StdUiSplitConfig {
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Left Class Name"` */
+  /** Default: `""` */
   leftClassName?: string;
   /** Default: `"1:1"` */
   ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
   /** Default: `false` */
   reverse?: boolean;
-  /** Default: `"Right Class Name"` */
+  /** Default: `""` */
   rightClassName?: string;
   /** Default: `"md"` */
   stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';

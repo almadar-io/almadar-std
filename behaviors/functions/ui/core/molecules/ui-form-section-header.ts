@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-form-section-header';
 const ALIAS = 'UiFormSectionHeader';
@@ -46,7 +46,7 @@ export interface StdUiFormSectionHeaderTogglePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFormSectionHeaderConfig {
-  /** Default: `"Badge"` */
+  /** Default: `""` */
   badge?: string;
   /** Default: `"default"` */
   badgeVariant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
@@ -62,9 +62,9 @@ export interface StdUiFormSectionHeaderConfig {
   isComplete?: boolean;
   /** Default: `"TOGGLE"` */
   onToggle?: string;
-  /** Default: `"Subtitle"` */
+  /** Default: `""` */
   subtitle?: string;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
 }
 

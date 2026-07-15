@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-avatar';
 const ALIAS = 'UiAvatar';
@@ -57,17 +57,17 @@ export interface StdUiAvatarConfig {
   action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `"Alt"` */
+  /** Default: `""` */
   alt?: string;
-  /** Default: `"Badge"` */
+  /** Default: `""` */
   badge?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `"Initials"` */
+  /** Default: `""` */
   initials?: string;
-  /** Default: `"Name"` */
+  /** Default: `""` */
   name?: string;
   /** Default: `"CLICK"` */
   onClick?: string;

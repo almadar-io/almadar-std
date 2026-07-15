@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-card';
 const ALIAS = 'UiCard';
@@ -48,7 +48,6 @@ export interface StdUiCardActionPayload {
 export interface StdUiCardConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
@@ -60,9 +59,9 @@ export interface StdUiCardConfig {
   padding?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"none"` */
   shadow?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `"Subtitle"` */
+  /** Default: `""` */
   subtitle?: string;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `"bordered"` */
   variant?: 'default' | 'bordered' | 'elevated' | 'interactive';

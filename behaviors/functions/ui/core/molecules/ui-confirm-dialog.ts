@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-confirm-dialog';
 const ALIAS = 'UiConfirmDialog';
@@ -60,15 +60,15 @@ export interface StdUiConfirmDialogOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiConfirmDialogConfig {
-  /** Default: `"Cancel Label"` */
+  /** Default: `""` */
   cancelLabel?: string;
-  /** Default: `"Cancel Text"` */
+  /** Default: `""` */
   cancelText?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Confirm Label"` */
+  /** Default: `""` */
   confirmLabel?: string;
-  /** Default: `"Confirm Text"` */
+  /** Default: `""` */
   confirmText?: string;
   description?: unknown;
   error?: EntityRow;
@@ -83,7 +83,7 @@ export interface StdUiConfirmDialogConfig {
   onConfirm?: string;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `"danger"` */
   variant?: 'danger' | 'warning' | 'info' | 'default';

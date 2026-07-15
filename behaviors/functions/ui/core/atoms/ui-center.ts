@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-center';
 const ALIAS = 'UiCenter';
@@ -39,7 +39,6 @@ export type StdUiCenterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCenterConfig {
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
@@ -51,7 +50,7 @@ export interface StdUiCenterConfig {
   horizontal?: boolean;
   /** Default: `false` */
   inline?: boolean;
-  /** Default: `"Min Height"` */
+  /** Default: `""` */
   minHeight?: string;
   /** Default: `{}` */
   style?: unknown;

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-dialogue-bubble';
 const ALIAS = 'UiDialogueBubble';
@@ -43,7 +43,6 @@ export interface StdUiDialogueBubbleConfig {
   className?: string;
   /** Default: `"neutral"` */
   mood?: 'neutral' | 'happy' | 'concerned' | 'angry';
-  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"portrait","dimension":"2d","name":"portrait","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png"}` */
   portrait?: EntityRow;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';

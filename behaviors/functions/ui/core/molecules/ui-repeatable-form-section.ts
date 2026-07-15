@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-repeatable-form-section';
 const ALIAS = 'UiRepeatableFormSection';
@@ -62,15 +62,15 @@ export interface StdUiRepeatableFormSectionReorderPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRepeatableFormSectionConfig {
-  /** Default: `"Add Label"` */
+  /** Default: `""` */
   addLabel?: string;
   /** Default: `false` */
   allowReorder?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Current State"` */
+  /** Default: `""` */
   currentState?: string;
-  /** Default: `"Empty Message"` */
+  /** Default: `""` */
   emptyMessage?: string;
   /** Default: `[{"addedAt":"Added At","addedInState":"Added In State","id":"Id"},{"addedAt":"Added At 2","addedInState":"Added In State 2","id":"Id 2"}]` */
   items?: EntityRow[];
@@ -86,11 +86,11 @@ export interface StdUiRepeatableFormSectionConfig {
   onReorder?: string;
   /** Default: `false` */
   readOnly?: boolean;
-  /** Default: `"Section Type"` */
+  /** Default: `""` */
   sectionType?: string;
   /** Default: `false` */
   showAuditInfo?: boolean;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `false` */
   trackAddedInState?: boolean;

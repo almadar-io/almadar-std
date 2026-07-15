@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-canvas-2d';
 const ALIAS = 'UiCanvas2d';
@@ -69,9 +69,8 @@ export interface StdUiCanvas2dTileLeavePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCanvas2dConfig {
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"backgroundImage","dimension":"2d","name":"backgroundImage","role":"decoration","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
   backgroundImage?: unknown;
-  /** Default: `"Bg Color"` */
+  /** Default: `""` */
   bgColor?: string;
   /** Default: `"pan-zoom"` */
   camera?: 'pan-zoom' | 'follow' | 'fixed';

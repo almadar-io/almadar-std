@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tabs';
 const ALIAS = 'UiTabs';
@@ -46,11 +46,11 @@ export interface StdUiTabsTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTabsConfig {
-  /** Default: `"Active Tab"` */
+  /** Default: `""` */
   activeTab?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Default Active Tab"` */
+  /** Default: `""` */
   defaultActiveTab?: string;
   /** Default: `[{"active":false,"badge":"Badge","content":"Content","disabled":false,"icon":"circle","iconAsset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"iconAsset","dimension":"2d","name":"iconAsset","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"id":"Id","label":"Label","value":"Value"},{"active":true,"badge":"Badge 2","content":"Content 2","disabled":true,"icon":"circle","iconAsset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"iconAsset","dimension":"2d","name":"iconAsset","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"id":"Id 2","label":"Label 2","value":"Value 2"}]` */
   items?: EntityRow[];

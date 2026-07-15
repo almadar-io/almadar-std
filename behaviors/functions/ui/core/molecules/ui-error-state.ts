@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-error-state';
 const ALIAS = 'UiErrorState';
@@ -48,15 +48,15 @@ export interface StdUiErrorStateRetryPayload {
 export interface StdUiErrorStateConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Description"` */
+  /** Default: `""` */
   description?: string;
-  /** Default: `"Message"` */
+  /** Default: `""` */
   message?: string;
   /** Default: `"RETRY"` */
   onRetry?: string;
   /** Default: `"RETRY"` */
   retryEvent?: string;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
 }
 

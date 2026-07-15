@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-meter';
 const ALIAS = 'UiMeter';
@@ -46,7 +46,7 @@ export interface StdUiMeterConfig {
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Label"` */
+  /** Default: `""` */
   label?: string;
   /** Default: `100` */
   max?: number;
@@ -60,7 +60,7 @@ export interface StdUiMeterConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `[{"color":"Color","label":"Label","value":1},{"color":"Color 2","label":"Label 2","value":2}]` */
   thresholds?: EntityRow[];
-  /** Default: `"Unit"` */
+  /** Default: `""` */
   unit?: string;
   /** Default: `1` */
   value?: number;

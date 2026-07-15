@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-wizard-navigation';
 const ALIAS = 'UiWizardNavigation';
@@ -84,19 +84,19 @@ export interface StdUiWizardNavigationCompleteClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardNavigationConfig {
-  /** Default: `"Back Label"` */
+  /** Default: `""` */
   backLabel?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   compact?: boolean;
-  /** Default: `"Complete Label"` */
+  /** Default: `""` */
   completeLabel?: string;
   /** Default: `1` */
   currentStep?: number;
   /** Default: `true` */
   isValid?: boolean;
-  /** Default: `"Next Label"` */
+  /** Default: `""` */
   nextLabel?: string;
   /** Default: `"BACK"` */
   onBack?: string;

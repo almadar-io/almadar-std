@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-relation-select';
 const ALIAS = 'UiRelationSelect';
@@ -52,25 +52,25 @@ export interface StdUiRelationSelectConfig {
   clearable?: boolean;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"Empty Message"` */
+  /** Default: `""` */
   emptyMessage?: string;
   /** Default: `""` */
   error?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Name"` */
+  /** Default: `""` */
   name?: string;
   /** Default: `"CHANGE"` */
   onChange?: string;
   /** Default: `[{"description":"Description","disabled":false,"label":"Label","value":"Value"},{"description":"Description 2","disabled":true,"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
-  /** Default: `"Placeholder"` */
+  /** Default: `""` */
   placeholder?: string;
   /** Default: `false` */
   required?: boolean;
-  /** Default: `"Search Placeholder"` */
+  /** Default: `""` */
   searchPlaceholder?: string;
-  /** Default: `"Value"` */
+  /** Default: `""` */
   value?: string;
 }
 

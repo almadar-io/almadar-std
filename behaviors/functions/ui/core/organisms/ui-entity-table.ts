@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-entity-table';
 const ALIAS = 'UiEntityTable';
@@ -63,10 +63,10 @@ export interface StdUiEntityTableConfig {
   columns?: EntityRow[];
   /** Default: `{"label":"Label"}` */
   emptyAction?: EntityRow;
-  /** Default: `"Empty Description"` */
+  /** Default: `""` */
   emptyDescription?: string;
   emptyIcon?: unknown;
-  /** Default: `"Empty Title"` */
+  /** Default: `""` */
   emptyTitle?: string;
   error?: EntityRow;
   /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name","sortable":false,"width":"Width"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2","sortable":true,"width":"Width 2"}]` */
@@ -84,9 +84,9 @@ export interface StdUiEntityTableConfig {
   pageSize?: number;
   /** Default: `[]` */
   rowActions?: EntityRow[];
-  /** Default: `"Search Placeholder"` */
+  /** Default: `""` */
   searchPlaceholder?: string;
-  /** Default: `"Search Value"` */
+  /** Default: `""` */
   searchValue?: string;
   /** Default: `false` */
   searchable?: boolean;
@@ -96,7 +96,7 @@ export interface StdUiEntityTableConfig {
   selectedIds?: string[];
   /** Default: `true` */
   showTotal?: boolean;
-  /** Default: `"Sort By"` */
+  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
@@ -302,7 +302,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'type': 'EntityTableEmptyAction',
           },
           'emptyDescription': {
-            'default': 'Empty Description',
+            'default': '',
             'description': 'emptyDescription prop',
             'label': 'Empty Description',
             'tier': 'presentation',
@@ -315,7 +315,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'type': 'icon',
           },
           'emptyTitle': {
-            'default': 'Empty Title',
+            'default': '',
             'description': 'emptyTitle prop',
             'label': 'Empty Title',
             'tier': 'presentation',
@@ -498,14 +498,14 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'type': '[EntityTableRowActionsItem]',
           },
           'searchPlaceholder': {
-            'default': 'Search Placeholder',
+            'default': '',
             'description': 'searchPlaceholder prop',
             'label': 'Search Placeholder',
             'tier': 'presentation',
             'type': 'string',
           },
           'searchValue': {
-            'default': 'Search Value',
+            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -543,7 +543,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'type': 'boolean',
           },
           'sortBy': {
-            'default': 'Sort By',
+            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -764,7 +764,6 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
   type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
-  const traitRenames = new Map<string, string>();
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -782,21 +781,10 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
       }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.name !== undefined && override.name !== tr.name) {
-        // A rename must also rewrite page trait refs + @trait.<old> config
-        // tokens (applyTraitRenames below) or the built orbital dangles.
-        traitRenames.set(tr.name, override.name);
-        merged.name = override.name;
-      }
       if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
-  }
-  if (traitRenames.size > 0) {
-    const renamed = applyTraitRenames(built, traitRenames);
-    built.traits = renamed.traits;
-    built.pages = renamed.pages;
   }
   if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {

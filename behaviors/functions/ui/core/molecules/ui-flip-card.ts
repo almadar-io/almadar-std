@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-flip-card';
 const ALIAS = 'UiFlipCard';
@@ -46,13 +46,13 @@ export interface StdUiFlipCardFlipPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFlipCardConfig {
-  /** Default: `[{"content":"Back","type":"typography"}]` */
+  /** Default: `[]` */
   back?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   flipped?: boolean;
-  /** Default: `[{"content":"Front","type":"typography"}]` */
+  /** Default: `[]` */
   front?: unknown;
   /** Default: `"h-64"` */
   height?: string;

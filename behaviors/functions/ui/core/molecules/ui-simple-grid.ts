@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-simple-grid';
 const ALIAS = 'UiSimpleGrid';
@@ -39,7 +39,6 @@ export type StdUiSimpleGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimpleGridConfig {
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
@@ -49,7 +48,7 @@ export interface StdUiSimpleGridConfig {
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `1` */
   maxCols?: number;
-  /** Default: `"Min Child Width"` */
+  /** Default: `""` */
   minChildWidth?: string;
 }
 

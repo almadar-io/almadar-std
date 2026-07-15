@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-label';
 const ALIAS = 'UiLabel';
@@ -41,11 +41,11 @@ export type StdUiLabelEventKey = 'INIT';
 export interface StdUiLabelConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Html For"` */
+  /** Default: `""` */
   htmlFor?: string;
   /** Default: `false` */
   required?: boolean;
-  /** Default: `"Text"` */
+  /** Default: `""` */
   text?: string;
 }
 

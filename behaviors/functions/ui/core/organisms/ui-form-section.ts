@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-form-section';
 const ALIAS = 'UiFormSection';
@@ -69,15 +69,14 @@ export interface StdUiFormSectionFormSectionLoadedPayload {
 export interface StdUiFormSectionConfig {
   /** Default: `"CANCEL"` */
   cancelEvent?: string;
-  /** Default: `"Cancel Label"` */
+  /** Default: `""` */
   cancelLabel?: string;
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `{}` */
   conditionalFields?: Record<string, TraitConfig>;
-  /** Default: `"Config Path"` */
+  /** Default: `""` */
   configPath?: string;
   error?: EntityRow;
   evaluationContext?: EntityRow;
@@ -93,11 +92,11 @@ export interface StdUiFormSectionConfig {
   layout?: 'vertical' | 'horizontal' | 'inline';
   /** Default: `"create"` */
   mode?: 'create' | 'edit';
-  /** Default: `"On Cancel"` */
+  /** Default: `""` */
   onCancel?: string;
   /** Default: `"FIELD_CHANGE"` */
   onFieldChange?: string;
-  /** Default: `"On Submit"` */
+  /** Default: `""` */
   onSubmit?: string;
   /** Default: `{}` */
   relationsData?: Record<string, TraitConfig>;
@@ -113,9 +112,9 @@ export interface StdUiFormSectionConfig {
   showSubmit?: boolean;
   /** Default: `"SUBMIT"` */
   submitEvent?: string;
-  /** Default: `"Submit Label"` */
+  /** Default: `""` */
   submitLabel?: string;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `[]` */
   violationTriggers?: EntityRow[];
@@ -201,19 +200,13 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'type': 'string',
           },
           'cancelLabel': {
-            'default': 'Cancel Label',
+            'default': '',
             'description': 'Cancel button label (if provided, shows cancel button)',
             'label': 'Cancel Label',
             'tier': 'presentation',
             'type': 'string',
           },
           'children': {
-            'default': [
-              {
-                'content': 'Sample content',
-                'type': 'typography',
-              },
-            ],
             'description': 'Form fields (traditional React children)',
             'label': 'Children',
             'tier': 'presentation',
@@ -237,7 +230,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'type': 'Map<string,SExpr>',
           },
           'configPath': {
-            'default': 'Config Path',
+            'default': '',
             'description': 'Config path for form configuration (schema-driven)',
             'label': 'Config Path',
             'tier': 'presentation',
@@ -581,7 +574,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             ],
           },
           'onCancel': {
-            'default': 'On Cancel',
+            'default': '',
             'description': 'Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})',
             'label': 'On Cancel',
             'tier': 'presentation',
@@ -595,7 +588,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'type': 'string',
           },
           'onSubmit': {
-            'default': 'On Submit',
+            'default': '',
             'description': 'Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})',
             'label': 'On Submit',
             'tier': 'presentation',
@@ -988,14 +981,14 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'type': 'string',
           },
           'submitLabel': {
-            'default': 'Submit Label',
+            'default': '',
             'description': 'Submit button label',
             'label': 'Submit Label',
             'tier': 'presentation',
             'type': 'string',
           },
           'title': {
-            'default': 'Title',
+            'default': '',
             'description': 'Form title (used by ModalSlot to extract title)',
             'label': 'Title',
             'tier': 'presentation',
@@ -1326,7 +1319,6 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
   type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
-  const traitRenames = new Map<string, string>();
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1344,21 +1336,10 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
       }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.name !== undefined && override.name !== tr.name) {
-        // A rename must also rewrite page trait refs + @trait.<old> config
-        // tokens (applyTraitRenames below) or the built orbital dangles.
-        traitRenames.set(tr.name, override.name);
-        merged.name = override.name;
-      }
       if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
-  }
-  if (traitRenames.size > 0) {
-    const renamed = applyTraitRenames(built, traitRenames);
-    built.traits = renamed.traits;
-    built.pages = renamed.pages;
   }
   if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {

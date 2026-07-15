@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-content-renderer';
 const ALIAS = 'UiContentRenderer';
@@ -43,7 +43,7 @@ export interface StdUiContentRendererConfig {
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Content"` */
+  /** Default: `""` */
   content?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
@@ -54,13 +54,13 @@ export interface StdUiContentRendererConfig {
   pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `"Search Value"` */
+  /** Default: `""` */
   searchValue?: string;
   /** Default: `[{"content":"Content","type":"markdown"},{"content":"Content 2","type":"code"}]` */
   segments?: EntityRow[];
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `"Sort By"` */
+  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';

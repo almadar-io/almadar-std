@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-stat-display';
 const ALIAS = 'UiStatDisplay';
@@ -41,12 +41,12 @@ export type StdUiStatDisplayEventKey = 'INIT';
 export interface StdUiStatDisplayConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Click Event"` */
+  /** Default: `""` */
   clickEvent?: string;
   /** Default: `false` */
   compact?: boolean;
   error?: EntityRow;
-  /** Default: `"Format"` */
+  /** Default: `""` */
   format?: string;
   /** Default: `"circle"` */
   icon?: unknown;
@@ -56,19 +56,19 @@ export interface StdUiStatDisplayConfig {
   iconColor?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Label"` */
+  /** Default: `""` */
   label?: string;
   /** Default: `"elevated"` */
   look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `0` */
   max?: number;
-  /** Default: `"Prefix"` */
+  /** Default: `""` */
   prefix?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   sparklineData?: number[];
-  /** Default: `"Suffix"` */
+  /** Default: `""` */
   suffix?: string;
   /** Default: `0` */
   target?: number;
@@ -78,7 +78,7 @@ export interface StdUiStatDisplayConfig {
   trendFormat?: 'absolute' | 'percent';
   /** Default: `"higher-is-better"` */
   trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `"Value"` */
+  /** Default: `""` */
   value?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';

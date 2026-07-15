@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-draw-text';
 const ALIAS = 'UiDrawText';
@@ -45,9 +45,9 @@ export interface StdUiDrawTextConfig {
   anchor?: unknown;
   /** Default: `{}` */
   baseline?: unknown;
-  /** Default: `"Color"` */
+  /** Default: `""` */
   color?: string;
-  /** Default: `"Font"` */
+  /** Default: `""` */
   font?: string;
   /** Default: `0` */
   offsetX?: number;
@@ -57,7 +57,7 @@ export interface StdUiDrawTextConfig {
   opacity?: number;
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;
-  /** Default: `"Text"` */
+  /** Default: `""` */
   text?: string;
 }
 

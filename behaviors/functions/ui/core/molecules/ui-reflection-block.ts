@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-reflection-block';
 const ALIAS = 'UiReflectionBlock';
@@ -43,11 +43,11 @@ export interface StdUiReflectionBlockConfig {
   className?: string;
   /** Default: `1` */
   index?: number;
-  /** Default: `"Prompt"` */
+  /** Default: `""` */
   prompt?: string;
   /** Default: `"SAVE_REFLECTION"` */
   saveEvent?: string;
-  /** Default: `"Saved Note"` */
+  /** Default: `""` */
   savedNote?: string;
 }
 

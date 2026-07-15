@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-community-links';
 const ALIAS = 'UiCommunityLinks';
@@ -45,9 +45,9 @@ export interface StdUiCommunityLinksConfig {
   discord?: EntityRow;
   /** Default: `{"stars":1,"url":"Url"}` */
   github?: EntityRow;
-  /** Default: `"Heading"` */
+  /** Default: `""` */
   heading?: string;
-  /** Default: `"Subtitle"` */
+  /** Default: `""` */
   subtitle?: string;
   /** Default: `{"followers":1,"url":"Url"}` */
   twitter?: EntityRow;

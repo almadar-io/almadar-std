@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-trend-indicator';
 const ALIAS = 'UiTrendIndicator';
@@ -45,7 +45,7 @@ export interface StdUiTrendIndicatorConfig {
   direction?: 'up' | 'down' | 'flat';
   /** Default: `false` */
   invert?: boolean;
-  /** Default: `"Label"` */
+  /** Default: `""` */
   label?: string;
   /** Default: `true` */
   showValue?: boolean;

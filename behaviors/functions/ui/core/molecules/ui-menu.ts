@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-menu';
 const ALIAS = 'UiMenu';
@@ -47,7 +47,6 @@ export interface StdUiMenuConfig {
   items?: EntityRow[];
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
-  /** Default: `[{"content":"Trigger","type":"typography"}]` */
   trigger?: unknown;
 }
 

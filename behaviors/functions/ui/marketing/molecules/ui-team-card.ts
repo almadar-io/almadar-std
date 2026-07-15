@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-team-card';
 const ALIAS = 'UiTeamCard';
@@ -41,15 +41,15 @@ export type StdUiTeamCardEventKey = 'INIT';
 export interface StdUiTeamCardConfig {
   /** Default: `{"initials":"Initials"}` */
   avatar?: unknown;
-  /** Default: `"Bio"` */
+  /** Default: `""` */
   bio?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Name"` */
+  /** Default: `""` */
   name?: string;
-  /** Default: `"Name Ar"` */
+  /** Default: `""` */
   nameAr?: string;
-  /** Default: `"Role"` */
+  /** Default: `""` */
   role?: string;
 }
 

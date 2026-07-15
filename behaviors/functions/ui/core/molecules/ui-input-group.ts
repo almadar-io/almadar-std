@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-input-group';
 const ALIAS = 'UiInputGroup';
@@ -70,11 +70,11 @@ export interface StdUiInputGroupConfig {
   disabled?: boolean;
   /** Default: `""` */
   error?: string;
-  /** Default: `"Helper Text"` */
+  /** Default: `""` */
   helperText?: string;
   /** Default: `"text"` */
   inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
-  /** Default: `"Label"` */
+  /** Default: `""` */
   label?: string;
   leftAddon?: unknown;
   leftIcon?: unknown;
@@ -84,13 +84,13 @@ export interface StdUiInputGroupConfig {
   onClear?: string;
   /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
-  /** Default: `"Placeholder"` */
+  /** Default: `""` */
   placeholder?: string;
   rightAddon?: unknown;
   rightIcon?: unknown;
   /** Default: `0` */
   rows?: number;
-  /** Default: `"Value"` */
+  /** Default: `""` */
   value?: string;
 }
 

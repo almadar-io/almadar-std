@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-showcase-card';
 const ALIAS = 'UiShowcaseCard';
@@ -39,19 +39,19 @@ export type StdUiShowcaseCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiShowcaseCardConfig {
-  /** Default: `"Accent Color"` */
+  /** Default: `""` */
   accentColor?: string;
-  /** Default: `"Badge"` */
+  /** Default: `""` */
   badge?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Description"` */
+  /** Default: `""` */
   description?: string;
-  /** Default: `"Href"` */
+  /** Default: `""` */
   href?: string;
   /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   image?: EntityRow;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
 }
 

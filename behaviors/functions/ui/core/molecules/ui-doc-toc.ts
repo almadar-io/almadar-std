@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-doc-toc';
 const ALIAS = 'UiDocToc';
@@ -39,7 +39,7 @@ export type StdUiDocTocEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocTocConfig {
-  /** Default: `"Active Id"` */
+  /** Default: `""` */
   activeId?: string;
   /** Default: `""` */
   className?: string;

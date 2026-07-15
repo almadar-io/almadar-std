@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-game-menu';
 const ALIAS = 'UiGameMenu';
@@ -46,11 +46,10 @@ export interface StdUiGameMenuSelectPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameMenuConfig {
-  /** Default: `"Background"` */
+  /** Default: `""` */
   background?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"logo","dimension":"2d","name":"logo","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   logo?: EntityRow;
   /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"},{"action":"Action 2","disabled":true,"id":"Id 2","label":"Label 2","navigatesTo":"Navigates To 2","subLabel":"Sub Label 2","variant":"secondary"}]` */
   menuItems?: EntityRow[];
@@ -58,7 +57,7 @@ export interface StdUiGameMenuConfig {
   onSelect?: string;
   /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"},{"action":"Action 2","disabled":true,"id":"Id 2","label":"Label 2","navigatesTo":"Navigates To 2","subLabel":"Sub Label 2","variant":"secondary"}]` */
   options?: EntityRow[];
-  /** Default: `"Subtitle"` */
+  /** Default: `""` */
   subtitle?: string;
   /** Default: `"Epic Quest"` */
   title?: string;

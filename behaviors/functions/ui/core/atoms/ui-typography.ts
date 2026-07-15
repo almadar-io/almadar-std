@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-typography';
 const ALIAS = 'UiTypography';
@@ -41,13 +41,11 @@ export type StdUiTypographyEventKey = 'INIT';
 export interface StdUiTypographyConfig {
   /** Default: `"left"` */
   align?: 'left' | 'center' | 'right';
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
-  /** Default: `[{"content":"Content","type":"typography"}]` */
   content?: unknown;
   /** Default: `1` */
   level?: number;

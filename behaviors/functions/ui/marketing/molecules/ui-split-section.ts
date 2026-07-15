@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-split-section';
 const ALIAS = 'UiSplitSection';
@@ -43,17 +43,16 @@ export interface StdUiSplitSectionConfig {
   background?: 'default' | 'alt';
   /** Default: `[]` */
   bullets?: string[];
-  /** Default: `[{"content":"Sample content","type":"typography"}]` */
   children?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"content":"Description","type":"typography"}]` */
+  /** Default: `[]` */
   description?: unknown;
   /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   image?: EntityRow;
   /** Default: `"right"` */
   imagePosition?: 'left' | 'right';
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
 }
 

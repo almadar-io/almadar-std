@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-animated-graphic';
 const ALIAS = 'UiAnimatedGraphic';
@@ -39,7 +39,7 @@ export type StdUiAnimatedGraphicEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedGraphicConfig {
-  /** Default: `"Alt"` */
+  /** Default: `""` */
   alt?: string;
   /** Default: `false` */
   animate?: boolean;
@@ -53,17 +53,17 @@ export interface StdUiAnimatedGraphicConfig {
   duration?: number;
   /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
   easing?: string;
-  /** Default: `"Fill Color"` */
+  /** Default: `""` */
   fillColor?: string;
-  /** Default: `"Height"` */
+  /** Default: `""` */
   height?: string;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   src?: unknown;
-  /** Default: `"Stroke Color"` */
+  /** Default: `""` */
   strokeColor?: string;
-  /** Default: `"Svg Content"` */
+  /** Default: `""` */
   svgContent?: string;
-  /** Default: `"Width"` */
+  /** Default: `""` */
   width?: string;
 }
 

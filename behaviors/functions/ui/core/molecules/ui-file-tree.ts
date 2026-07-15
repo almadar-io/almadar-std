@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-file-tree';
 const ALIAS = 'UiFileTree';
@@ -52,7 +52,7 @@ export interface StdUiFileTreeConfig {
   indent?: number;
   /** Default: `"FILE_SELECT"` */
   onFileSelect?: string;
-  /** Default: `"Selected Path"` */
+  /** Default: `""` */
   selectedPath?: string;
   /** Default: `[{"children":[],"language":"Language","name":"Name","path":"Path","size":1,"type":"file"},{"children":[],"language":"Language 2","name":"Name 2","path":"Path 2","size":2,"type":"dir"}]` */
   tree?: EntityRow[];

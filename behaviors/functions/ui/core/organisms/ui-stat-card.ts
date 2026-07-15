@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { applyTraitRenames, rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-stat-card';
 const ALIAS = 'UiStatCard';
@@ -67,7 +67,7 @@ export interface StdUiStatCardConfig {
   invertTrend?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Label"` */
+  /** Default: `""` */
   label?: string;
   /** Default: `[{"field":"Field","format":"currency","icon":"circle","label":"Label","value":"Value"},{"field":"Field 2","format":"percent","icon":"circle","label":"Label 2","value":"Value 2"}]` */
   metrics?: EntityRow[];
@@ -77,19 +77,19 @@ export interface StdUiStatCardConfig {
   pageSize?: number;
   /** Default: `0` */
   previousValue?: number;
-  /** Default: `"Search Value"` */
+  /** Default: `""` */
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `"Sort By"` */
+  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `[]` */
   sparklineData?: number[];
-  /** Default: `"Subtitle"` */
+  /** Default: `""` */
   subtitle?: string;
-  /** Default: `"Title"` */
+  /** Default: `""` */
   title?: string;
   /** Default: `0` */
   totalCount?: number;
@@ -292,7 +292,7 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': 'boolean',
           },
           'label': {
-            'default': 'Label',
+            'default': '',
             'description': 'Main label',
             'label': 'Label',
             'tier': 'presentation',
@@ -378,7 +378,7 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': 'number',
           },
           'searchValue': {
-            'default': 'Search Value',
+            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -395,7 +395,7 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': '[string]',
           },
           'sortBy': {
-            'default': 'Sort By',
+            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -423,14 +423,14 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': '[number]',
           },
           'subtitle': {
-            'default': 'Subtitle',
+            'default': '',
             'description': 'Subtitle or description',
             'label': 'Subtitle',
             'tier': 'presentation',
             'type': 'string',
           },
           'title': {
-            'default': 'Title',
+            'default': '',
             'description': 'Title (alias for label)',
             'label': 'Title',
             'tier': 'presentation',
@@ -635,7 +635,6 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
   type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
-  const traitRenames = new Map<string, string>();
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -653,21 +652,10 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
       }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.name !== undefined && override.name !== tr.name) {
-        // A rename must also rewrite page trait refs + @trait.<old> config
-        // tokens (applyTraitRenames below) or the built orbital dangles.
-        traitRenames.set(tr.name, override.name);
-        merged.name = override.name;
-      }
       if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
-  }
-  if (traitRenames.size > 0) {
-    const renamed = applyTraitRenames(built, traitRenames);
-    built.traits = renamed.traits;
-    built.pages = renamed.pages;
   }
   if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
