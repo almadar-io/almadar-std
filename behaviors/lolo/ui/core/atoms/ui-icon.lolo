@@ -11,8 +11,7 @@ orbital IconOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          icon: @config.icon
-          name: @config.name
+          name: (if ["=", @config.icon, ""] @config.name @config.icon)
           size: @config.size
           color: @config.color
           animation: @config.animation
@@ -24,9 +23,9 @@ orbital IconOrbital {
     }
 
     config {
-      icon : icon = "circle"
+      icon : icon = ""
         @label "Icon"
-        @description "Lucide icon component (preferred for type-safe usage), OR a canonical kebab-case icon name string — a string is treated exactly like `name` so trait/factory authors can pass an icon by name through the `icon` prop."
+        @description "Lucide icon component (preferred for type-safe usage), OR a canonical kebab-case icon name string — a string is treated exactly like `name` so trait/factory authors can pass an icon by name through the `icon` prop. Empty means unset, so a call-site `name` resolves."
         @tier "presentation"
       name : string = ""
         @label "Name"

@@ -45,7 +45,7 @@ export interface StdUiIconConfig {
   className?: string;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
-  /** Default: `"circle"` */
+  /** Default: `""` */
   icon?: unknown;
   /** Default: `""` */
   name?: string;

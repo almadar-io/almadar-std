@@ -115,8 +115,8 @@
               ]
             },
             "icon": {
-              "default": "circle",
-              "description": "Lucide icon component (preferred for type-safe usage), OR a canonical kebab-case icon name string — a string is treated exactly like `name` so trait/factory authors can pass an icon by name through the `icon` prop.",
+              "default": "",
+              "description": "Lucide icon component (preferred for type-safe usage), OR a canonical kebab-case icon name string — a string is treated exactly like `name` so trait/factory authors can pass an icon by name through the `icon` prop. Empty means unset, so a call-site `name` resolves.",
               "label": "Icon",
               "tier": "presentation",
               "type": "icon"
@@ -194,8 +194,16 @@
                       "animation": "@config.animation",
                       "className": "@config.className",
                       "color": "@config.color",
-                      "icon": "@config.icon",
-                      "name": "@config.name",
+                      "name": [
+                        "if",
+                        [
+                          "=",
+                          "@config.icon",
+                          ""
+                        ],
+                        "@config.name",
+                        "@config.icon"
+                      ],
                       "size": "@config.size",
                       "strokeWidth": "@config.strokeWidth",
                       "style": "@config.style",

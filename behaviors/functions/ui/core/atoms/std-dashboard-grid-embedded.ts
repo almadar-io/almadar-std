@@ -31,12 +31,10 @@ const ALIAS = 'DashboardGridEmbedded';
  * without modifying its state-machine topology.
  */
 export interface StdDashboardGridEmbeddedConfig {
-  /** Default: `"muted"` */
-  color?: unknown;
-  /** Default: `"plus"` */
-  name?: unknown;
-  /** Default: `"sm"` */
-  size?: unknown;
+  /** Default: `["@config.tile1Trait","@config.tile2Trait","@config.tile3Trait","@config.tile4Trait","@config.tile5Trait","@config.tile6Trait","@config.tile7Trait","@config.tile8Trait","@config.tile9Trait","@config.tile10Trait","@config.tile11Trait","@config.tile12Trait"]` */
+  children?: unknown;
+  /** Default: `"@config.minTileWidth"` */
+  minChildWidth?: unknown;
 }
 
 /**
@@ -64,36 +62,6 @@ export interface StdDashboardGridEmbeddedParams {
   config?: StdDashboardGridEmbeddedConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
-}
-
-/** Trait descriptor: `DashboardGridEmbedded.traits.Icon1`. */
-export function stdDashboardGridEmbeddedIcon1Trait(params: StdDashboardGridEmbeddedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Icon1`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DashboardGridEmbedded.traits.Typography1`. */
-export function stdDashboardGridEmbeddedTypography1Trait(params: StdDashboardGridEmbeddedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.Typography1`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
 }
 
 /** Trait descriptor: `DashboardGridEmbedded.traits.SimpleGrid1`. */
@@ -163,8 +131,6 @@ export function stdDashboardGridEmbedded(params: StdDashboardGridEmbeddedParams)
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdDashboardGridEmbeddedIcon1Trait(params),
-      stdDashboardGridEmbeddedTypography1Trait(params),
       stdDashboardGridEmbeddedSimpleGrid1Trait(params),
       stdDashboardGridEmbeddedEmptyTileTrait(params),
       stdDashboardGridEmbeddedDashboardGridEmbeddedTrait(params),
