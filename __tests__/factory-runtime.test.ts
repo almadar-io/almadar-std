@@ -183,6 +183,7 @@ describe('factory-runtime', () => {
       const renamed = applyDeclarationEntityRename(
         { name: orb.name, orbitals: [built] },
         { from: canonicalEntity, to: 'CustomThing' },
+        '2026-07-15T00:00:00.000Z',
       );
       const renamedEntity = renamed.orbitals[0].entity;
       if (typeof renamedEntity !== 'object') throw new Error('expected resolved Entity');
@@ -306,6 +307,10 @@ describe('factory-runtime', () => {
           const proc = spawnSync(orbBin, ['resolve', tmpPath], {
             encoding: 'utf-8',
             timeout: 30_000,
+            // Game-board organisms resolve to multi-MB schemas (full tile
+            // atlases); the 1 MB spawnSync default SIGTERMs the child and reads
+            // as a false resolve failure. 256 MB covers the largest board.
+            maxBuffer: 256 * 1024 * 1024,
           });
 
           if (proc.status !== 0) {
