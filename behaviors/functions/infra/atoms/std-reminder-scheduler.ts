@@ -79,7 +79,7 @@ export interface StdReminderSchedulerConfig {
   /** Default: `"info"` */
   severity?: string;
   /** Default: `"ReminderRunLog"` */
-  targetEntity?: string;
+  targetEntity?: unknown;
   /** Default: `""` */
   template?: string;
 }

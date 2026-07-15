@@ -80,7 +80,7 @@ export interface StdLifecycleConfig {
   /** Default: `""` */
   fromStatus?: string;
   /** Default: `"LifecycleRunLog"` */
-  targetEntity?: string;
+  targetEntity?: unknown;
   /** Default: `""` */
   toStatus?: string;
 }

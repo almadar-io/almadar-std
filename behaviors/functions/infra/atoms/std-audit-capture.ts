@@ -53,7 +53,7 @@ export interface StdAuditCaptureConfig {
   /** Default: `false` */
   captureBeforeAfter?: boolean;
   /** Default: `""` */
-  captureEntity?: string;
+  captureEntity?: unknown;
   /** Default: `[]` */
   captureEventTypes?: string[];
   /** Default: `false` */

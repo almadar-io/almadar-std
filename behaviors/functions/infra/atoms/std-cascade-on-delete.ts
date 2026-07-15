@@ -76,13 +76,13 @@ export interface StdCascadeOnDeleteCascadeFailedPayload {
  */
 export interface StdCascadeOnDeleteConfig {
   /** Default: `"CascadeLog"` */
-  dependentEntity?: string;
+  dependentEntity?: unknown;
   /** Default: `false` */
   enabled?: boolean;
   /** Default: `"parentId"` */
   foreignKeyField?: string;
   /** Default: `""` */
-  parentEntity?: string;
+  parentEntity?: unknown;
 }
 
 /**

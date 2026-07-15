@@ -64,7 +64,7 @@ export interface StdStatusLifecycleConfig {
   /** Default: `"status"` */
   statusField?: string;
   /** Default: `"StatusRecord"` */
-  targetEntity?: string;
+  targetEntity?: unknown;
   /** Default: `[{"event":"ACTIVATE","from":"draft","label":"Activate","to":"active"},{"event":"ARCHIVE","from":"active","label":"Archive","to":"archived"}]` */
   transitions?: EntityRow[];
 }
