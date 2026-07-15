@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-arcade-board-3d';
 const ALIAS = 'UiArcadeBoard3d';
@@ -92,7 +92,6 @@ type _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef = 'Frame.traits.HeroAuthorit
 
 /** Per-orbital factory: builds the ArcadeBoard3DOrbital orbital with consumer params. */
 export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3dArcadeBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'ArcadeBoard3DOrbital',
     uses: [
@@ -102,7 +101,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1342,7 +1341,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'HeroAuthority',
         'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
@@ -1424,7 +1423,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'PlayEconomy',
         'ref': ('Frame.traits.PlayEconomy' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
@@ -1435,7 +1434,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
@@ -1450,7 +1449,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundGate',
         'ref': ('Frame.traits.RoundGate' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),
@@ -1715,7 +1714,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Player',
         'ref': ('Frame.traits.ArcadeIntent' satisfies _StdUiArcadeBoard3dArcadeBoard3DOrbitalUsesRef),
       }),

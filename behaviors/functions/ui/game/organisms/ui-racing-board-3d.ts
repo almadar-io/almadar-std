@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-racing-board-3d';
 const ALIAS = 'UiRacingBoard3d';
@@ -186,12 +186,11 @@ type _StdUiRacingBoard3dRacingBoard3DOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the RacingBoard3DOrbital orbital with consumer params. */
 export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3dRacingBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'RacingBoard3DItem';
   const built = makeOrbitalWithUses({
     name: 'RacingBoard3DOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'RacingBoard3DItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -563,7 +562,7 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'accel': {
@@ -4357,7 +4356,7 @@ export function stdUiRacingBoard3dRacingBoard3DOrbital(params: StdUiRacingBoard3
             'name': 'rivalTick',
           },
         ],
-      } satisfies Trait, 'RacingBoard3DItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

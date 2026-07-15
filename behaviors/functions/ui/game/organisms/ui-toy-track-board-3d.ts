@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-toy-track-board-3d';
 const ALIAS = 'UiToyTrackBoard3d';
@@ -186,12 +186,11 @@ type _StdUiToyTrackBoard3dToyTrackBoard3DOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ToyTrackBoard3DOrbital orbital with consumer params. */
 export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrackBoard3dToyTrackBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'ToyTrackBoard3DItem';
   const built = makeOrbitalWithUses({
     name: 'ToyTrackBoard3DOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'ToyTrackBoard3DItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -563,7 +562,7 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'accel': {
@@ -4490,7 +4489,7 @@ export function stdUiToyTrackBoard3dToyTrackBoard3DOrbital(params: StdUiToyTrack
             'name': 'rivalTick',
           },
         ],
-      } satisfies Trait, 'ToyTrackBoard3DItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

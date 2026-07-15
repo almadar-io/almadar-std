@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-fishing-board';
 const ALIAS = 'UiFishingBoard';
@@ -137,12 +137,11 @@ type _StdUiFishingBoardFishingBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the FishingBoardOrbital orbital with consumer params. */
 export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFishingBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'FishingBoardItem';
   const built = makeOrbitalWithUses({
     name: 'FishingBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'FishingBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -584,7 +583,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetManifest': {
@@ -7485,7 +7484,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
             'name': 'renderTick',
           },
         ],
-      } satisfies Trait, 'FishingBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

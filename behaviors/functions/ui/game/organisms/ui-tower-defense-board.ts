@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tower-defense-board';
 const ALIAS = 'UiTowerDefenseBoard';
@@ -173,12 +173,11 @@ type _StdUiTowerDefenseBoardTowerDefenseBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the TowerDefenseBoardOrbital orbital with consumer params. */
 export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'TowerDefenseBoardItem';
   const built = makeOrbitalWithUses({
     name: 'TowerDefenseBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'TowerDefenseBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -540,7 +539,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetManifest': {
@@ -12614,7 +12613,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'name': 'towerFireTick',
           },
         ],
-      } satisfies Trait, 'TowerDefenseBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

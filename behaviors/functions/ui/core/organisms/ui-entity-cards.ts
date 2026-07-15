@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-entity-cards';
 const ALIAS = 'UiEntityCards';
@@ -148,12 +148,11 @@ type _StdUiEntityCardsEntityCardsOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the EntityCardsOrbital orbital with consumer params. */
 export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntityCardsOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'EntityCardsItem';
   const built = makeOrbitalWithUses({
     name: 'EntityCardsOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'EntityCardsItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -170,7 +169,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeFilters': {
@@ -641,7 +640,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             },
           ],
         },
-      } satisfies Trait, 'EntityCardsItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

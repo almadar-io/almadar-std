@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-math';
 const ALIAS = 'LearningMath';
@@ -88,7 +88,6 @@ type _StdLearningMathVectorAdditionOrbitalUsesRef = 'MathVectors.traits.MathVect
 
 /** Per-orbital factory: builds the VectorAdditionOrbital orbital with consumer params. */
 export function stdLearningMathVectorAdditionOrbital(params: StdLearningMathVectorAdditionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'VectorScene';
   const built = makeOrbitalWithUses({
     name: 'VectorAdditionOrbital',
     uses: [
@@ -98,7 +97,7 @@ export function stdLearningMathVectorAdditionOrbital(params: StdLearningMathVect
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'VectorScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -208,7 +207,7 @@ export function stdLearningMathVectorAdditionOrbital(params: StdLearningMathVect
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'VectorScene',
         'name': 'VectorEngine',
         'ref': ('MathVectors.traits.MathVectorsSim' satisfies _StdLearningMathVectorAdditionOrbitalUsesRef),
       }),
@@ -340,7 +339,6 @@ type _StdLearningMathLinearSystemsOrbitalUsesRef = 'MathLinear.traits.MathLinear
 
 /** Per-orbital factory: builds the LinearSystemsOrbital orbital with consumer params. */
 export function stdLearningMathLinearSystemsOrbital(params: StdLearningMathLinearSystemsOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'LinearScene';
   const built = makeOrbitalWithUses({
     name: 'LinearSystemsOrbital',
     uses: [
@@ -350,7 +348,7 @@ export function stdLearningMathLinearSystemsOrbital(params: StdLearningMathLinea
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'LinearScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -514,7 +512,7 @@ export function stdLearningMathLinearSystemsOrbital(params: StdLearningMathLinea
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'LinearScene',
         'name': 'LinearEngine',
         'ref': ('MathLinear.traits.MathLinearSim' satisfies _StdLearningMathLinearSystemsOrbitalUsesRef),
       }),
@@ -646,7 +644,6 @@ type _StdLearningMathNumberLineOrbitalUsesRef = 'MathNumberline.traits.MathNumbe
 
 /** Per-orbital factory: builds the NumberLineOrbital orbital with consumer params. */
 export function stdLearningMathNumberLineOrbital(params: StdLearningMathNumberLineOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'NumberlineScene';
   const built = makeOrbitalWithUses({
     name: 'NumberLineOrbital',
     uses: [
@@ -656,7 +653,7 @@ export function stdLearningMathNumberLineOrbital(params: StdLearningMathNumberLi
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'NumberlineScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -935,7 +932,7 @@ export function stdLearningMathNumberLineOrbital(params: StdLearningMathNumberLi
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'NumberlineScene',
         'name': 'NumberlineEngine',
         'ref': ('MathNumberline.traits.MathNumberlineSim' satisfies _StdLearningMathNumberLineOrbitalUsesRef),
       }),
@@ -1067,7 +1064,6 @@ type _StdLearningMathArithmeticSequenceOrbitalUsesRef = 'MathSequence.traits.Mat
 
 /** Per-orbital factory: builds the ArithmeticSequenceOrbital orbital with consumer params. */
 export function stdLearningMathArithmeticSequenceOrbital(params: StdLearningMathArithmeticSequenceOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SequenceScene';
   const built = makeOrbitalWithUses({
     name: 'ArithmeticSequenceOrbital',
     uses: [
@@ -1077,7 +1073,7 @@ export function stdLearningMathArithmeticSequenceOrbital(params: StdLearningMath
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'SequenceScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1315,7 +1311,7 @@ export function stdLearningMathArithmeticSequenceOrbital(params: StdLearningMath
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'SequenceScene',
         'name': 'SequenceEngine',
         'ref': ('MathSequence.traits.MathSequenceSim' satisfies _StdLearningMathArithmeticSequenceOrbitalUsesRef),
       }),
@@ -1447,7 +1443,6 @@ type _StdLearningMathUnitCircleOrbitalUsesRef = 'MathUnitCircle.traits.MathUnitC
 
 /** Per-orbital factory: builds the UnitCircleOrbital orbital with consumer params. */
 export function stdLearningMathUnitCircleOrbital(params: StdLearningMathUnitCircleOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'UnitCircleScene';
   const built = makeOrbitalWithUses({
     name: 'UnitCircleOrbital',
     uses: [
@@ -1457,7 +1452,7 @@ export function stdLearningMathUnitCircleOrbital(params: StdLearningMathUnitCirc
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'UnitCircleScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1572,7 +1567,7 @@ export function stdLearningMathUnitCircleOrbital(params: StdLearningMathUnitCirc
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'UnitCircleScene',
         'name': 'UnitCircleEngine',
         'ref': ('MathUnitCircle.traits.MathUnitCircleSim' satisfies _StdLearningMathUnitCircleOrbitalUsesRef),
       }),
@@ -1704,7 +1699,6 @@ type _StdLearningMathSineWaveOrbitalUsesRef = 'MathSineWave.traits.MathSineWaveS
 
 /** Per-orbital factory: builds the SineWaveOrbital orbital with consumer params. */
 export function stdLearningMathSineWaveOrbital(params: StdLearningMathSineWaveOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SineWaveScene';
   const built = makeOrbitalWithUses({
     name: 'SineWaveOrbital',
     uses: [
@@ -1714,7 +1708,7 @@ export function stdLearningMathSineWaveOrbital(params: StdLearningMathSineWaveOr
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'SineWaveScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1790,7 +1784,7 @@ export function stdLearningMathSineWaveOrbital(params: StdLearningMathSineWaveOr
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'SineWaveScene',
         'name': 'SineWaveEngine',
         'ref': ('MathSineWave.traits.MathSineWaveSim' satisfies _StdLearningMathSineWaveOrbitalUsesRef),
       }),

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-math-lab';
 const ALIAS = 'LearningMathLab';
@@ -122,12 +122,11 @@ type _StdLearningMathLabMathLabOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the MathLabOrbital orbital with consumer params. */
 export function stdLearningMathLabMathLabOrbital(params: StdLearningMathLabMathLabOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MathLabItem';
   const built = makeOrbitalWithUses({
     name: 'MathLabOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'MathLabItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -444,7 +443,7 @@ export function stdLearningMathLabMathLabOrbital(params: StdLearningMathLabMathL
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'animate': {
@@ -1006,7 +1005,7 @@ export function stdLearningMathLabMathLabOrbital(params: StdLearningMathLabMathL
             },
           ],
         },
-      } satisfies Trait, 'MathLabItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

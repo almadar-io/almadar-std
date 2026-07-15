@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tactics-demo-2d';
 const ALIAS = 'UiTacticsDemo2d';
@@ -92,7 +92,6 @@ type _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef = 'Frame.traits.TacticsAutho
 
 /** Per-orbital factory: builds the TacticsDemo2DOrbital orbital with consumer params. */
 export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2dTacticsDemo2DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'TacticsDemo2DOrbital',
     uses: [
@@ -106,7 +105,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1087,7 +1086,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
@@ -1098,7 +1097,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
@@ -1109,7 +1108,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
@@ -1124,7 +1123,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'ScoreKeeper',
         'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),
@@ -1168,7 +1167,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef),
       }),

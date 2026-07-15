@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-state-machine-view';
 const ALIAS = 'UiStateMachineView';
@@ -93,12 +93,11 @@ type _StdUiStateMachineViewStateMachineViewOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the StateMachineViewOrbital orbital with consumer params. */
 export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateMachineViewStateMachineViewOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'StateMachineViewItem';
   const built = makeOrbitalWithUses({
     name: 'StateMachineViewOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'StateMachineViewItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -115,7 +114,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'className': {
@@ -202,7 +201,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             },
           ],
         },
-      } satisfies Trait, 'StateMachineViewItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

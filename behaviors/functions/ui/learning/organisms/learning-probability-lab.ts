@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-probability-lab';
 const ALIAS = 'LearningProbabilityLab';
@@ -120,12 +120,11 @@ type _StdLearningProbabilityLabProbabilityLabOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ProbabilityLabOrbital orbital with consumer params. */
 export function stdLearningProbabilityLabProbabilityLabOrbital(params: StdLearningProbabilityLabProbabilityLabOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'ProbabilityLabItem';
   const built = makeOrbitalWithUses({
     name: 'ProbabilityLabOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'ProbabilityLabItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -403,7 +402,7 @@ export function stdLearningProbabilityLabProbabilityLabOrbital(params: StdLearni
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'animate': {
@@ -915,7 +914,7 @@ export function stdLearningProbabilityLabProbabilityLabOrbital(params: StdLearni
             },
           ],
         },
-      } satisfies Trait, 'ProbabilityLabItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

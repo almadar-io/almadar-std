@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-space-station-board';
 const ALIAS = 'UiSpaceStationBoard';
@@ -92,7 +92,6 @@ type _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef = 'Frame.traits.Crew
 
 /** Per-orbital factory: builds the SpaceStationBoardOrbital orbital with consumer params. */
 export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpaceStationBoardSpaceStationBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'SpaceStationBoardOrbital',
     uses: [
@@ -102,7 +101,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1660,7 +1659,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'CrewAuthority',
         'ref': ('Frame.traits.CrewAuthority' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),
@@ -1671,7 +1670,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),
@@ -1970,7 +1969,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Crew',
         'ref': ('Frame.traits.CrewIntent' satisfies _StdUiSpaceStationBoardSpaceStationBoardOrbitalUsesRef),
       }),

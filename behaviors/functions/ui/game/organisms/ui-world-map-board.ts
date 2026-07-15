@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-world-map-board';
 const ALIAS = 'UiWorldMapBoard';
@@ -92,7 +92,6 @@ type _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef = 'Frame.traits.TacticsAutho
 
 /** Per-orbital factory: builds the WorldMapBoardOrbital orbital with consumer params. */
 export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoardWorldMapBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'WorldMapBoardOrbital',
     uses: [
@@ -102,7 +101,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -6668,7 +6667,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
@@ -6679,7 +6678,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
@@ -6698,7 +6697,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'GoldAuthority',
         'ref': ('Frame.traits.GoldAuthority' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),
@@ -7025,7 +7024,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Hero',
         'ref': ('Frame.traits.WorldMapIntent' satisfies _StdUiWorldMapBoardWorldMapBoardOrbitalUsesRef),
       }),

@@ -16,6 +16,7 @@ import type { OrbitalSchema, TraitConfigValue } from '@almadar/core';
 import {
   applyParamsToOrb,
   applyParamsToWholeOrb,
+  applyDeclarationEntityRename,
   extractManifest,
 } from '../factory-runtime/index.js';
 import type { OrbitalTraitOverride } from '../factory-runtime/index.js';
@@ -102,15 +103,18 @@ async function loadOrb(topic: string, tier: string, name: string): Promise<Orbit
 describe('factory-runtime', () => {
   describe('extractManifest', () => {
     it('emits one manifest per orbital with the canonical six paramFields + trait splits', async () => {
-      const orb = await loadOrb('core', 'organisms', 'std-generic-app');
+      // std-list — a persisted single-orbital atom (entity `ListItem`,
+      // collection `listitems`) so the persisted override surface
+      // (persistence + collection) is present alongside the base four.
+      const orb = await loadOrb('ui/core', 'atoms', 'std-list');
       const manifests = extractManifest(orb);
 
       expect(manifests.length).toBe(orb.orbitals.length);
-      const item = manifests.find((m) => m.orbitalName === 'ItemOrbital');
+      const item = manifests.find((m) => m.orbitalName === 'ListItemOrbital');
       expect(item).toBeDefined();
-      if (!item) throw new Error('expected ItemOrbital manifest');
+      if (!item) throw new Error('expected ListItemOrbital manifest');
 
-      expect(item.organism).toBe('std-generic-app');
+      expect(item.organism).toBe('std-list');
       expect(item.paramFields.map((f) => f.name)).toEqual([
         'fields',
         'pagePath',
@@ -129,14 +133,16 @@ describe('factory-runtime', () => {
   });
 
   describe('applyParamsToOrb', () => {
-    it('applies entityName + traitOverrides.config to a resolved orbital', async () => {
-      // std-list is a small single-orbital molecule — simple shape to
-      // exercise both entity rename and trait config merge.
-      const orb = await loadOrb('core', 'molecules', 'std-list');
+    it('emits the CANONICAL entity + applies traitOverrides.config; the rename is post-stamp', async () => {
+      // std-list is a small single-orbital atom — simple shape to exercise
+      // both the (deferred) entity rename and the trait config merge.
+      const orb = await loadOrb('ui/core', 'atoms', 'std-list');
       const manifests = extractManifest(orb);
       const orbital = orb.orbitals[0];
       const manifest = manifests.find((m) => m.orbitalName === orbital.name);
       if (!manifest) throw new Error('expected manifest for first orbital');
+      const canonicalEntity =
+        typeof orbital.entity === 'object' ? orbital.entity.name : '';
 
       const overrides: Record<string, OrbitalTraitOverride> = {};
       if (manifest.traitNames.length > 0) {
@@ -153,8 +159,12 @@ describe('factory-runtime', () => {
       if (typeof entity === 'string' || 'extends' in entity) {
         throw new Error('expected resolved Entity, got reference form');
       }
-      expect(entity.name).toBe('CustomThing');
+      // V4-W4 stamp-before-rename: the factory emits the CANONICAL entity name.
+      // The `entityName` rename is a declaration-only concern applied AFTER
+      // stamping (never inline), so the factory output still carries `ListItem`.
+      expect(entity.name).toBe(canonicalEntity);
 
+      // The trait config override IS applied inline (config is not a rename).
       if (manifest.traitNames.length > 0) {
         const firstTraitName = manifest.traitNames[0];
         const overridden = built.traits.find(
@@ -166,30 +176,53 @@ describe('factory-runtime', () => {
         );
         expect(overridden).toBeDefined();
       }
+
+      // The declaration rename (the post-stamp step) renames the entity + every
+      // inline trait's `linkedEntity` from canonical → effective, leaving the
+      // `@entity` body tokens (resolved by stamped id) untouched.
+      const renamed = applyDeclarationEntityRename(
+        { name: orb.name, orbitals: [built] },
+        { from: canonicalEntity, to: 'CustomThing' },
+      );
+      const renamedEntity = renamed.orbitals[0].entity;
+      if (typeof renamedEntity !== 'object') throw new Error('expected resolved Entity');
+      expect(renamedEntity.name).toBe('CustomThing');
+      for (const t of renamed.orbitals[0].traits) {
+        if (t && typeof t === 'object' && 'stateMachine' in t && t.linkedEntity !== undefined) {
+          expect(t.linkedEntity).toBe('CustomThing');
+        }
+      }
     });
   });
 
   describe('applyParamsToWholeOrb', () => {
-    it('applies the same params bag to every orbital with a matching manifest', async () => {
-      // std-generic-app is multi-orbital (8 orbitals) — broadest exercise for the
-      // whole-orb path that the LLM-loop seam (`call_behavior`) takes.
-      const orb = await loadOrb('core', 'organisms', 'std-generic-app');
+    it('rebuilds every orbital preserving its CANONICAL entity name (rename is post-stamp)', async () => {
+      // learning-chemistry is multi-orbital (3 orbitals: Diffusion/Reaction/
+      // Osmosis) — broadest exercise for the whole-orb path the LLM-loop seam
+      // (`call_behavior`) takes.
+      const orb = await loadOrb('ui/learning', 'organisms', 'learning-chemistry');
       const manifests = extractManifest(orb);
+      const canonicalByOrbital = new Map(
+        orb.orbitals.map((o) => [
+          o.name,
+          typeof o.entity === 'object' ? o.entity.name : '',
+        ]),
+      );
       const built = applyParamsToWholeOrb(orb, manifests, {
         entityName: 'Metric',
       });
       expect(built.name).toBe(orb.name);
       expect(built.orbitals.length).toBe(orb.orbitals.length);
-      // Every orbital that had a manifest should have its entity renamed
-      // to 'Metric'. Orbitals without a manifest pass through unchanged.
-      const manifestNames = new Set(manifests.map((m) => m.orbitalName));
+      // V4-W4 stamp-before-rename: the whole-orb overlay emits each orbital's
+      // CANONICAL entity name. A single `entityName` cannot rename a multi-orbital
+      // whole-orb (each orbital owns a distinct entity), so every entity keeps its
+      // canonical name; the rename is a post-stamp, single-orbital-gated concern.
       for (const orbital of built.orbitals) {
-        if (!manifestNames.has(orbital.name)) continue;
         const entity = orbital.entity;
         if (typeof entity === 'string' || 'extends' in entity) {
           throw new Error('expected resolved Entity on rebuilt orbital');
         }
-        expect(entity.name).toBe('Metric');
+        expect(entity.name).toBe(canonicalByOrbital.get(orbital.name));
       }
     });
   });

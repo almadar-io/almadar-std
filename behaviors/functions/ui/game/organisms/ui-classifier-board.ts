@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-classifier-board';
 const ALIAS = 'UiClassifierBoard';
@@ -148,12 +148,11 @@ type _StdUiClassifierBoardClassifierBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ClassifierBoardOrbital orbital with consumer params. */
 export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifierBoardClassifierBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'ClassifierBoardItem';
   const built = makeOrbitalWithUses({
     name: 'ClassifierBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'ClassifierBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -274,7 +273,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeFilters': {
@@ -1780,7 +1779,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             },
           ],
         },
-      } satisfies Trait, 'ClassifierBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

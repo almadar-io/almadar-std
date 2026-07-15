@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-space-shmup-board';
 const ALIAS = 'UiSpaceShmupBoard';
@@ -192,7 +192,6 @@ type _StdUiSpaceShmupBoardSpaceShmupBoardOrbitalUsesRef = 'AnimTick.traits.AnimT
 
 /** Per-orbital factory: builds the SpaceShmupBoardOrbital orbital with consumer params. */
 export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShmupBoardSpaceShmupBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SpaceShmupBoardItem';
   const built = makeOrbitalWithUses({
     name: 'SpaceShmupBoardOrbital',
     uses: [
@@ -202,7 +201,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'SpaceShmupBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -432,7 +431,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetManifest': {
@@ -7212,7 +7211,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
             'name': 'simulateTick',
           },
         ],
-      } satisfies Trait, 'SpaceShmupBoardItem', canonicalName),
+      } satisfies Trait,
       makeTraitRef({
         'config': {
           'frames': {
@@ -7229,7 +7228,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'SpaceShmupBoardItem',
         'name': 'ThrusterClock',
         'ref': ('AnimTick.traits.AnimTick' satisfies _StdUiSpaceShmupBoardSpaceShmupBoardOrbitalUsesRef),
       }),

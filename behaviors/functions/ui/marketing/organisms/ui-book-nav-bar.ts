@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-book-nav-bar';
 const ALIAS = 'UiBookNavBar';
@@ -98,12 +98,11 @@ type _StdUiBookNavBarBookNavBarOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BookNavBarOrbital orbital with consumer params. */
 export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavBarOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BookNavBarItem';
   const built = makeOrbitalWithUses({
     name: 'BookNavBarOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'BookNavBarItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -120,7 +119,7 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'chapterTitle': {
@@ -206,7 +205,7 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
             },
           ],
         },
-      } satisfies Trait, 'BookNavBarItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

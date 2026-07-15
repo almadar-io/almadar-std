@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-visual-novel-board';
 const ALIAS = 'UiVisualNovelBoard';
@@ -130,12 +130,11 @@ type _StdUiVisualNovelBoardVisualNovelBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the VisualNovelBoardOrbital orbital with consumer params. */
 export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisualNovelBoardVisualNovelBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'VisualNovelBoardItem';
   const built = makeOrbitalWithUses({
     name: 'VisualNovelBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'VisualNovelBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -246,7 +245,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'className': {
@@ -1595,7 +1594,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'name': 'typewriterTick',
           },
         ],
-      } satisfies Trait, 'VisualNovelBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

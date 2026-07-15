@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-graveyard-board-3d';
 const ALIAS = 'UiGraveyardBoard3d';
@@ -90,7 +90,6 @@ type _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef = 'Frame.traits.Tactic
 
 /** Per-orbital factory: builds the GraveyardBoard3DOrbital orbital with consumer params. */
 export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGraveyardBoard3dGraveyardBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'GraveyardBoard3DOrbital',
     uses: [
@@ -100,7 +99,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -559,7 +558,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
@@ -570,7 +569,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
@@ -581,7 +580,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),
@@ -830,7 +829,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef),
       }),

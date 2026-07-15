@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-case-study-organism';
 const ALIAS = 'UiCaseStudyOrganism';
@@ -120,12 +120,11 @@ type _StdUiCaseStudyOrganismCaseStudyOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the CaseStudyOrganismOrbital orbital with consumer params. */
 export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'CaseStudyOrganismItem';
   const built = makeOrbitalWithUses({
     name: 'CaseStudyOrganismOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'CaseStudyOrganismItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -172,7 +171,7 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeFilters': {
@@ -413,7 +412,7 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             },
           ],
         },
-      } satisfies Trait, 'CaseStudyOrganismItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

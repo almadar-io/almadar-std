@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-chemistry';
 const ALIAS = 'LearningChemistry';
@@ -88,7 +88,6 @@ type _StdLearningChemistryDiffusionOrbitalUsesRef = 'ChemDiffusion.traits.ChemDi
 
 /** Per-orbital factory: builds the DiffusionOrbital orbital with consumer params. */
 export function stdLearningChemistryDiffusionOrbital(params: StdLearningChemistryDiffusionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'DiffusionScene';
   const built = makeOrbitalWithUses({
     name: 'DiffusionOrbital',
     uses: [
@@ -98,7 +97,7 @@ export function stdLearningChemistryDiffusionOrbital(params: StdLearningChemistr
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'DiffusionScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -307,7 +306,7 @@ export function stdLearningChemistryDiffusionOrbital(params: StdLearningChemistr
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'DiffusionScene',
         'name': 'DiffusionEngine',
         'ref': ('ChemDiffusion.traits.ChemDiffusionSim' satisfies _StdLearningChemistryDiffusionOrbitalUsesRef),
       }),
@@ -439,7 +438,6 @@ type _StdLearningChemistryReactionOrbitalUsesRef = 'ChemReaction.traits.ChemReac
 
 /** Per-orbital factory: builds the ReactionOrbital orbital with consumer params. */
 export function stdLearningChemistryReactionOrbital(params: StdLearningChemistryReactionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'ReactionScene';
   const built = makeOrbitalWithUses({
     name: 'ReactionOrbital',
     uses: [
@@ -449,7 +447,7 @@ export function stdLearningChemistryReactionOrbital(params: StdLearningChemistry
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'ReactionScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -649,7 +647,7 @@ export function stdLearningChemistryReactionOrbital(params: StdLearningChemistry
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReactionScene',
         'name': 'ReactionEngine',
         'ref': ('ChemReaction.traits.ChemReactionSim' satisfies _StdLearningChemistryReactionOrbitalUsesRef),
       }),
@@ -781,7 +779,6 @@ type _StdLearningChemistryOsmosisOrbitalUsesRef = 'ChemOsmosis.traits.ChemOsmosi
 
 /** Per-orbital factory: builds the OsmosisOrbital orbital with consumer params. */
 export function stdLearningChemistryOsmosisOrbital(params: StdLearningChemistryOsmosisOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'OsmosisScene';
   const built = makeOrbitalWithUses({
     name: 'OsmosisOrbital',
     uses: [
@@ -791,7 +788,7 @@ export function stdLearningChemistryOsmosisOrbital(params: StdLearningChemistryO
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'OsmosisScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1035,7 +1032,7 @@ export function stdLearningChemistryOsmosisOrbital(params: StdLearningChemistryO
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OsmosisScene',
         'name': 'OsmosisEngine',
         'ref': ('ChemOsmosis.traits.ChemOsmosisSim' satisfies _StdLearningChemistryOsmosisOrbitalUsesRef),
       }),

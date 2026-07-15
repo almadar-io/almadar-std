@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-master-detail-layout';
 const ALIAS = 'UiMasterDetailLayout';
@@ -101,12 +101,11 @@ type _StdUiMasterDetailLayoutMasterDetailLayoutOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the MasterDetailLayoutOrbital orbital with consumer params. */
 export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMasterDetailLayoutMasterDetailLayoutOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MasterDetailLayoutItem';
   const built = makeOrbitalWithUses({
     name: 'MasterDetailLayoutOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'MasterDetailLayoutItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -123,7 +122,7 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'className': {
@@ -226,7 +225,7 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             },
           ],
         },
-      } satisfies Trait, 'MasterDetailLayoutItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

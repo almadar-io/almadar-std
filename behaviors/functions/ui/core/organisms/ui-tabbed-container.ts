@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tabbed-container';
 const ALIAS = 'UiTabbedContainer';
@@ -107,12 +107,11 @@ type _StdUiTabbedContainerTabbedContainerOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the TabbedContainerOrbital orbital with consumer params. */
 export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedContainerTabbedContainerOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'TabbedContainerItem';
   const built = makeOrbitalWithUses({
     name: 'TabbedContainerOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'TabbedContainerItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -129,7 +128,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeTab': {
@@ -301,7 +300,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             },
           ],
         },
-      } satisfies Trait, 'TabbedContainerItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

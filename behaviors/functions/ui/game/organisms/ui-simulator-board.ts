@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-simulator-board';
 const ALIAS = 'UiSimulatorBoard';
@@ -156,12 +156,11 @@ type _StdUiSimulatorBoardSimulatorBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SimulatorBoardOrbital orbital with consumer params. */
 export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorBoardSimulatorBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SimulatorBoardItem';
   const built = makeOrbitalWithUses({
     name: 'SimulatorBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'SimulatorBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -268,7 +267,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeFilters': {
@@ -2363,7 +2362,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             },
           ],
         },
-      } satisfies Trait, 'SimulatorBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

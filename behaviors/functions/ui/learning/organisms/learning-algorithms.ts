@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-algorithms';
 const ALIAS = 'LearningAlgorithms';
@@ -82,7 +82,6 @@ type _StdLearningAlgorithmsAstargraphOrbitalUsesRef = 'Astargraph.traits.AstarSi
 
 /** Per-orbital factory: builds the AstargraphOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsAstargraphOrbital(params: StdLearningAlgorithmsAstargraphOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'AstargraphScene';
   const built = makeOrbitalWithUses({
     name: 'AstargraphOrbital',
     uses: [
@@ -92,7 +91,7 @@ export function stdLearningAlgorithmsAstargraphOrbital(params: StdLearningAlgori
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'AstargraphScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -304,7 +303,7 @@ export function stdLearningAlgorithmsAstargraphOrbital(params: StdLearningAlgori
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AstargraphScene',
         'name': 'AstargraphEngine',
         'ref': ('Astargraph.traits.AstarSim' satisfies _StdLearningAlgorithmsAstargraphOrbitalUsesRef),
       }),
@@ -436,7 +435,6 @@ type _StdLearningAlgorithmsAstargridOrbitalUsesRef = 'Astargrid.traits.AstarGrid
 
 /** Per-orbital factory: builds the AstargridOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsAstargridOrbital(params: StdLearningAlgorithmsAstargridOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'AstargridScene';
   const built = makeOrbitalWithUses({
     name: 'AstargridOrbital',
     uses: [
@@ -446,7 +444,7 @@ export function stdLearningAlgorithmsAstargridOrbital(params: StdLearningAlgorit
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'AstargridScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -563,7 +561,7 @@ export function stdLearningAlgorithmsAstargridOrbital(params: StdLearningAlgorit
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AstargridScene',
         'name': 'AstargridEngine',
         'ref': ('Astargrid.traits.AstarGridSim' satisfies _StdLearningAlgorithmsAstargridOrbitalUsesRef),
       }),
@@ -695,7 +693,6 @@ type _StdLearningAlgorithmsBfsOrbitalUsesRef = 'Bfs.traits.BfsSim';
 
 /** Per-orbital factory: builds the BfsOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsBfsOrbital(params: StdLearningAlgorithmsBfsOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BfsScene';
   const built = makeOrbitalWithUses({
     name: 'BfsOrbital',
     uses: [
@@ -705,7 +702,7 @@ export function stdLearningAlgorithmsBfsOrbital(params: StdLearningAlgorithmsBfs
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'BfsScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -851,7 +848,7 @@ export function stdLearningAlgorithmsBfsOrbital(params: StdLearningAlgorithmsBfs
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BfsScene',
         'name': 'BfsEngine',
         'ref': ('Bfs.traits.BfsSim' satisfies _StdLearningAlgorithmsBfsOrbitalUsesRef),
       }),
@@ -983,7 +980,6 @@ type _StdLearningAlgorithmsBinarysearchOrbitalUsesRef = 'Binarysearch.traits.Bin
 
 /** Per-orbital factory: builds the BinarysearchOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsBinarysearchOrbital(params: StdLearningAlgorithmsBinarysearchOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BinarysearchScene';
   const built = makeOrbitalWithUses({
     name: 'BinarysearchOrbital',
     uses: [
@@ -993,7 +989,7 @@ export function stdLearningAlgorithmsBinarysearchOrbital(params: StdLearningAlgo
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'BinarysearchScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1100,7 +1096,7 @@ export function stdLearningAlgorithmsBinarysearchOrbital(params: StdLearningAlgo
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BinarysearchScene',
         'name': 'BinarysearchEngine',
         'ref': ('Binarysearch.traits.BinarySearchSim' satisfies _StdLearningAlgorithmsBinarysearchOrbitalUsesRef),
       }),
@@ -1232,7 +1228,6 @@ type _StdLearningAlgorithmsBubblesortOrbitalUsesRef = 'Bubblesort.traits.BubbleS
 
 /** Per-orbital factory: builds the BubblesortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsBubblesortOrbital(params: StdLearningAlgorithmsBubblesortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BubblesortScene';
   const built = makeOrbitalWithUses({
     name: 'BubblesortOrbital',
     uses: [
@@ -1242,7 +1237,7 @@ export function stdLearningAlgorithmsBubblesortOrbital(params: StdLearningAlgori
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'BubblesortScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1315,7 +1310,7 @@ export function stdLearningAlgorithmsBubblesortOrbital(params: StdLearningAlgori
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BubblesortScene',
         'name': 'BubblesortEngine',
         'ref': ('Bubblesort.traits.BubbleSortSim' satisfies _StdLearningAlgorithmsBubblesortOrbitalUsesRef),
       }),
@@ -1447,7 +1442,6 @@ type _StdLearningAlgorithmsDfsOrbitalUsesRef = 'Dfs.traits.DfsSim';
 
 /** Per-orbital factory: builds the DfsOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsDfsOrbital(params: StdLearningAlgorithmsDfsOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'DfsScene';
   const built = makeOrbitalWithUses({
     name: 'DfsOrbital',
     uses: [
@@ -1457,7 +1451,7 @@ export function stdLearningAlgorithmsDfsOrbital(params: StdLearningAlgorithmsDfs
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'DfsScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1603,7 +1597,7 @@ export function stdLearningAlgorithmsDfsOrbital(params: StdLearningAlgorithmsDfs
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'DfsScene',
         'name': 'DfsEngine',
         'ref': ('Dfs.traits.DfsSim' satisfies _StdLearningAlgorithmsDfsOrbitalUsesRef),
       }),
@@ -1735,7 +1729,6 @@ type _StdLearningAlgorithmsDijkstraOrbitalUsesRef = 'Dijkstra.traits.DijkstraSim
 
 /** Per-orbital factory: builds the DijkstraOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsDijkstraOrbital(params: StdLearningAlgorithmsDijkstraOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'DijkstraScene';
   const built = makeOrbitalWithUses({
     name: 'DijkstraOrbital',
     uses: [
@@ -1745,7 +1738,7 @@ export function stdLearningAlgorithmsDijkstraOrbital(params: StdLearningAlgorith
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'DijkstraScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1923,7 +1916,7 @@ export function stdLearningAlgorithmsDijkstraOrbital(params: StdLearningAlgorith
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'DijkstraScene',
         'name': 'DijkstraEngine',
         'ref': ('Dijkstra.traits.DijkstraSim' satisfies _StdLearningAlgorithmsDijkstraOrbitalUsesRef),
       }),
@@ -2055,7 +2048,6 @@ type _StdLearningAlgorithmsFloodfillOrbitalUsesRef = 'Floodfill.traits.FloodFill
 
 /** Per-orbital factory: builds the FloodfillOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsFloodfillOrbital(params: StdLearningAlgorithmsFloodfillOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'FloodfillScene';
   const built = makeOrbitalWithUses({
     name: 'FloodfillOrbital',
     uses: [
@@ -2065,7 +2057,7 @@ export function stdLearningAlgorithmsFloodfillOrbital(params: StdLearningAlgorit
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'FloodfillScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2176,7 +2168,7 @@ export function stdLearningAlgorithmsFloodfillOrbital(params: StdLearningAlgorit
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FloodfillScene',
         'name': 'FloodfillEngine',
         'ref': ('Floodfill.traits.FloodFillSim' satisfies _StdLearningAlgorithmsFloodfillOrbitalUsesRef),
       }),
@@ -2308,7 +2300,6 @@ type _StdLearningAlgorithmsGameoflifeOrbitalUsesRef = 'Gameoflife.traits.GameOfL
 
 /** Per-orbital factory: builds the GameoflifeOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsGameoflifeOrbital(params: StdLearningAlgorithmsGameoflifeOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameoflifeScene';
   const built = makeOrbitalWithUses({
     name: 'GameoflifeOrbital',
     uses: [
@@ -2318,7 +2309,7 @@ export function stdLearningAlgorithmsGameoflifeOrbital(params: StdLearningAlgori
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameoflifeScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2381,7 +2372,7 @@ export function stdLearningAlgorithmsGameoflifeOrbital(params: StdLearningAlgori
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameoflifeScene',
         'name': 'GameoflifeEngine',
         'ref': ('Gameoflife.traits.GameOfLifeSim' satisfies _StdLearningAlgorithmsGameoflifeOrbitalUsesRef),
       }),
@@ -2513,7 +2504,6 @@ type _StdLearningAlgorithmsGridbfsOrbitalUsesRef = 'Gridbfs.traits.GridBfsSim';
 
 /** Per-orbital factory: builds the GridbfsOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsGridbfsOrbital(params: StdLearningAlgorithmsGridbfsOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GridbfsScene';
   const built = makeOrbitalWithUses({
     name: 'GridbfsOrbital',
     uses: [
@@ -2523,7 +2513,7 @@ export function stdLearningAlgorithmsGridbfsOrbital(params: StdLearningAlgorithm
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GridbfsScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2629,7 +2619,7 @@ export function stdLearningAlgorithmsGridbfsOrbital(params: StdLearningAlgorithm
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GridbfsScene',
         'name': 'GridbfsEngine',
         'ref': ('Gridbfs.traits.GridBfsSim' satisfies _StdLearningAlgorithmsGridbfsOrbitalUsesRef),
       }),
@@ -2761,7 +2751,6 @@ type _StdLearningAlgorithmsHeapsortOrbitalUsesRef = 'Heapsort.traits.HeapSortSim
 
 /** Per-orbital factory: builds the HeapsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsHeapsortOrbital(params: StdLearningAlgorithmsHeapsortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'HeapsortScene';
   const built = makeOrbitalWithUses({
     name: 'HeapsortOrbital',
     uses: [
@@ -2771,7 +2760,7 @@ export function stdLearningAlgorithmsHeapsortOrbital(params: StdLearningAlgorith
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'HeapsortScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2894,7 +2883,7 @@ export function stdLearningAlgorithmsHeapsortOrbital(params: StdLearningAlgorith
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'HeapsortScene',
         'name': 'HeapsortEngine',
         'ref': ('Heapsort.traits.HeapSortSim' satisfies _StdLearningAlgorithmsHeapsortOrbitalUsesRef),
       }),
@@ -3026,7 +3015,6 @@ type _StdLearningAlgorithmsInsertionsortOrbitalUsesRef = 'Insertionsort.traits.I
 
 /** Per-orbital factory: builds the InsertionsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsInsertionsortOrbital(params: StdLearningAlgorithmsInsertionsortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'InsertionsortScene';
   const built = makeOrbitalWithUses({
     name: 'InsertionsortOrbital',
     uses: [
@@ -3036,7 +3024,7 @@ export function stdLearningAlgorithmsInsertionsortOrbital(params: StdLearningAlg
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'InsertionsortScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -3109,7 +3097,7 @@ export function stdLearningAlgorithmsInsertionsortOrbital(params: StdLearningAlg
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'InsertionsortScene',
         'name': 'InsertionsortEngine',
         'ref': ('Insertionsort.traits.InsertionSortSim' satisfies _StdLearningAlgorithmsInsertionsortOrbitalUsesRef),
       }),
@@ -3241,7 +3229,6 @@ type _StdLearningAlgorithmsMazegenOrbitalUsesRef = 'Mazegen.traits.MazeGenSim';
 
 /** Per-orbital factory: builds the MazegenOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsMazegenOrbital(params: StdLearningAlgorithmsMazegenOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MazegenScene';
   const built = makeOrbitalWithUses({
     name: 'MazegenOrbital',
     uses: [
@@ -3251,7 +3238,7 @@ export function stdLearningAlgorithmsMazegenOrbital(params: StdLearningAlgorithm
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'MazegenScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -3353,7 +3340,7 @@ export function stdLearningAlgorithmsMazegenOrbital(params: StdLearningAlgorithm
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MazegenScene',
         'name': 'MazegenEngine',
         'ref': ('Mazegen.traits.MazeGenSim' satisfies _StdLearningAlgorithmsMazegenOrbitalUsesRef),
       }),
@@ -3485,7 +3472,6 @@ type _StdLearningAlgorithmsMergesortOrbitalUsesRef = 'Mergesort.traits.MergeSort
 
 /** Per-orbital factory: builds the MergesortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsMergesortOrbital(params: StdLearningAlgorithmsMergesortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MergesortScene';
   const built = makeOrbitalWithUses({
     name: 'MergesortOrbital',
     uses: [
@@ -3495,7 +3481,7 @@ export function stdLearningAlgorithmsMergesortOrbital(params: StdLearningAlgorit
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'MergesortScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -3662,7 +3648,7 @@ export function stdLearningAlgorithmsMergesortOrbital(params: StdLearningAlgorit
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MergesortScene',
         'name': 'MergesortEngine',
         'ref': ('Mergesort.traits.MergeSortSim' satisfies _StdLearningAlgorithmsMergesortOrbitalUsesRef),
       }),
@@ -3794,7 +3780,6 @@ type _StdLearningAlgorithmsMstOrbitalUsesRef = 'Mst.traits.MstSim';
 
 /** Per-orbital factory: builds the MstOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsMstOrbital(params: StdLearningAlgorithmsMstOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MstScene';
   const built = makeOrbitalWithUses({
     name: 'MstOrbital',
     uses: [
@@ -3804,7 +3789,7 @@ export function stdLearningAlgorithmsMstOrbital(params: StdLearningAlgorithmsMst
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'MstScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -3982,7 +3967,7 @@ export function stdLearningAlgorithmsMstOrbital(params: StdLearningAlgorithmsMst
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MstScene',
         'name': 'MstEngine',
         'ref': ('Mst.traits.MstSim' satisfies _StdLearningAlgorithmsMstOrbitalUsesRef),
       }),
@@ -4114,7 +4099,6 @@ type _StdLearningAlgorithmsQuicksortOrbitalUsesRef = 'Quicksort.traits.QuickSort
 
 /** Per-orbital factory: builds the QuicksortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsQuicksortOrbital(params: StdLearningAlgorithmsQuicksortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'QuicksortScene';
   const built = makeOrbitalWithUses({
     name: 'QuicksortOrbital',
     uses: [
@@ -4124,7 +4108,7 @@ export function stdLearningAlgorithmsQuicksortOrbital(params: StdLearningAlgorit
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'QuicksortScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -4266,7 +4250,7 @@ export function stdLearningAlgorithmsQuicksortOrbital(params: StdLearningAlgorit
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'QuicksortScene',
         'name': 'QuicksortEngine',
         'ref': ('Quicksort.traits.QuickSortSim' satisfies _StdLearningAlgorithmsQuicksortOrbitalUsesRef),
       }),
@@ -4398,7 +4382,6 @@ type _StdLearningAlgorithmsSelectionsortOrbitalUsesRef = 'Selectionsort.traits.S
 
 /** Per-orbital factory: builds the SelectionsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsSelectionsortOrbital(params: StdLearningAlgorithmsSelectionsortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SelectionsortScene';
   const built = makeOrbitalWithUses({
     name: 'SelectionsortOrbital',
     uses: [
@@ -4408,7 +4391,7 @@ export function stdLearningAlgorithmsSelectionsortOrbital(params: StdLearningAlg
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'SelectionsortScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -4486,7 +4469,7 @@ export function stdLearningAlgorithmsSelectionsortOrbital(params: StdLearningAlg
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'SelectionsortScene',
         'name': 'SelectionsortEngine',
         'ref': ('Selectionsort.traits.SelectionSortSim' satisfies _StdLearningAlgorithmsSelectionsortOrbitalUsesRef),
       }),
@@ -4618,7 +4601,6 @@ type _StdLearningAlgorithmsSlidingwindowOrbitalUsesRef = 'Slidingwindow.traits.S
 
 /** Per-orbital factory: builds the SlidingwindowOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsSlidingwindowOrbital(params: StdLearningAlgorithmsSlidingwindowOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SlidingwindowScene';
   const built = makeOrbitalWithUses({
     name: 'SlidingwindowOrbital',
     uses: [
@@ -4628,7 +4610,7 @@ export function stdLearningAlgorithmsSlidingwindowOrbital(params: StdLearningAlg
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'SlidingwindowScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -4735,7 +4717,7 @@ export function stdLearningAlgorithmsSlidingwindowOrbital(params: StdLearningAlg
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'SlidingwindowScene',
         'name': 'SlidingwindowEngine',
         'ref': ('Slidingwindow.traits.SlidingWindowSim' satisfies _StdLearningAlgorithmsSlidingwindowOrbitalUsesRef),
       }),
@@ -4867,7 +4849,6 @@ type _StdLearningAlgorithmsToposortOrbitalUsesRef = 'Toposort.traits.ToposortSim
 
 /** Per-orbital factory: builds the ToposortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsToposortOrbital(params: StdLearningAlgorithmsToposortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'ToposortScene';
   const built = makeOrbitalWithUses({
     name: 'ToposortOrbital',
     uses: [
@@ -4877,7 +4858,7 @@ export function stdLearningAlgorithmsToposortOrbital(params: StdLearningAlgorith
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'ToposortScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -5009,7 +4990,7 @@ export function stdLearningAlgorithmsToposortOrbital(params: StdLearningAlgorith
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ToposortScene',
         'name': 'ToposortEngine',
         'ref': ('Toposort.traits.ToposortSim' satisfies _StdLearningAlgorithmsToposortOrbitalUsesRef),
       }),
@@ -5141,7 +5122,6 @@ type _StdLearningAlgorithmsTwopointerOrbitalUsesRef = 'Twopointer.traits.TwoPoin
 
 /** Per-orbital factory: builds the TwopointerOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsTwopointerOrbital(params: StdLearningAlgorithmsTwopointerOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'TwopointerScene';
   const built = makeOrbitalWithUses({
     name: 'TwopointerOrbital',
     uses: [
@@ -5151,7 +5131,7 @@ export function stdLearningAlgorithmsTwopointerOrbital(params: StdLearningAlgori
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'TwopointerScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -5253,7 +5233,7 @@ export function stdLearningAlgorithmsTwopointerOrbital(params: StdLearningAlgori
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TwopointerScene',
         'name': 'TwopointerEngine',
         'ref': ('Twopointer.traits.TwoPointerSim' satisfies _StdLearningAlgorithmsTwopointerOrbitalUsesRef),
       }),

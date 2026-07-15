@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-space-board-3d';
 const ALIAS = 'UiSpaceBoard3d';
@@ -90,7 +90,6 @@ type _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthori
 
 /** Per-orbital factory: builds the SpaceBoard3DOrbital orbital with consumer params. */
 export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSpaceBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'SpaceBoard3DOrbital',
     uses: [
@@ -100,7 +99,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -541,7 +540,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
@@ -552,7 +551,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
@@ -563,7 +562,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),
@@ -913,7 +912,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef),
       }),

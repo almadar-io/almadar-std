@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-book-cover-page';
 const ALIAS = 'UiBookCoverPage';
@@ -100,12 +100,11 @@ type _StdUiBookCoverPageBookCoverPageOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BookCoverPageOrbital orbital with consumer params. */
 export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPageBookCoverPageOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BookCoverPageItem';
   const built = makeOrbitalWithUses({
     name: 'BookCoverPageOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'BookCoverPageItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -122,7 +121,7 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'author': {
@@ -216,7 +215,7 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
             },
           ],
         },
-      } satisfies Trait, 'BookCoverPageItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

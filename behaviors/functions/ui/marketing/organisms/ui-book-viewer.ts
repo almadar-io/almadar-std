@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-book-viewer';
 const ALIAS = 'UiBookViewer';
@@ -120,12 +120,11 @@ type _StdUiBookViewerBookViewerOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BookViewerOrbital orbital with consumer params. */
 export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookViewerOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BookViewerItem';
   const built = makeOrbitalWithUses({
     name: 'BookViewerOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'BookViewerItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -142,7 +141,7 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeFilters': {
@@ -458,7 +457,7 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             },
           ],
         },
-      } satisfies Trait, 'BookViewerItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

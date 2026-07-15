@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-sequencer-board';
 const ALIAS = 'UiSequencerBoard';
@@ -148,12 +148,11 @@ type _StdUiSequencerBoardSequencerBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SequencerBoardOrbital orbital with consumer params. */
 export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerBoardSequencerBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SequencerBoardItem';
   const built = makeOrbitalWithUses({
     name: 'SequencerBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'SequencerBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -486,7 +485,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'allowDuplicates': {
@@ -2343,7 +2342,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'name': 'playbackTick',
           },
         ],
-      } satisfies Trait, 'SequencerBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

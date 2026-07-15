@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-subagent-trace-panel';
 const ALIAS = 'UiSubagentTracePanel';
@@ -139,12 +139,11 @@ type _StdUiSubagentTracePanelSubagentTracePanelOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SubagentTracePanelOrbital orbital with consumer params. */
 export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSubagentTracePanelSubagentTracePanelOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SubagentTracePanelItem';
   const built = makeOrbitalWithUses({
     name: 'SubagentTracePanelOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'SubagentTracePanelItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -161,7 +160,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeFilters': {
@@ -491,7 +490,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             },
           ],
         },
-      } satisfies Trait, 'SubagentTracePanelItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-probability';
 const ALIAS = 'LearningProbability';
@@ -92,7 +92,6 @@ type _StdLearningProbabilityGaltonBoardOrbitalUsesRef = 'ProbGalton.traits.Galto
 
 /** Per-orbital factory: builds the GaltonBoardOrbital orbital with consumer params. */
 export function stdLearningProbabilityGaltonBoardOrbital(params: StdLearningProbabilityGaltonBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GaltonScene';
   const built = makeOrbitalWithUses({
     name: 'GaltonBoardOrbital',
     uses: [
@@ -102,7 +101,7 @@ export function stdLearningProbabilityGaltonBoardOrbital(params: StdLearningProb
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GaltonScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -210,7 +209,7 @@ export function stdLearningProbabilityGaltonBoardOrbital(params: StdLearningProb
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GaltonScene',
         'name': 'GaltonEngine',
         'ref': ('ProbGalton.traits.GaltonSim' satisfies _StdLearningProbabilityGaltonBoardOrbitalUsesRef),
       }),
@@ -342,7 +341,6 @@ type _StdLearningProbabilityRandomWalkOrbitalUsesRef = 'ProbWalk.traits.WalkSim'
 
 /** Per-orbital factory: builds the RandomWalkOrbital orbital with consumer params. */
 export function stdLearningProbabilityRandomWalkOrbital(params: StdLearningProbabilityRandomWalkOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'WalkScene';
   const built = makeOrbitalWithUses({
     name: 'RandomWalkOrbital',
     uses: [
@@ -352,7 +350,7 @@ export function stdLearningProbabilityRandomWalkOrbital(params: StdLearningProba
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'WalkScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -427,7 +425,7 @@ export function stdLearningProbabilityRandomWalkOrbital(params: StdLearningProba
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'WalkScene',
         'name': 'WalkEngine',
         'ref': ('ProbWalk.traits.WalkSim' satisfies _StdLearningProbabilityRandomWalkOrbitalUsesRef),
       }),
@@ -559,7 +557,6 @@ type _StdLearningProbabilityMonteCarloOrbitalUsesRef = 'MonteCarlo.traits.MonteC
 
 /** Per-orbital factory: builds the MonteCarloOrbital orbital with consumer params. */
 export function stdLearningProbabilityMonteCarloOrbital(params: StdLearningProbabilityMonteCarloOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MonteCarloScene';
   const built = makeOrbitalWithUses({
     name: 'MonteCarloOrbital',
     uses: [
@@ -569,7 +566,7 @@ export function stdLearningProbabilityMonteCarloOrbital(params: StdLearningProba
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'MonteCarloScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -640,7 +637,7 @@ export function stdLearningProbabilityMonteCarloOrbital(params: StdLearningProba
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MonteCarloScene',
         'name': 'MonteCarloEngine',
         'ref': ('MonteCarlo.traits.MonteCarloSim' satisfies _StdLearningProbabilityMonteCarloOrbitalUsesRef),
       }),

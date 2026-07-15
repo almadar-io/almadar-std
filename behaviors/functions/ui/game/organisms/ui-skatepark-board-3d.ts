@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-skatepark-board-3d';
 const ALIAS = 'UiSkateparkBoard3d';
@@ -185,12 +185,11 @@ type _StdUiSkateparkBoard3dSkateparkBoard3DOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SkateparkBoard3DOrbital orbital with consumer params. */
 export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkateparkBoard3dSkateparkBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SkateparkBoard3DItem';
   const built = makeOrbitalWithUses({
     name: 'SkateparkBoard3DOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'SkateparkBoard3DItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -523,7 +522,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetBaseUrl': {
@@ -3919,7 +3918,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
             'name': 'animTick',
           },
         ],
-      } satisfies Trait, 'SkateparkBoard3DItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

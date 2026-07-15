@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-sports-board';
 const ALIAS = 'UiSportsBoard';
@@ -134,12 +134,11 @@ type _StdUiSportsBoardSportsBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SportsBoardOrbital orbital with consumer params. */
 export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSportsBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SportsBoardItem';
   const built = makeOrbitalWithUses({
     name: 'SportsBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'SportsBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -562,7 +561,7 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetBaseUrl': {
@@ -6639,7 +6638,7 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
             'name': 'renderTick',
           },
         ],
-      } satisfies Trait, 'SportsBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

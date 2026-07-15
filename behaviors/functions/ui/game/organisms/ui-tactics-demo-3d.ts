@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-tactics-demo-3d';
 const ALIAS = 'UiTacticsDemo3d';
@@ -90,7 +90,6 @@ type _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef = 'Frame.traits.TacticsAutho
 
 /** Per-orbital factory: builds the TacticsDemo3DOrbital orbital with consumer params. */
 export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3dTacticsDemo3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'TacticsDemo3DOrbital',
     uses: [
@@ -100,7 +99,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -463,7 +462,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef),
       }),
@@ -474,7 +473,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef),
       }),
@@ -485,7 +484,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef),
       }),
@@ -533,7 +532,7 @@ export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef),
       }),

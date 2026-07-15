@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-showcase-organism';
 const ALIAS = 'UiShowcaseOrganism';
@@ -122,12 +122,11 @@ type _StdUiShowcaseOrganismShowcaseOrganismOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the ShowcaseOrganismOrbital orbital with consumer params. */
 export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowcaseOrganismShowcaseOrganismOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'ShowcaseOrganismItem';
   const built = makeOrbitalWithUses({
     name: 'ShowcaseOrganismOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'ShowcaseOrganismItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -189,7 +188,7 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeFilters': {
@@ -439,7 +438,7 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
             },
           ],
         },
-      } satisfies Trait, 'ShowcaseOrganismItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

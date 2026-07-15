@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-physics';
 const ALIAS = 'LearningPhysics';
@@ -94,7 +94,6 @@ type _StdLearningPhysicsProjectileMotionOrbitalUsesRef = 'Projectile.traits.Proj
 
 /** Per-orbital factory: builds the ProjectileMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsProjectileMotionOrbital(params: StdLearningPhysicsProjectileMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'ProjectileScene';
   const built = makeOrbitalWithUses({
     name: 'ProjectileMotionOrbital',
     uses: [
@@ -104,7 +103,7 @@ export function stdLearningPhysicsProjectileMotionOrbital(params: StdLearningPhy
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'ProjectileScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -241,7 +240,7 @@ export function stdLearningPhysicsProjectileMotionOrbital(params: StdLearningPhy
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ProjectileScene',
         'name': 'ProjectileEngine',
         'ref': ('Projectile.traits.ProjectileSim' satisfies _StdLearningPhysicsProjectileMotionOrbitalUsesRef),
       }),
@@ -373,7 +372,6 @@ type _StdLearningPhysicsFreeFallMotionOrbitalUsesRef = 'FreeFall.traits.FreeFall
 
 /** Per-orbital factory: builds the FreeFallMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsFreeFallMotionOrbital(params: StdLearningPhysicsFreeFallMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'FreeFallScene';
   const built = makeOrbitalWithUses({
     name: 'FreeFallMotionOrbital',
     uses: [
@@ -383,7 +381,7 @@ export function stdLearningPhysicsFreeFallMotionOrbital(params: StdLearningPhysi
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'FreeFallScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -532,7 +530,7 @@ export function stdLearningPhysicsFreeFallMotionOrbital(params: StdLearningPhysi
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FreeFallScene',
         'name': 'FreeFallEngine',
         'ref': ('FreeFall.traits.FreeFallSim' satisfies _StdLearningPhysicsFreeFallMotionOrbitalUsesRef),
       }),
@@ -664,7 +662,6 @@ type _StdLearningPhysicsSpringMotionOrbitalUsesRef = 'Spring.traits.SpringSim';
 
 /** Per-orbital factory: builds the SpringMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsSpringMotionOrbital(params: StdLearningPhysicsSpringMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SpringScene';
   const built = makeOrbitalWithUses({
     name: 'SpringMotionOrbital',
     uses: [
@@ -674,7 +671,7 @@ export function stdLearningPhysicsSpringMotionOrbital(params: StdLearningPhysics
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'SpringScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -823,7 +820,7 @@ export function stdLearningPhysicsSpringMotionOrbital(params: StdLearningPhysics
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'SpringScene',
         'name': 'SpringEngine',
         'ref': ('Spring.traits.SpringSim' satisfies _StdLearningPhysicsSpringMotionOrbitalUsesRef),
       }),
@@ -955,7 +952,6 @@ type _StdLearningPhysicsFrictionMotionOrbitalUsesRef = 'Friction.traits.Friction
 
 /** Per-orbital factory: builds the FrictionMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsFrictionMotionOrbital(params: StdLearningPhysicsFrictionMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'FrictionScene';
   const built = makeOrbitalWithUses({
     name: 'FrictionMotionOrbital',
     uses: [
@@ -965,7 +961,7 @@ export function stdLearningPhysicsFrictionMotionOrbital(params: StdLearningPhysi
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'FrictionScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1106,7 +1102,7 @@ export function stdLearningPhysicsFrictionMotionOrbital(params: StdLearningPhysi
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FrictionScene',
         'name': 'FrictionEngine',
         'ref': ('Friction.traits.FrictionSim' satisfies _StdLearningPhysicsFrictionMotionOrbitalUsesRef),
       }),
@@ -1238,7 +1234,6 @@ type _StdLearningPhysicsCircularMotionOrbitalUsesRef = 'Circular.traits.Circular
 
 /** Per-orbital factory: builds the CircularMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsCircularMotionOrbital(params: StdLearningPhysicsCircularMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'CircularScene';
   const built = makeOrbitalWithUses({
     name: 'CircularMotionOrbital',
     uses: [
@@ -1248,7 +1243,7 @@ export function stdLearningPhysicsCircularMotionOrbital(params: StdLearningPhysi
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'CircularScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1385,7 +1380,7 @@ export function stdLearningPhysicsCircularMotionOrbital(params: StdLearningPhysi
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'CircularScene',
         'name': 'CircularEngine',
         'ref': ('Circular.traits.CircularSim' satisfies _StdLearningPhysicsCircularMotionOrbitalUsesRef),
       }),
@@ -1517,7 +1512,6 @@ type _StdLearningPhysicsPendulumMotionOrbitalUsesRef = 'Pendulum.traits.Pendulum
 
 /** Per-orbital factory: builds the PendulumMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsPendulumMotionOrbital(params: StdLearningPhysicsPendulumMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'PendulumScene';
   const built = makeOrbitalWithUses({
     name: 'PendulumMotionOrbital',
     uses: [
@@ -1527,7 +1521,7 @@ export function stdLearningPhysicsPendulumMotionOrbital(params: StdLearningPhysi
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'PendulumScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1682,7 +1676,7 @@ export function stdLearningPhysicsPendulumMotionOrbital(params: StdLearningPhysi
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PendulumScene',
         'name': 'PendulumEngine',
         'ref': ('Pendulum.traits.PendulumSim' satisfies _StdLearningPhysicsPendulumMotionOrbitalUsesRef),
       }),
@@ -1814,7 +1808,6 @@ type _StdLearningPhysicsCollisionMotionOrbitalUsesRef = 'Collision.traits.Collis
 
 /** Per-orbital factory: builds the CollisionMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsCollisionMotionOrbital(params: StdLearningPhysicsCollisionMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'CollisionScene';
   const built = makeOrbitalWithUses({
     name: 'CollisionMotionOrbital',
     uses: [
@@ -1824,7 +1817,7 @@ export function stdLearningPhysicsCollisionMotionOrbital(params: StdLearningPhys
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'CollisionScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1973,7 +1966,7 @@ export function stdLearningPhysicsCollisionMotionOrbital(params: StdLearningPhys
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'CollisionScene',
         'name': 'CollisionEngine',
         'ref': ('Collision.traits.CollisionSim' satisfies _StdLearningPhysicsCollisionMotionOrbitalUsesRef),
       }),
@@ -2105,7 +2098,6 @@ type _StdLearningPhysicsInclineMotionOrbitalUsesRef = 'Incline.traits.InclineSim
 
 /** Per-orbital factory: builds the InclineMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsInclineMotionOrbital(params: StdLearningPhysicsInclineMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'InclineScene';
   const built = makeOrbitalWithUses({
     name: 'InclineMotionOrbital',
     uses: [
@@ -2115,7 +2107,7 @@ export function stdLearningPhysicsInclineMotionOrbital(params: StdLearningPhysic
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'InclineScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2266,7 +2258,7 @@ export function stdLearningPhysicsInclineMotionOrbital(params: StdLearningPhysic
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'InclineScene',
         'name': 'InclineEngine',
         'ref': ('Incline.traits.InclineSim' satisfies _StdLearningPhysicsInclineMotionOrbitalUsesRef),
       }),
@@ -2398,7 +2390,6 @@ type _StdLearningPhysicsOrbitMotionOrbitalUsesRef = 'Orbit.traits.OrbitSim';
 
 /** Per-orbital factory: builds the OrbitMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsOrbitMotionOrbital(params: StdLearningPhysicsOrbitMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'OrbitScene';
   const built = makeOrbitalWithUses({
     name: 'OrbitMotionOrbital',
     uses: [
@@ -2408,7 +2399,7 @@ export function stdLearningPhysicsOrbitMotionOrbital(params: StdLearningPhysicsO
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'OrbitScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2557,7 +2548,7 @@ export function stdLearningPhysicsOrbitMotionOrbital(params: StdLearningPhysicsO
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrbitScene',
         'name': 'OrbitEngine',
         'ref': ('Orbit.traits.OrbitSim' satisfies _StdLearningPhysicsOrbitMotionOrbitalUsesRef),
       }),
@@ -2689,7 +2680,6 @@ type _StdLearningPhysicsGasMotionOrbitalUsesRef = 'Gas.traits.GasSim';
 
 /** Per-orbital factory: builds the GasMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsGasMotionOrbital(params: StdLearningPhysicsGasMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GasScene';
   const built = makeOrbitalWithUses({
     name: 'GasMotionOrbital',
     uses: [
@@ -2699,7 +2689,7 @@ export function stdLearningPhysicsGasMotionOrbital(params: StdLearningPhysicsGas
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GasScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2992,7 +2982,7 @@ export function stdLearningPhysicsGasMotionOrbital(params: StdLearningPhysicsGas
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GasScene',
         'name': 'GasEngine',
         'ref': ('Gas.traits.GasSim' satisfies _StdLearningPhysicsGasMotionOrbitalUsesRef),
       }),
@@ -3124,7 +3114,6 @@ type _StdLearningPhysicsMagneticMotionOrbitalUsesRef = 'Magnetic.traits.Magnetic
 
 /** Per-orbital factory: builds the MagneticMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsMagneticMotionOrbital(params: StdLearningPhysicsMagneticMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MagneticScene';
   const built = makeOrbitalWithUses({
     name: 'MagneticMotionOrbital',
     uses: [
@@ -3134,7 +3123,7 @@ export function stdLearningPhysicsMagneticMotionOrbital(params: StdLearningPhysi
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'MagneticScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -3275,7 +3264,7 @@ export function stdLearningPhysicsMagneticMotionOrbital(params: StdLearningPhysi
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MagneticScene',
         'name': 'MagneticEngine',
         'ref': ('Magnetic.traits.MagneticSim' satisfies _StdLearningPhysicsMagneticMotionOrbitalUsesRef),
       }),
@@ -3407,7 +3396,6 @@ type _StdLearningPhysicsWaveMotionOrbitalUsesRef = 'Wave.traits.WaveSim';
 
 /** Per-orbital factory: builds the WaveMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsWaveMotionOrbital(params: StdLearningPhysicsWaveMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'WaveScene';
   const built = makeOrbitalWithUses({
     name: 'WaveMotionOrbital',
     uses: [
@@ -3417,7 +3405,7 @@ export function stdLearningPhysicsWaveMotionOrbital(params: StdLearningPhysicsWa
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'WaveScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -3786,7 +3774,7 @@ export function stdLearningPhysicsWaveMotionOrbital(params: StdLearningPhysicsWa
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'WaveScene',
         'name': 'WaveEngine',
         'ref': ('Wave.traits.WaveSim' satisfies _StdLearningPhysicsWaveMotionOrbitalUsesRef),
       }),
@@ -3918,7 +3906,6 @@ type _StdLearningPhysicsReflectionMotionOrbitalUsesRef = 'Reflection.traits.Refl
 
 /** Per-orbital factory: builds the ReflectionMotionOrbital orbital with consumer params. */
 export function stdLearningPhysicsReflectionMotionOrbital(params: StdLearningPhysicsReflectionMotionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'ReflectionScene';
   const built = makeOrbitalWithUses({
     name: 'ReflectionMotionOrbital',
     uses: [
@@ -3928,7 +3915,7 @@ export function stdLearningPhysicsReflectionMotionOrbital(params: StdLearningPhy
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'ReflectionScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -4067,7 +4054,7 @@ export function stdLearningPhysicsReflectionMotionOrbital(params: StdLearningPhy
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReflectionScene',
         'name': 'ReflectionEngine',
         'ref': ('Reflection.traits.ReflectionSim' satisfies _StdLearningPhysicsReflectionMotionOrbitalUsesRef),
       }),

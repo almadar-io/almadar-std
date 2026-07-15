@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-event-handler-board';
 const ALIAS = 'UiEventHandlerBoard';
@@ -153,12 +153,11 @@ type _StdUiEventHandlerBoardEventHandlerBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the EventHandlerBoardOrbital orbital with consumer params. */
 export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEventHandlerBoardEventHandlerBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'EventHandlerBoardItem';
   const built = makeOrbitalWithUses({
     name: 'EventHandlerBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'EventHandlerBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -323,7 +322,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'activeFilters': {
@@ -4906,7 +4905,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
             },
           ],
         },
-      } satisfies Trait, 'EventHandlerBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

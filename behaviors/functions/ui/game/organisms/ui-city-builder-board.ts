@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-city-builder-board';
 const ALIAS = 'UiCityBuilderBoard';
@@ -149,12 +149,11 @@ type _StdUiCityBuilderBoardCityBuilderBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the CityBuilderBoardOrbital orbital with consumer params. */
 export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBuilderBoardCityBuilderBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'CityBuilderBoardItem';
   const built = makeOrbitalWithUses({
     name: 'CityBuilderBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'CityBuilderBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -471,7 +470,7 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetManifest': {
@@ -8621,7 +8620,7 @@ export function stdUiCityBuilderBoardCityBuilderBoardOrbital(params: StdUiCityBu
             'name': 'resourceIncomeTick',
           },
         ],
-      } satisfies Trait, 'CityBuilderBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

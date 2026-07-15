@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-biology';
 const ALIAS = 'LearningBiology';
@@ -90,7 +90,6 @@ type _StdLearningBiologyPredatorPreyOrbitalUsesRef = 'BioPopulation.traits.BioPo
 
 /** Per-orbital factory: builds the PredatorPreyOrbital orbital with consumer params. */
 export function stdLearningBiologyPredatorPreyOrbital(params: StdLearningBiologyPredatorPreyOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'PopulationScene';
   const built = makeOrbitalWithUses({
     name: 'PredatorPreyOrbital',
     uses: [
@@ -100,7 +99,7 @@ export function stdLearningBiologyPredatorPreyOrbital(params: StdLearningBiology
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'PopulationScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -226,7 +225,7 @@ export function stdLearningBiologyPredatorPreyOrbital(params: StdLearningBiology
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PopulationScene',
         'name': 'PopulationEngine',
         'ref': ('BioPopulation.traits.BioPopulationSim' satisfies _StdLearningBiologyPredatorPreyOrbitalUsesRef),
       }),
@@ -358,7 +357,6 @@ type _StdLearningBiologyFoodwebOrbitalUsesRef = 'BioFoodweb.traits.BioFoodwebSim
 
 /** Per-orbital factory: builds the FoodwebOrbital orbital with consumer params. */
 export function stdLearningBiologyFoodwebOrbital(params: StdLearningBiologyFoodwebOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'FoodwebScene';
   const built = makeOrbitalWithUses({
     name: 'FoodwebOrbital',
     uses: [
@@ -368,7 +366,7 @@ export function stdLearningBiologyFoodwebOrbital(params: StdLearningBiologyFoodw
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'FoodwebScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -545,7 +543,7 @@ export function stdLearningBiologyFoodwebOrbital(params: StdLearningBiologyFoodw
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FoodwebScene',
         'name': 'FoodwebEngine',
         'ref': ('BioFoodweb.traits.BioFoodwebSim' satisfies _StdLearningBiologyFoodwebOrbitalUsesRef),
       }),
@@ -677,7 +675,6 @@ type _StdLearningBiologyMitosisOrbitalUsesRef = 'BioMitosis.traits.BioMitosisSim
 
 /** Per-orbital factory: builds the MitosisOrbital orbital with consumer params. */
 export function stdLearningBiologyMitosisOrbital(params: StdLearningBiologyMitosisOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MitosisScene';
   const built = makeOrbitalWithUses({
     name: 'MitosisOrbital',
     uses: [
@@ -687,7 +684,7 @@ export function stdLearningBiologyMitosisOrbital(params: StdLearningBiologyMitos
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'MitosisScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -810,7 +807,7 @@ export function stdLearningBiologyMitosisOrbital(params: StdLearningBiologyMitos
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MitosisScene',
         'name': 'MitosisEngine',
         'ref': ('BioMitosis.traits.BioMitosisSim' satisfies _StdLearningBiologyMitosisOrbitalUsesRef),
       }),
@@ -942,7 +939,6 @@ type _StdLearningBiologyCellStructureOrbitalUsesRef = 'BioCell.traits.BioCellSim
 
 /** Per-orbital factory: builds the CellStructureOrbital orbital with consumer params. */
 export function stdLearningBiologyCellStructureOrbital(params: StdLearningBiologyCellStructureOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'CellScene';
   const built = makeOrbitalWithUses({
     name: 'CellStructureOrbital',
     uses: [
@@ -952,7 +948,7 @@ export function stdLearningBiologyCellStructureOrbital(params: StdLearningBiolog
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'CellScene',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1138,7 +1134,7 @@ export function stdLearningBiologyCellStructureOrbital(params: StdLearningBiolog
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'CellScene',
         'name': 'CellEngine',
         'ref': ('BioCell.traits.BioCellSim' satisfies _StdLearningBiologyCellStructureOrbitalUsesRef),
       }),

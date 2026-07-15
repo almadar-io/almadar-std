@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-platformer-board-3d';
 const ALIAS = 'UiPlatformerBoard3d';
@@ -178,12 +178,11 @@ type _StdUiPlatformerBoard3dPlatformerBoard3DOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the PlatformerBoard3DOrbital orbital with consumer params. */
 export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlatformerBoard3dPlatformerBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'PlatformerBoard3DItem';
   const built = makeOrbitalWithUses({
     name: 'PlatformerBoard3DOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'PlatformerBoard3DItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -516,7 +515,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetBaseUrl': {
@@ -4007,7 +4006,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
             'name': 'animTick',
           },
         ],
-      } satisfies Trait, 'PlatformerBoard3DItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

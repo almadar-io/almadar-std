@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/learning-biology-lab';
 const ALIAS = 'LearningBiologyLab';
@@ -108,12 +108,11 @@ type _StdLearningBiologyLabBiologyLabOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the BiologyLabOrbital orbital with consumer params. */
 export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiologyLabBiologyLabOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BiologyLabItem';
   const built = makeOrbitalWithUses({
     name: 'BiologyLabOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'BiologyLabItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -382,7 +381,7 @@ export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiolog
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'animate': {
@@ -814,7 +813,7 @@ export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiolog
             },
           ],
         },
-      } satisfies Trait, 'BiologyLabItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

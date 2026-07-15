@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-media-gallery';
 const ALIAS = 'UiMediaGallery';
@@ -141,12 +141,11 @@ type _StdUiMediaGalleryMediaGalleryOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the MediaGalleryOrbital orbital with consumer params. */
 export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMediaGalleryOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MediaGalleryItem';
   const built = makeOrbitalWithUses({
     name: 'MediaGalleryOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'MediaGalleryItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -163,7 +162,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'actions': {
@@ -605,7 +604,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             },
           ],
         },
-      } satisfies Trait, 'MediaGalleryItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

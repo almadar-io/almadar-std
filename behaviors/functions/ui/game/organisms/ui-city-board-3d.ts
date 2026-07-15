@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-city-board-3d';
 const ALIAS = 'UiCityBoard3d';
@@ -92,7 +92,6 @@ type _StdUiCityBoard3dCityBoard3DOrbitalUsesRef = 'Frame.traits.HeroAuthority' |
 
 /** Per-orbital factory: builds the CityBoard3DOrbital orbital with consumer params. */
 export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'CityBoard3DOrbital',
     uses: [
@@ -102,7 +101,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2702,7 +2701,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'HeroAuthority',
         'ref': ('Frame.traits.HeroAuthority' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
@@ -2867,7 +2866,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Collector',
         'ref': ('Frame.traits.Collector' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
@@ -2878,7 +2877,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
@@ -2889,7 +2888,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundGate',
         'ref': ('Frame.traits.RoundGate' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),
@@ -2981,7 +2980,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Player',
         'ref': ('Frame.traits.HeroIntent' satisfies _StdUiCityBoard3dCityBoard3DOrbitalUsesRef),
       }),

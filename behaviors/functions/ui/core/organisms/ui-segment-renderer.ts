@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-segment-renderer';
 const ALIAS = 'UiSegmentRenderer';
@@ -96,12 +96,11 @@ type _StdUiSegmentRendererSegmentRendererOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the SegmentRendererOrbital orbital with consumer params. */
 export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentRendererSegmentRendererOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SegmentRendererItem';
   const built = makeOrbitalWithUses({
     name: 'SegmentRendererOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'SegmentRendererItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -118,7 +117,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'className': {
@@ -245,7 +244,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             },
           ],
         },
-      } satisfies Trait, 'SegmentRendererItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

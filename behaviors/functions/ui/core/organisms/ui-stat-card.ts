@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-stat-card';
 const ALIAS = 'UiStatCard';
@@ -148,12 +148,11 @@ type _StdUiStatCardStatCardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the StatCardOrbital orbital with consumer params. */
 export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'StatCardItem';
   const built = makeOrbitalWithUses({
     name: 'StatCardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'StatCardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -170,7 +169,7 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'action': {
@@ -618,7 +617,7 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             },
           ],
         },
-      } satisfies Trait, 'StatCardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

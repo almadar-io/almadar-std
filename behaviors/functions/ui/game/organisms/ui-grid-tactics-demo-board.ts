@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-grid-tactics-demo-board';
 const ALIAS = 'UiGridTacticsDemoBoard';
@@ -90,7 +90,6 @@ type _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef = 'Tactics.traits.G
 
 /** Per-orbital factory: builds the GridTacticsDemoOrbital orbital with consumer params. */
 export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'GridTacticsDemoOrbital',
     uses: [
@@ -108,7 +107,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -387,7 +386,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'TacticsAuthority',
         'ref': ('Tactics.traits.GridTactics' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
@@ -398,7 +397,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
@@ -409,11 +408,11 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundLogic',
         'ref': ('Round.traits.RoundFlow' satisfies _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef),
       }),
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'movementRange': {
@@ -1695,7 +1694,7 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
             'name': 'renderTick',
           },
         ],
-      } satisfies Trait, 'GameState', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

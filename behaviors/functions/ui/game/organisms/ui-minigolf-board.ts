@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-minigolf-board';
 const ALIAS = 'UiMinigolfBoard';
@@ -163,12 +163,11 @@ type _StdUiMinigolfBoardMinigolfBoardOrbitalUsesRef = never;
 
 /** Per-orbital factory: builds the MinigolfBoardOrbital orbital with consumer params. */
 export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoardMinigolfBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MinigolfBoardItem';
   const built = makeOrbitalWithUses({
     name: 'MinigolfBoardOrbital',
     uses: [],
     entity: {
-      name: canonicalName,
+      name: 'MinigolfBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -745,7 +744,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetManifest': {
@@ -11317,7 +11316,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
             'name': 'renderTick',
           },
         ],
-      } satisfies Trait, 'MinigolfBoardItem', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-holiday-runner-board';
 const ALIAS = 'UiHolidayRunnerBoard';
@@ -127,7 +127,6 @@ type _StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalUsesRef = 'AnimTick.traits
 
 /** Per-orbital factory: builds the HolidayRunnerBoardOrbital orbital with consumer params. */
 export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'HolidayRunnerBoardItem';
   const built = makeOrbitalWithUses({
     name: 'HolidayRunnerBoardOrbital',
     uses: [
@@ -137,7 +136,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'HolidayRunnerBoardItem',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -375,7 +374,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'assetManifest': {
@@ -4529,7 +4528,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'name': 'renderTick',
           },
         ],
-      } satisfies Trait, 'HolidayRunnerBoardItem', canonicalName),
+      } satisfies Trait,
       makeTraitRef({
         'config': {
           'frames': {
@@ -4540,7 +4539,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'HolidayRunnerBoardItem',
         'name': 'AnimClock',
         'ref': ('AnimTick.traits.AnimTick' satisfies _StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalUsesRef),
       }),

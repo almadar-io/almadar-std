@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-topdown-rts-board';
 const ALIAS = 'UiTopdownRtsBoard';
@@ -92,7 +92,6 @@ type _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef = 'Frame.traits.TacticsA
 
 /** Per-orbital factory: builds the TopdownRtsBoardOrbital orbital with consumer params. */
 export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'TopdownRtsBoardOrbital',
     uses: [
@@ -110,7 +109,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1401,7 +1400,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Authority',
         'ref': ('Frame.traits.TacticsAuthority' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1412,7 +1411,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Frame.traits.FxDecay' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1423,7 +1422,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundLogic',
         'ref': ('Frame.traits.RoundLogic' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1446,7 +1445,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'ScoreKeeper',
         'ref': ('Score.traits.ScoreKeeper' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1489,7 +1488,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Producer',
         'ref': ('Production.traits.Producer' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),
@@ -1753,7 +1752,7 @@ export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownR
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'Player',
         'ref': ('Frame.traits.PlayerIntent' satisfies _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef),
       }),

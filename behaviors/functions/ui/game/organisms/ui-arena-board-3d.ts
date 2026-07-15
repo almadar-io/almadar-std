@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
+import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-arena-board-3d';
 const ALIAS = 'UiArenaBoard3d';
@@ -90,7 +90,6 @@ type _StdUiArenaBoard3dArenaBoard3DOrbitalUsesRef = 'Chase.traits.ChaseAi' | 'Pa
 
 /** Per-orbital factory: builds the ArenaBoard3DOrbital orbital with consumer params. */
 export function stdUiArenaBoard3dArenaBoard3DOrbital(params: StdUiArenaBoard3dArenaBoard3DOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'ArenaBoard3DOrbital',
     uses: [
@@ -108,7 +107,7 @@ export function stdUiArenaBoard3dArenaBoard3DOrbital(params: StdUiArenaBoard3dAr
       },
     ],
     entity: {
-      name: canonicalName,
+      name: 'GameState',
       persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -707,7 +706,7 @@ export function stdUiArenaBoard3dArenaBoard3DOrbital(params: StdUiArenaBoard3dAr
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'ChaseAI',
         'ref': ('Chase.traits.ChaseAi' satisfies _StdUiArenaBoard3dArenaBoard3DOrbitalUsesRef),
       }),
@@ -718,7 +717,7 @@ export function stdUiArenaBoard3dArenaBoard3DOrbital(params: StdUiArenaBoard3dAr
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdUiArenaBoard3dArenaBoard3DOrbitalUsesRef),
       }),
@@ -729,11 +728,11 @@ export function stdUiArenaBoard3dArenaBoard3DOrbital(params: StdUiArenaBoard3dAr
             'type': 'unknown',
           },
         },
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'GameState',
         'name': 'RoundLogic',
         'ref': ('Round.traits.RoundFlow' satisfies _StdUiArenaBoard3dArenaBoard3DOrbitalUsesRef),
       }),
-      rebindInlineTraitEntity({
+      {
         'category': 'interaction',
         'config': {
           'tiles': {
@@ -1537,7 +1536,7 @@ export function stdUiArenaBoard3dArenaBoard3DOrbital(params: StdUiArenaBoard3dAr
             'name': 'renderTick',
           },
         ],
-      } satisfies Trait, 'GameState', canonicalName),
+      } satisfies Trait,
     ],
     pages: [
       {
