@@ -46,7 +46,6 @@ export interface StdUiPricingPageTemplatePricingPageTemplateLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPricingPageTemplateConfig {
-  /** Default: `""` */
   className?: string;
 }
 

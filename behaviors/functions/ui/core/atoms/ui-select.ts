@@ -62,25 +62,19 @@ export interface StdUiSelectValueChangePayload {
 export interface StdUiSelectConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `false` */
   clearable?: boolean;
-  /** Default: `""` */
   error?: string;
-  /** Default: `[{"label":"Label","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]},{"label":"Label 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]}]` */
+  /** Default: `[]` */
   groups?: EntityRow[];
-  /** Default: `false` */
   multiple?: boolean;
   /** Default: `"CHANGE"` */
   onChange?: string;
   /** Default: `"VALUE_CHANGE"` */
   onValueChange?: string;
-  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
+  /** Default: `[]` */
   options?: EntityRow[];
-  /** Default: `""` */
   placeholder?: string;
-  /** Default: `false` */
   searchable?: boolean;
   /** Default: `[]` */
   value?: string[];

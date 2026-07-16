@@ -39,15 +39,12 @@ export type StdUiTeamCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTeamCardConfig {
-  /** Default: `{"initials":"Initials"}` */
   avatar?: unknown;
   /** Default: `""` */
   bio?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
   name?: string;
-  /** Default: `""` */
   nameAr?: string;
   /** Default: `""` */
   role?: string;

@@ -62,13 +62,11 @@ export interface StdUiSidebarLogoClickPayload {
 export interface StdUiSidebarConfig {
   /** Default: `"KFlow"` */
   brandName?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `"CLOSE"` */
   closeEvent?: string;
   /** Default: `"COLLAPSE_CHANGE"` */
   collapseChangeEvent?: string;
-  /** Default: `false` */
   collapsed?: boolean;
   /** Default: `false` */
   defaultCollapsed?: boolean;
@@ -76,7 +74,6 @@ export interface StdUiSidebarConfig {
   footerContent?: unknown;
   /** Default: `false` */
   hideCollapseButton?: boolean;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subItems":[]},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","id":"Id 2","isActive":true,"label":"Label 2","subItems":[]}]` */
   items?: EntityRow[];

@@ -47,7 +47,6 @@ export interface StdUiFlipContainerClickPayload {
  */
 export interface StdUiFlipContainerConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   flipped?: boolean;

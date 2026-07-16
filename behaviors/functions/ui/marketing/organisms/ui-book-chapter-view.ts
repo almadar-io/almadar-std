@@ -46,7 +46,6 @@ export interface StdUiBookChapterViewBookChapterViewLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBookChapterViewConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
@@ -124,7 +123,6 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',

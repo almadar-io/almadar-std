@@ -48,7 +48,6 @@ export interface StdUiWizardProgressStepClickPayload {
 export interface StdUiWizardProgressConfig {
   /** Default: `true` */
   allowNavigation?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   compact?: boolean;
@@ -58,7 +57,7 @@ export interface StdUiWizardProgressConfig {
   onStepClick?: string;
   /** Default: `"STEP_CLICK"` */
   stepClickEvent?: string;
-  /** Default: `[{"description":"Description","id":"Id","title":"Title"},{"description":"Description 2","id":"Id 2","title":"Title 2"}]` */
+  /** Default: `[]` */
   steps?: EntityRow[];
 }
 

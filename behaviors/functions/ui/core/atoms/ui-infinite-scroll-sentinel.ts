@@ -46,7 +46,6 @@ export interface StdUiInfiniteScrollSentinelLoadMorePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInfiniteScrollSentinelConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `true` */
   hasMore?: boolean;

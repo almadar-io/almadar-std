@@ -39,7 +39,6 @@ export type StdUiThemeToggleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiThemeToggleConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   showLabel?: boolean;

@@ -39,7 +39,6 @@ export type StdUiSocialProofEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSocialProofConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `[{"logo":"Logo","name":"Name","quote":"Quote"},{"logo":"Logo 2","name":"Name 2","quote":"Quote 2"}]` */
   items?: EntityRow[];

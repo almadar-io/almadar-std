@@ -46,11 +46,8 @@ export interface StdUiTabbedContainerTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTabbedContainerConfig {
-  /** Default: `""` */
   activeTab?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   defaultTab?: string;
   /** Default: `"TAB_CHANGE"` */
   onTabChange?: string;
@@ -132,21 +129,18 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
         'category': 'interaction',
         'config': {
           'activeTab': {
-            'default': '',
             'description': 'Controlled active tab',
             'label': 'Active Tab',
             'tier': 'presentation',
             'type': 'string',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
           },
           'defaultTab': {
-            'default': '',
             'description': 'Default active tab ID',
             'label': 'Default Tab',
             'tier': 'presentation',

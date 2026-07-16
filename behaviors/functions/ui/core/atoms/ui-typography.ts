@@ -42,7 +42,6 @@ export interface StdUiTypographyConfig {
   /** Default: `"left"` */
   align?: 'left' | 'center' | 'right';
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';

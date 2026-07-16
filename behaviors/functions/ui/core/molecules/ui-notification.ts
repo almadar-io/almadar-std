@@ -55,11 +55,8 @@ export interface StdUiNotificationActionPayload {
 export interface StdUiNotificationConfig {
   /** Default: `"ACTION"` */
   actionEvent?: string;
-  /** Default: `""` */
   actionLabel?: string;
-  /** Default: `""` */
   badge?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `"DISMISS"` */
   dismissEvent?: string;
@@ -73,7 +70,6 @@ export interface StdUiNotificationConfig {
   onAction?: string;
   /** Default: `"DISMISS"` */
   onDismiss?: string;
-  /** Default: `""` */
   title?: string;
   /** Default: `"info"` */
   variant?: 'success' | 'error' | 'info' | 'warning';

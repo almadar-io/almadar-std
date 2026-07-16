@@ -46,7 +46,6 @@ export interface StdUiFeatureDetailPageTemplateFeatureDetailPageTemplateLoadedPa
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureDetailPageTemplateConfig {
-  /** Default: `""` */
   className?: string;
 }
 

@@ -41,17 +41,13 @@ export type StdUiIconEventKey = 'INIT';
 export interface StdUiIconConfig {
   /** Default: `"none"` */
   animation?: 'spin' | 'pulse' | 'none';
-  /** Default: `""` */
   className?: string;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
-  /** Default: `""` */
   icon?: unknown;
-  /** Default: `""` */
   name?: string;
   /** Default: `"md"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `0` */
   strokeWidth?: number;
   /** Default: `{}` */
   style?: unknown;

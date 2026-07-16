@@ -43,20 +43,16 @@ export interface StdUiSplitConfig {
   align?: 'start' | 'center' | 'end' | 'stretch';
   /** Default: `[]` */
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
   leftClassName?: string;
   /** Default: `"1:1"` */
   ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
   /** Default: `false` */
   reverse?: boolean;
-  /** Default: `""` */
   rightClassName?: string;
   /** Default: `"md"` */
   stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';

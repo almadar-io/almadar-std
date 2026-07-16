@@ -49,9 +49,8 @@ export interface StdUiMatrixQuestionChangePayload {
 export interface StdUiMatrixQuestionConfig {
   /** Default: `"CHANGE"` */
   changeEvent?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
+  /** Default: `[]` */
   columns?: EntityRow[];
   /** Default: `false` */
   disabled?: boolean;
@@ -61,7 +60,6 @@ export interface StdUiMatrixQuestionConfig {
   rows?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md';
-  /** Default: `""` */
   title?: string;
   /** Default: `{}` */
   values?: Record<string, TraitConfig>;

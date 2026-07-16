@@ -39,13 +39,11 @@ export type StdUiStateJsonViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateJsonViewConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   defaultExpanded?: boolean;
   /** Default: `""` */
   initialState?: string;
-  /** Default: `""` */
   label?: string;
   /** Default: `""` */
   name?: string;

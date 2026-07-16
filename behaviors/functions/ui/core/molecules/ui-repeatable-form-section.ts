@@ -62,19 +62,14 @@ export interface StdUiRepeatableFormSectionReorderPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRepeatableFormSectionConfig {
-  /** Default: `""` */
   addLabel?: string;
   /** Default: `false` */
   allowReorder?: boolean;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   currentState?: string;
-  /** Default: `""` */
   emptyMessage?: string;
   /** Default: `[{"addedAt":"Added At","addedInState":"Added In State","id":"Id"},{"addedAt":"Added At 2","addedInState":"Added In State 2","id":"Id 2"}]` */
   items?: EntityRow[];
-  /** Default: `0` */
   maxItems?: number;
   /** Default: `0` */
   minItems?: number;

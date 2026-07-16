@@ -40,7 +40,6 @@ export type StdUiArticleSectionEventKey = 'INIT';
  */
 export interface StdUiArticleSectionConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"md"` */
   maxWidth?: 'sm' | 'md' | 'lg';

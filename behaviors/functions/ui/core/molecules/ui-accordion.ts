@@ -55,7 +55,6 @@ export interface StdUiAccordionTogglePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAccordionConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   defaultOpen?: number[];

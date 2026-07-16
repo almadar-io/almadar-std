@@ -95,36 +95,26 @@ export interface StdUiDataListDataListLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `""` */
   accepts?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
+  /** Default: `[]` */
   columns?: EntityRow[];
-  /** Default: `""` */
   currentUser?: string;
-  /** Default: `""` */
   dndItemIdField?: string;
-  /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `""` */
   dragGroup?: string;
-  /** Default: `""` */
   dropEvent?: string;
   error?: EntityRow;
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
+  /** Default: `[]` */
   fields?: EntityRow[];
   /** Default: `"none"` */
   gap?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `""` */
   groupBy?: string;
-  /** Default: `false` */
   hasMore?: boolean;
-  /** Default: `false` */
   infiniteScroll?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
+  /** Default: `[]` */
   itemActions?: unknown;
   /** Default: `"ITEM_CLICK"` */
   itemClickEvent?: string;
@@ -134,25 +124,20 @@ export interface StdUiDataListConfig {
   longPressEvent?: string;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `0` */
   maxInlineActions?: number;
   /** Default: `5` */
   pageSize?: number;
-  /** Default: `""` */
   positionEvent?: string;
   /** Default: `"REORDER"` */
   reorderEvent?: string;
-  /** Default: `false` */
   reorderable?: boolean;
-  /** Default: `""` */
   senderField?: string;
-  /** Default: `false` */
   sortable?: boolean;
-  /** Default: `[{"icon":"circle","label":"Label","variant":"primary"},{"icon":"circle","label":"Label 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   swipeLeftActions?: EntityRow[];
   /** Default: `"SWIPE_LEFT"` */
   swipeLeftEvent?: string;
-  /** Default: `[{"icon":"circle","label":"Label","variant":"primary"},{"icon":"circle","label":"Label 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   swipeRightActions?: EntityRow[];
   /** Default: `"SWIPE_RIGHT"` */
   swipeRightEvent?: string;

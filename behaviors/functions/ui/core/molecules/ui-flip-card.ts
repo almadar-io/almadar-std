@@ -48,7 +48,6 @@ export interface StdUiFlipCardFlipPayload {
 export interface StdUiFlipCardConfig {
   /** Default: `[]` */
   back?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   flipped?: boolean;

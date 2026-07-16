@@ -39,14 +39,12 @@ export type StdUiMeterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMeterConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
   label?: string;
   /** Default: `100` */
   max?: number;
@@ -58,9 +56,8 @@ export interface StdUiMeterConfig {
   showValue?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"color":"Color","label":"Label","value":1},{"color":"Color 2","label":"Label 2","value":2}]` */
+  /** Default: `[]` */
   thresholds?: EntityRow[];
-  /** Default: `""` */
   unit?: string;
   /** Default: `1` */
   value?: number;

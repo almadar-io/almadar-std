@@ -60,13 +60,9 @@ export interface StdUiVersionDiffRevertPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVersionDiffConfig {
-  /** Default: `""` */
   afterId?: string;
-  /** Default: `""` */
   beforeId?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   language?: string;
   /** Default: `"REVERT"` */
   onRevert?: string;

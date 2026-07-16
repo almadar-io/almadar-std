@@ -39,10 +39,8 @@ export type StdUiGameIconEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameIconConfig {
-  /** Default: `""` */
   alt?: string;
   assetUrl?: EntityRow;
-  /** Default: `""` */
   className?: string;
   /** Default: `"circle"` */
   icon?: unknown;

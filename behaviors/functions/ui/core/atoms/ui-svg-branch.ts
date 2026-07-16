@@ -43,7 +43,6 @@ export interface StdUiSvgBranchConfig {
   asRoot?: boolean;
   /** Default: `2` */
   branches?: number;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

@@ -65,7 +65,6 @@ export interface StdUiMapViewConfig {
   centerLat?: number;
   /** Default: `-0.09` */
   centerLng?: number;
-  /** Default: `""` */
   className?: string;
   /** Default: `"400px"` */
   height?: string;
@@ -73,13 +72,13 @@ export interface StdUiMapViewConfig {
   mapClickEvent?: string;
   /** Default: `"MARKER_CLICK"` */
   markerClickEvent?: string;
-  /** Default: `[{"category":"Category","id":"Id","label":"Label","lat":1,"lng":1},{"category":"Category 2","id":"Id 2","label":"Label 2","lat":2,"lng":2}]` */
+  /** Default: `[]` */
   markers?: EntityRow[];
   /** Default: `"MAP_CLICK"` */
   onMapClick?: string;
   /** Default: `"MARKER_CLICK"` */
   onMarkerClick?: string;
-  /** Default: `[{"color":"Color","dashArray":"Dash Array","id":"Id","label":"Label","opacity":1,"waypoints":[{"lat":1,"lng":1},{"lat":2,"lng":2}],"weight":1},{"color":"Color 2","dashArray":"Dash Array 2","id":"Id 2","label":"Label 2","opacity":2,"waypoints":[{"lat":1,"lng":1},{"lat":2,"lng":2}],"weight":2}]` */
+  /** Default: `[]` */
   routes?: EntityRow[];
   /** Default: `true` */
   showAttribution?: boolean;

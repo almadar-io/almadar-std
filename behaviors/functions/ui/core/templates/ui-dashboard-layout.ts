@@ -70,17 +70,16 @@ export interface StdUiDashboardLayoutConfig {
   /** Default: `"{{APP_TITLE}}"` */
   appName?: string;
   children?: unknown;
-  /** Default: `""` */
   currentPath?: string;
   headerActions?: unknown;
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
   logo?: unknown;
-  /** Default: `[{"badge":"Badge","children":[],"href":"Href","icon":"circle","label":"Label"},{"badge":"Badge 2","children":[],"href":"Href 2","icon":"circle","label":"Label 2"}]` */
+  /** Default: `[]` */
   navItems?: EntityRow[];
   /** Default: `"NOTIFICATION_CLICK"` */
   notificationClickEvent?: string;
-  /** Default: `[{"createdAt":"Created At","description":"Description","id":"Id","message":"Message","read":false},{"createdAt":"Created At 2","description":"Description 2","id":"Id 2","message":"Message 2","read":true}]` */
+  /** Default: `[]` */
   notifications?: EntityRow[];
   /** Default: `"NOTIFICATION_CLICK"` */
   onNotificationClick?: string;
@@ -97,7 +96,6 @@ export interface StdUiDashboardLayoutConfig {
   sidebarFooter?: unknown;
   /** Default: `[]` */
   topBarActions?: EntityRow[];
-  /** Default: `{"avatar":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png","email":"Email","name":"Name"}` */
   user?: EntityRow;
 }
 

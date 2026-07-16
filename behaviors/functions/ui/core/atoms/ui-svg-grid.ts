@@ -41,7 +41,6 @@ export type StdUiSvgGridEventKey = 'INIT';
 export interface StdUiSvgGridConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

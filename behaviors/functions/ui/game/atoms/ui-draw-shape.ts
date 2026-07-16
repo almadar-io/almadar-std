@@ -41,31 +41,21 @@ export type StdUiDrawShapeEventKey = 'INIT';
 export interface StdUiDrawShapeConfig {
   /** Default: `{}` */
   anchor?: unknown;
-  /** Default: `""` */
   fill?: string;
-  /** Default: `0` */
   height?: number;
-  /** Default: `0` */
   offsetX?: number;
-  /** Default: `0` */
   offsetY?: number;
-  /** Default: `0` */
   opacity?: number;
   /** Default: `[]` */
   points?: EntityRow[];
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;
-  /** Default: `0` */
   radiusX?: number;
-  /** Default: `0` */
   radiusY?: number;
   /** Default: `"cell"` */
   shape?: 'cell' | 'rect' | 'ellipse' | 'poly';
-  /** Default: `""` */
   stroke?: string;
-  /** Default: `0` */
   strokeWidth?: number;
-  /** Default: `0` */
   width?: number;
 }
 

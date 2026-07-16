@@ -39,13 +39,11 @@ export type StdUiAnimatedGraphicEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedGraphicConfig {
-  /** Default: `""` */
   alt?: string;
   /** Default: `false` */
   animate?: boolean;
   /** Default: `"draw"` */
   animation?: 'draw' | 'fill' | 'pulse' | 'morph';
-  /** Default: `""` */
   className?: string;
   /** Default: `0` */
   delay?: number;
@@ -53,17 +51,12 @@ export interface StdUiAnimatedGraphicConfig {
   duration?: number;
   /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
   easing?: string;
-  /** Default: `""` */
   fillColor?: string;
-  /** Default: `""` */
   height?: string;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   src?: unknown;
-  /** Default: `""` */
   strokeColor?: string;
-  /** Default: `""` */
   svgContent?: string;
-  /** Default: `""` */
   width?: string;
 }
 

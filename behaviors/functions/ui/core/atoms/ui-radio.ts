@@ -48,19 +48,14 @@ export interface StdUiRadioActionPayload {
 export interface StdUiRadioConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   error?: string;
-  /** Default: `""` */
   helperText?: string;
-  /** Default: `""` */
   label?: string;
   /** Default: `[]` */
   options?: string[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
   value?: string;
 }
 

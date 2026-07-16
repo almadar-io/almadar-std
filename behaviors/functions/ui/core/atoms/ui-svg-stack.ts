@@ -41,7 +41,6 @@ export type StdUiSvgStackEventKey = 'INIT';
 export interface StdUiSvgStackConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;
@@ -49,7 +48,6 @@ export interface StdUiSvgStackConfig {
   height?: number;
   /** Default: `[]` */
   labels?: string[];
-  /** Default: `0` */
   layers?: number;
   /** Default: `1` */
   opacity?: number;

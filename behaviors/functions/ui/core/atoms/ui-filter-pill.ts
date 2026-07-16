@@ -53,13 +53,10 @@ export interface StdUiFilterPillClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFilterPillConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"CLICK"` */
   clickEvent?: string;
-  /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `""` */
   label?: string;
   /** Default: `"CLICK"` */
   onClick?: string;

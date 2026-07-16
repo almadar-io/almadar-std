@@ -47,7 +47,6 @@ export interface StdUiTimeSlotCellClickPayload {
  */
 export interface StdUiTimeSlotCellConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   isOccupied?: boolean;

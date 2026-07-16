@@ -55,19 +55,16 @@ export interface StdUiAlertClosePayload {
 export interface StdUiAlertConfig {
   actions?: unknown;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"DISMISS"` */
   dismissEvent?: string;
   /** Default: `false` */
   dismissible?: boolean;
-  /** Default: `""` */
   message?: string;
   /** Default: `"CLOSE"` */
   onClose?: string;
   /** Default: `"DISMISS"` */
   onDismiss?: string;
-  /** Default: `""` */
   title?: string;
   /** Default: `"info"` */
   variant?: 'info' | 'success' | 'warning' | 'error';

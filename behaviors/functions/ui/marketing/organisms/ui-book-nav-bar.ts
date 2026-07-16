@@ -39,9 +39,7 @@ export type StdUiBookNavBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookNavBarConfig {
-  /** Default: `""` */
   chapterTitle?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `1` */
   currentPage?: number;
@@ -123,14 +121,12 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
         'category': 'interaction',
         'config': {
           'chapterTitle': {
-            'default': '',
             'description': 'chapterTitle prop',
             'label': 'Chapter Title',
             'tier': 'presentation',
             'type': 'string',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',

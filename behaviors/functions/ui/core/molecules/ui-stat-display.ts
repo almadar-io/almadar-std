@@ -39,16 +39,12 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   clickEvent?: string;
   /** Default: `false` */
   compact?: boolean;
   error?: EntityRow;
-  /** Default: `""` */
   format?: string;
-  /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `"bg-muted"` */
   iconBg?: string;
@@ -60,19 +56,14 @@ export interface StdUiStatDisplayConfig {
   label?: string;
   /** Default: `"elevated"` */
   look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `0` */
   max?: number;
-  /** Default: `""` */
   prefix?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   sparklineData?: number[];
-  /** Default: `""` */
   suffix?: string;
-  /** Default: `0` */
   target?: number;
-  /** Default: `0` */
   trend?: number;
   /** Default: `"absolute"` */
   trendFormat?: 'absolute' | 'percent';

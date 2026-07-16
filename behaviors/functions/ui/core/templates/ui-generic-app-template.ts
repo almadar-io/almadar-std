@@ -47,11 +47,9 @@ export interface StdUiGenericAppTemplateGenericAppTemplateLoadedPayload {
  */
 export interface StdUiGenericAppTemplateConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   footer?: unknown;
   headerActions?: unknown;
-  /** Default: `""` */
   subtitle?: string;
   /** Default: `""` */
   title?: string;

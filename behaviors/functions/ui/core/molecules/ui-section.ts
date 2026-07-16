@@ -41,22 +41,16 @@ export type StdUiSectionEventKey = 'INIT';
 export interface StdUiSectionConfig {
   action?: unknown;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   contentClassName?: string;
-  /** Default: `""` */
   description?: string;
   /** Default: `false` */
   divider?: boolean;
   error?: EntityRow;
-  /** Default: `""` */
   headerClassName?: string;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"md"` */
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `""` */
   title?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'card' | 'bordered' | 'filled';

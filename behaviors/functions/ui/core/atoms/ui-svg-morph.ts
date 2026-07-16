@@ -41,7 +41,6 @@ export type StdUiSvgMorphEventKey = 'INIT';
 export interface StdUiSvgMorphConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

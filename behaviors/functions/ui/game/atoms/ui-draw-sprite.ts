@@ -41,24 +41,18 @@ export type StdUiDrawSpriteEventKey = 'INIT';
 export interface StdUiDrawSpriteConfig {
   /** Default: `{}` */
   anchor?: unknown;
-  /** Default: `""` */
   animation?: string;
   asset?: EntityRow;
-  /** Default: `false` */
   flipX?: boolean;
   /** Default: `{}` */
   frame?: unknown;
-  /** Default: `0` */
   height?: number;
-  /** Default: `0` */
   opacity?: number;
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;
-  /** Default: `0` */
   rotation?: number;
   /** Default: `{}` */
   shadow?: unknown;
-  /** Default: `0` */
   width?: number;
 }
 

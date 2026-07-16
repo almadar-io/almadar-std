@@ -39,19 +39,16 @@ export type StdUiTrendIndicatorEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTrendIndicatorConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"up"` */
   direction?: 'up' | 'down' | 'flat';
   /** Default: `false` */
   invert?: boolean;
-  /** Default: `""` */
   label?: string;
   /** Default: `true` */
   showValue?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
   value?: number;
 }
 

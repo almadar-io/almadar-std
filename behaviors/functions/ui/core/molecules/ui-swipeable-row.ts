@@ -40,7 +40,6 @@ export type StdUiSwipeableRowEventKey = 'INIT';
  */
 export interface StdUiSwipeableRowConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `{}` */
   itemData?: unknown;

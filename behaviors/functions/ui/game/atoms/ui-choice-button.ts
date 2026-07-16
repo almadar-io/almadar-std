@@ -56,13 +56,10 @@ export interface StdUiChoiceButtonConfig {
   /** Default: `"ACTION"` */
   action?: string;
   assetUrl?: EntityRow;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `0` */
   index?: number;
   /** Default: `"CLICK"` */
   onClick?: string;

@@ -53,13 +53,11 @@ export interface StdUiViolationAlertNavigateToFieldPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiViolationAlertConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   compact?: boolean;
   /** Default: `false` */
   dismissible?: boolean;
-  /** Default: `""` */
   message?: string;
   /** Default: `"DISMISS"` */
   onDismiss?: string;

@@ -71,16 +71,13 @@ export interface StdUiWizardContainerConfig {
   allowBack?: boolean;
   /** Default: `"BACK"` */
   backEvent?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   compact?: boolean;
   /** Default: `"COMPLETE"` */
   completeEvent?: string;
-  /** Default: `""` */
   currentStep?: string;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"NEXT"` */
   nextEvent?: string;

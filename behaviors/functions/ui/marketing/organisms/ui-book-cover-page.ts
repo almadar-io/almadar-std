@@ -39,15 +39,12 @@ export type StdUiBookCoverPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookCoverPageConfig {
-  /** Default: `""` */
   author?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   coverImageUrl?: unknown;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
-  /** Default: `""` */
   subtitle?: string;
   /** Default: `""` */
   title?: string;
@@ -125,14 +122,12 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
         'category': 'interaction',
         'config': {
           'author': {
-            'default': '',
             'description': 'author prop',
             'label': 'Author',
             'tier': 'presentation',
             'type': 'string',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -157,7 +152,6 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
             ],
           },
           'subtitle': {
-            'default': '',
             'description': 'subtitle prop',
             'label': 'Subtitle',
             'tier': 'presentation',

@@ -41,11 +41,9 @@ export type StdUiSectionHeaderEventKey = 'INIT';
 export interface StdUiSectionHeaderConfig {
   /** Default: `"center"` */
   align?: 'center' | 'left' | 'right';
-  /** Default: `""` */
   className?: string;
   /** Default: `2` */
   level?: number;
-  /** Default: `""` */
   subtitle?: string;
   /** Default: `""` */
   title?: string;

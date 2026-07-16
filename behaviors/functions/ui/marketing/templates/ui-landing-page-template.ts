@@ -46,7 +46,6 @@ export interface StdUiLandingPageTemplateLandingPageTemplateLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLandingPageTemplateConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `3` */
   featureColumns?: number;

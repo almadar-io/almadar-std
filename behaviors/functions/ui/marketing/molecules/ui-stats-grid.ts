@@ -39,7 +39,6 @@ export type StdUiStatsGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatsGridConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `3` */
   columns?: number;

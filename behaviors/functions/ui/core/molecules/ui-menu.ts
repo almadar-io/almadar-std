@@ -39,7 +39,6 @@ export type StdUiMenuEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMenuConfig {
-  /** Default: `""` */
   className?: string;
   footer?: unknown;
   header?: unknown;

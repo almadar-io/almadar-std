@@ -96,21 +96,6 @@ export function stdGalleryGalleryIconTrait(params: StdGalleryParams): TraitRefer
   });
 }
 
-/** Trait descriptor: `Gallery.traits.TitleHeading`. */
-export function stdGalleryTitleHeadingTrait(params: StdGalleryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TitleHeading`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
 /** Trait descriptor: `Gallery.traits.TitleDivider`. */
 export function stdGalleryTitleDividerTrait(params: StdGalleryParams): TraitReference {
   return makeTraitRef({
@@ -241,7 +226,6 @@ export function stdGallery(params: StdGalleryParams): OrbitalDefinition {
       stdGalleryLoadingSpinnerTrait(params),
       stdGalleryLoadingCaptionTrait(params),
       stdGalleryGalleryIconTrait(params),
-      stdGalleryTitleHeadingTrait(params),
       stdGalleryTitleDividerTrait(params),
       stdGalleryMediaGalleryGridTrait(params),
       stdGalleryErrorAlertTrait(params),

@@ -39,11 +39,9 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiRuntimeDebuggerConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `true` */
   defaultCollapsed?: boolean;
-  /** Default: `""` */
   defaultTab?: string;
   /** Default: `"floating"` */
   mode?: 'floating' | 'inline' | 'verify';
@@ -123,7 +121,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -137,7 +134,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             'type': 'boolean',
           },
           'defaultTab': {
-            'default': '',
             'description': 'Default active tab id',
             'label': 'Default Tab',
             'tier': 'presentation',

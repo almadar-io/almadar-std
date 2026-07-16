@@ -40,24 +40,18 @@ export type StdUiStatBadgeEventKey = 'INIT';
  */
 export interface StdUiStatBadgeConfig {
   assetUrl?: EntityRow;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   field?: string;
   /** Default: `"number"` */
   format?: 'number' | 'hearts' | 'bar' | 'text';
-  /** Default: `"circle"` */
   icon?: unknown;
   iconUrl?: EntityRow;
   /** Default: `""` */
   label?: string;
-  /** Default: `0` */
   max?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
   source?: string;
-  /** Default: `""` */
   value?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';

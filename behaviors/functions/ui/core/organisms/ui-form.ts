@@ -69,14 +69,11 @@ export interface StdUiFormFormLoadedPayload {
 export interface StdUiFormConfig {
   /** Default: `"CANCEL"` */
   cancelEvent?: string;
-  /** Default: `""` */
   cancelLabel?: string;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `{}` */
   conditionalFields?: Record<string, TraitConfig>;
-  /** Default: `""` */
   configPath?: string;
   error?: EntityRow;
   evaluationContext?: EntityRow;
@@ -92,29 +89,23 @@ export interface StdUiFormConfig {
   layout?: 'vertical' | 'horizontal' | 'inline';
   /** Default: `"create"` */
   mode?: 'create' | 'edit';
-  /** Default: `""` */
   onCancel?: string;
   /** Default: `"FIELD_CHANGE"` */
   onFieldChange?: string;
-  /** Default: `""` */
   onSubmit?: string;
   /** Default: `{}` */
   relationsData?: Record<string, TraitConfig>;
   /** Default: `{}` */
   relationsLoading?: Record<string, TraitConfig>;
-  /** Default: `false` */
   repeatable?: boolean;
-  /** Default: `[{"collapsible":false,"fields":[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","values":["Item","Item 2"]}],"id":"Id","title":"Title"},{"collapsible":true,"fields":[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","values":["Item","Item 2"]}],"id":"Id 2","title":"Title 2"}]` */
+  /** Default: `[]` */
   sections?: EntityRow[];
-  /** Default: `false` */
   showCancel?: boolean;
   /** Default: `true` */
   showSubmit?: boolean;
   /** Default: `"SUBMIT"` */
   submitEvent?: string;
-  /** Default: `""` */
   submitLabel?: string;
-  /** Default: `""` */
   title?: string;
   /** Default: `[]` */
   violationTriggers?: EntityRow[];
@@ -199,7 +190,6 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': 'string',
           },
           'cancelLabel': {
-            'default': '',
             'description': 'Cancel button label (if provided, shows cancel button)',
             'label': 'Cancel Label',
             'tier': 'presentation',
@@ -212,7 +202,6 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': 'node',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -229,7 +218,6 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': 'Map<string,SExpr>',
           },
           'configPath': {
-            'default': '',
             'description': 'Config path for form configuration (schema-driven)',
             'label': 'Config Path',
             'tier': 'presentation',
@@ -573,7 +561,6 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             ],
           },
           'onCancel': {
-            'default': '',
             'description': 'Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})',
             'label': 'On Cancel',
             'tier': 'presentation',
@@ -587,7 +574,6 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': 'string',
           },
           'onSubmit': {
-            'default': '',
             'description': 'Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})',
             'label': 'On Submit',
             'tier': 'presentation',
@@ -639,161 +625,13 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': 'Map<string,boolean>',
           },
           'repeatable': {
-            'default': false,
             'description': 'Whether the form supports repeatable entries',
             'label': 'Repeatable',
             'tier': 'presentation',
             'type': 'boolean',
           },
           'sections': {
-            'default': [
-              {
-                'collapsible': false,
-                'fields': [
-                  {
-                    'disabled': false,
-                    'field': 'Field',
-                    'inputType': 'Input Type',
-                    'label': 'Label',
-                    'max': 1,
-                    'min': 1,
-                    'name': 'Name',
-                    'options': [
-                      {
-                        'label': 'Label',
-                        'value': 'Value',
-                      },
-                      {
-                        'label': 'Label 2',
-                        'value': 'Value 2',
-                      },
-                    ],
-                    'pattern': 'Pattern',
-                    'placeholder': 'Placeholder',
-                    'readonly': false,
-                    'relation': {
-                      'cardinality': 'one',
-                      'displayField': 'Display Field',
-                      'entity': 'Entity',
-                    },
-                    'required': false,
-                    'type': 'Type',
-                    'values': [
-                      'Item',
-                      'Item 2',
-                    ],
-                  },
-                  {
-                    'disabled': true,
-                    'field': 'Field 2',
-                    'inputType': 'Input Type 2',
-                    'label': 'Label 2',
-                    'max': 2,
-                    'min': 2,
-                    'name': 'Name 2',
-                    'options': [
-                      {
-                        'label': 'Label',
-                        'value': 'Value',
-                      },
-                      {
-                        'label': 'Label 2',
-                        'value': 'Value 2',
-                      },
-                    ],
-                    'pattern': 'Pattern 2',
-                    'placeholder': 'Placeholder 2',
-                    'readonly': true,
-                    'relation': {
-                      'cardinality': 'many',
-                      'displayField': 'Display Field 2',
-                      'entity': 'Entity 2',
-                    },
-                    'required': true,
-                    'type': 'Type 2',
-                    'values': [
-                      'Item',
-                      'Item 2',
-                    ],
-                  },
-                ],
-                'id': 'Id',
-                'title': 'Title',
-              },
-              {
-                'collapsible': true,
-                'fields': [
-                  {
-                    'disabled': false,
-                    'field': 'Field',
-                    'inputType': 'Input Type',
-                    'label': 'Label',
-                    'max': 1,
-                    'min': 1,
-                    'name': 'Name',
-                    'options': [
-                      {
-                        'label': 'Label',
-                        'value': 'Value',
-                      },
-                      {
-                        'label': 'Label 2',
-                        'value': 'Value 2',
-                      },
-                    ],
-                    'pattern': 'Pattern',
-                    'placeholder': 'Placeholder',
-                    'readonly': false,
-                    'relation': {
-                      'cardinality': 'one',
-                      'displayField': 'Display Field',
-                      'entity': 'Entity',
-                    },
-                    'required': false,
-                    'type': 'Type',
-                    'values': [
-                      'Item',
-                      'Item 2',
-                    ],
-                  },
-                  {
-                    'disabled': true,
-                    'field': 'Field 2',
-                    'inputType': 'Input Type 2',
-                    'label': 'Label 2',
-                    'max': 2,
-                    'min': 2,
-                    'name': 'Name 2',
-                    'options': [
-                      {
-                        'label': 'Label',
-                        'value': 'Value',
-                      },
-                      {
-                        'label': 'Label 2',
-                        'value': 'Value 2',
-                      },
-                    ],
-                    'pattern': 'Pattern 2',
-                    'placeholder': 'Placeholder 2',
-                    'readonly': true,
-                    'relation': {
-                      'cardinality': 'many',
-                      'displayField': 'Display Field 2',
-                      'entity': 'Entity 2',
-                    },
-                    'required': true,
-                    'type': 'Type 2',
-                    'values': [
-                      'Item',
-                      'Item 2',
-                    ],
-                  },
-                ],
-                'id': 'Id 2',
-                'title': 'Title 2',
-              },
-            ],
+            'default': [],
             'description': 'Nested form sections with optional conditions',
             'items': {
               'properties': {
@@ -959,7 +797,6 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': '[FormSectionsItem]',
           },
           'showCancel': {
-            'default': false,
             'description': 'Show cancel button (defaults to true for schema forms)',
             'label': 'Show Cancel',
             'tier': 'presentation',
@@ -980,14 +817,12 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': 'string',
           },
           'submitLabel': {
-            'default': '',
             'description': 'Submit button label',
             'label': 'Submit Label',
             'tier': 'presentation',
             'type': 'string',
           },
           'title': {
-            'default': '',
             'description': 'Form title (used by ModalSlot to extract title)',
             'label': 'Title',
             'tier': 'presentation',

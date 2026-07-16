@@ -76,7 +76,6 @@ export interface StdUiReplyTreeReplyTreeLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiReplyTreeConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"CONTINUE_THREAD"` */
   continueThreadEvent?: string;

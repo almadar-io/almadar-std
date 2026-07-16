@@ -76,10 +76,8 @@ export interface StdUiTextHighlightHoverPayload {
 export interface StdUiTextHighlightConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `""` */
   annotationId?: string;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"question"` */
   highlightType?: 'question' | 'note';

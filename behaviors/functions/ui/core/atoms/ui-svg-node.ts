@@ -41,13 +41,11 @@ export type StdUiSvgNodeEventKey = 'INIT';
 export interface StdUiSvgNodeConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;
   /** Default: `100` */
   height?: number;
-  /** Default: `""` */
   label?: string;
   /** Default: `1` */
   opacity?: number;

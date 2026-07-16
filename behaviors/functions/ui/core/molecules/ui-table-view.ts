@@ -67,40 +67,29 @@ export interface StdUiTableViewTableViewLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `""` */
   accepts?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `[{"align":"left","className":"Class Name","field":"Field","format":"badge","header":"Header","icon":"circle","key":"Key","label":"Label","sortable":false,"weight":"normal","width":"Width"},{"align":"center","className":"Class Name 2","field":"Field 2","format":"date","header":"Header 2","icon":"circle","key":"Key 2","label":"Label 2","sortable":true,"weight":"medium","width":"Width 2"}]` */
+  /** Default: `[]` */
   columns?: EntityRow[];
-  /** Default: `""` */
   dndItemIdField?: string;
-  /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `""` */
   dragGroup?: string;
-  /** Default: `""` */
   dropEvent?: string;
-  /** Default: `""` */
   emptyMessage?: string;
   error?: EntityRow;
-  /** Default: `[{"align":"left","className":"Class Name","field":"Field","format":"badge","header":"Header","icon":"circle","key":"Key","label":"Label","sortable":false,"weight":"normal","width":"Width"},{"align":"center","className":"Class Name 2","field":"Field 2","format":"date","header":"Header 2","icon":"circle","key":"Key 2","label":"Label 2","sortable":true,"weight":"medium","width":"Width 2"}]` */
+  /** Default: `[]` */
   fields?: EntityRow[];
-  /** Default: `""` */
   groupBy?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
+  /** Default: `[]` */
   itemActions?: unknown;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `0` */
   maxInlineActions?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   positionEvent?: string;
-  /** Default: `""` */
   reorderEvent?: string;
   /** Default: `"SELECT"` */
   selectEvent?: string;
@@ -108,13 +97,11 @@ export interface StdUiTableViewConfig {
   selectable?: boolean;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `""` */
   sortColumn?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `"SORT"` */
   sortEvent?: string;
-  /** Default: `false` */
   sortable?: boolean;
 }
 

@@ -41,34 +41,23 @@ export type StdUiChatBarEventKey = 'INIT';
 export interface StdUiChatBarConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `""` */
   activeGate?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   context?: string;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `0` */
   jepaValidity?: number;
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   placeholder?: string;
-  /** Default: `""` */
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `"idle"` */
   status?: 'idle' | 'running' | 'paused' | 'complete' | 'error';
-  /** Default: `0` */
   totalCount?: number;
 }
 
@@ -151,21 +140,18 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             'type': 'json',
           },
           'activeGate': {
-            'default': '',
             'description': 'Currently active gate label, e.g. \'Gate 2: State machines\'',
             'label': 'Active Gate',
             'tier': 'presentation',
             'type': 'string',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
           },
           'context': {
-            'default': '',
             'description': 'Agent context description',
             'label': 'Context',
             'tier': 'presentation',
@@ -200,21 +186,18 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             'type': 'ChatBarError',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
             'type': 'boolean',
           },
           'jepaValidity': {
-            'default': 0,
             'description': 'JEPA validity probability 0-1',
             'label': 'Jepa Validity',
             'tier': 'presentation',
             'type': 'number',
           },
           'pageProp': {
-            'default': 0,
             'description': 'Current page number',
             'label': 'Page',
             'synonyms': 'page',
@@ -222,21 +205,18 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             'type': 'number',
           },
           'pageSize': {
-            'default': 0,
             'description': 'Number of items per page',
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
           },
           'placeholder': {
-            'default': '',
             'description': 'Input placeholder text',
             'label': 'Placeholder',
             'tier': 'presentation',
             'type': 'string',
           },
           'searchValue': {
-            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -253,7 +233,6 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             'type': '[string]',
           },
           'sortBy': {
-            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -285,7 +264,6 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             ],
           },
           'totalCount': {
-            'default': 0,
             'description': 'Total number of items',
             'label': 'Total Count',
             'tier': 'presentation',

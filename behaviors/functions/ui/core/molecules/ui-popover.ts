@@ -40,7 +40,6 @@ export type StdUiPopoverEventKey = 'INIT';
  */
 export interface StdUiPopoverConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   content?: unknown;
   /** Default: `"bottom"` */

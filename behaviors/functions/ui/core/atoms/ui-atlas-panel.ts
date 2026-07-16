@@ -39,14 +39,12 @@ export type StdUiAtlasPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAtlasPanelConfig {
-  /** Default: `{"category":"Category","name":"Name"}` */
   asset?: EntityRow;
   /** Default: `16` */
   borderSlice?: number;
   /** Default: `16` */
   borderWidth?: number;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"nineSlice"` */
   mode?: 'nineSlice' | 'repeat';

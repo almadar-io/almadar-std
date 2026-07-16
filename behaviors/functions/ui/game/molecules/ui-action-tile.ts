@@ -45,28 +45,21 @@ export interface StdUiActionTileConfig {
   activeFilters?: unknown;
   /** Default: `{}` */
   categoryColors?: Record<string, TraitConfig>;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
   totalCount?: number;
 }
 

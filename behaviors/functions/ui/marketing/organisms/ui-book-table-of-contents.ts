@@ -46,9 +46,7 @@ export interface StdUiBookTableOfContentsBookTableOfContentsLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBookTableOfContentsConfig {
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   currentChapterId?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
@@ -126,14 +124,12 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
           },
           'currentChapterId': {
-            'default': '',
             'description': 'currentChapterId prop',
             'label': 'Current Chapter Id',
             'tier': 'presentation',

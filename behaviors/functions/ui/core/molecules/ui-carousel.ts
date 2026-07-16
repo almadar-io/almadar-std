@@ -50,7 +50,6 @@ export interface StdUiCarouselConfig {
   autoPlay?: boolean;
   /** Default: `5000` */
   autoPlayInterval?: number;
-  /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   items?: EntityRow[];

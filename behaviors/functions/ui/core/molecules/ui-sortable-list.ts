@@ -53,7 +53,6 @@ export interface StdUiSortableListSortableListLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSortableListConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"left"` */
   dragHandlePosition?: 'left' | 'right';

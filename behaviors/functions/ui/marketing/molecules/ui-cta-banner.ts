@@ -43,13 +43,9 @@ export interface StdUiCtaBannerConfig {
   align?: 'center' | 'left';
   /** Default: `"alt"` */
   background?: 'default' | 'alt' | 'dark' | 'gradient' | 'primary';
-  /** Default: `""` */
   className?: string;
-  /** Default: `{"href":"Href","label":"Label"}` */
   primaryAction?: EntityRow;
-  /** Default: `{"href":"Href","label":"Label"}` */
   secondaryAction?: EntityRow;
-  /** Default: `""` */
   subtitle?: string;
   /** Default: `""` */
   title?: string;

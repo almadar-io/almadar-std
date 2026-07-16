@@ -54,7 +54,6 @@ export interface StdUiModalOpenPayload {
  */
 export interface StdUiModalConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"CLOSE"` */
   closeEvent?: string;
@@ -75,7 +74,6 @@ export interface StdUiModalConfig {
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `true` */
   swipeDownToClose?: boolean;
-  /** Default: `""` */
   title?: string;
 }
 

@@ -54,13 +54,9 @@ export interface StdUiControlButtonReleasePayload {
  */
 export interface StdUiControlButtonConfig {
   assetUrl?: EntityRow;
-  /** Default: `""` */
   className?: string;
-  /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `""` */
   label?: string;
   /** Default: `"PRESS"` */
   onPress?: string;
@@ -68,7 +64,6 @@ export interface StdUiControlButtonConfig {
   onRelease?: string;
   /** Default: `"PRESS"` */
   pressEvent?: string;
-  /** Default: `false` */
   pressed?: boolean;
   /** Default: `"RELEASE"` */
   releaseEvent?: string;

@@ -45,9 +45,7 @@ export interface StdUiActionPaletteConfig {
   allowDuplicates?: boolean;
   /** Default: `{}` */
   categoryColors?: Record<string, TraitConfig>;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   label?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

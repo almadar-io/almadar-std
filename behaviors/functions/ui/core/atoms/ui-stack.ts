@@ -53,7 +53,6 @@ export interface StdUiStackConfig {
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"vertical"` */
   direction?: 'horizontal' | 'vertical';
@@ -67,11 +66,9 @@ export interface StdUiStackConfig {
   responsive?: boolean;
   /** Default: `false` */
   reverse?: boolean;
-  /** Default: `""` */
   role?: string;
   /** Default: `{}` */
   style?: unknown;
-  /** Default: `0` */
   tabIndex?: number;
   /** Default: `false` */
   wrap?: boolean;

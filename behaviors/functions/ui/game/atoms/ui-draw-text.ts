@@ -47,13 +47,9 @@ export interface StdUiDrawTextConfig {
   baseline?: unknown;
   /** Default: `""` */
   color?: string;
-  /** Default: `""` */
   font?: string;
-  /** Default: `0` */
   offsetX?: number;
-  /** Default: `0` */
   offsetY?: number;
-  /** Default: `0` */
   opacity?: number;
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;

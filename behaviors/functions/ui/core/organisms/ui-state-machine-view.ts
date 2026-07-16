@@ -39,10 +39,8 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
 }
 
@@ -118,7 +116,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -153,7 +150,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'type': 'StateMachineViewError',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',

@@ -40,7 +40,6 @@ export type StdUiScaledDiagramEventKey = 'INIT';
  */
 export interface StdUiScaledDiagramConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
 }
 

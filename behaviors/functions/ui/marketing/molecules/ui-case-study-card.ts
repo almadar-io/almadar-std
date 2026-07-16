@@ -41,9 +41,7 @@ export type StdUiCaseStudyCardEventKey = 'INIT';
 export interface StdUiCaseStudyCardConfig {
   /** Default: `""` */
   category?: string;
-  /** Default: `""` */
   categoryColor?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
   description?: string;

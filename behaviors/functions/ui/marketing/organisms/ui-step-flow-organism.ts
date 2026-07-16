@@ -48,32 +48,24 @@ export interface StdUiStepFlowOrganismStepFlowOrganismLoadedPayload {
 export interface StdUiStepFlowOrganismConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `""` */
   heading?: string;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `true` */
   showConnectors?: boolean;
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `""` */
   subtitle?: string;
-  /** Default: `0` */
   totalCount?: number;
 }
 
@@ -176,7 +168,6 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'type': 'json',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -211,7 +202,6 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'type': 'StepFlowOrganismError',
           },
           'heading': {
-            'default': '',
             'description': 'heading prop',
             'label': 'Heading',
             'tier': 'presentation',
@@ -236,7 +226,6 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             ],
           },
           'pageProp': {
-            'default': 0,
             'description': 'Current page number',
             'label': 'Page',
             'synonyms': 'page',
@@ -244,14 +233,12 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'type': 'number',
           },
           'pageSize': {
-            'default': 0,
             'description': 'Number of items per page',
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
           },
           'searchValue': {
-            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -275,7 +262,6 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'type': 'boolean',
           },
           'sortBy': {
-            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -293,14 +279,12 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             ],
           },
           'subtitle': {
-            'default': '',
             'description': 'subtitle prop',
             'label': 'Subtitle',
             'tier': 'presentation',
             'type': 'string',
           },
           'totalCount': {
-            'default': 0,
             'description': 'Total number of items',
             'label': 'Total Count',
             'tier': 'presentation',

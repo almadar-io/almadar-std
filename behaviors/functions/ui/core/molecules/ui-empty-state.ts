@@ -48,23 +48,16 @@ export interface StdUiEmptyStateActionPayload {
 export interface StdUiEmptyStateConfig {
   /** Default: `"ACTION"` */
   actionEvent?: string;
-  /** Default: `""` */
   actionLabel?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   description?: string;
-  /** Default: `false` */
   destructive?: boolean;
-  /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `"icon-only"` */
   look?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
-  /** Default: `""` */
   message?: string;
   /** Default: `"ACTION"` */
   onAction?: string;
-  /** Default: `""` */
   title?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'success' | 'error' | 'warning' | 'info';

@@ -46,18 +46,13 @@ export interface StdUiStatCardStatCardLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStatCardConfig {
-  /** Default: `{"label":"Label","navigatesTo":"Navigates To"}` */
   action?: EntityRow;
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `""` */
   className?: string;
-  /** Default: `false` */
   compact?: boolean;
-  /** Default: `0` */
   currentValue?: number;
   error?: EntityRow;
-  /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `"bg-muted"` */
   iconBg?: string;
@@ -65,35 +60,24 @@ export interface StdUiStatCardConfig {
   iconColor?: string;
   /** Default: `false` */
   invertTrend?: boolean;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
   label?: string;
-  /** Default: `[{"field":"Field","format":"currency","icon":"circle","label":"Label","value":"Value"},{"field":"Field 2","format":"percent","icon":"circle","label":"Label 2","value":"Value 2"}]` */
+  /** Default: `[]` */
   metrics?: EntityRow[];
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `0` */
   previousValue?: number;
-  /** Default: `""` */
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `[]` */
   sparklineData?: number[];
-  /** Default: `""` */
   subtitle?: string;
-  /** Default: `""` */
   title?: string;
-  /** Default: `0` */
   totalCount?: number;
-  /** Default: `0` */
   trend?: number;
   /** Default: `"up"` */
   trendDirection?: 'up' | 'down' | 'neutral';
@@ -173,10 +157,6 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
         'category': 'interaction',
         'config': {
           'action': {
-            'default': {
-              'label': 'Label',
-              'navigatesTo': 'Navigates To',
-            },
             'description': 'Action button',
             'label': 'Action',
             'properties': {
@@ -207,21 +187,18 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': 'json',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
           },
           'compact': {
-            'default': false,
             'description': 'Compact display mode',
             'label': 'Compact',
             'tier': 'presentation',
             'type': 'boolean',
           },
           'currentValue': {
-            'default': 0,
             'description': 'Current value as number for trend calculation',
             'label': 'Current Value',
             'tier': 'presentation',
@@ -256,7 +233,6 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': 'StatCardError',
           },
           'icon': {
-            'default': 'circle',
             'description': 'Icon to display (Lucide component or icon name string)',
             'label': 'Icon',
             'tier': 'presentation',
@@ -284,36 +260,19 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': 'boolean',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
             'type': 'boolean',
           },
           'label': {
-            'default': '',
             'description': 'Main label',
             'label': 'Label',
             'tier': 'presentation',
             'type': 'string',
           },
           'metrics': {
-            'default': [
-              {
-                'field': 'Field',
-                'format': 'currency',
-                'icon': 'circle',
-                'label': 'Label',
-                'value': 'Value',
-              },
-              {
-                'field': 'Field 2',
-                'format': 'percent',
-                'icon': 'circle',
-                'label': 'Label 2',
-                'value': 'Value 2',
-              },
-            ],
+            'default': [],
             'description': 'Metrics to display (schema format) - accepts readonly for compatibility with generated const arrays',
             'items': {
               'properties': {
@@ -355,7 +314,6 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': '[StatCardMetricsItem]',
           },
           'pageProp': {
-            'default': 0,
             'description': 'Current page number',
             'label': 'Page',
             'synonyms': 'page',
@@ -363,21 +321,18 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': 'number',
           },
           'pageSize': {
-            'default': 0,
             'description': 'Number of items per page',
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
           },
           'previousValue': {
-            'default': 0,
             'description': 'Previous value for comparison',
             'label': 'Previous Value',
             'tier': 'presentation',
             'type': 'number',
           },
           'searchValue': {
-            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -394,7 +349,6 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': '[string]',
           },
           'sortBy': {
-            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -422,28 +376,24 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': '[number]',
           },
           'subtitle': {
-            'default': '',
             'description': 'Subtitle or description',
             'label': 'Subtitle',
             'tier': 'presentation',
             'type': 'string',
           },
           'title': {
-            'default': '',
             'description': 'Title (alias for label)',
             'label': 'Title',
             'tier': 'presentation',
             'type': 'string',
           },
           'totalCount': {
-            'default': 0,
             'description': 'Total number of items',
             'label': 'Total Count',
             'tier': 'presentation',
             'type': 'number',
           },
           'trend': {
-            'default': 0,
             'description': 'Manual trend percentage (overrides calculation)',
             'label': 'Trend',
             'tier': 'presentation',

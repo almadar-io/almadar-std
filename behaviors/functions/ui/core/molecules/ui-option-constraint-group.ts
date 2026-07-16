@@ -48,9 +48,7 @@ export interface StdUiOptionConstraintGroupChangePayload {
 export interface StdUiOptionConstraintGroupConfig {
   /** Default: `"CHANGE"` */
   changeEvent?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   description?: string;
   /** Default: `""` */
   groupId?: string;

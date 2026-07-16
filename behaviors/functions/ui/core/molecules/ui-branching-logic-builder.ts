@@ -46,7 +46,6 @@ export interface StdUiBranchingLogicBuilderRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBranchingLogicBuilderConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"RULES_CHANGE"` */
   onRulesChange?: string;

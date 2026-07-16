@@ -39,7 +39,6 @@ export type StdUiFeatureGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureGridConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `3` */
   columns?: number;

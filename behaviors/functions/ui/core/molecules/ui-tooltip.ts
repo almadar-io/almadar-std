@@ -40,7 +40,6 @@ export type StdUiTooltipEventKey = 'INIT';
  */
 export interface StdUiTooltipConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   content?: unknown;
   /** Default: `200` */

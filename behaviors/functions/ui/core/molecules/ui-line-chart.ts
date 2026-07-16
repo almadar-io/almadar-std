@@ -41,7 +41,6 @@ export type StdUiLineChartEventKey = 'INIT';
 export interface StdUiLineChartConfig {
   /** Default: `"var(--color-primary)"` */
   areaColor?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `[{"date":"2024-01-01","label":"Label","value":1},{"date":"2024-01-01","label":"Label 2","value":2}]` */
   data?: EntityRow[];

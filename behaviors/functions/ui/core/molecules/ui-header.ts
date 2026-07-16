@@ -70,10 +70,8 @@ export interface StdUiHeaderConfig {
   actions?: unknown;
   /** Default: `"KFlow"` */
   brandName?: string;
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `false` */
   isMenuOpen?: boolean;
@@ -82,7 +80,7 @@ export interface StdUiHeaderConfig {
   logoSrc?: unknown;
   /** Default: `"compact-bar"` */
   look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","label":"Label"},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","label":"Label 2"}]` */
+  /** Default: `[]` */
   navigationItems?: EntityRow[];
   /** Default: `"LOGO_CLICK"` */
   onLogoClick?: string;
@@ -92,7 +90,6 @@ export interface StdUiHeaderConfig {
   onSearch?: string;
   /** Default: `"USER_CLICK"` */
   onUserClick?: string;
-  /** Default: `""` */
   searchPlaceholder?: string;
   /** Default: `true` */
   showMenuToggle?: boolean;
@@ -100,9 +97,7 @@ export interface StdUiHeaderConfig {
   showSearch?: boolean;
   /** Default: `true` */
   sticky?: boolean;
-  /** Default: `{"alt":"Alt","initials":"Initials","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   userAvatar?: EntityRow;
-  /** Default: `""` */
   userName?: string;
   /** Default: `"mobile"` */
   variant?: 'mobile' | 'desktop';

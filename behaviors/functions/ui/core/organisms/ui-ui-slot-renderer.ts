@@ -39,7 +39,6 @@ export type StdUiUiSlotRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiUiSlotRendererConfig {
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
   /** Default: `"fixed"` */
@@ -48,9 +47,7 @@ export interface StdUiUiSlotRendererConfig {
   includeFloating?: boolean;
   /** Default: `false` */
   includeHud?: boolean;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `{"enabled":false}` */
   suspense?: EntityRow;
 }
 
@@ -126,7 +123,6 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional class name for the container',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -186,16 +182,12 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'type': 'boolean',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
             'type': 'boolean',
           },
           'suspense': {
-            'default': {
-              'enabled': false,
-            },
             'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
             'label': 'Suspense',
             'properties': {

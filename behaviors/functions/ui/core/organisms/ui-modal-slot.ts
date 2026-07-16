@@ -40,16 +40,12 @@ export type StdUiModalSlotEventKey = 'INIT';
  */
 export interface StdUiModalSlotConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `""` */
   sourceTrait?: string;
-  /** Default: `""` */
   title?: string;
 }
 
@@ -131,7 +127,6 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
             'type': 'node',
           },
           'className': {
-            'default': '',
             'description': 'Custom class name',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -166,7 +161,6 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
             'type': 'ModalSlotError',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
@@ -187,14 +181,12 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
             ],
           },
           'sourceTrait': {
-            'default': '',
             'description': 'Source trait name for qualified event emission',
             'label': 'Source Trait',
             'tier': 'presentation',
             'type': 'string',
           },
           'title': {
-            'default': '',
             'description': 'Override modal title (extracted from children if not provided)',
             'label': 'Title',
             'tier': 'presentation',

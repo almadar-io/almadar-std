@@ -46,7 +46,6 @@ export interface StdUiAboutPageTemplateAboutPageTemplateLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAboutPageTemplateConfig {
-  /** Default: `""` */
   className?: string;
 }
 

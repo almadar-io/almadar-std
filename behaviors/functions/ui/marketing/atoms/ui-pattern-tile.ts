@@ -39,7 +39,6 @@ export type StdUiPatternTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPatternTileConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

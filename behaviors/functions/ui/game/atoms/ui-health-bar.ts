@@ -41,7 +41,6 @@ export type StdUiHealthBarEventKey = 'INIT';
 export interface StdUiHealthBarConfig {
   /** Default: `true` */
   animated?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `3` */
   current?: number;
@@ -49,9 +48,7 @@ export interface StdUiHealthBarConfig {
   /** Default: `"hearts"` */
   format?: 'hearts' | 'bar' | 'numeric' | 'progress';
   frameAsset?: EntityRow;
-  /** Default: `""` */
   labelSuffix?: string;
-  /** Default: `0` */
   level?: number;
   /** Default: `5` */
   max?: number;

@@ -39,20 +39,16 @@ export type StdUiDocumentViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocumentViewerConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   content?: string;
-  /** Default: `0` */
   currentPage?: number;
   /** Default: `"pdf"` */
   documentType?: 'pdf' | 'text' | 'html' | 'markdown';
-  /** Default: `[{"content":"Content","documentType":"pdf","label":"Label","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},{"content":"Content 2","documentType":"text","label":"Label 2","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}]` */
+  /** Default: `[]` */
   documents?: EntityRow[];
   error?: EntityRow;
-  /** Default: `""` */
   height?: string;
   /** Default: `false` */
   isLoading?: boolean;
@@ -64,9 +60,7 @@ export interface StdUiDocumentViewerConfig {
   showToolbar?: boolean;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   src?: unknown;
-  /** Default: `""` */
   title?: string;
-  /** Default: `0` */
   totalPages?: number;
 }
 

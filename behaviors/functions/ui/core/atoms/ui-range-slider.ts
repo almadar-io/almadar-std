@@ -57,9 +57,7 @@ export interface StdUiRangeSliderConfig {
   action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `0` */
   buffered?: number;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;

@@ -39,7 +39,6 @@ export type StdUiReflectionBlockEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiReflectionBlockConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `1` */
   index?: number;
@@ -47,7 +46,6 @@ export interface StdUiReflectionBlockConfig {
   prompt?: string;
   /** Default: `"SAVE_REFLECTION"` */
   saveEvent?: string;
-  /** Default: `""` */
   savedNote?: string;
 }
 

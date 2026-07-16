@@ -62,7 +62,6 @@ export interface StdUiBoxConfig {
   /** Default: `false` */
   border?: boolean;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"block"` */
   display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
@@ -78,7 +77,6 @@ export interface StdUiBoxConfig {
   marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   /** Default: `"none"` */
   marginY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `""` */
   maxWidth?: string;
   /** Default: `"auto"` */
   overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';

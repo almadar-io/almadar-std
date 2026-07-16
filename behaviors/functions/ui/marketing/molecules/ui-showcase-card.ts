@@ -39,15 +39,10 @@ export type StdUiShowcaseCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiShowcaseCardConfig {
-  /** Default: `""` */
   accentColor?: string;
-  /** Default: `""` */
   badge?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   description?: string;
-  /** Default: `""` */
   href?: string;
   /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   image?: EntityRow;

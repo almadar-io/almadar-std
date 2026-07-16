@@ -48,19 +48,16 @@ export interface StdUiLikertScaleChangePayload {
 export interface StdUiLikertScaleConfig {
   /** Default: `"CHANGE"` */
   changeEvent?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `"CHANGE"` */
   onChange?: string;
-  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
+  /** Default: `[]` */
   options?: EntityRow[];
-  /** Default: `""` */
   question?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
   value?: string;
   /** Default: `"radios"` */
   variant?: 'radios' | 'buttons';

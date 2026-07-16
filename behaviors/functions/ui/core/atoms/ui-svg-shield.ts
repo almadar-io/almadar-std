@@ -41,7 +41,6 @@ export type StdUiSvgShieldEventKey = 'INIT';
 export interface StdUiSvgShieldConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

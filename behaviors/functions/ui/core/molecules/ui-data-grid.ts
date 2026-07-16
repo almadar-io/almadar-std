@@ -67,50 +67,38 @@ export interface StdUiDataGridDataGridLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `""` */
   accepts?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `1` */
   cols?: number;
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
+  /** Default: `[]` */
   columns?: EntityRow[];
-  /** Default: `""` */
   dndItemIdField?: string;
-  /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `""` */
   dragGroup?: string;
-  /** Default: `""` */
   dropEvent?: string;
   error?: EntityRow;
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
+  /** Default: `[]` */
   fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `false` */
   hasMore?: boolean;
-  /** Default: `""` */
   imageField?: string;
-  /** Default: `false` */
   infiniteScroll?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
+  /** Default: `[]` */
   itemActions?: unknown;
   /** Default: `"LOAD_MORE"` */
   loadMoreEvent?: string;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `0` */
   maxInlineActions?: number;
   /** Default: `280` */
   minCardWidth?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   positionEvent?: string;
-  /** Default: `""` */
   reorderEvent?: string;
   /** Default: `false` */
   scrollX?: boolean;
@@ -118,7 +106,6 @@ export interface StdUiDataGridConfig {
   selectable?: boolean;
   /** Default: `"SELECTION"` */
   selectionEvent?: string;
-  /** Default: `false` */
   sortable?: boolean;
 }
 

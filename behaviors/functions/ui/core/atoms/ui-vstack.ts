@@ -53,7 +53,6 @@ export interface StdUiVstackConfig {
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   flex?: boolean;
@@ -65,11 +64,9 @@ export interface StdUiVstackConfig {
   responsive?: boolean;
   /** Default: `false` */
   reverse?: boolean;
-  /** Default: `""` */
   role?: string;
   /** Default: `{}` */
   style?: unknown;
-  /** Default: `0` */
   tabIndex?: number;
   /** Default: `false` */
   wrap?: boolean;

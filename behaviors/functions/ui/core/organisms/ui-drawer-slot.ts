@@ -40,18 +40,14 @@ export type StdUiDrawerSlotEventKey = 'INIT';
  */
 export interface StdUiDrawerSlotConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"right"` */
   position?: 'left' | 'right';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `""` */
   sourceTrait?: string;
-  /** Default: `""` */
   title?: string;
 }
 
@@ -133,7 +129,6 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'type': 'node',
           },
           'className': {
-            'default': '',
             'description': 'Custom class name',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -168,7 +163,6 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'type': 'DrawerSlotError',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state',
             'label': 'Is Loading',
             'tier': 'presentation',
@@ -200,14 +194,12 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             ],
           },
           'sourceTrait': {
-            'default': '',
             'description': 'Source trait name for qualified event emission',
             'label': 'Source Trait',
             'tier': 'presentation',
             'type': 'string',
           },
           'title': {
-            'default': '',
             'description': 'Override drawer title (extracted from children if not provided)',
             'label': 'Title',
             'tier': 'presentation',

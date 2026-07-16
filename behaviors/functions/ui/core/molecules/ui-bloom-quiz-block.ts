@@ -43,11 +43,8 @@ export interface StdUiBloomQuizBlockConfig {
   answer?: string;
   /** Default: `"ANSWER_BLOOM"` */
   answerEvent?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `0` */
   index?: number;
-  /** Default: `false` */
   isAnswered?: boolean;
   /** Default: `"remember"` */
   level?: 'remember' | 'understand' | 'apply' | 'analyze' | 'evaluate' | 'create';

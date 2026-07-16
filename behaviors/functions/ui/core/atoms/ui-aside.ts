@@ -40,7 +40,6 @@ export type StdUiAsideEventKey = 'INIT';
  */
 export interface StdUiAsideConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
 }
 

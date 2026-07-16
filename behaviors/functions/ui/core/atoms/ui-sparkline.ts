@@ -39,7 +39,6 @@ export type StdUiSparklineEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSparklineConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"auto"` */
   color?: 'auto' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'muted';

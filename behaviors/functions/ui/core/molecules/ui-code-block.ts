@@ -46,20 +46,17 @@ export interface StdUiCodeBlockChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   code?: string;
-  /** Default: `[{"afterLineNumber":1,"beforeLineNumber":1,"content":"Content","type":"added"},{"afterLineNumber":2,"beforeLineNumber":2,"content":"Content 2","type":"removed"}]` */
+  /** Default: `[]` */
   diff?: EntityRow[];
   /** Default: `false` */
   editable?: boolean;
   error?: EntityRow;
-  /** Default: `[{"code":"Code","label":"Label","language":"text"},{"code":"Code 2","label":"Label 2","language":"json"}]` */
+  /** Default: `[]` */
   files?: EntityRow[];
-  /** Default: `false` */
   foldable?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
@@ -69,13 +66,10 @@ export interface StdUiCodeBlockConfig {
   maxHeight?: string;
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
-  /** Default: `""` */
   newValue?: string;
-  /** Default: `""` */
   oldValue?: string;
   /** Default: `"CHANGE"` */
   onChange?: string;
-  /** Default: `false` */
   showCopy?: boolean;
   /** Default: `true` */
   showCopyButton?: boolean;
@@ -83,7 +77,6 @@ export interface StdUiCodeBlockConfig {
   showLanguageBadge?: boolean;
   /** Default: `false` */
   showLineNumbers?: boolean;
-  /** Default: `""` */
   title?: string;
   /** Default: `false` */
   wordWrap?: boolean;

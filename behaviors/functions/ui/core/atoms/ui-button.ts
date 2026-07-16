@@ -50,17 +50,13 @@ export interface StdUiButtonConfig {
   action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `""` */
   className?: string;
-  /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"circle"` */
   icon?: unknown;
   iconAsset?: EntityRow;
   iconRight?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
   label?: string;
   leftIcon?: unknown;
   rightIcon?: unknown;

@@ -55,7 +55,6 @@ export interface StdUiSubagentTracePanelOpenPayload {
 export interface StdUiSubagentTracePanelConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   coordinatorActivities?: EntityRow[];
@@ -64,9 +63,7 @@ export interface StdUiSubagentTracePanelConfig {
   /** Default: `1` */
   disclosureLevel?: number;
   error?: EntityRow;
-  /** Default: `""` */
   focusedOrbital?: string;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"overlay"` */
   mode?: 'overlay' | 'tab';
@@ -74,21 +71,16 @@ export interface StdUiSubagentTracePanelConfig {
   onClose?: string;
   /** Default: `false` */
   open?: boolean;
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `[]` */
   subagents?: EntityRow[];
-  /** Default: `0` */
   totalCount?: number;
 }
 
@@ -171,7 +163,6 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'type': 'json',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -233,14 +224,12 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'type': 'SubagentTracePanelError',
           },
           'focusedOrbital': {
-            'default': '',
             'description': 'Current canvas focus orbital — only used by overlay mode. Tab mode ignores this.',
             'label': 'Focused Orbital',
             'tier': 'presentation',
             'type': 'string',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
@@ -272,7 +261,6 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'type': 'boolean',
           },
           'pageProp': {
-            'default': 0,
             'description': 'Current page number',
             'label': 'Page',
             'synonyms': 'page',
@@ -280,14 +268,12 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'type': 'number',
           },
           'pageSize': {
-            'default': 0,
             'description': 'Number of items per page',
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
           },
           'searchValue': {
-            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -304,7 +290,6 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'type': '[string]',
           },
           'sortBy': {
-            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -332,7 +317,6 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'type': '[json]',
           },
           'totalCount': {
-            'default': 0,
             'description': 'Total number of items',
             'label': 'Total Count',
             'tier': 'presentation',

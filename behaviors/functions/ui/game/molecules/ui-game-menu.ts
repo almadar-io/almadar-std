@@ -46,18 +46,15 @@ export interface StdUiGameMenuSelectPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameMenuConfig {
-  /** Default: `""` */
   background?: string;
-  /** Default: `""` */
   className?: string;
   logo?: EntityRow;
-  /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"},{"action":"Action 2","disabled":true,"id":"Id 2","label":"Label 2","navigatesTo":"Navigates To 2","subLabel":"Sub Label 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   menuItems?: EntityRow[];
   /** Default: `"SELECT"` */
   onSelect?: string;
-  /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"},{"action":"Action 2","disabled":true,"id":"Id 2","label":"Label 2","navigatesTo":"Navigates To 2","subLabel":"Sub Label 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   options?: EntityRow[];
-  /** Default: `""` */
   subtitle?: string;
   /** Default: `"Epic Quest"` */
   title?: string;

@@ -50,7 +50,6 @@ export interface StdUiOverlayConfig {
   action?: string;
   /** Default: `false` */
   blur?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `true` */
   isVisible?: boolean;

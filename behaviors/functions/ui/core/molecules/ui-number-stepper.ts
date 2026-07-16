@@ -57,15 +57,11 @@ export interface StdUiNumberStepperConfig {
   action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `""` */
   label?: string;
-  /** Default: `0` */
   max?: number;
-  /** Default: `0` */
   min?: number;
   /** Default: `"CHANGE"` */
   onChange?: string;

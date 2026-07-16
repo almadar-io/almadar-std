@@ -62,7 +62,6 @@ export interface StdUiPositionedCanvasPositionedCanvasLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPositionedCanvasConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   editable?: boolean;
@@ -76,7 +75,6 @@ export interface StdUiPositionedCanvasConfig {
   onSelect?: string;
   /** Default: `"SELECT"` */
   selectEvent?: string;
-  /** Default: `""` */
   selectedId?: string;
   /** Default: `800` */
   width?: number;

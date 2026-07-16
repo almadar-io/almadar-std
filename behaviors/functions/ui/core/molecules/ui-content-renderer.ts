@@ -41,30 +41,22 @@ export type StdUiContentRendererEventKey = 'INIT';
 export interface StdUiContentRendererConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   content?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   searchValue?: string;
-  /** Default: `[{"content":"Content","type":"markdown"},{"content":"Content 2","type":"code"}]` */
+  /** Default: `[]` */
   segments?: EntityRow[];
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
   totalCount?: number;
 }
 

@@ -46,13 +46,9 @@ export interface StdUiCheckboxChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCheckboxConfig {
-  /** Default: `false` */
   checked?: boolean;
-  /** Default: `""` */
   className?: string;
-  /** Default: `false` */
   defaultChecked?: boolean;
-  /** Default: `""` */
   label?: string;
   /** Default: `"CHANGE"` */
   onChange?: string;

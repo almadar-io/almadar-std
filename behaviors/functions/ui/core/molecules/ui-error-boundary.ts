@@ -40,7 +40,6 @@ export type StdUiErrorBoundaryEventKey = 'INIT';
  */
 export interface StdUiErrorBoundaryConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
 }
 

@@ -53,20 +53,18 @@ export interface StdUiTimelineTimelineLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTimelineConfig {
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
   /** Default: `["Item","Item 2"]` */
   fields?: string[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
+  /** Default: `[]` */
   itemActions?: unknown;
-  /** Default: `[{"date":"Date","description":"Description","icon":"circle","id":"Id","status":"complete","tags":["Item","Item 2"],"title":"Title"},{"date":"Date 2","description":"Description 2","icon":"circle","id":"Id 2","status":"active","tags":["Item","Item 2"],"title":"Title 2"}]` */
+  /** Default: `[]` */
   items?: EntityRow[];
   /** Default: `"vertical-spacious"` */
   look?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
-  /** Default: `""` */
   title?: string;
 }
 
@@ -142,7 +140,6 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -197,43 +194,12 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'type': 'boolean',
           },
           'itemActions': {
-            'default': [
-              {
-                'event': 'VIEW',
-                'label': 'View',
-                'variant': 'ghost',
-              },
-            ],
+            'default': [],
             'tier': 'presentation',
             'type': 'json',
           },
           'items': {
-            'default': [
-              {
-                'date': 'Date',
-                'description': 'Description',
-                'icon': 'circle',
-                'id': 'Id',
-                'status': 'complete',
-                'tags': [
-                  'Item',
-                  'Item 2',
-                ],
-                'title': 'Title',
-              },
-              {
-                'date': 'Date 2',
-                'description': 'Description 2',
-                'icon': 'circle',
-                'id': 'Id 2',
-                'status': 'active',
-                'tags': [
-                  'Item',
-                  'Item 2',
-                ],
-                'title': 'Title 2',
-              },
-            ],
+            'default': [],
             'description': 'Timeline items',
             'items': {
               'properties': {
@@ -302,7 +268,6 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             ],
           },
           'title': {
-            'default': '',
             'description': 'Timeline title',
             'label': 'Title',
             'tier': 'presentation',

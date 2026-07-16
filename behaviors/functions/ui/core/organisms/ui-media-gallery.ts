@@ -53,26 +53,22 @@ export interface StdUiMediaGalleryMediaGalleryLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMediaGalleryConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   actions?: EntityRow[];
   /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `"square"` */
   aspectRatio?: 'square' | 'landscape' | 'portrait';
-  /** Default: `""` */
   className?: string;
   /** Default: `3` */
   columns?: number;
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"alt":"Alt","caption":"Caption","fileSize":"File Size","id":"Id","mediaType":"image","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png","thumbnail":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},{"alt":"Alt 2","caption":"Caption 2","fileSize":"File Size 2","id":"Id 2","mediaType":"video","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png","thumbnail":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}]` */
+  /** Default: `[]` */
   items?: EntityRow[];
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   searchValue?: string;
   /** Default: `false` */
   selectable?: boolean;
@@ -84,13 +80,10 @@ export interface StdUiMediaGalleryConfig {
   selectionEvent?: string;
   /** Default: `false` */
   showUpload?: boolean;
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `""` */
   title?: string;
-  /** Default: `0` */
   totalCount?: number;
 }
 
@@ -166,18 +159,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
         'category': 'interaction',
         'config': {
           'actions': {
-            'default': [
-              {
-                'label': 'Label',
-                'navigatesTo': 'Navigates To',
-                'variant': 'primary',
-              },
-              {
-                'label': 'Label 2',
-                'navigatesTo': 'Navigates To 2',
-                'variant': 'secondary',
-              },
-            ],
+            'default': [],
             'description': 'Actions',
             'items': {
               'properties': {
@@ -233,7 +215,6 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             ],
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -282,26 +263,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'type': 'boolean',
           },
           'items': {
-            'default': [
-              {
-                'alt': 'Alt',
-                'caption': 'Caption',
-                'fileSize': 'File Size',
-                'id': 'Id',
-                'mediaType': 'image',
-                'src': 'https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png',
-                'thumbnail': 'https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png',
-              },
-              {
-                'alt': 'Alt 2',
-                'caption': 'Caption 2',
-                'fileSize': 'File Size 2',
-                'id': 'Id 2',
-                'mediaType': 'video',
-                'src': 'https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png',
-                'thumbnail': 'https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png',
-              },
-            ],
+            'default': [],
             'description': 'Media items',
             'items': {
               'properties': {
@@ -352,7 +314,6 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'type': '[MediaGalleryItemsItem]',
           },
           'pageProp': {
-            'default': 0,
             'description': 'Current page number',
             'label': 'Page',
             'synonyms': 'page',
@@ -360,14 +321,12 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'type': 'number',
           },
           'pageSize': {
-            'default': 0,
             'description': 'Number of items per page',
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
           },
           'searchValue': {
-            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -415,7 +374,6 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'type': 'boolean',
           },
           'sortBy': {
-            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -433,14 +391,12 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             ],
           },
           'title': {
-            'default': '',
             'description': 'Gallery title',
             'label': 'Title',
             'tier': 'presentation',
             'type': 'string',
           },
           'totalCount': {
-            'default': 0,
             'description': 'Total number of items',
             'label': 'Total Count',
             'tier': 'presentation',

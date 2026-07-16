@@ -48,26 +48,22 @@ export interface StdUiBiologyCanvasShapeClickPayload {
 export interface StdUiBiologyCanvasConfig {
   /** Default: `false` */
   animate?: boolean;
-  /** Default: `""` */
   backgroundColor?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `[{"color":"Color","from":"From","label":"Label","to":"To"},{"color":"Color 2","from":"From 2","label":"Label 2","to":"To 2"}]` */
+  /** Default: `[]` */
   edges?: EntityRow[];
   error?: EntityRow;
   /** Default: `400` */
   height?: number;
   /** Default: `false` */
   interactive?: boolean;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"color":"Color","id":"Id","kind":"cell","label":"Label","radius":1,"x":1,"y":1},{"color":"Color 2","id":"Id 2","kind":"organelle","label":"Label 2","radius":2,"x":2,"y":2}]` */
+  /** Default: `[]` */
   nodes?: EntityRow[];
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
-  /** Default: `[{"align":"left","axis":"x","color":"Color","fill":"Fill","fontSize":1,"height":1,"id":"Id","label":"Label","lineWidth":1,"max":1,"min":1,"opacity":1,"path":"Path","points":[{"x":1,"y":1},{"x":2,"y":2}],"radius":1,"step":1,"text":"Text","type":"line","width":1,"x":1,"x1":1,"x2":1,"y":1,"y1":1,"y2":1},{"align":"center","axis":"y","color":"Color 2","fill":"Fill 2","fontSize":2,"height":2,"id":"Id 2","label":"Label 2","lineWidth":2,"max":2,"min":2,"opacity":2,"path":"Path 2","points":[{"x":1,"y":1},{"x":2,"y":2}],"radius":2,"step":2,"text":"Text 2","type":"arrow","width":2,"x":2,"x1":2,"x2":2,"y":2,"y1":2,"y2":2}]` */
+  /** Default: `[]` */
   shapes?: EntityRow[];
-  /** Default: `""` */
   title?: string;
   /** Default: `600` */
   width?: number;

@@ -77,7 +77,6 @@ export interface StdUiTraitSlotDropPayload {
 export interface StdUiTraitSlotConfig {
   /** Default: `{}` */
   categoryColors?: Record<string, TraitConfig>;
-  /** Default: `""` */
   className?: string;
   /** Default: `"CLICK"` */
   clickEvent?: string;
@@ -85,14 +84,11 @@ export interface StdUiTraitSlotConfig {
   draggable?: boolean;
   /** Default: `"DROP"` */
   dropEvent?: string;
-  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id","name":"Name"}` */
   equippedItem?: EntityRow;
   error?: EntityRow;
   /** Default: `"correct"` */
   feedback?: 'correct' | 'wrong';
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
   lockLabel?: string;
   /** Default: `false` */
   locked?: boolean;

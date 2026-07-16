@@ -39,23 +39,17 @@ export type StdUiAtlasImageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAtlasImageConfig {
-  /** Default: `""` */
   alt?: string;
-  /** Default: `{"category":"Category","name":"Name"}` */
   asset?: EntityRow;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   fill?: boolean;
   /** Default: `"contain"` */
   fit?: 'contain' | 'cover' | 'fill';
-  /** Default: `0` */
   height?: number;
-  /** Default: `0` */
   size?: number;
   /** Default: `{}` */
   style?: unknown;
-  /** Default: `0` */
   width?: number;
 }
 

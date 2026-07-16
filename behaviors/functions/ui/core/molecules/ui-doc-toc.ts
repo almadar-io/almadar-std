@@ -39,9 +39,7 @@ export type StdUiDocTocEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocTocConfig {
-  /** Default: `""` */
   activeId?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `[{"id":"Id","label":"Label","level":1},{"id":"Id 2","label":"Label 2","level":2}]` */
   items?: EntityRow[];

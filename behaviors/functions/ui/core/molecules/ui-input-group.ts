@@ -62,19 +62,13 @@ export interface StdUiInputGroupChangePayload {
 export interface StdUiInputGroupConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `false` */
   clearable?: boolean;
-  /** Default: `false` */
   disabled?: boolean;
-  /** Default: `""` */
   error?: string;
-  /** Default: `""` */
   helperText?: string;
   /** Default: `"text"` */
   inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
-  /** Default: `""` */
   label?: string;
   leftAddon?: unknown;
   leftIcon?: unknown;
@@ -82,15 +76,12 @@ export interface StdUiInputGroupConfig {
   onChange?: string;
   /** Default: `"CLEAR"` */
   onClear?: string;
-  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
+  /** Default: `[]` */
   options?: EntityRow[];
-  /** Default: `""` */
   placeholder?: string;
   rightAddon?: unknown;
   rightIcon?: unknown;
-  /** Default: `0` */
   rows?: number;
-  /** Default: `""` */
   value?: string;
 }
 

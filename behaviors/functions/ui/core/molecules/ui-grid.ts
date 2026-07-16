@@ -42,7 +42,6 @@ export interface StdUiGridConfig {
   /** Default: `"start"` */
   alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"none"` */
   colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -55,7 +54,6 @@ export interface StdUiGridConfig {
   justifyItems?: 'start' | 'center' | 'end' | 'stretch';
   /** Default: `"none"` */
   rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `0` */
   rows?: number;
   /** Default: `{}` */
   style?: unknown;

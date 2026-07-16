@@ -41,22 +41,18 @@ export type StdUiFlexEventKey = 'INIT';
 export interface StdUiFlexConfig {
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `""` */
   basis?: string;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"row"` */
   direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
   /** Default: `"none"` */
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `0` */
   grow?: number;
   /** Default: `false` */
   inline?: boolean;
   /** Default: `"start"` */
   justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  /** Default: `0` */
   shrink?: number;
   /** Default: `"nowrap"` */
   wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';

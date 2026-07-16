@@ -41,7 +41,6 @@ export type StdUiSvgConnectionEventKey = 'INIT';
 export interface StdUiSvgConnectionConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

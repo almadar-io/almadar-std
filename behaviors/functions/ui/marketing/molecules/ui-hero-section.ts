@@ -45,27 +45,20 @@ export interface StdUiHeroSectionConfig {
   background?: 'dark' | 'gradient' | 'subtle';
   backgroundElement?: unknown;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
-  /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   image?: EntityRow;
   /** Default: `"below"` */
   imagePosition?: 'below' | 'right' | 'background';
-  /** Default: `""` */
   installCommand?: string;
-  /** Default: `{"href":"Href","label":"Label"}` */
   primaryAction?: EntityRow;
-  /** Default: `{"href":"Href","label":"Label"}` */
   secondaryAction?: EntityRow;
   /** Default: `""` */
   subtitle?: string;
-  /** Default: `""` */
   tag?: string;
   /** Default: `"primary"` */
   tagVariant?: 'primary' | 'secondary' | 'accent';
   /** Default: `""` */
   title?: string;
-  /** Default: `""` */
   titleAccent?: string;
 }
 

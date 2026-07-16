@@ -60,9 +60,7 @@ export interface StdUiLightboxOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLightboxConfig {
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   closeAction?: string;
   /** Default: `0` */
   currentIndex?: number;

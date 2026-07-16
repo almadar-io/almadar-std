@@ -40,7 +40,6 @@ export type StdUiLawReferenceTooltipEventKey = 'INIT';
  */
 export interface StdUiLawReferenceTooltipConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"top"` */
   position?: 'top' | 'bottom' | 'left' | 'right';

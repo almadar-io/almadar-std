@@ -39,7 +39,6 @@ export type StdUiCodeRunnerPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeRunnerPanelConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
   code?: string;
@@ -123,7 +122,6 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',

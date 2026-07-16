@@ -49,9 +49,7 @@ export interface StdUiCardConfig {
   /** Default: `"ACTION"` */
   action?: string;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
-  /** Default: `false` */
   loading?: boolean;
   /** Default: `"elevated"` */
   look?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
@@ -59,9 +57,7 @@ export interface StdUiCardConfig {
   padding?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"none"` */
   shadow?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `""` */
   subtitle?: string;
-  /** Default: `""` */
   title?: string;
   /** Default: `"bordered"` */
   variant?: 'default' | 'bordered' | 'elevated' | 'interactive';

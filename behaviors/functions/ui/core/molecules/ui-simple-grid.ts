@@ -40,7 +40,6 @@ export type StdUiSimpleGridEventKey = 'INIT';
  */
 export interface StdUiSimpleGridConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `1` */
   cols?: number;
@@ -48,7 +47,6 @@ export interface StdUiSimpleGridConfig {
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `1` */
   maxCols?: number;
-  /** Default: `""` */
   minChildWidth?: string;
 }
 

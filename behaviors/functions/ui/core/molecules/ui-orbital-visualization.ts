@@ -48,12 +48,9 @@ export interface StdUiOrbitalVisualizationClickPayload {
 export interface StdUiOrbitalVisualizationConfig {
   /** Default: `true` */
   animated?: boolean;
-  /** Default: `""` */
   className?: string;
-  /** Default: `0` */
   complexity?: number;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"CLICK"` */
   onClick?: string;

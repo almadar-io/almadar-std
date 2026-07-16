@@ -70,18 +70,14 @@ export interface StdUiCanvas2dTileLeavePayload {
  */
 export interface StdUiCanvas2dConfig {
   backgroundImage?: unknown;
-  /** Default: `""` */
   bgColor?: string;
   /** Default: `"pan-zoom"` */
   camera?: 'pan-zoom' | 'follow' | 'fixed';
-  /** Default: `{"x":1,"y":1,"z":1}` */
   cameraPos?: EntityRow;
-  /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   drawables?: EntityRow[];
   error?: EntityRow;
-  /** Default: `{"x":1,"y":1,"z":1}` */
   followTarget?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;

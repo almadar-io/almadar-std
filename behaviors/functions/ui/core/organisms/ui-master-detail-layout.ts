@@ -39,16 +39,13 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailLayoutConfig {
-  /** Default: `""` */
   className?: string;
   detail?: unknown;
-  /** Default: `""` */
   detailClassName?: string;
   emptyDetail?: unknown;
   /** Default: `false` */
   hasSelection?: boolean;
   master?: unknown;
-  /** Default: `""` */
   masterClassName?: string;
   /** Default: `"350px"` */
   masterWidth?: string;
@@ -126,7 +123,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -139,7 +135,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'type': 'node',
           },
           'detailClassName': {
-            'default': '',
             'description': 'Class for detail pane',
             'label': 'Detail Class Name',
             'tier': 'presentation',
@@ -165,7 +160,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'type': 'node',
           },
           'masterClassName': {
-            'default': '',
             'description': 'Class for master pane',
             'label': 'Master Class Name',
             'tier': 'presentation',

@@ -40,7 +40,6 @@ export type StdUiGeometricPatternEventKey = 'INIT';
  */
 export interface StdUiGeometricPatternConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

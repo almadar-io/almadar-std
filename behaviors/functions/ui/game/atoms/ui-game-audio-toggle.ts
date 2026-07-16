@@ -39,10 +39,8 @@ export type StdUiGameAudioToggleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioToggleConfig {
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
   offAsset?: EntityRow;
   onAsset?: EntityRow;

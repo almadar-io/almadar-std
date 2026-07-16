@@ -54,7 +54,6 @@ export interface StdUiDrawerOpenPayload {
  */
 export interface StdUiDrawerConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"CLOSE"` */
   closeEvent?: string;
@@ -71,7 +70,6 @@ export interface StdUiDrawerConfig {
   position?: 'left' | 'right';
   /** Default: `true` */
   showCloseButton?: boolean;
-  /** Default: `""` */
   title?: string;
   /** Default: `"md"` */
   width?: 'sm' | 'md' | 'lg' | 'xl' | 'full';

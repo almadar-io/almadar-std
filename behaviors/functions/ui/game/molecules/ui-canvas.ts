@@ -77,12 +77,10 @@ export interface StdUiCanvasFeatureClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCanvasConfig {
-  /** Default: `""` */
   backgroundColor?: string;
   backgroundImage?: unknown;
   /** Default: `{}` */
   camera?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   drawables?: EntityRow[];
@@ -90,7 +88,6 @@ export interface StdUiCanvasConfig {
   featureClickEvent?: string;
   /** Default: `[]` */
   fogOfWar?: unknown;
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `{"item":"Item"}` */
   keyMap?: Record<string, TraitConfig>;
@@ -98,19 +95,13 @@ export interface StdUiCanvasConfig {
   keyUpMap?: Record<string, TraitConfig>;
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
-  /** Default: `0` */
   pixelsPerUnit?: number;
   /** Default: `"isometric"` */
   projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
-  /** Default: `false` */
   shadows?: boolean;
-  /** Default: `false` */
   showCoordinates?: boolean;
-  /** Default: `false` */
   showGrid?: boolean;
-  /** Default: `false` */
   showMinimap?: boolean;
-  /** Default: `false` */
   showTileInfo?: boolean;
   /** Default: `"TILE_CLICK"` */
   tileClickEvent?: string;
@@ -120,11 +111,8 @@ export interface StdUiCanvasConfig {
   tileLeaveEvent?: string;
   /** Default: `"UNIT_CLICK"` */
   unitClickEvent?: string;
-  /** Default: `0` */
   unitScale?: number;
-  /** Default: `0` */
   worldHeight?: number;
-  /** Default: `0` */
   worldWidth?: number;
 }
 

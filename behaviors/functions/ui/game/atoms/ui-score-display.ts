@@ -40,15 +40,11 @@ export type StdUiScoreDisplayEventKey = 'INIT';
  */
 export interface StdUiScoreDisplayConfig {
   assetUrl?: EntityRow;
-  /** Default: `""` */
   className?: string;
-  /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `""` */
   label?: string;
   /** Default: `"en-US"` */
   locale?: string;
-  /** Default: `0` */
   score?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl';

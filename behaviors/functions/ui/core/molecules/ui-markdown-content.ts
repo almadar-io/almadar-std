@@ -39,7 +39,6 @@ export type StdUiMarkdownContentEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMarkdownContentConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
   content?: string;

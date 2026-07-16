@@ -42,7 +42,6 @@ export interface StdUiContainerConfig {
   /** Default: `true` */
   center?: boolean;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"xs"` */
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';

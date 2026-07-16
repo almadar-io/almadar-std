@@ -39,17 +39,16 @@ export type StdUiGameHudEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameHudConfig {
-  /** Default: `""` */
   className?: string;
-  /** Default: `[{"assetUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"bind":"Bind","format":"Format","icon":"circle","label":"Label","max":1,"position":"Position","type":"Type","value":"Value"},{"assetUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"bind":"Bind 2","format":"Format 2","icon":"circle","label":"Label 2","max":2,"position":"Position 2","type":"Type 2","value":"Value 2"}]` */
+  /** Default: `[]` */
   elements?: EntityRow[];
-  /** Default: `[{"field":"Field","source":"Source"},{"field":"Field 2","source":"Source 2"}]` */
+  /** Default: `[]` */
   items?: EntityRow[];
   /** Default: `"top"` */
   position?: 'top' | 'bottom' | 'corners';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"field":"Field","source":"Source"},{"field":"Field 2","source":"Source 2"}]` */
+  /** Default: `[]` */
   stats?: EntityRow[];
   /** Default: `true` */
   transparent?: boolean;

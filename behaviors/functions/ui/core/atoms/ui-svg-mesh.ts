@@ -41,7 +41,6 @@ export type StdUiSvgMeshEventKey = 'INIT';
 export interface StdUiSvgMeshConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

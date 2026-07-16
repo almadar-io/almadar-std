@@ -39,13 +39,10 @@ export type StdUiSegmentRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSegmentRendererConfig {
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   containerClassName?: string;
   /** Default: `[{"content":"Content","type":"Type"},{"content":"Content 2","type":"Type 2"}]` */
   segments?: EntityRow[];
-  /** Default: `{"activationResponse":"Activation Response","reflectionNotes":["Item","Item 2"]}` */
   userProgress?: EntityRow;
 }
 
@@ -121,14 +118,12 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
         'category': 'interaction',
         'config': {
           'className': {
-            'default': '',
             'description': 'Additional CSS classes for the root container',
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
           },
           'containerClassName': {
-            'default': '',
             'description': 'CSS classes for the outer wrapping div',
             'label': 'Container Class Name',
             'tier': 'presentation',
@@ -166,13 +161,6 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'type': '[SegmentRendererSegmentsItem]',
           },
           'userProgress': {
-            'default': {
-              'activationResponse': 'Activation Response',
-              'reflectionNotes': [
-                'Item',
-                'Item 2',
-              ],
-            },
             'description': 'User progress for restoring activation/reflection state',
             'label': 'User Progress',
             'properties': {

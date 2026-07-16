@@ -48,28 +48,20 @@ export interface StdUiBookViewerBookViewerLoadedPayload {
 export interface StdUiBookViewerConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `{"author":"Author","chapterContent":"Chapter Content","chapterId":"Chapter Id","chapterOrbitalSchema":"Chapter Orbital Schema","chapterTitle":"Chapter Title","chapters":"Chapters","coverImageUrl":"Cover Image Url","direction":"Direction","partTitle":"Part Title","parts":"Parts","subtitle":"Subtitle","title":"Title"}` */
   fieldMap?: EntityRow;
   /** Default: `0` */
   initialPage?: number;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
   totalCount?: number;
 }
 
@@ -152,7 +144,6 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'type': 'json',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -187,20 +178,6 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'type': 'BookViewerError',
           },
           'fieldMap': {
-            'default': {
-              'author': 'Author',
-              'chapterContent': 'Chapter Content',
-              'chapterId': 'Chapter Id',
-              'chapterOrbitalSchema': 'Chapter Orbital Schema',
-              'chapterTitle': 'Chapter Title',
-              'chapters': 'Chapters',
-              'coverImageUrl': 'Cover Image Url',
-              'direction': 'Direction',
-              'partTitle': 'Part Title',
-              'parts': 'Parts',
-              'subtitle': 'Subtitle',
-              'title': 'Title',
-            },
             'description': 'Field name translation map — a BookFieldMap object or locale key (\'ar\')',
             'label': 'Field Map',
             'properties': {
@@ -276,14 +253,12 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'type': 'number',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
             'type': 'boolean',
           },
           'pageProp': {
-            'default': 0,
             'description': 'Current page number',
             'label': 'Page',
             'synonyms': 'page',
@@ -291,14 +266,12 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'type': 'number',
           },
           'pageSize': {
-            'default': 0,
             'description': 'Number of items per page',
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
           },
           'searchValue': {
-            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -315,7 +288,6 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'type': '[string]',
           },
           'sortBy': {
-            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -333,7 +305,6 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             ],
           },
           'totalCount': {
-            'default': 0,
             'description': 'Total number of items',
             'label': 'Total Count',
             'tier': 'presentation',

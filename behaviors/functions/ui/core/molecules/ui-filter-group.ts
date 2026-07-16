@@ -54,11 +54,9 @@ export interface StdUiFilterGroupClearAllPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFilterGroupConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `[{"field":"Field","label":"Label","options":["Item","Item 2"],"type":"checkbox"},{"field":"Field 2","label":"Label 2","options":["Item","Item 2"],"type":"select"}]` */
   filters?: EntityRow[];
-  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"toolbar"` */
   look?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
@@ -66,7 +64,6 @@ export interface StdUiFilterGroupConfig {
   onClearAll?: string;
   /** Default: `"FILTER_CHANGE"` */
   onFilterChange?: string;
-  /** Default: `""` */
   query?: string;
   /** Default: `true` */
   showIcon?: boolean;

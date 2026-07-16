@@ -46,7 +46,6 @@ export interface StdUiTypewriterTextCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTypewriterTextConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"COMPLETE"` */
   onComplete?: string;

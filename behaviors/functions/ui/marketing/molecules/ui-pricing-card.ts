@@ -41,11 +41,8 @@ export type StdUiPricingCardEventKey = 'INIT';
 export interface StdUiPricingCardConfig {
   /** Default: `{"href":"Href","label":"Label"}` */
   action?: EntityRow;
-  /** Default: `""` */
   badge?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   description?: string;
   /** Default: `["Item","Item 2"]` */
   features?: string[];

@@ -39,11 +39,9 @@ export type StdUiProgressBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiProgressBarConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"default"` */
   color?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
-  /** Default: `""` */
   label?: string;
   /** Default: `100` */
   max?: number;

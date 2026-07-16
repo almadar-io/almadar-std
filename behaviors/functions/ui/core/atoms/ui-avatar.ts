@@ -57,17 +57,11 @@ export interface StdUiAvatarConfig {
   action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `""` */
   alt?: string;
-  /** Default: `""` */
   badge?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `""` */
   initials?: string;
-  /** Default: `""` */
   name?: string;
   /** Default: `"CLICK"` */
   onClick?: string;

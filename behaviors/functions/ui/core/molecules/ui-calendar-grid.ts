@@ -90,7 +90,6 @@ export interface StdUiCalendarGridCalendarGridLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCalendarGridConfig {
-  /** Default: `""` */
   className?: string;
   dayWindow?: string;
   /** Default: `"LONG_PRESS"` */

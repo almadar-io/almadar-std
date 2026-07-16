@@ -39,9 +39,7 @@ export type StdUiStatusDotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatusDotConfig {
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   label?: string;
   /** Default: `false` */
   pulse?: boolean;

@@ -55,13 +55,11 @@ export interface StdUiRichBlockEditorRichBlockEditorLoadedPayload {
 export interface StdUiRichBlockEditorConfig {
   /** Default: `"CHANGE"` */
   changeEvent?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `true` */
   enableBlocks?: boolean;
   /** Default: `"CHANGE"` */
   onChange?: string;
-  /** Default: `""` */
   placeholder?: string;
   /** Default: `false` */
   readOnly?: boolean;

@@ -67,7 +67,6 @@ export interface StdUiCounterTemplateCounterTemplateLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCounterTemplateConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"DECREMENT"` */
   decrementEvent?: string;

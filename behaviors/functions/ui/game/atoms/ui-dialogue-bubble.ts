@@ -39,14 +39,12 @@ export type StdUiDialogueBubbleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDialogueBubbleConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"neutral"` */
   mood?: 'neutral' | 'happy' | 'concerned' | 'angry';
   portrait?: EntityRow;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
-  /** Default: `0` */
   revealedChars?: number;
   /** Default: `"Hero"` */
   speaker?: string;

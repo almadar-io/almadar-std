@@ -46,19 +46,14 @@ export interface StdUiStateGraphNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateGraphConfig {
-  /** Default: `""` */
   addingFrom?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   currentState?: string;
   /** Default: `400` */
   height?: number;
-  /** Default: `""` */
   initialState?: string;
   /** Default: `"NODE_CLICK"` */
   nodeClickEvent?: string;
-  /** Default: `""` */
   selectedState?: string;
   /** Default: `["Item","Item 2"]` */
   states?: string[];

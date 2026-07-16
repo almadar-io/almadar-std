@@ -40,16 +40,12 @@ export type StdUiToastSlotEventKey = 'INIT';
  */
 export interface StdUiToastSlotConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `5000` */
   duration?: number;
   error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
   sourceTrait?: string;
-  /** Default: `""` */
   title?: string;
   /** Default: `"success"` */
   variant?: 'success' | 'error' | 'info' | 'warning';
@@ -133,7 +129,6 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'type': 'node',
           },
           'className': {
-            'default': '',
             'description': 'Custom class name',
             'label': 'Class Name',
             'tier': 'presentation',
@@ -175,21 +170,18 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'type': 'ToastSlotError',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
             'type': 'boolean',
           },
           'sourceTrait': {
-            'default': '',
             'description': 'Source trait name for qualified event emission',
             'label': 'Source Trait',
             'tier': 'presentation',
             'type': 'string',
           },
           'title': {
-            'default': '',
             'description': 'Toast title',
             'label': 'Title',
             'tier': 'presentation',

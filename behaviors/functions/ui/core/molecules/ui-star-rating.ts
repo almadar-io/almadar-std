@@ -57,9 +57,7 @@ export interface StdUiStarRatingConfig {
   action?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   label?: string;
   /** Default: `5` */
   max?: number;

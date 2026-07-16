@@ -45,7 +45,6 @@ export interface StdUiGameShellConfig {
   backgroundAsset?: EntityRow;
   /** Default: `[{"type":"canvas-2d"}]` */
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   controls?: unknown;
   /** Default: `"future"` */

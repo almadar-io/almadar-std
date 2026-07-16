@@ -39,13 +39,11 @@ export type StdUiActivationBlockEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActivationBlockConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
   question?: string;
   /** Default: `"SAVE_ACTIVATION"` */
   saveEvent?: string;
-  /** Default: `""` */
   savedResponse?: string;
 }
 

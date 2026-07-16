@@ -39,7 +39,6 @@ export type StdUiMarketingStatCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMarketingStatCardConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
   label?: string;

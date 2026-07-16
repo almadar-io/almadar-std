@@ -54,13 +54,12 @@ export interface StdUiGraphCanvasNodeDoubleClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGraphCanvasConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
+  /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `""` */
   className?: string;
   /** Default: `true` */
   draggable?: boolean;
-  /** Default: `[{"color":"Color","label":"Label","source":"Source","target":"Target","weight":1},{"color":"Color 2","label":"Label 2","source":"Source 2","target":"Target 2","weight":2}]` */
+  /** Default: `[]` */
   edges?: EntityRow[];
   error?: EntityRow;
   /** Default: `400` */
@@ -79,7 +78,7 @@ export interface StdUiGraphCanvasConfig {
   nodeClickEvent?: string;
   /** Default: `28` */
   nodeSpacing?: number;
-  /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1,"x":1,"y":1},{"color":"Color 2","group":"Group 2","id":"Id 2","label":"Label 2","size":2,"x":2,"y":2}]` */
+  /** Default: `[]` */
   nodes?: EntityRow[];
   /** Default: `"NODE_CLICK"` */
   onNodeClick?: string;
@@ -87,11 +86,9 @@ export interface StdUiGraphCanvasConfig {
   onNodeDoubleClick?: string;
   /** Default: `800` */
   repulsion?: number;
-  /** Default: `""` */
   selectedNodeId?: string;
   /** Default: `true` */
   showLabels?: boolean;
-  /** Default: `""` */
   title?: string;
 }
 

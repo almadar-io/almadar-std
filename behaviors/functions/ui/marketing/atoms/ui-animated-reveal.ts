@@ -39,12 +39,10 @@ export type StdUiAnimatedRevealEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedRevealConfig {
-  /** Default: `false` */
   animate?: boolean;
   /** Default: `"fade-up"` */
   animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `0` */
   delay?: number;

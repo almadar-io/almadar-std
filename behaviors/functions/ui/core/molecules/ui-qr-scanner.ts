@@ -47,7 +47,6 @@ export interface StdUiQrScannerScanPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiQrScannerConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `"environment"` */
   facingMode?: 'environment' | 'user';

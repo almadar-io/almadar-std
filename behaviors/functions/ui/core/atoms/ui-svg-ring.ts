@@ -41,7 +41,6 @@ export type StdUiSvgRingEventKey = 'INIT';
 export interface StdUiSvgRingConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;
@@ -51,7 +50,6 @@ export interface StdUiSvgRingConfig {
   cy?: number;
   /** Default: `100` */
   height?: number;
-  /** Default: `""` */
   label?: string;
   /** Default: `1` */
   opacity?: number;

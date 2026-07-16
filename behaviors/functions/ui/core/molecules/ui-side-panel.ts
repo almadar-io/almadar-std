@@ -54,7 +54,6 @@ export interface StdUiSidePanelOpenPayload {
  */
 export interface StdUiSidePanelConfig {
   children?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `"CLOSE"` */
   closeEvent?: string;

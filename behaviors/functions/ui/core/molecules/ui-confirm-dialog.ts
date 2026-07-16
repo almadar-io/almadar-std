@@ -60,15 +60,10 @@ export interface StdUiConfirmDialogOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiConfirmDialogConfig {
-  /** Default: `""` */
   cancelLabel?: string;
-  /** Default: `""` */
   cancelText?: string;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   confirmLabel?: string;
-  /** Default: `""` */
   confirmText?: string;
   description?: unknown;
   error?: EntityRow;

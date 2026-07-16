@@ -46,13 +46,11 @@ export interface StdUiVoteStackVotePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVoteStackConfig {
-  /** Default: `""` */
   className?: string;
   /** Default: `1` */
   count?: number;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `""` */
   label?: string;
   /** Default: `"VOTE"` */
   onVote?: string;

@@ -43,7 +43,6 @@ export interface StdUiSvgPulseConfig {
   animated?: boolean;
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

@@ -41,7 +41,6 @@ export type StdUiSvgLobeEventKey = 'INIT';
 export interface StdUiSvgLobeConfig {
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;

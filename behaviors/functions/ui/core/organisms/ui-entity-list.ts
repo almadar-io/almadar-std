@@ -63,11 +63,8 @@ export interface StdUiEntityListConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
   children?: unknown;
-  /** Default: `""` */
   className?: string;
-  /** Default: `""` */
   emptyMessage?: string;
-  /** Default: `""` */
   entityType?: string;
   error?: EntityRow;
   /** Default: `[]` */
@@ -78,23 +75,17 @@ export interface StdUiEntityListConfig {
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: unknown;
-  /** Default: `0` */
   pageProp?: number;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `""` */
   searchValue?: string;
   /** Default: `false` */
   selectable?: boolean;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `false` */
   showDividers?: boolean;
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
   totalCount?: number;
   /** Default: `"default"` */
   variant?: 'default' | 'card';
@@ -185,21 +176,18 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'type': 'node',
           },
           'className': {
-            'default': '',
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
           },
           'emptyMessage': {
-            'default': '',
             'description': 'emptyMessage prop',
             'label': 'Empty Message',
             'tier': 'presentation',
             'type': 'string',
           },
           'entityType': {
-            'default': '',
             'description': 'Entity type name for display',
             'label': 'Entity Type',
             'tier': 'presentation',
@@ -307,7 +295,6 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'type': 'json',
           },
           'pageProp': {
-            'default': 0,
             'description': 'Current page number',
             'label': 'Page',
             'synonyms': 'page',
@@ -315,14 +302,12 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'type': 'number',
           },
           'pageSize': {
-            'default': 0,
             'description': 'Number of items per page',
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
           },
           'searchValue': {
-            'default': '',
             'description': 'Current search query value',
             'label': 'Search Value',
             'tier': 'presentation',
@@ -346,14 +331,12 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'type': '[string]',
           },
           'showDividers': {
-            'default': false,
             'description': 'showDividers prop',
             'label': 'Show Dividers',
             'tier': 'presentation',
             'type': 'boolean',
           },
           'sortBy': {
-            'default': '',
             'description': 'Current sort field',
             'label': 'Sort By',
             'tier': 'presentation',
@@ -371,7 +354,6 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             ],
           },
           'totalCount': {
-            'default': 0,
             'description': 'Total number of items',
             'label': 'Total Count',
             'tier': 'presentation',
