@@ -172,7 +172,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'default': [],
             'description': 'Full coordinator activities (tool calls, results, messages, errors).',
             'items': {
-              'type': 'string',
+              'type': 'object',
             },
             'label': 'Coordinator Activities',
             'tier': 'presentation',
@@ -182,7 +182,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'default': [],
             'description': 'Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section.',
             'items': {
-              'type': 'string',
+              'type': 'object',
             },
             'label': 'Coordinator Messages',
             'tier': 'presentation',
@@ -310,7 +310,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'default': [],
             'description': 'All known subagents from the runner.',
             'items': {
-              'type': 'string',
+              'type': 'object',
             },
             'label': 'Subagents',
             'tier': 'presentation',

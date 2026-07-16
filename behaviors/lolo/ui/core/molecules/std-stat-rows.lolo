@@ -1,0 +1,54 @@
+app std-stat-rows "1.0.0"
+"std-stat-rows — a vertical stack of stat-badge rows rendered from a config-driven list. Exemplar for dynamic collection rendering over an arbitrary container: `(array/map @entity.rows (fn item …))` sits directly in a `children:` position, so no `renderItem` pattern is needed; the map lambda binds each row's fields with `@item.<field>`."
+;; @capabilities "render a list/stack of stat rows (label + value) from a config-driven array; array/map over children; per-item @item field binding"
+orbital StatRowsOrbital {
+  type StatRow = {
+    label : string!
+    value : string
+  }
+
+  entity StatRowsData [runtime] {
+    id : string!
+    rows : [StatRow]
+  }
+
+  trait StatRowsRender -> @rebindable StatRowsData [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.rows @config.rows)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: @config.gap
+          className: @config.className
+          children: [
+            (array/map @entity.rows (fn item {
+              type: stat-badge
+              label: @item.label
+              value: @item.value
+            }))
+          ]
+        })
+    }
+
+    config {
+      rows : [StatRow] = [{ label: "Revenue", value: "$12.4k" }, { label: "Active users", value: "1,204" }, { label: "Churn", value: "1.8%" }]
+        @label "Rows"
+        @description "The stat rows to render; each row's label and value are bound inside the array/map lambda via @item.label / @item.value."
+        @synonyms "stats, metrics, rows, items, list, entries"
+        @tier "presentation"
+      gap : "sm" | "md" | "lg" = md
+        @label "Gap"
+        @description "Vertical spacing between rows."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes on the outer stack."
+        @tier "presentation"
+    }
+  }
+
+  page "/stat-rows" as StatRowsPage -> StatRowsRender
+}

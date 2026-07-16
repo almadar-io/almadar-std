@@ -240,6 +240,7 @@ export * from './ui/game/molecules/std-crew-board-2d.js';
 export * from './ui/game/molecules/std-dungeon-board-2d.js';
 export * from './ui/game/molecules/std-market-board-3d.js';
 export * from './ui/game/molecules/std-objective-board-3d.js';
+export * from './ui/core/molecules/std-stat-rows.js';
 export * from './ui/game/molecules/std-survival-board-3d.js';
 export * from './ui/game/molecules/std-tactics-board-2d.js';
 export * from './ui/game/molecules/std-tactics-board-3d.js';

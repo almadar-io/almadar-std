@@ -7,6 +7,7 @@ orbital GraphCanvasOrbital {
     group : string
     color : string
     size : number
+    badge : number
     x : number
     y : number
   }
@@ -16,6 +17,11 @@ orbital GraphCanvasOrbital {
     label : string
     weight : number
     color : string
+  }
+  type GraphCanvasSimilarityItem = {
+    source : string!
+    target : string!
+    weight : number!
   }
   type GraphCanvasActionsItem = {
     label : string!
@@ -35,6 +41,7 @@ orbital GraphCanvasOrbital {
     group : string
     color : string
     size : number
+    badge : number
     x : number
     y : number
   }
@@ -44,6 +51,17 @@ orbital GraphCanvasOrbital {
     group : string
     color : string
     size : number
+    badge : number
+    x : number
+    y : number
+  }
+  type GraphCanvasBADGECLICKNode = {
+    id : string!
+    label : string
+    group : string
+    color : string
+    size : number
+    badge : number
     x : number
     y : number
   }
@@ -61,6 +79,7 @@ orbital GraphCanvasOrbital {
           title: @config.title
           nodes: @config.nodes
           edges: @config.edges
+          similarity: @config.similarity
           height: @config.height
           showLabels: @config.showLabels
           interactive: @config.interactive
@@ -68,6 +87,7 @@ orbital GraphCanvasOrbital {
           actions: @config.actions
           onNodeClick: @config.onNodeClick
           onNodeDoubleClick: @config.onNodeDoubleClick
+          onBadgeClick: @config.onBadgeClick
           nodeClickEvent: @config.nodeClickEvent
           selectedNodeId: @config.selectedNodeId
           repulsion: @config.repulsion
@@ -94,6 +114,11 @@ orbital GraphCanvasOrbital {
       }
         @description "On node double-click (e.g. to drill in)"
         @tier "essential"
+      @config.onBadgeClick -> external {
+        node : GraphCanvasBADGECLICKNode
+      }
+        @description "On node badge click (e.g. to expand a merged cluster)."
+        @tier "essential"
     }
 
     config {
@@ -107,7 +132,11 @@ orbital GraphCanvasOrbital {
         @tier "presentation"
       edges : [GraphCanvasEdgesItem] = []
         @label "Edges"
-        @description "Graph edges"
+        @description "Graph edges (the only rendered links)"
+        @tier "presentation"
+      similarity : [GraphCanvasSimilarityItem] = []
+        @label "Similarity"
+        @description "All-pairs similarity (cosine 0–1) used ONLY for layout, never drawn. It is the secondary macro-layout: non-connected pairs get a weak spring (higher cosine ⇒ closer) so clusters arrange relative to each other; drawn `edges` stay the primary tight structure. When omitted, edges alone drive the layout."
         @tier "presentation"
       height : number = 400
         @label "Height"
@@ -136,6 +165,10 @@ orbital GraphCanvasOrbital {
       onNodeDoubleClick : string = "NODE_DOUBLE_CLICK"
         @label "On Node Double Click"
         @description "On node double-click (e.g. to drill in)"
+        @tier "presentation"
+      onBadgeClick : string = "BADGE_CLICK"
+        @label "On Badge Click"
+        @description "On node badge click (e.g. to expand a merged cluster)."
         @tier "presentation"
       nodeClickEvent : string = "NODE_CLICK"
         @label "Node Click Event"

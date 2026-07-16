@@ -30,7 +30,7 @@ const ALIAS = 'UiGraphCanvas';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiGraphCanvasEventKey = 'INIT' | 'NODE_CLICK' | 'NODE_DOUBLE_CLICK';
+export type StdUiGraphCanvasEventKey = 'BADGE_CLICK' | 'INIT' | 'NODE_CLICK' | 'NODE_DOUBLE_CLICK';
 
 /**
  * Payload shape for the `NODE_CLICK` event.
@@ -44,6 +44,13 @@ export interface StdUiGraphCanvasNodeClickPayload {
  * Payload shape for the `NODE_DOUBLE_CLICK` event.
  */
 export interface StdUiGraphCanvasNodeDoubleClickPayload {
+  node?: EntityRow;
+}
+
+/**
+ * Payload shape for the `BADGE_CLICK` event.
+ */
+export interface StdUiGraphCanvasBadgeClickPayload {
   node?: EntityRow;
 }
 
@@ -80,6 +87,8 @@ export interface StdUiGraphCanvasConfig {
   nodeSpacing?: number;
   /** Default: `[]` */
   nodes?: EntityRow[];
+  /** Default: `"BADGE_CLICK"` */
+  onBadgeClick?: string;
   /** Default: `"NODE_CLICK"` */
   onNodeClick?: string;
   /** Default: `"NODE_DOUBLE_CLICK"` */
@@ -89,6 +98,8 @@ export interface StdUiGraphCanvasConfig {
   selectedNodeId?: string;
   /** Default: `true` */
   showLabels?: boolean;
+  /** Default: `[]` */
+  similarity?: EntityRow[];
   title?: string;
 }
 

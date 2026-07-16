@@ -37,6 +37,15 @@
         "parent": "trt_01KXG04PB8J9CDXQ5FQYCMQF3T",
         "renames": []
       },
+      "evt_01KXN8682CNR0FEQ1F5WVB6KN1": {
+        "bakedName": "@config.onBadgeClick",
+        "curName": "@config.onBadgeClick",
+        "id": "evt_01KXN8682CNR0FEQ1F5WVB6KN1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04PB8J9CDXQ5FQYCMQF3T",
+        "renames": []
+      },
       "orb_01KXG04PB8TC1C3CBCGPSN2HBS": {
         "bakedName": "GraphCanvasOrbital",
         "curName": "GraphCanvasOrbital",
@@ -150,7 +159,7 @@
             },
             "edges": {
               "default": [],
-              "description": "Graph edges",
+              "description": "Graph edges (the only rendered links)",
               "items": {
                 "properties": {
                   "color": {
@@ -279,6 +288,11 @@
               "description": "Graph nodes",
               "items": {
                 "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "required": false,
+                    "type": "number"
+                  },
                   "color": {
                     "name": "color",
                     "required": false,
@@ -321,6 +335,13 @@
               "tier": "presentation",
               "type": "[GraphCanvasNodesItem]"
             },
+            "onBadgeClick": {
+              "default": "BADGE_CLICK",
+              "description": "On node badge click (e.g. to expand a merged cluster).",
+              "label": "On Badge Click",
+              "tier": "presentation",
+              "type": "string"
+            },
             "onNodeClick": {
               "default": "NODE_CLICK",
               "description": "On node click",
@@ -354,6 +375,33 @@
               "label": "Show Labels",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "similarity": {
+              "default": [],
+              "description": "All-pairs similarity (cosine 0–1) used ONLY for layout, never drawn. It is the secondary macro-layout: non-connected pairs get a weak spring (higher cosine ⇒ closer) so clusters arrange relative to each other; drawn `edges` stay the primary tight structure. When omitted, edges alone drive the layout.",
+              "items": {
+                "properties": {
+                  "source": {
+                    "name": "source",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "target": {
+                    "name": "target",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Similarity",
+              "tier": "presentation",
+              "type": "[GraphCanvasSimilarityItem]"
             },
             "title": {
               "description": "Graph title",
@@ -390,6 +438,10 @@
                     },
                     {
                       "name": "size",
+                      "type": "number"
+                    },
+                    {
+                      "name": "badge",
                       "type": "number"
                     },
                     {
@@ -439,6 +491,58 @@
                     },
                     {
                       "name": "size",
+                      "type": "number"
+                    },
+                    {
+                      "name": "badge",
+                      "type": "number"
+                    },
+                    {
+                      "name": "x",
+                      "type": "number"
+                    },
+                    {
+                      "name": "y",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "On node badge click (e.g. to expand a merged cluster).",
+              "event": "@config.onBadgeClick",
+              "eventId": "evt_01KXN8682CNR0FEQ1F5WVB6KN1",
+              "payloadSchema": [
+                {
+                  "name": "node",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "label",
+                      "type": "string"
+                    },
+                    {
+                      "name": "group",
+                      "type": "string"
+                    },
+                    {
+                      "name": "color",
+                      "type": "string"
+                    },
+                    {
+                      "name": "size",
+                      "type": "number"
+                    },
+                    {
+                      "name": "badge",
                       "type": "number"
                     },
                     {
@@ -508,6 +612,10 @@
                         "type": "number"
                       },
                       {
+                        "name": "badge",
+                        "type": "number"
+                      },
+                      {
                         "name": "x",
                         "type": "number"
                       },
@@ -557,6 +665,58 @@
                         "type": "number"
                       },
                       {
+                        "name": "badge",
+                        "type": "number"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "On node badge click (e.g. to expand a merged cluster).",
+                "id": "evt_01KXN8682CNR0FEQ1F5WVB6KN1",
+                "key": "@config.onBadgeClick",
+                "name": "@config.on badge click",
+                "payloadSchema": [
+                  {
+                    "name": "node",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "group",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "size",
+                        "type": "number"
+                      },
+                      {
+                        "name": "badge",
+                        "type": "number"
+                      },
+                      {
                         "name": "x",
                         "type": "number"
                       },
@@ -598,11 +758,13 @@
                       "nodeClickEvent": "@config.nodeClickEvent",
                       "nodeSpacing": "@config.nodeSpacing",
                       "nodes": "@config.nodes",
+                      "onBadgeClick": "@config.onBadgeClick",
                       "onNodeClick": "@config.onNodeClick",
                       "onNodeDoubleClick": "@config.onNodeDoubleClick",
                       "repulsion": "@config.repulsion",
                       "selectedNodeId": "@config.selectedNodeId",
                       "showLabels": "@config.showLabels",
+                      "similarity": "@config.similarity",
                       "title": "@config.title",
                       "type": "graph-canvas"
                     }

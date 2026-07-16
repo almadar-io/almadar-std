@@ -16,7 +16,8 @@
         "name": "GraphCanvasRender",
         "emittedEvents": [
           "NODE_CLICK",
-          "NODE_DOUBLE_CLICK"
+          "NODE_DOUBLE_CLICK",
+          "BADGE_CLICK"
         ],
         "listenedEvents": [],
         "events": [
@@ -30,6 +31,12 @@
             "name": "NODE_DOUBLE_CLICK",
             "direction": "emit",
             "description": "On node double-click (e.g. to drill in)",
+            "tier": "essential"
+          },
+          {
+            "name": "BADGE_CLICK",
+            "direction": "emit",
+            "description": "On node badge click (e.g. to expand a merged cluster).",
             "tier": "essential"
           },
           {
@@ -96,7 +103,7 @@
             "type": "[GraphCanvasEdgesItem]",
             "default": [],
             "label": "Edges",
-            "description": "Graph edges",
+            "description": "Graph edges (the only rendered links)",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -236,6 +243,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "badge": {
+                  "name": "badge",
+                  "required": false,
+                  "type": "number"
+                },
                 "color": {
                   "name": "color",
                   "required": false,
@@ -274,6 +286,14 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "onBadgeClick",
+            "type": "string",
+            "default": "BADGE_CLICK",
+            "label": "On Badge Click",
+            "description": "On node badge click (e.g. to expand a merged cluster).",
+            "tier": "presentation"
           },
           {
             "key": "onNodeClick",
@@ -315,6 +335,34 @@
             "tier": "presentation"
           },
           {
+            "key": "similarity",
+            "type": "[GraphCanvasSimilarityItem]",
+            "default": [],
+            "label": "Similarity",
+            "description": "All-pairs similarity (cosine 0–1) used ONLY for layout, never drawn. It is the secondary macro-layout: non-connected pairs get a weak spring (higher cosine ⇒ closer) so clusters arrange relative to each other; drawn `edges` stay the primary tight structure. When omitted, edges alone drive the layout.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "source": {
+                  "name": "source",
+                  "required": true,
+                  "type": "string"
+                },
+                "target": {
+                  "name": "target",
+                  "required": true,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "title",
             "type": "string",
             "label": "Title",
@@ -341,6 +389,7 @@
       }
     ],
     "emittedEvents": [
+      "BADGE_CLICK",
       "NODE_CLICK",
       "NODE_DOUBLE_CLICK"
     ],
@@ -349,7 +398,7 @@
     "provenance": "generated",
     "sourceValid": false,
     "sourceErrors": [
-      "orb validate reported invalid: [{\"code\":\"ORB_ID_NAME_MISMATCH\",\"path\":\"orbitals[0 (GraphCanvasOrbital)].traits[0].emits[0 (NODE_CLICK)]\",\"message\":\"name `NODE_CLICK` disagrees with ledger curName `@config.onNodeClick` for id `evt_01KXG04PBEGHZRZQ03Q18VVX8P`.\"},{\"code\":\"ORB_ID_NAME_MISMATCH\",\"path\":\"orbitals[0 (GraphCanvasOrbital)].traits[0].emits[1 (NODE_DOUBLE_CLICK)]\",\"message\":\"name `NODE_DOUBLE_CLICK` disagrees with ledger curName `@config.onNodeDoubleClick` for id `evt_01KXG04PBESG3WNHVVB6Z7VVD1`.\"}]"
+      "orb validate reported invalid: [{\"code\":\"ORB_RUI_INVALID_PROP\",\"path\":\"orbitals[0 (GraphCanvasOrbital)].traits[0 (GraphCanvasRender)].stateMachine.transitions[0].effects[0]\",\"message\":\"Unknown prop 'similarity' for pattern 'graph-canvas'\",\"suggestion\":\"Check pattern registry for valid props for 'graph-canvas'\",\"validValues\":[\"onNodeClick\",\"className\",\"selectedNodeId\",\"title\",\"actions\",\"draggable\",\"linkOpacity\",\"edges\",\"nodes\",\"interactive\",\"layout\",\"linkDistance\",\"isLoading\",\"nodeSpacing\",\"height\",\"onNodeDoubleClick\",\"error\","
     ]
   }
 ]
