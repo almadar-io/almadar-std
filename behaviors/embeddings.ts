@@ -46,7 +46,11 @@ interface StoredBehaviorEmbeddingsFile {
   vectors: Record<string, StoredVector>;
 }
 
-let cache: BehaviorEmbeddingsManifest | null = null;
+// Promise-memoized: concurrent first callers share ONE in-flight load; a
+// `null` (missing/invalid manifest) is never cached so a later bake is
+// picked up — same retry semantics the result-memoized form had, minus the
+// concurrent-first-load race.
+let pending: Promise<BehaviorEmbeddingsManifest | null> | null = null;
 
 function decodeVector(stored: StoredVector): readonly number[] {
   if (!('d' in stored)) return stored;
@@ -58,8 +62,15 @@ function decodeVector(stored: StoredVector): readonly number[] {
   return out;
 }
 
-async function loadManifest(): Promise<BehaviorEmbeddingsManifest | null> {
-  if (cache) return cache;
+function loadManifest(): Promise<BehaviorEmbeddingsManifest | null> {
+  pending ??= loadManifestUncached().then((m) => {
+    if (m === null) pending = null;
+    return m;
+  });
+  return pending;
+}
+
+async function loadManifestUncached(): Promise<BehaviorEmbeddingsManifest | null> {
   try {
     const { readFileSync } = await import('fs');
     const { resolve } = await import('path');
@@ -79,8 +90,7 @@ async function loadManifest(): Promise<BehaviorEmbeddingsManifest | null> {
     for (const [key, stored] of Object.entries(parsed.vectors)) {
       vectors[key] = decodeVector(stored);
     }
-    cache = { version: parsed.version, model: parsed.model, dimensions: parsed.dimensions, vectors };
-    return cache;
+    return { version: parsed.version, model: parsed.model, dimensions: parsed.dimensions, vectors };
   } catch {
     return null;
   }

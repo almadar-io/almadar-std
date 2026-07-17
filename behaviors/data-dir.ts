@@ -23,16 +23,22 @@
 // import of `module`/`path`/`url` makes them error on the browser stub. In the
 // browser the node branch is skipped and resolution returns "" (the data sidecars
 // aren't read there anyway — the loaders are behind their own dynamic `import('fs')`).
-let cached: string | null = null;
+// Promise-memoized (not result-memoized): concurrent first callers share ONE
+// in-flight resolution — the `if (cached) … await … cached =` form let two
+// concurrent loads interleave.
+let pending: Promise<string> | null = null;
 
-export async function resolveStdDataDir(): Promise<string> {
-  if (cached !== null) return cached;
+export function resolveStdDataDir(): Promise<string> {
+  pending ??= resolveStdDataDirUncached();
+  return pending;
+}
 
+async function resolveStdDataDirUncached(): Promise<string> {
   const override = (typeof process !== 'undefined' && process.env?.ALMADAR_STD_DATA_DIR) || '';
-  if (override) return (cached = override);
+  if (override) return override;
 
   // Browser / non-Node: no filesystem, no sidecars to resolve.
-  if (typeof process === 'undefined' || !process.versions?.node) return (cached = '');
+  if (typeof process === 'undefined' || !process.versions?.node) return '';
 
   const [{ createRequire }, nodePath, nodeUrl] = await Promise.all([
     import('module'),
@@ -41,9 +47,9 @@ export async function resolveStdDataDir(): Promise<string> {
   ]);
   try {
     const req = createRequire(import.meta.url);
-    return (cached = nodePath.resolve(nodePath.dirname(req.resolve('@almadar/std/package.json')), 'dist'));
+    return nodePath.resolve(nodePath.dirname(req.resolve('@almadar/std/package.json')), 'dist');
   } catch {
     // @almadar/std not resolvable on disk (bundled w/o the package) — fall through.
   }
-  return (cached = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url)));
+  return nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
 }

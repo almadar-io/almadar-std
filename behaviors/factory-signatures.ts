@@ -19,10 +19,21 @@
 import type { FactorySignatureCatalog } from '@almadar/core';
 import { resolveStdDataDir } from './data-dir.js';
 
-let cache: FactorySignatureCatalog | null = null;
+// Promise-memoized: concurrent first callers share ONE in-flight load; a
+// `null` (missing/invalid sidecar) is never cached so the next call retries —
+// same retry semantics the result-memoized form had, minus the
+// concurrent-first-load race.
+let pending: Promise<FactorySignatureCatalog | null> | null = null;
 
-async function loadCatalog(): Promise<FactorySignatureCatalog | null> {
-  if (cache) return cache;
+function loadCatalog(): Promise<FactorySignatureCatalog | null> {
+  pending ??= loadCatalogUncached().then((c) => {
+    if (c === null) pending = null;
+    return c;
+  });
+  return pending;
+}
+
+async function loadCatalogUncached(): Promise<FactorySignatureCatalog | null> {
   try {
     const { readFileSync } = await import('fs');
     const { resolve } = await import('path');
@@ -35,8 +46,7 @@ async function loadCatalog(): Promise<FactorySignatureCatalog | null> {
     ) {
       return null;
     }
-    cache = parsed;
-    return cache;
+    return parsed;
   } catch {
     return null;
   }

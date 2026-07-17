@@ -50,7 +50,11 @@ export interface StoredKnobEmbeddingsFile {
   keys?: Record<string, number>;
 }
 
-let cache: KnobEmbeddingsManifest | null = null;
+// Promise-memoized: concurrent first callers share ONE in-flight load; a
+// `null` (missing/invalid manifest) is never cached so a later bake is
+// picked up — same retry semantics the result-memoized form had, minus the
+// concurrent-first-load race.
+let pending: Promise<KnobEmbeddingsManifest | null> | null = null;
 
 function decodeVector(stored: StoredKnobVector): ReadonlyArray<number> {
   if (!('d' in stored)) return stored;
@@ -81,8 +85,15 @@ function reconstructVectors(parsed: StoredKnobEmbeddingsFile): Record<string, Re
   return vectors;
 }
 
-async function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
-  if (cache) return cache;
+function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
+  pending ??= loadManifestUncached().then((m) => {
+    if (m === null) pending = null;
+    return m;
+  });
+  return pending;
+}
+
+async function loadManifestUncached(): Promise<KnobEmbeddingsManifest | null> {
   try {
     const { readFileSync } = await import('fs');
     const { resolve } = await import('path');
@@ -94,13 +105,12 @@ async function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
     if (typeof parsed?.model !== 'string' || typeof parsed?.dimensions !== 'number' || (!interned && !nonInterned)) {
       return null;
     }
-    cache = {
+    return {
       version: parsed.version,
       model: parsed.model,
       dimensions: parsed.dimensions,
       vectors: reconstructVectors(parsed),
     };
-    return cache;
   } catch {
     return null;
   }

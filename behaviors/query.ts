@@ -14,20 +14,31 @@ import { resolveStdDataDir } from './data-dir.js';
 
 // Import registry data directly — bundlers inline this at build time.
 // Falls back to fs read for dev mode (unbundled).
-let registryJsonData: { behaviors: Record<string, unknown> } | null = null;
+// Promise-memoized: concurrent first callers share ONE in-flight load (the
+// result-memoized form raced — a concurrent failure handed one caller an
+// EMPTY registry while the other succeeded, silently dropping its results).
+// A failed/empty load is never cached: the memo clears so the next call
+// retries instead of poisoning the process lifetime.
+let registryDataPending: Promise<{ behaviors: Record<string, unknown> }> | null = null;
 
-async function loadRegistryData(): Promise<{ behaviors: Record<string, unknown> }> {
-  if (registryJsonData) return registryJsonData;
+function loadRegistryData(): Promise<{ behaviors: Record<string, unknown> }> {
+  registryDataPending ??= loadRegistryDataUncached().then((data) => {
+    if (Object.keys(data.behaviors).length === 0) registryDataPending = null;
+    return data;
+  });
+  return registryDataPending;
+}
+
+async function loadRegistryDataUncached(): Promise<{ behaviors: Record<string, unknown> }> {
   try {
     const { readFileSync } = await import('fs');
     const { resolve } = await import('path');
     const dir = await resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'behaviors-registry.json'), 'utf-8');
-    registryJsonData = JSON.parse(raw);
+    return JSON.parse(raw) as { behaviors: Record<string, unknown> };
   } catch {
-    registryJsonData = { behaviors: {} };
+    return { behaviors: {} };
   }
-  return registryJsonData!;
 }
 
 // ============================================================================
@@ -117,21 +128,14 @@ export interface BehaviorSummary {
 // Registry Cache
 // ============================================================================
 
-let registryCache: Record<string, RegistryEntry> | null = null;
-
 /**
  * Read and cache the behavior registry.
  * Async to support bundled environments where fs may not be available.
+ * Caching (and its concurrency safety) lives in `loadRegistryData`.
  */
 export async function getBehaviorRegistry(): Promise<Record<string, RegistryEntry>> {
-  if (registryCache) return registryCache;
-  try {
-    const data = await loadRegistryData();
-    registryCache = data.behaviors as Record<string, RegistryEntry>;
-    return registryCache;
-  } catch {
-    return {};
-  }
+  const data = await loadRegistryData();
+  return data.behaviors as Record<string, RegistryEntry>;
 }
 
 // ============================================================================
