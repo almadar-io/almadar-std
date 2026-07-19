@@ -153,6 +153,20 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["=", "@entity.status", "active"]',
   },
+  '==': {
+    module: 'core',
+    category: 'comparison',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Equal to (canonical .lolo spelling)',
+    hasSideEffects: false,
+    returnType: 'boolean',
+    params: [
+      { name: 'a', type: ANY, description: 'Left operand' },
+      { name: 'b', type: ANY, description: 'Right operand' },
+    ],
+    example: '["==", "@entity.status", "active"]',
+  },
   '!=': {
     module: 'core',
     category: 'comparison',
