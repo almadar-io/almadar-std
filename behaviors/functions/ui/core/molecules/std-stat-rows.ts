@@ -42,7 +42,7 @@ export interface StdStatRowsConfig {
   className?: string;
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
-  /** Default: `[]` */
+  /** Default: `[{"label":"Revenue","value":"$12.4k"},{"label":"Active users","value":"1,204"},{"label":"Churn","value":"1.8%"}]` */
   rows?: EntityRow[];
 }
 
