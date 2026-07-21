@@ -39,25 +39,19 @@ export type StdUiFormActionsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFormActionsConfig {
-  /** Default: `{}` */
-  activeFilters?: unknown;
-  /** Default: `"right"` */
-  align?: 'left' | 'right' | 'between' | 'center';
   children?: unknown;
   className?: string;
-  error?: EntityRow;
-  isLoading?: boolean;
-  pageProp?: number;
-  pageSize?: number;
-  searchValue?: string;
   /** Default: `[]` */
-  selectedIds?: string[];
-  sortBy?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `false` */
-  sticky?: boolean;
-  totalCount?: number;
+  filters?: EntityRow[];
+  /** Default: `"right-aligned-buttons"` */
+  look?: 'right-aligned-buttons' | 'floating-bar' | 'inline-row' | 'dropdown-menu' | 'command-palette-trigger';
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
+  primary?: EntityRow;
+  /** Default: `[]` */
+  secondary?: EntityRow[];
+  /** Default: `"default"` */
+  variant?: 'default' | 'segmented' | 'toggle';
 }
 
 /**
