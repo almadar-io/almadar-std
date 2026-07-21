@@ -25,102 +25,6 @@ const BEHAVIOR_PATH = 'std/behaviors/std-approval-gate';
 const ALIAS = 'ApprovalGate';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdApprovalGateEventKey = 'APPROVE' | 'ApprovalDenied' | 'ApprovalGranted' | 'ApprovalRequestLoadFailed' | 'ApprovalRequestLoaded' | 'ApprovalRequestReviewFailed' | 'ApprovalRequestReviewed' | 'CLOSE' | 'DENY' | 'INIT' | 'OPEN';
-
-/**
- * Payload shape for the `APPROVE` event.
- */
-export interface StdApprovalGateApprovePayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `DENY` event.
- */
-export interface StdApprovalGateDenyPayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `ApprovalGranted` event.
- */
-export interface StdApprovalGateApprovalGrantedPayload {
-  requestId?: string;
-  payload?: EntityRow;
-}
-
-/**
- * Payload shape for the `ApprovalDenied` event.
- */
-export interface StdApprovalGateApprovalDeniedPayload {
-  requestId?: string;
-}
-
-/**
- * Payload shape for the `ApprovalRequestLoaded` event.
- */
-export interface StdApprovalGateApprovalRequestLoadedPayload {
-  data?: EntityRow[];
-}
-
-/**
- * Payload shape for the `ApprovalRequestLoadFailed` event.
- */
-export interface StdApprovalGateApprovalRequestLoadFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Payload shape for the `ApprovalRequestReviewed` event.
- */
-export interface StdApprovalGateApprovalRequestReviewedPayload {
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `ApprovalRequestReviewFailed` event.
- */
-export interface StdApprovalGateApprovalRequestReviewFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Typed call-site config block for this trait — every
- * field maps to a `config { ... }` entry in the source
- * .lolo. The agent fills these to specialise the trait
- * without modifying its state-machine topology.
- */
-export interface StdApprovalGateConfig {
-  /** Default: `[]` */
-  approverRoles?: string[];
-  /** Default: `true` */
-  autoApproveBelowThreshold?: boolean;
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `0` */
-  escalationHours?: number;
-  /** Default: `[]` */
-  escalationRoles?: string[];
-  /** Default: `"modal"` */
-  reviewSlot?: unknown;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `0` */
-  threshold?: number;
-  /** Default: `""` */
-  valueField?: string;
-}
-
-/**
  * Params for the std-approval-gate descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -136,18 +40,138 @@ export interface StdApprovalGateParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdApprovalGateEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdApprovalGateConfig;
+  /** Nested config override (outer key = config field name). */
+  config?: TraitConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
+}
+
+/** Trait descriptor: `ApprovalGate.traits.LoadingSpinner`. */
+export function stdApprovalGateLoadingSpinnerTrait(params: StdApprovalGateParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.LoadingSpinner`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ApprovalGate.traits.ErrorSpinner`. */
+export function stdApprovalGateErrorSpinnerTrait(params: StdApprovalGateParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ErrorSpinner`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ApprovalGate.traits.LoadingText`. */
+export function stdApprovalGateLoadingTextTrait(params: StdApprovalGateParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.LoadingText`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ApprovalGate.traits.ShieldCheckIcon`. */
+export function stdApprovalGateShieldCheckIconTrait(params: StdApprovalGateParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ShieldCheckIcon`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ApprovalGate.traits.ApprovalQueueTitle`. */
+export function stdApprovalGateApprovalQueueTitleTrait(params: StdApprovalGateParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ApprovalQueueTitle`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ApprovalGate.traits.CloseButton`. */
+export function stdApprovalGateCloseButtonTrait(params: StdApprovalGateParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.CloseButton`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ApprovalGate.traits.ApprovalDivider`. */
+export function stdApprovalGateApprovalDividerTrait(params: StdApprovalGateParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ApprovalDivider`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ApprovalGate.traits.ErrorAlert`. */
+export function stdApprovalGateErrorAlertTrait(params: StdApprovalGateParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ErrorAlert`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
 }
 
 /** Trait descriptor: `ApprovalGate.traits.ApprovalGateReview`. */
@@ -155,141 +179,6 @@ export function stdApprovalGateApprovalGateReviewTrait(params: StdApprovalGatePa
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ApprovalGateReview`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineSpinnerRender1`. */
-export function stdApprovalGateInlineSpinnerRender1Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender1`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineTypographyRender2`. */
-export function stdApprovalGateInlineTypographyRender2Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender2`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineIconRender3`. */
-export function stdApprovalGateInlineIconRender3Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineIconRender3`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineTypographyRender4`. */
-export function stdApprovalGateInlineTypographyRender4Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender4`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineButtonRender5`. */
-export function stdApprovalGateInlineButtonRender5Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineButtonRender5`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineDividerRender6`. */
-export function stdApprovalGateInlineDividerRender6Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineDividerRender6`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineAlertRender7`. */
-export function stdApprovalGateInlineAlertRender7Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineAlertRender7`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineAlertRender8`. */
-export function stdApprovalGateInlineAlertRender8Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineAlertRender8`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApprovalGate.traits.InlineSpinnerRender9`. */
-export function stdApprovalGateInlineSpinnerRender9Trait(params: StdApprovalGateParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender9`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -322,16 +211,15 @@ export function stdApprovalGate(params: StdApprovalGateParams): OrbitalDefinitio
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
+      stdApprovalGateLoadingSpinnerTrait(params),
+      stdApprovalGateErrorSpinnerTrait(params),
+      stdApprovalGateLoadingTextTrait(params),
+      stdApprovalGateShieldCheckIconTrait(params),
+      stdApprovalGateApprovalQueueTitleTrait(params),
+      stdApprovalGateCloseButtonTrait(params),
+      stdApprovalGateApprovalDividerTrait(params),
+      stdApprovalGateErrorAlertTrait(params),
       stdApprovalGateApprovalGateReviewTrait(params),
-      stdApprovalGateInlineSpinnerRender1Trait(params),
-      stdApprovalGateInlineTypographyRender2Trait(params),
-      stdApprovalGateInlineIconRender3Trait(params),
-      stdApprovalGateInlineTypographyRender4Trait(params),
-      stdApprovalGateInlineButtonRender5Trait(params),
-      stdApprovalGateInlineDividerRender6Trait(params),
-      stdApprovalGateInlineAlertRender7Trait(params),
-      stdApprovalGateInlineAlertRender8Trait(params),
-      stdApprovalGateInlineSpinnerRender9Trait(params),
     ],
     pages: [
       stdApprovalGatePage(params),

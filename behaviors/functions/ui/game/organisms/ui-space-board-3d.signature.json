@@ -254,7 +254,15 @@
           }
         ],
         "capabilities": [],
-        "ref": "Frame.traits.TacticsAuthority"
+        "ref": "Frame.traits.TacticsAuthority",
+        "transitionEvents": [
+          "AI_TURN",
+          "ATTACK",
+          "HEAL",
+          "INIT",
+          "MOVE",
+          "SPAWN"
+        ]
       },
       {
         "name": "FxDecay",
@@ -268,7 +276,11 @@
           }
         ],
         "capabilities": [],
-        "ref": "Frame.traits.FxDecay"
+        "ref": "Frame.traits.FxDecay",
+        "transitionEvents": [
+          "BURST",
+          "INIT"
+        ]
       },
       {
         "name": "RoundLogic",
@@ -282,7 +294,11 @@
           }
         ],
         "capabilities": [],
-        "ref": "Frame.traits.RoundLogic"
+        "ref": "Frame.traits.RoundLogic",
+        "transitionEvents": [
+          "INIT",
+          "UNITS_CHANGED"
+        ]
       },
       {
         "name": "Player",
@@ -643,7 +659,14 @@
           }
         ],
         "capabilities": [],
-        "ref": "Frame.traits.PlayerIntent"
+        "ref": "Frame.traits.PlayerIntent",
+        "transitionEvents": [
+          "CANCEL",
+          "END_TURN",
+          "INIT",
+          "TILE_CLICK",
+          "UNIT_CLICK"
+        ]
       }
     ],
     "pages": [
@@ -659,6 +682,1068 @@
     "provenance": "authored",
     "substrateSignature": "07d930e2b902d9da",
     "capabilities": "3D Mars-base grid tactics, canyon terrain combat, tactical unit positioning",
-    "sourceValid": true
+    "sourceValid": true,
+    "paramsSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed params for ui-space-board-3d / SpaceBoard3DOrbital. Empty {} = factory defaults.",
+      "properties": {
+        "entityName": {
+          "type": "string",
+          "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
+        },
+        "pagePath": {
+          "type": "string",
+          "description": "URL path override for the orbital's first page."
+        },
+        "fields": {
+          "type": "array",
+          "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date",
+                      "timestamp",
+                      "datetime",
+                      "object"
+                    ],
+                    "description": "Field type tag."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "values"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "enum"
+                    ],
+                    "description": "Enum field."
+                  },
+                  "values": {
+                    "type": "array",
+                    "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type",
+                  "relation"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "relation"
+                    ],
+                    "description": "Relation (FK) field."
+                  },
+                  "relation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "entity",
+                      "cardinality"
+                    ],
+                    "properties": {
+                      "entity": {
+                        "type": "string",
+                        "description": "Sibling entity name (PascalCase singular)."
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    },
+                    "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Field name (camelCase)."
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "default": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "array"
+                    ],
+                    "description": "Array field."
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "Element shape (optional for primitive arrays)."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "traitOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
+          "properties": {
+            "Authority": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for Authority.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "attackDamage": {
+                      "default": 3
+                    },
+                    "gridHeight": {
+                      "default": 18
+                    },
+                    "gridWidth": {
+                      "default": 18
+                    },
+                    "running": {
+                      "default": true
+                    },
+                    "units": {
+                      "default": [
+                        {
+                          "health": 10,
+                          "id": "u1",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "astronaut",
+                            "dimension": "3d",
+                            "name": "astronautA",
+                            "role": "player",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"
+                          },
+                          "name": "Astronaut",
+                          "position": {
+                            "x": 4,
+                            "y": 16
+                          },
+                          "team": "player",
+                          "unitType": "astronaut",
+                          "x": 4,
+                          "y": 16,
+                          "z": 0
+                        },
+                        {
+                          "health": 12,
+                          "id": "u2",
+                          "maxHealth": 12,
+                          "modelUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "rover",
+                            "dimension": "3d",
+                            "name": "rover",
+                            "role": "player",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb"
+                          },
+                          "name": "Rover",
+                          "position": {
+                            "x": 9,
+                            "y": 16
+                          },
+                          "team": "player",
+                          "unitType": "rover",
+                          "x": 9,
+                          "y": 16,
+                          "z": 0
+                        },
+                        {
+                          "health": 10,
+                          "id": "u3",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "astronaut",
+                            "dimension": "3d",
+                            "name": "astronautA",
+                            "role": "player",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"
+                          },
+                          "name": "Engineer",
+                          "position": {
+                            "x": 14,
+                            "y": 16
+                          },
+                          "team": "player",
+                          "unitType": "astronaut",
+                          "x": 14,
+                          "y": 16,
+                          "z": 0
+                        },
+                        {
+                          "health": 8,
+                          "id": "e1",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "alien",
+                            "dimension": "3d",
+                            "name": "alien",
+                            "role": "enemy",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"
+                          },
+                          "name": "Alien",
+                          "position": {
+                            "x": 4,
+                            "y": 1
+                          },
+                          "team": "enemy",
+                          "unitType": "alien",
+                          "x": 4,
+                          "y": 1,
+                          "z": 0
+                        },
+                        {
+                          "health": 6,
+                          "id": "e2",
+                          "maxHealth": 8,
+                          "modelUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "raider",
+                            "dimension": "3d",
+                            "name": "craft_speederA",
+                            "role": "enemy",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb"
+                          },
+                          "name": "Raider Craft",
+                          "position": {
+                            "x": 9,
+                            "y": 1
+                          },
+                          "team": "enemy",
+                          "unitType": "raider",
+                          "x": 9,
+                          "y": 1,
+                          "z": 0
+                        },
+                        {
+                          "health": 8,
+                          "id": "e3",
+                          "maxHealth": 10,
+                          "modelUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "alien",
+                            "dimension": "3d",
+                            "name": "alien",
+                            "role": "enemy",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"
+                          },
+                          "name": "Alien Scout",
+                          "position": {
+                            "x": 14,
+                            "y": 1
+                          },
+                          "team": "enemy",
+                          "unitType": "alien",
+                          "x": 14,
+                          "y": 1,
+                          "z": 0
+                        }
+                      ]
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "enum": [
+                          "AI_TURN",
+                          "ATTACK",
+                          "HEAL",
+                          "INIT",
+                          "MOVE",
+                          "SPAWN"
+                        ],
+                        "description": "Local state-machine event fired when the subscription matches. Must be one of the events this trait's own transitions already react to."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "FxDecay": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for FxDecay.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "running": {
+                      "default": true
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "enum": [
+                          "BURST",
+                          "INIT"
+                        ],
+                        "description": "Local state-machine event fired when the subscription matches. Must be one of the events this trait's own transitions already react to."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "RoundLogic": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for RoundLogic.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "running": {
+                      "default": true
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "enum": [
+                          "INIT",
+                          "UNITS_CHANGED"
+                        ],
+                        "description": "Local state-machine event fired when the subscription matches. Must be one of the events this trait's own transitions already react to."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            },
+            "Player": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Override knobs for Player.",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "assetManifest": {
+                      "default": {
+                        "effects": {
+                          "death": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "8:1",
+                            "category": "death",
+                            "dimension": "3d",
+                            "name": "death",
+                            "role": "effect",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/bones.glb"
+                          },
+                          "heal": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "8:1",
+                            "category": "heal",
+                            "dimension": "3d",
+                            "name": "heal",
+                            "role": "effect",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/barrel.glb"
+                          },
+                          "hit": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "8:1",
+                            "category": "hit",
+                            "dimension": "3d",
+                            "name": "hit",
+                            "role": "effect",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/meteor_half.glb"
+                          },
+                          "magic": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "8:1",
+                            "category": "magic",
+                            "dimension": "3d",
+                            "name": "magic",
+                            "role": "effect",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/machine_wireless.glb"
+                          },
+                          "melee": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "8:1",
+                            "category": "melee",
+                            "dimension": "3d",
+                            "name": "melee",
+                            "role": "effect",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/weapon_gun.glb"
+                          },
+                          "ranged": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "8:1",
+                            "category": "ranged",
+                            "dimension": "3d",
+                            "name": "ranged",
+                            "role": "effect",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/weapon_rifle.glb"
+                          }
+                        },
+                        "features": {
+                          "comms_dish": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "comms_dish",
+                            "dimension": "3d",
+                            "name": "comms_dish",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/satelliteDish.glb"
+                          },
+                          "dome": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "dome",
+                            "dimension": "3d",
+                            "name": "dome",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_roundA.glb"
+                          },
+                          "hangar": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "hangar",
+                            "dimension": "3d",
+                            "name": "hangar",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_smallA.glb"
+                          },
+                          "rocket": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "rocket",
+                            "dimension": "3d",
+                            "name": "rocket",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rocket_baseA.glb"
+                          }
+                        },
+                        "terrains": {
+                          "boulder": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "boulder",
+                            "dimension": "3d",
+                            "name": "boulder",
+                            "role": "tile",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"
+                          },
+                          "crater": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "crater",
+                            "dimension": "3d",
+                            "name": "crater",
+                            "role": "tile",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb"
+                          },
+                          "regolith": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "regolith",
+                            "dimension": "3d",
+                            "name": "regolith",
+                            "role": "tile",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"
+                          }
+                        },
+                        "units": {
+                          "alien": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "alien",
+                            "dimension": "3d",
+                            "name": "alien",
+                            "role": "npc",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"
+                          },
+                          "astronaut": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "astronaut",
+                            "dimension": "3d",
+                            "name": "astronaut",
+                            "role": "npc",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"
+                          },
+                          "raider": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "raider",
+                            "dimension": "3d",
+                            "name": "raider",
+                            "role": "npc",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb"
+                          },
+                          "rover": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "rover",
+                            "dimension": "3d",
+                            "name": "rover",
+                            "role": "npc",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb"
+                          }
+                        }
+                      }
+                    },
+                    "bgColor": {
+                      "default": "#05070f"
+                    },
+                    "cameraMode": {
+                      "default": "isometric"
+                    },
+                    "features": {
+                      "default": [
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "dome",
+                            "dimension": "3d",
+                            "name": "hangar_roundA",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_roundA.glb"
+                          },
+                          "id": "f1",
+                          "type": "dome",
+                          "x": 9,
+                          "y": 9
+                        },
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "rocket",
+                            "dimension": "3d",
+                            "name": "rocket_baseA",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rocket_baseA.glb"
+                          },
+                          "id": "f2",
+                          "type": "rocket",
+                          "x": 5,
+                          "y": 7
+                        },
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "hangar",
+                            "dimension": "3d",
+                            "name": "hangar_smallA",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_smallA.glb"
+                          },
+                          "id": "f3",
+                          "type": "hangar",
+                          "x": 13,
+                          "y": 7
+                        },
+                        {
+                          "assetUrl": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "category": "comms_dish",
+                            "dimension": "3d",
+                            "name": "satelliteDish",
+                            "role": "decoration",
+                            "style": "lowpoly-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/satelliteDish.glb"
+                          },
+                          "id": "f4",
+                          "type": "comms_dish",
+                          "x": 9,
+                          "y": 12
+                        }
+                      ]
+                    },
+                    "gridHeight": {
+                      "default": 18
+                    },
+                    "gridWidth": {
+                      "default": 18
+                    },
+                    "movementRange": {
+                      "default": 4
+                    },
+                    "scale": {
+                      "default": 0.45
+                    },
+                    "unitScale": {
+                      "default": 1
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
+                },
+                "events": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
+                },
+                "listens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event",
+                      "triggers"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": "string",
+                        "description": "Event key to subscribe to (bare name, no orbital prefix)."
+                      },
+                      "triggers": {
+                        "type": "string",
+                        "enum": [
+                          "CANCEL",
+                          "END_TURN",
+                          "INIT",
+                          "TILE_CLICK",
+                          "UNIT_CLICK"
+                        ],
+                        "description": "Local state-machine event fired when the subscription matches. Must be one of the events this trait's own transitions already react to."
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "internal",
+                          "external"
+                        ],
+                        "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
+                      }
+                    }
+                  },
+                  "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
+                },
+                "emitsScope": {
+                  "type": "string",
+                  "enum": [
+                    "internal",
+                    "external"
+                  ],
+                  "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
+                }
+              }
+            }
+          }
+        },
+        "extraTraits": {
+          "type": "array",
+          "description": "Sibling traits to compose beyond the factory-authored stack.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "as",
+              "ref"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Registry path (e.g. std/behaviors/std-approval-request)."
+              },
+              "as": {
+                "type": "string",
+                "description": "Local alias used in `ref`."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Trait reference (Alias.traits.X)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional rename of the inlined trait."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Optional entity rebinding."
+              },
+              "emitsScope": {
+                "type": "string",
+                "enum": [
+                  "internal",
+                  "external"
+                ]
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page overrides keyed by canonical page name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Canonical page name from the orbital."
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path override."
+              },
+              "linkedEntity": {
+                "type": "string",
+                "description": "Rebind the primary entity."
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryReady": true
   }
 ]

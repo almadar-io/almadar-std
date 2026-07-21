@@ -25,62 +25,20 @@ const BEHAVIOR_PATH = 'std/behaviors/std-cache-aside';
 const ALIAS = 'CacheAside';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdCacheAsideEventKey = 'CACHED' | 'CacheEntryLoadFailed' | 'CacheEntryLoaded' | 'CacheEntryUpdateFailed' | 'CacheEntryUpdated' | 'FETCH' | 'INIT' | 'INVALIDATE' | 'REFRESH';
-
-/**
- * Payload shape for the `CacheEntryLoaded` event.
- */
-export interface StdCacheAsideCacheEntryLoadedPayload {
-  data?: EntityRow[];
-}
-
-/**
- * Payload shape for the `CacheEntryLoadFailed` event.
- */
-export interface StdCacheAsideCacheEntryLoadFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Payload shape for the `CacheEntryUpdated` event.
- */
-export interface StdCacheAsideCacheEntryUpdatedPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `CacheEntryUpdateFailed` event.
- */
-export interface StdCacheAsideCacheEntryUpdateFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdCacheAsideConfig {
-  /** Default: `"icon-only"` */
-  emptyLook?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
-  /** Default: `"lru"` */
-  evictionPolicy?: 'lru' | 'lfu' | 'fifo' | 'ttl-only';
-  /** Default: `1000` */
-  maxCacheSize?: number;
-  /** Default: `true` */
-  staleWhileRevalidate?: boolean;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `300` */
-  ttlSeconds?: number;
+  /** Default: `"FETCH"` */
+  action?: unknown;
+  /** Default: `"download"` */
+  icon?: unknown;
+  /** Default: `"Fetch"` */
+  label?: unknown;
+  /** Default: `"primary"` */
+  variant?: unknown;
 }
 
 /**
@@ -96,8 +54,8 @@ export interface StdCacheAsideParams {
   fields?: EntityField[];
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdCacheAsideEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -108,6 +66,66 @@ export interface StdCacheAsideParams {
   config?: StdCacheAsideConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
+}
+
+/** Trait descriptor: `CacheAside.traits.FetchButton`. */
+export function stdCacheAsideFetchButtonTrait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.FetchButton`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InvalidateButton`. */
+export function stdCacheAsideInvalidateButtonTrait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InvalidateButton`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.RefreshButton`. */
+export function stdCacheAsideRefreshButtonTrait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.RefreshButton`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.RetryButton`. */
+export function stdCacheAsideRetryButtonTrait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.RetryButton`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
 }
 
 /** Trait descriptor: `CacheAside.traits.CacheEntryCacheManager`. */
@@ -155,11 +173,11 @@ export function stdCacheAsideInlineTypographyRender2Trait(params: StdCacheAsideP
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineButtonRender3`. */
-export function stdCacheAsideInlineButtonRender3Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineDividerRender3`. */
+export function stdCacheAsideInlineDividerRender3Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineButtonRender3`,
+    ref: `${ALIAS}.traits.InlineDividerRender3`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -170,11 +188,11 @@ export function stdCacheAsideInlineButtonRender3Trait(params: StdCacheAsideParam
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineDividerRender4`. */
-export function stdCacheAsideInlineDividerRender4Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender4`. */
+export function stdCacheAsideInlineEmptyStateRender4Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineDividerRender4`,
+    ref: `${ALIAS}.traits.InlineEmptyStateRender4`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -185,11 +203,11 @@ export function stdCacheAsideInlineDividerRender4Trait(params: StdCacheAsidePara
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender5`. */
-export function stdCacheAsideInlineEmptyStateRender5Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender5`. */
+export function stdCacheAsideInlineSpinnerRender5Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineEmptyStateRender5`,
+    ref: `${ALIAS}.traits.InlineSpinnerRender5`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -200,11 +218,11 @@ export function stdCacheAsideInlineEmptyStateRender5Trait(params: StdCacheAsideP
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender6`. */
-export function stdCacheAsideInlineSpinnerRender6Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender6`. */
+export function stdCacheAsideInlineTypographyRender6Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender6`,
+    ref: `${ALIAS}.traits.InlineTypographyRender6`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -215,11 +233,11 @@ export function stdCacheAsideInlineSpinnerRender6Trait(params: StdCacheAsidePara
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineTypographyRender7`. */
-export function stdCacheAsideInlineTypographyRender7Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineIconRender7`. */
+export function stdCacheAsideInlineIconRender7Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender7`,
+    ref: `${ALIAS}.traits.InlineIconRender7`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -230,11 +248,11 @@ export function stdCacheAsideInlineTypographyRender7Trait(params: StdCacheAsideP
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineIconRender8`. */
-export function stdCacheAsideInlineIconRender8Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender8`. */
+export function stdCacheAsideInlineTypographyRender8Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineIconRender8`,
+    ref: `${ALIAS}.traits.InlineTypographyRender8`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -245,11 +263,11 @@ export function stdCacheAsideInlineIconRender8Trait(params: StdCacheAsideParams)
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineTypographyRender9`. */
-export function stdCacheAsideInlineTypographyRender9Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineStatusDotRender9`. */
+export function stdCacheAsideInlineStatusDotRender9Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender9`,
+    ref: `${ALIAS}.traits.InlineStatusDotRender9`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -260,11 +278,11 @@ export function stdCacheAsideInlineTypographyRender9Trait(params: StdCacheAsideP
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineStatusDotRender10`. */
-export function stdCacheAsideInlineStatusDotRender10Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineDividerRender10`. */
+export function stdCacheAsideInlineDividerRender10Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineStatusDotRender10`,
+    ref: `${ALIAS}.traits.InlineDividerRender10`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -275,11 +293,11 @@ export function stdCacheAsideInlineStatusDotRender10Trait(params: StdCacheAsideP
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineButtonRender11`. */
-export function stdCacheAsideInlineButtonRender11Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineIconRender11`. */
+export function stdCacheAsideInlineIconRender11Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineButtonRender11`,
+    ref: `${ALIAS}.traits.InlineIconRender11`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -290,11 +308,11 @@ export function stdCacheAsideInlineButtonRender11Trait(params: StdCacheAsidePara
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineDividerRender12`. */
-export function stdCacheAsideInlineDividerRender12Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender12`. */
+export function stdCacheAsideInlineTypographyRender12Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineDividerRender12`,
+    ref: `${ALIAS}.traits.InlineTypographyRender12`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -305,11 +323,11 @@ export function stdCacheAsideInlineDividerRender12Trait(params: StdCacheAsidePar
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineIconRender13`. */
-export function stdCacheAsideInlineIconRender13Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineBadgeRender13`. */
+export function stdCacheAsideInlineBadgeRender13Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineIconRender13`,
+    ref: `${ALIAS}.traits.InlineBadgeRender13`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -335,11 +353,11 @@ export function stdCacheAsideInlineTypographyRender14Trait(params: StdCacheAside
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineBadgeRender15`. */
-export function stdCacheAsideInlineBadgeRender15Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineIconRender15`. */
+export function stdCacheAsideInlineIconRender15Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineBadgeRender15`,
+    ref: `${ALIAS}.traits.InlineIconRender15`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -365,11 +383,11 @@ export function stdCacheAsideInlineTypographyRender16Trait(params: StdCacheAside
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineIconRender17`. */
-export function stdCacheAsideInlineIconRender17Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender17`. */
+export function stdCacheAsideInlineTypographyRender17Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineIconRender17`,
+    ref: `${ALIAS}.traits.InlineTypographyRender17`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -380,11 +398,11 @@ export function stdCacheAsideInlineIconRender17Trait(params: StdCacheAsideParams
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineTypographyRender18`. */
-export function stdCacheAsideInlineTypographyRender18Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineIconRender18`. */
+export function stdCacheAsideInlineIconRender18Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender18`,
+    ref: `${ALIAS}.traits.InlineIconRender18`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -410,11 +428,11 @@ export function stdCacheAsideInlineTypographyRender19Trait(params: StdCacheAside
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineButtonRender20`. */
-export function stdCacheAsideInlineButtonRender20Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineStatusDotRender20`. */
+export function stdCacheAsideInlineStatusDotRender20Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineButtonRender20`,
+    ref: `${ALIAS}.traits.InlineStatusDotRender20`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -425,11 +443,11 @@ export function stdCacheAsideInlineButtonRender20Trait(params: StdCacheAsidePara
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineIconRender21`. */
-export function stdCacheAsideInlineIconRender21Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineDividerRender21`. */
+export function stdCacheAsideInlineDividerRender21Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineIconRender21`,
+    ref: `${ALIAS}.traits.InlineDividerRender21`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -440,11 +458,11 @@ export function stdCacheAsideInlineIconRender21Trait(params: StdCacheAsideParams
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineTypographyRender22`. */
-export function stdCacheAsideInlineTypographyRender22Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineAlertRender22`. */
+export function stdCacheAsideInlineAlertRender22Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender22`,
+    ref: `${ALIAS}.traits.InlineAlertRender22`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -455,11 +473,11 @@ export function stdCacheAsideInlineTypographyRender22Trait(params: StdCacheAside
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineStatusDotRender23`. */
-export function stdCacheAsideInlineStatusDotRender23Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender23`. */
+export function stdCacheAsideInlineSpinnerRender23Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineStatusDotRender23`,
+    ref: `${ALIAS}.traits.InlineSpinnerRender23`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -470,11 +488,11 @@ export function stdCacheAsideInlineStatusDotRender23Trait(params: StdCacheAsideP
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineButtonRender24`. */
-export function stdCacheAsideInlineButtonRender24Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender24`. */
+export function stdCacheAsideInlineSpinnerRender24Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineButtonRender24`,
+    ref: `${ALIAS}.traits.InlineSpinnerRender24`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -485,11 +503,11 @@ export function stdCacheAsideInlineButtonRender24Trait(params: StdCacheAsidePara
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineDividerRender25`. */
-export function stdCacheAsideInlineDividerRender25Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender25`. */
+export function stdCacheAsideInlineSpinnerRender25Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineDividerRender25`,
+    ref: `${ALIAS}.traits.InlineSpinnerRender25`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -500,11 +518,11 @@ export function stdCacheAsideInlineDividerRender25Trait(params: StdCacheAsidePar
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineAlertRender26`. */
-export function stdCacheAsideInlineAlertRender26Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender26`. */
+export function stdCacheAsideInlineEmptyStateRender26Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineAlertRender26`,
+    ref: `${ALIAS}.traits.InlineEmptyStateRender26`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -520,66 +538,6 @@ export function stdCacheAsideInlineSpinnerRender27Trait(params: StdCacheAsidePar
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.InlineSpinnerRender27`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender28`. */
-export function stdCacheAsideInlineSpinnerRender28Trait(params: StdCacheAsideParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender28`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender29`. */
-export function stdCacheAsideInlineSpinnerRender29Trait(params: StdCacheAsideParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender29`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender30`. */
-export function stdCacheAsideInlineEmptyStateRender30Trait(params: StdCacheAsideParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineEmptyStateRender30`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender31`. */
-export function stdCacheAsideInlineSpinnerRender31Trait(params: StdCacheAsideParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender31`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -612,38 +570,38 @@ export function stdCacheAside(params: StdCacheAsideParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
+      stdCacheAsideFetchButtonTrait(params),
+      stdCacheAsideInvalidateButtonTrait(params),
+      stdCacheAsideRefreshButtonTrait(params),
+      stdCacheAsideRetryButtonTrait(params),
       stdCacheAsideCacheEntryCacheManagerTrait(params),
       stdCacheAsideInlineIconRender1Trait(params),
       stdCacheAsideInlineTypographyRender2Trait(params),
-      stdCacheAsideInlineButtonRender3Trait(params),
-      stdCacheAsideInlineDividerRender4Trait(params),
-      stdCacheAsideInlineEmptyStateRender5Trait(params),
-      stdCacheAsideInlineSpinnerRender6Trait(params),
-      stdCacheAsideInlineTypographyRender7Trait(params),
-      stdCacheAsideInlineIconRender8Trait(params),
-      stdCacheAsideInlineTypographyRender9Trait(params),
-      stdCacheAsideInlineStatusDotRender10Trait(params),
-      stdCacheAsideInlineButtonRender11Trait(params),
-      stdCacheAsideInlineDividerRender12Trait(params),
-      stdCacheAsideInlineIconRender13Trait(params),
+      stdCacheAsideInlineDividerRender3Trait(params),
+      stdCacheAsideInlineEmptyStateRender4Trait(params),
+      stdCacheAsideInlineSpinnerRender5Trait(params),
+      stdCacheAsideInlineTypographyRender6Trait(params),
+      stdCacheAsideInlineIconRender7Trait(params),
+      stdCacheAsideInlineTypographyRender8Trait(params),
+      stdCacheAsideInlineStatusDotRender9Trait(params),
+      stdCacheAsideInlineDividerRender10Trait(params),
+      stdCacheAsideInlineIconRender11Trait(params),
+      stdCacheAsideInlineTypographyRender12Trait(params),
+      stdCacheAsideInlineBadgeRender13Trait(params),
       stdCacheAsideInlineTypographyRender14Trait(params),
-      stdCacheAsideInlineBadgeRender15Trait(params),
+      stdCacheAsideInlineIconRender15Trait(params),
       stdCacheAsideInlineTypographyRender16Trait(params),
-      stdCacheAsideInlineIconRender17Trait(params),
-      stdCacheAsideInlineTypographyRender18Trait(params),
+      stdCacheAsideInlineTypographyRender17Trait(params),
+      stdCacheAsideInlineIconRender18Trait(params),
       stdCacheAsideInlineTypographyRender19Trait(params),
-      stdCacheAsideInlineButtonRender20Trait(params),
-      stdCacheAsideInlineIconRender21Trait(params),
-      stdCacheAsideInlineTypographyRender22Trait(params),
-      stdCacheAsideInlineStatusDotRender23Trait(params),
-      stdCacheAsideInlineButtonRender24Trait(params),
-      stdCacheAsideInlineDividerRender25Trait(params),
-      stdCacheAsideInlineAlertRender26Trait(params),
+      stdCacheAsideInlineStatusDotRender20Trait(params),
+      stdCacheAsideInlineDividerRender21Trait(params),
+      stdCacheAsideInlineAlertRender22Trait(params),
+      stdCacheAsideInlineSpinnerRender23Trait(params),
+      stdCacheAsideInlineSpinnerRender24Trait(params),
+      stdCacheAsideInlineSpinnerRender25Trait(params),
+      stdCacheAsideInlineEmptyStateRender26Trait(params),
       stdCacheAsideInlineSpinnerRender27Trait(params),
-      stdCacheAsideInlineSpinnerRender28Trait(params),
-      stdCacheAsideInlineSpinnerRender29Trait(params),
-      stdCacheAsideInlineEmptyStateRender30Trait(params),
-      stdCacheAsideInlineSpinnerRender31Trait(params),
     ],
     pages: [
       stdCacheAsidePage(params),

@@ -30,12 +30,19 @@ const ALIAS = 'UiModal';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiModalEventKey = 'CLOSE' | 'INIT' | 'OPEN';
+export type StdUiModalEventKey = 'CLOSE' | 'EXITED' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `CLOSE` event.
  */
 export interface StdUiModalClosePayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `EXITED` event.
+ */
+export interface StdUiModalExitedPayload {
   id?: string;
 }
 
@@ -68,6 +75,8 @@ export interface StdUiModalConfig {
   look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
   /** Default: `"CLOSE"` */
   onClose?: string;
+  /** Default: `"EXITED"` */
+  onExited?: string;
   /** Default: `true` */
   showCloseButton?: boolean;
   /** Default: `"md"` */

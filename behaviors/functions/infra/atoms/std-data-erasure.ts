@@ -25,106 +25,6 @@ const BEHAVIOR_PATH = 'std/behaviors/std-data-erasure';
 const ALIAS = 'DataErasure';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdDataErasureEventKey = 'CANCEL_ERASURE' | 'CLOSE' | 'ErasureLoadFailed' | 'ErasureLoaded' | 'ErasureSaveFailed' | 'ErasureSaved' | 'ExecScanFailed' | 'ExecScanLoaded' | 'ExecStepped' | 'ExecuteErasure' | 'INIT' | 'OPEN';
-
-/**
- * Payload shape for the `CANCEL_ERASURE` event.
- */
-export interface StdDataErasureCancelErasurePayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `ErasureLoaded` event.
- */
-export interface StdDataErasureErasureLoadedPayload {
-  data?: EntityRow[];
-}
-
-/**
- * Payload shape for the `ErasureLoadFailed` event.
- */
-export interface StdDataErasureErasureLoadFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Payload shape for the `ErasureSaved` event.
- */
-export interface StdDataErasureErasureSavedPayload {
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `ErasureSaveFailed` event.
- */
-export interface StdDataErasureErasureSaveFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Payload shape for the `ExecuteErasure` event.
- */
-export interface StdDataErasureExecuteErasurePayload {
-  requestId?: string;
-  targetEntity?: string;
-  subjectId?: string;
-}
-
-/**
- * Payload shape for the `ExecScanLoaded` event.
- */
-export interface StdDataErasureExecScanLoadedPayload {
-  data?: EntityRow[];
-}
-
-/**
- * Payload shape for the `ExecScanFailed` event.
- */
-export interface StdDataErasureExecScanFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Payload shape for the `ExecStepped` event.
- */
-export interface StdDataErasureExecSteppedPayload {
-  id?: string;
-}
-
-/**
- * Typed call-site config block for this trait — every
- * field maps to a `config { ... }` entry in the source
- * .lolo. The agent fills these to specialise the trait
- * without modifying its state-machine topology.
- */
-export interface StdDataErasureConfig {
-  /** Default: `"anonymize"` */
-  anonymizeVsDelete?: 'anonymize' | 'delete';
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `30` */
-  gracePeriodDays?: number;
-  /** Default: `[]` */
-  piiFields?: string[];
-  /** Default: `"modal"` */
-  reviewSlot?: unknown;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `""` */
-  targetEntity?: string;
-}
-
-/**
  * Params for the std-data-erasure descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -140,18 +40,138 @@ export interface StdDataErasureParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdDataErasureEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdDataErasureConfig;
+  /** Nested config override (outer key = config field name). */
+  config?: TraitConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
+}
+
+/** Trait descriptor: `DataErasure.traits.LoadingSpinner`. */
+export function stdDataErasureLoadingSpinnerTrait(params: StdDataErasureParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.LoadingSpinner`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `DataErasure.traits.ErrorSpinner`. */
+export function stdDataErasureErrorSpinnerTrait(params: StdDataErasureParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ErrorSpinner`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `DataErasure.traits.LoadingText`. */
+export function stdDataErasureLoadingTextTrait(params: StdDataErasureParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.LoadingText`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `DataErasure.traits.Trash2Icon`. */
+export function stdDataErasureTrash2IconTrait(params: StdDataErasureParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.Trash2Icon`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `DataErasure.traits.ErasureRequestsTitle`. */
+export function stdDataErasureErasureRequestsTitleTrait(params: StdDataErasureParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ErasureRequestsTitle`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `DataErasure.traits.CloseButton`. */
+export function stdDataErasureCloseButtonTrait(params: StdDataErasureParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.CloseButton`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `DataErasure.traits.ErasureDivider`. */
+export function stdDataErasureErasureDividerTrait(params: StdDataErasureParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ErasureDivider`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `DataErasure.traits.ErrorAlert`. */
+export function stdDataErasureErrorAlertTrait(params: StdDataErasureParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ErrorAlert`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
 }
 
 /** Trait descriptor: `DataErasure.traits.ErasureWorkflow`. */
@@ -159,141 +179,6 @@ export function stdDataErasureErasureWorkflowTrait(params: StdDataErasureParams)
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ErasureWorkflow`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineSpinnerRender1`. */
-export function stdDataErasureInlineSpinnerRender1Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender1`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineTypographyRender2`. */
-export function stdDataErasureInlineTypographyRender2Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender2`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineIconRender3`. */
-export function stdDataErasureInlineIconRender3Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineIconRender3`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineTypographyRender4`. */
-export function stdDataErasureInlineTypographyRender4Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender4`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineButtonRender5`. */
-export function stdDataErasureInlineButtonRender5Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineButtonRender5`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineDividerRender6`. */
-export function stdDataErasureInlineDividerRender6Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineDividerRender6`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineAlertRender7`. */
-export function stdDataErasureInlineAlertRender7Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineAlertRender7`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineAlertRender8`. */
-export function stdDataErasureInlineAlertRender8Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineAlertRender8`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DataErasure.traits.InlineSpinnerRender9`. */
-export function stdDataErasureInlineSpinnerRender9Trait(params: StdDataErasureParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender9`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -326,16 +211,15 @@ export function stdDataErasure(params: StdDataErasureParams): OrbitalDefinition 
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
+      stdDataErasureLoadingSpinnerTrait(params),
+      stdDataErasureErrorSpinnerTrait(params),
+      stdDataErasureLoadingTextTrait(params),
+      stdDataErasureTrash2IconTrait(params),
+      stdDataErasureErasureRequestsTitleTrait(params),
+      stdDataErasureCloseButtonTrait(params),
+      stdDataErasureErasureDividerTrait(params),
+      stdDataErasureErrorAlertTrait(params),
       stdDataErasureErasureWorkflowTrait(params),
-      stdDataErasureInlineSpinnerRender1Trait(params),
-      stdDataErasureInlineTypographyRender2Trait(params),
-      stdDataErasureInlineIconRender3Trait(params),
-      stdDataErasureInlineTypographyRender4Trait(params),
-      stdDataErasureInlineButtonRender5Trait(params),
-      stdDataErasureInlineDividerRender6Trait(params),
-      stdDataErasureInlineAlertRender7Trait(params),
-      stdDataErasureInlineAlertRender8Trait(params),
-      stdDataErasureInlineSpinnerRender9Trait(params),
     ],
     pages: [
       stdDataErasurePage(params),

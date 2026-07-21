@@ -1,0 +1,38 @@
+app ui-presence "1.0.0"
+"Presence — UI factory (1:1 with the @almadar/ui presence pattern)."
+orbital PresenceOrbital {
+  entity PresenceItem [runtime] {
+    id : string!
+  }
+
+  trait PresenceRender -> @rebindable PresenceItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          show: @config.show
+          className: @config.className
+          children: @config.children
+          type: presence
+        })
+    }
+
+    config {
+      show : boolean = false
+        @label "Show"
+        @description "When false, the exit animation runs, then children unmount."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/presence" as PresencePage -> PresenceRender
+}

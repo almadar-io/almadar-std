@@ -25,87 +25,6 @@ const BEHAVIOR_PATH = 'std/behaviors/std-mod-queue';
 const ALIAS = 'ModQueue';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdModQueueEventKey = 'APPROVE' | 'CLOSE' | 'ESCALATE' | 'INIT' | 'ModQueueItemLoadFailed' | 'ModQueueItemLoaded' | 'ModQueueItemReviewFailed' | 'ModQueueItemReviewed' | 'OPEN' | 'REJECT';
-
-/**
- * Payload shape for the `APPROVE` event.
- */
-export interface StdModQueueApprovePayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `REJECT` event.
- */
-export interface StdModQueueRejectPayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `ESCALATE` event.
- */
-export interface StdModQueueEscalatePayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `ModQueueItemLoaded` event.
- */
-export interface StdModQueueModQueueItemLoadedPayload {
-  data?: EntityRow[];
-}
-
-/**
- * Payload shape for the `ModQueueItemLoadFailed` event.
- */
-export interface StdModQueueModQueueItemLoadFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Payload shape for the `ModQueueItemReviewed` event.
- */
-export interface StdModQueueModQueueItemReviewedPayload {
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `ModQueueItemReviewFailed` event.
- */
-export interface StdModQueueModQueueItemReviewFailedPayload {
-  error?: string;
-  code?: string;
-}
-
-/**
- * Typed call-site config block for this trait — every
- * field maps to a `config { ... }` entry in the source
- * .lolo. The agent fills these to specialise the trait
- * without modifying its state-machine topology.
- */
-export interface StdModQueueConfig {
-  /** Default: `5` */
-  autoEscalateThreshold?: number;
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `"modal"` */
-  reviewSlot?: unknown;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Moderation Queue"` */
-  title?: string;
-}
-
-/**
  * Params for the std-mod-queue descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -121,18 +40,138 @@ export interface StdModQueueParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdModQueueEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdModQueueConfig;
+  /** Nested config override (outer key = config field name). */
+  config?: TraitConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
+}
+
+/** Trait descriptor: `ModQueue.traits.LoadingSpinner`. */
+export function stdModQueueLoadingSpinnerTrait(params: StdModQueueParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.LoadingSpinner`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ModQueue.traits.ErrorSpinner`. */
+export function stdModQueueErrorSpinnerTrait(params: StdModQueueParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ErrorSpinner`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ModQueue.traits.LoadingText`. */
+export function stdModQueueLoadingTextTrait(params: StdModQueueParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.LoadingText`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ModQueue.traits.ShieldAlertIcon`. */
+export function stdModQueueShieldAlertIconTrait(params: StdModQueueParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ShieldAlertIcon`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ModQueue.traits.ModQueueTitle`. */
+export function stdModQueueModQueueTitleTrait(params: StdModQueueParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ModQueueTitle`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ModQueue.traits.CloseButton`. */
+export function stdModQueueCloseButtonTrait(params: StdModQueueParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.CloseButton`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ModQueue.traits.ModQueueDivider`. */
+export function stdModQueueModQueueDividerTrait(params: StdModQueueParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ModQueueDivider`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `ModQueue.traits.ErrorAlert`. */
+export function stdModQueueErrorAlertTrait(params: StdModQueueParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ErrorAlert`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
 }
 
 /** Trait descriptor: `ModQueue.traits.ModQueueItemReview`. */
@@ -140,141 +179,6 @@ export function stdModQueueModQueueItemReviewTrait(params: StdModQueueParams): T
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ModQueueItemReview`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineSpinnerRender1`. */
-export function stdModQueueInlineSpinnerRender1Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender1`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineTypographyRender2`. */
-export function stdModQueueInlineTypographyRender2Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender2`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineIconRender3`. */
-export function stdModQueueInlineIconRender3Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineIconRender3`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineTypographyRender4`. */
-export function stdModQueueInlineTypographyRender4Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender4`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineButtonRender5`. */
-export function stdModQueueInlineButtonRender5Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineButtonRender5`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineDividerRender6`. */
-export function stdModQueueInlineDividerRender6Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineDividerRender6`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineAlertRender7`. */
-export function stdModQueueInlineAlertRender7Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineAlertRender7`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineAlertRender8`. */
-export function stdModQueueInlineAlertRender8Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineAlertRender8`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ModQueue.traits.InlineSpinnerRender9`. */
-export function stdModQueueInlineSpinnerRender9Trait(params: StdModQueueParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender9`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -307,16 +211,15 @@ export function stdModQueue(params: StdModQueueParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
+      stdModQueueLoadingSpinnerTrait(params),
+      stdModQueueErrorSpinnerTrait(params),
+      stdModQueueLoadingTextTrait(params),
+      stdModQueueShieldAlertIconTrait(params),
+      stdModQueueModQueueTitleTrait(params),
+      stdModQueueCloseButtonTrait(params),
+      stdModQueueModQueueDividerTrait(params),
+      stdModQueueErrorAlertTrait(params),
       stdModQueueModQueueItemReviewTrait(params),
-      stdModQueueInlineSpinnerRender1Trait(params),
-      stdModQueueInlineTypographyRender2Trait(params),
-      stdModQueueInlineIconRender3Trait(params),
-      stdModQueueInlineTypographyRender4Trait(params),
-      stdModQueueInlineButtonRender5Trait(params),
-      stdModQueueInlineDividerRender6Trait(params),
-      stdModQueueInlineAlertRender7Trait(params),
-      stdModQueueInlineAlertRender8Trait(params),
-      stdModQueueInlineSpinnerRender9Trait(params),
     ],
     pages: [
       stdModQueuePage(params),

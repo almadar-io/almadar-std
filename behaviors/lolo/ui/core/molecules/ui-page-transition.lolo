@@ -1,0 +1,38 @@
+app ui-page-transition "1.0.0"
+"PageTransition — UI factory (1:1 with the @almadar/ui page-transition pattern)."
+orbital PageTransitionOrbital {
+  entity PageTransitionItem [runtime] {
+    id : string!
+  }
+
+  trait PageTransitionRender -> @rebindable PageTransitionItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          locationKey: @config.locationKey
+          children: @config.children
+          className: @config.className
+          type: page-transition
+        })
+    }
+
+    config {
+      locationKey : string = ""
+        @label "Location Key"
+        @description "Value that changes on navigation (e.g. `location.pathname`)."
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/page-transition" as PageTransitionPage -> PageTransitionRender
+}
