@@ -40,6 +40,8 @@ export type StdUiLoadingStateEventKey = 'INIT';
  */
 export interface StdUiLoadingStateConfig {
   className?: string;
+  /** Default: `false` */
+  fullPage?: boolean;
   message?: string;
   title?: string;
 }

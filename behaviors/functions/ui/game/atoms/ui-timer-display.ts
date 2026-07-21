@@ -43,6 +43,7 @@ export interface StdUiTimerDisplayConfig {
   className?: string;
   /** Default: `"mm:ss"` */
   format?: 'mm:ss' | 'ss' | 'countdown';
+  iconAsset?: EntityRow;
   /** Default: `0` */
   lowThreshold?: number;
   /** Default: `true` */

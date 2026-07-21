@@ -1,6 +1,18 @@
 app ui-timer-display "1.0.0"
 "TimerDisplay — counts down every second while running; re-renders on each tick."
 orbital TimerDisplayOrbital {
+  type TimerDisplayIconAsset = {
+    url : asset!
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
+    category : string
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    name : string
+    thumbnailUrl : string
+  }
+
   entity TimerDisplayItem [runtime] {
     id      : string!
     seconds : number = 90
@@ -21,6 +33,7 @@ orbital TimerDisplayOrbital {
           size: @config.size
           className: @config.className
           lowThreshold: @config.lowThreshold
+          iconAsset: @config.iconAsset
           type: timer-display
         })
     }
@@ -36,6 +49,7 @@ orbital TimerDisplayOrbital {
           size: @config.size
           className: @config.className
           lowThreshold: @config.lowThreshold
+          iconAsset: @config.iconAsset
           type: timer-display
         })
     }
@@ -64,6 +78,10 @@ orbital TimerDisplayOrbital {
       lowThreshold : number = 0
         @label "Low Threshold"
         @description "Seconds below which to pulse red"
+        @tier "presentation"
+      iconAsset : TimerDisplayIconAsset
+        @label "Icon Asset"
+        @description "Icon asset rendered to the left of the time value. Falls back to no icon."
         @tier "presentation"
     }
   }
