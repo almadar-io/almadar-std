@@ -142,7 +142,7 @@ describe('factory-runtime', () => {
       const manifest = manifests.find((m) => m.orbitalName === orbital.name);
       if (!manifest) throw new Error('expected manifest for first orbital');
       const canonicalEntity =
-        typeof orbital.entity === 'object' ? orbital.entity.name : '';
+        typeof orbital.entity === 'object' ? (orbital.entity.name ?? '') : '';
 
       const overrides: Record<string, OrbitalTraitOverride> = {};
       if (manifest.traitNames.length > 0) {
