@@ -54,6 +54,8 @@ export interface StdUiGameShellConfig {
   overlay?: unknown;
   /** Default: `true` */
   showTopBar?: boolean;
+  /** Default: `""` */
+  theme?: string;
 }
 
 /**

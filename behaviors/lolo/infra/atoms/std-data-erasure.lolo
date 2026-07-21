@@ -1,6 +1,13 @@
 app std-data-erasure "1.0.0"
 "std-data-erasure — GDPR Art. 17 right-to-be-forgotten queue. Tracks ErasureRequest rows through pending → grace → executed lifecycle with Cancel during grace. v1.0 ships the request lifecycle UI + knob set; auto-emit of ExecuteErasure after grace lands in v1.1 (loop-with-emit gap — docs/Almadar_Std_Factories.md). Target app/ atoms then own the actual delete or piiFields scrub via an ExecuteErasure listener."
 orbital DataErasureOrbital {
+    uses Spinner from "std/behaviors/ui-spinner"
+    uses Typography from "std/behaviors/ui-typography"
+    uses Icon from "std/behaviors/ui-icon"
+    uses Button from "std/behaviors/ui-button"
+    uses Divider from "std/behaviors/ui-divider"
+    uses Alert from "std/behaviors/ui-alert"
+
     type ErasureLoaded = Event { data : [ErasureRequest] } "Fired when the erasure queue finishes loading."
 
     type ErasureLoadFailed = Event { error : string, code : string } "Fired when the erasure queue fails to load."
@@ -45,12 +52,7 @@ orbital DataErasureOrbital {
         })
         (render-ui @config.reviewSlot {
           align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading erasure requests…"
-            type: typography
-            variant: caption
-          }]
+          children: [<Spinner.traits.SpinnerRender linkedEntity={ErasureRequest} />, <Typography.traits.TypographyRender linkedEntity={ErasureRequest} color={muted} content={"Loading erasure requests…"} variant={caption} />]
           className: py-12
           direction: vertical
           gap: md
@@ -109,26 +111,16 @@ orbital DataErasureOrbital {
             align: center
             children: [{
               align: center
-              children: [{ name: trash-2, type: icon }, {
-                content: "Erasure requests"
-                type: typography
-                variant: h3
-              }]
+              children: [<Icon.traits.IconRender linkedEntity={ErasureRequest} name={trash-2} />, <Typography.traits.TypographyRender linkedEntity={ErasureRequest} content={"Erasure requests"} variant={h3} />]
               direction: horizontal
               gap: sm
               type: stack
-            }, {
-              action: CLOSE
-              icon: x
-              label: Close
-              type: button
-              variant: ghost
-            }]
+            }, <Button.traits.ButtonRender linkedEntity={ErasureRequest} action={CLOSE} icon={x} label={Close} variant={ghost} />]
             direction: horizontal
             gap: sm
             justify: between
             type: stack
-          }, { type: divider }, {
+          }, <Divider.traits.DividerRender linkedEntity={ErasureRequest} />, {
             cols: 1
             entity: ?data
             fields: [{
@@ -159,11 +151,9 @@ orbital DataErasureOrbital {
           type: stack
         })
       ErasureLoadFailed -> error
-        (render-ui @config.reviewSlot {
-          message: ?error
-          type: alert
-          variant: error
-        })
+        (render-ui @config.reviewSlot <Stack>
+          <Alert.traits.AlertRender linkedEntity={ErasureRequest} message={?error} variant={error} />
+        </Stack>)
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }
@@ -180,11 +170,9 @@ orbital DataErasureOrbital {
           emit: { failure: ErasureLoadFailed, success: ErasureLoaded }
         })
       ErasureSaveFailed -> browsing
-        (render-ui @config.reviewSlot {
-          message: ?error
-          type: alert
-          variant: error
-        })
+        (render-ui @config.reviewSlot <Stack>
+          <Alert.traits.AlertRender linkedEntity={ErasureRequest} message={?error} variant={error} />
+        </Stack>)
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }
@@ -194,7 +182,9 @@ orbital DataErasureOrbital {
         (fetch ErasureRequest {
           emit: { failure: ErasureLoadFailed, success: ErasureLoaded }
         })
-        (render-ui @config.reviewSlot { size: sm, type: spinner })
+        (render-ui @config.reviewSlot <Stack>
+          <Spinner.traits.SpinnerRender linkedEntity={ErasureRequest} size={sm} />
+        </Stack>)
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }

@@ -1,6 +1,16 @@
 app std-cache-aside "1.0.0"
 "std-cache-aside as a Function"
 orbital CacheEntryOrbital {
+    uses Icon from "std/behaviors/ui-icon"
+    uses Typography from "std/behaviors/ui-typography"
+    uses Button from "std/behaviors/ui-button"
+    uses Divider from "std/behaviors/ui-divider"
+    uses EmptyState from "std/behaviors/ui-empty-state"
+    uses Spinner from "std/behaviors/ui-spinner"
+    uses StatusDot from "std/behaviors/ui-status-dot"
+    uses Badge from "std/behaviors/ui-badge"
+    uses Alert from "std/behaviors/ui-alert"
+
     type CacheEntryLoaded = Event { data : [CacheEntry] } "Fired when CacheEntry finishes loading; payload.data holds the entries"
 
     type CacheEntryLoadFailed = Event { error : string, code : string } "Fired when CacheEntry fails to load"
@@ -27,32 +37,16 @@ orbital CacheEntryOrbital {
         (render-ui main {
           children: [{
             children: [{
-              children: [{ name: database, type: icon }, {
-                content: "Cache (empty)"
-                type: typography
-                variant: h2
-              }]
+              children: [<Icon.traits.IconRender linkedEntity={CacheEntry} name={database} />, <Typography.traits.TypographyRender linkedEntity={CacheEntry} content={"Cache (empty)"} variant={h2} />]
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              action: FETCH
-              icon: download
-              label: Fetch
-              type: button
-              variant: primary
-            }]
+            }, <Button.traits.ButtonRender linkedEntity={CacheEntry} action={FETCH} icon={download} label={Fetch} variant={primary} />]
             direction: horizontal
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            description: "Fetch data to populate the cache."
-            icon: inbox
-            look: @config.emptyLook
-            title: "Cache is empty"
-            type: empty-state
-          }]
+          }, <Divider.traits.DividerRender linkedEntity={CacheEntry} />, <EmptyState.traits.EmptyStateRender description={"Fetch data to populate the cache."} icon={inbox} linkedEntity={CacheEntry} look={@config.emptyLook} title={"Cache is empty"} />]
           direction: vertical
           gap: lg
           type: stack
@@ -63,12 +57,7 @@ orbital CacheEntryOrbital {
         })
         (render-ui main {
           align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Fetching cache…"
-            type: typography
-            variant: caption
-          }]
+          children: [<Spinner.traits.SpinnerRender linkedEntity={CacheEntry} />, <Typography.traits.TypographyRender color={muted} content={"Fetching cache…"} linkedEntity={CacheEntry} variant={caption} />]
           className: py-12
           direction: vertical
           gap: md
@@ -81,28 +70,13 @@ orbital CacheEntryOrbital {
         (render-ui main {
           children: [{
             children: [{
-              children: [{ name: database, type: icon }, {
-                content: "Cache (hot)"
-                type: typography
-                variant: h2
-              }]
+              children: [<Icon.traits.IconRender linkedEntity={CacheEntry} name={database} />, <Typography.traits.TypographyRender linkedEntity={CacheEntry} content={"Cache (hot)"} variant={h2} />]
               direction: horizontal
               gap: md
               type: stack
             }, {
               align: center
-              children: [{
-                label: Cached
-                pulse: false
-                status: online
-                type: status-dot
-              }, {
-                action: INVALIDATE
-                icon: trash
-                label: Invalidate
-                type: button
-                variant: ghost
-              }]
+              children: [<StatusDot.traits.StatusDotRender label={Cached} linkedEntity={CacheEntry} pulse={false} status={online} />, <Button.traits.ButtonRender linkedEntity={CacheEntry} action={INVALIDATE} icon={trash} label={Invalidate} variant={ghost} />]
               direction: horizontal
               gap: sm
               type: stack
@@ -111,7 +85,7 @@ orbital CacheEntryOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
+          }, <Divider.traits.DividerRender linkedEntity={CacheEntry} />, {
             entity: ?data
             fields: []
             look: @config.tableLook
@@ -120,23 +94,15 @@ orbital CacheEntryOrbital {
                 align: center
                 children: [{
                   align: center
-                  children: [{ name: database, type: icon }, {
-                    content: @item.name
-                    type: typography
-                    variant: h4
-                  }]
+                  children: [<Icon.traits.IconRender linkedEntity={CacheEntry} name={database} />, <Typography.traits.TypographyRender content={@item.name} linkedEntity={CacheEntry} variant={h4} />]
                   direction: horizontal
                   gap: sm
                   type: stack
-                }, { label: @item.description, type: badge }]
+                }, <Badge.traits.BadgeRender label={@item.description} linkedEntity={CacheEntry} />]
                 direction: horizontal
                 justify: between
                 type: stack
-              }, {
-                content: @item.status
-                type: typography
-                variant: caption
-              }]
+              }, <Typography.traits.TypographyRender content={@item.status} linkedEntity={CacheEntry} variant={caption} />]
               direction: vertical
               gap: sm
               type: stack
@@ -150,26 +116,7 @@ orbital CacheEntryOrbital {
       CacheEntryLoadFailed -> error
         (render-ui main {
           align: center
-          children: [{
-            color: error
-            name: alert-triangle
-            type: icon
-          }, {
-            content: "Failed to load"
-            type: typography
-            variant: h3
-          }, {
-            color: muted
-            content: ?error
-            type: typography
-            variant: body
-          }, {
-            action: FETCH
-            icon: rotate-ccw
-            label: Retry
-            type: button
-            variant: primary
-          }]
+          children: [<Icon.traits.IconRender color={error} linkedEntity={CacheEntry} name={alert-triangle} />, <Typography.traits.TypographyRender content={"Failed to load"} linkedEntity={CacheEntry} variant={h3} />, <Typography.traits.TypographyRender color={muted} content={?error} linkedEntity={CacheEntry} variant={body} />, <Button.traits.ButtonRender linkedEntity={CacheEntry} action={FETCH} icon={rotate-ccw} label={Retry} variant={primary} />]
           className: py-12
           direction: vertical
           gap: md
@@ -182,28 +129,13 @@ orbital CacheEntryOrbital {
         (render-ui main {
           children: [{
             children: [{
-              children: [{ name: database, type: icon }, {
-                content: "Cache (stale)"
-                type: typography
-                variant: h2
-              }]
+              children: [<Icon.traits.IconRender linkedEntity={CacheEntry} name={database} />, <Typography.traits.TypographyRender linkedEntity={CacheEntry} content={"Cache (stale)"} variant={h2} />]
               direction: horizontal
               gap: md
               type: stack
             }, {
               align: center
-              children: [{
-                label: Stale
-                pulse: true
-                status: warning
-                type: status-dot
-              }, {
-                action: REFRESH
-                icon: refresh-cw
-                label: Refresh
-                type: button
-                variant: primary
-              }]
+              children: [<StatusDot.traits.StatusDotRender label={Stale} linkedEntity={CacheEntry} pulse={true} status={warning} />, <Button.traits.ButtonRender linkedEntity={CacheEntry} action={REFRESH} icon={refresh-cw} label={Refresh} variant={primary} />]
               direction: horizontal
               gap: sm
               type: stack
@@ -212,11 +144,7 @@ orbital CacheEntryOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            message: "Cache data is stale. Refresh to get the latest data."
-            type: alert
-            variant: warning
-          }]
+          }, <Divider.traits.DividerRender linkedEntity={CacheEntry} />, <Alert.traits.AlertRender linkedEntity={CacheEntry} message={"Cache data is stale. Refresh to get the latest data."} variant={warning} />]
           direction: vertical
           gap: lg
           type: stack
@@ -228,7 +156,9 @@ orbital CacheEntryOrbital {
         (fetch CacheEntry {
           emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main <Stack>
+          <Spinner.traits.SpinnerRender linkedEntity={CacheEntry} />
+        </Stack>)
     }
 
     state stale {
@@ -236,28 +166,30 @@ orbital CacheEntryOrbital {
         (fetch CacheEntry {
           emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main <Stack>
+          <Spinner.traits.SpinnerRender linkedEntity={CacheEntry} />
+        </Stack>)
       FETCH -> loading
         (fetch CacheEntry {
           emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main <Stack>
+          <Spinner.traits.SpinnerRender linkedEntity={CacheEntry} />
+        </Stack>)
     }
 
     state error {
       INIT -> empty
-        (render-ui main {
-          description: "Fetch data to populate the cache."
-          icon: inbox
-          look: @config.emptyLook
-          title: "Cache is empty"
-          type: empty-state
-        })
+        (render-ui main <Stack>
+          <EmptyState.traits.EmptyStateRender description={"Fetch data to populate the cache."} icon={inbox} linkedEntity={CacheEntry} look={@config.emptyLook} title={"Cache is empty"} />
+        </Stack>)
       FETCH -> loading
         (fetch CacheEntry {
           emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main <Stack>
+          <Spinner.traits.SpinnerRender linkedEntity={CacheEntry} />
+        </Stack>)
     }
 
     emits {

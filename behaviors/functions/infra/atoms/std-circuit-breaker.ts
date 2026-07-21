@@ -272,6 +272,36 @@ export function stdCircuitBreakerResetButtonTrait(params: StdCircuitBreakerParam
   });
 }
 
+/** Trait descriptor: `CircuitBreaker.traits.CircuitDivider`. */
+export function stdCircuitBreakerCircuitDividerTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.CircuitDivider`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CircuitBreaker.traits.StatsGrid`. */
+export function stdCircuitBreakerStatsGridTrait(params: StdCircuitBreakerParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.StatsGrid`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `CircuitBreaker.traits.ServiceNodeCircuitBreaker`. */
 export function stdCircuitBreakerServiceNodeCircuitBreakerTrait(params: StdCircuitBreakerParams): TraitReference {
   return makeTraitRef({
@@ -323,6 +353,8 @@ export function stdCircuitBreaker(params: StdCircuitBreakerParams): OrbitalDefin
       stdCircuitBreakerSuccessesStatTrait(params),
       stdCircuitBreakerFailuresMeterTrait(params),
       stdCircuitBreakerResetButtonTrait(params),
+      stdCircuitBreakerCircuitDividerTrait(params),
+      stdCircuitBreakerStatsGridTrait(params),
       stdCircuitBreakerServiceNodeCircuitBreakerTrait(params),
     ],
     pages: [

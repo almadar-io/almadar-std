@@ -242,6 +242,36 @@ export function stdRateLimiterResetPrimaryButtonTrait(params: StdRateLimiterPara
   });
 }
 
+/** Trait descriptor: `RateLimiter.traits.RateBucketDivider`. */
+export function stdRateLimiterRateBucketDividerTrait(params: StdRateLimiterParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.RateBucketDivider`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `RateLimiter.traits.StatsGrid`. */
+export function stdRateLimiterStatsGridTrait(params: StdRateLimiterParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.StatsGrid`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `RateLimiter.traits.RateBucketRateLimiter`. */
 export function stdRateLimiterRateBucketRateLimiterTrait(params: StdRateLimiterParams): TraitReference {
   return makeTraitRef({
@@ -291,6 +321,8 @@ export function stdRateLimiter(params: StdRateLimiterParams): OrbitalDefinition 
       stdRateLimiterRequestButtonTrait(params),
       stdRateLimiterResetButtonTrait(params),
       stdRateLimiterResetPrimaryButtonTrait(params),
+      stdRateLimiterRateBucketDividerTrait(params),
+      stdRateLimiterStatsGridTrait(params),
       stdRateLimiterRateBucketRateLimiterTrait(params),
     ],
     pages: [

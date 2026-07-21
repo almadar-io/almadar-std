@@ -9,6 +9,8 @@ orbital RateBucketOrbital {
     uses Meter from "std/behaviors/ui-meter"
     uses ProgressBar from "std/behaviors/ui-progress-bar"
     uses Button from "std/behaviors/ui-button"
+    uses Divider from "std/behaviors/ui-divider"
+    uses SimpleGrid from "std/behaviors/ui-simple-grid"
 
   entity RateBucket [runtime] {
     id : string
@@ -116,6 +118,17 @@ orbital RateBucketOrbital {
     }
   }
 
+  trait RateBucketDivider = Divider.traits.DividerRender -> RateBucket {
+    config {}
+  }
+
+  trait StatsGrid = SimpleGrid.traits.SimpleGridRender -> RateBucket {
+    config {
+      children: [@trait.RequestsStat, @trait.WindowStat]
+      cols: 2
+    }
+  }
+
   trait RateBucketRateLimiter -> RateBucket [interaction, collection, rate-limit] {
     initial: open
 
@@ -138,11 +151,7 @@ orbital RateBucketOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            children: [@trait.RequestsStat, @trait.WindowStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.CountMeter, @trait.CountProgressBar, {
+          }, @trait.RateBucketDivider, @trait.StatsGrid, @trait.CountMeter, @trait.CountProgressBar, {
             children: [@trait.RequestButton, @trait.ResetButton]
             direction: horizontal
             gap: sm
@@ -168,11 +177,7 @@ orbital RateBucketOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            children: [@trait.RequestsStat, @trait.WindowStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.CountMeter, @trait.CountProgressBar, {
+          }, @trait.RateBucketDivider, @trait.StatsGrid, @trait.CountMeter, @trait.CountProgressBar, {
             children: [@trait.RequestButton, @trait.ResetButton]
             direction: horizontal
             gap: sm
@@ -199,11 +204,7 @@ orbital RateBucketOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.RateLimitAlert, {
-            children: [@trait.RequestsStat, @trait.WindowStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.CountMeter, {
+          }, @trait.RateBucketDivider, @trait.RateLimitAlert, @trait.StatsGrid, @trait.CountMeter, {
             children: [@trait.ResetPrimaryButton]
             direction: horizontal
             gap: sm
@@ -231,11 +232,7 @@ orbital RateBucketOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            children: [@trait.RequestsStat, @trait.WindowStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.CountMeter, @trait.CountProgressBar, {
+          }, @trait.RateBucketDivider, @trait.StatsGrid, @trait.CountMeter, @trait.CountProgressBar, {
             children: [@trait.RequestButton, @trait.ResetButton]
             direction: horizontal
             gap: sm
@@ -266,11 +263,7 @@ orbital RateBucketOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
-            children: [@trait.RequestsStat, @trait.WindowStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.CountMeter, @trait.CountProgressBar, {
+          }, @trait.RateBucketDivider, @trait.StatsGrid, @trait.CountMeter, @trait.CountProgressBar, {
             children: [@trait.RequestButton, @trait.ResetButton]
             direction: horizontal
             gap: sm
@@ -296,11 +289,7 @@ orbital RateBucketOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.RateLimitAlert, {
-            children: [@trait.RequestsStat, @trait.WindowStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.CountMeter, {
+          }, @trait.RateBucketDivider, @trait.RateLimitAlert, @trait.StatsGrid, @trait.CountMeter, {
             children: [@trait.ResetPrimaryButton]
             direction: horizontal
             gap: sm

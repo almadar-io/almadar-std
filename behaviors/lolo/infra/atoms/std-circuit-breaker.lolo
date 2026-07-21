@@ -8,6 +8,8 @@ orbital ServiceNodeOrbital {
     uses StatDisplay from "std/behaviors/ui-stat-display"
     uses Meter from "std/behaviors/ui-meter"
     uses Button from "std/behaviors/ui-button"
+    uses Divider from "std/behaviors/ui-divider"
+    uses SimpleGrid from "std/behaviors/ui-simple-grid"
 
     type ServiceNodeLoaded = Event ServiceNode "Fired when ServiceNode finishes loading"
 
@@ -127,6 +129,17 @@ orbital ServiceNodeOrbital {
     }
   }
 
+  trait CircuitDivider = Divider.traits.DividerRender -> ServiceNode {
+    config {}
+  }
+
+  trait StatsGrid = SimpleGrid.traits.SimpleGridRender -> ServiceNode {
+    config {
+      children: [@trait.FailuresStat, @trait.SuccessesStat]
+      cols: 2
+    }
+  }
+
   trait ServiceNodeCircuitBreaker -> ServiceNode [interaction, collection] {
     initial: closed
 
@@ -152,11 +165,7 @@ orbital ServiceNodeOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.SuccessAlert, {
-            children: [@trait.FailuresStat, @trait.SuccessesStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.FailuresMeter]
+          }, @trait.CircuitDivider, @trait.SuccessAlert, @trait.StatsGrid, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
@@ -176,11 +185,7 @@ orbital ServiceNodeOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.ErrorAlert, {
-            children: [@trait.FailuresStat, @trait.SuccessesStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.FailuresMeter, @trait.ResetButton]
+          }, @trait.CircuitDivider, @trait.ErrorAlert, @trait.StatsGrid, @trait.FailuresMeter, @trait.ResetButton]
           direction: vertical
           gap: lg
           type: stack
@@ -200,11 +205,7 @@ orbital ServiceNodeOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.SuccessAlert, {
-            children: [@trait.FailuresStat, @trait.SuccessesStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.FailuresMeter]
+          }, @trait.CircuitDivider, @trait.SuccessAlert, @trait.StatsGrid, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
@@ -227,11 +228,7 @@ orbital ServiceNodeOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.WarningAlert, {
-            children: [@trait.FailuresStat, @trait.SuccessesStat]
-            cols: 2
-            type: simple-grid
-          }]
+          }, @trait.CircuitDivider, @trait.WarningAlert, @trait.StatsGrid]
           direction: vertical
           gap: lg
           type: stack
@@ -251,11 +248,7 @@ orbital ServiceNodeOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.SuccessAlert, {
-            children: [@trait.FailuresStat, @trait.SuccessesStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.FailuresMeter]
+          }, @trait.CircuitDivider, @trait.SuccessAlert, @trait.StatsGrid, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
@@ -278,11 +271,7 @@ orbital ServiceNodeOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.SuccessAlert, {
-            children: [@trait.FailuresStat, @trait.SuccessesStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.FailuresMeter]
+          }, @trait.CircuitDivider, @trait.SuccessAlert, @trait.StatsGrid, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
@@ -302,11 +291,7 @@ orbital ServiceNodeOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.ErrorAlert, {
-            children: [@trait.FailuresStat, @trait.SuccessesStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.FailuresMeter, @trait.ResetButton]
+          }, @trait.CircuitDivider, @trait.ErrorAlert, @trait.StatsGrid, @trait.FailuresMeter, @trait.ResetButton]
           direction: vertical
           gap: lg
           type: stack
@@ -326,11 +311,7 @@ orbital ServiceNodeOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, @trait.SuccessAlert, {
-            children: [@trait.FailuresStat, @trait.SuccessesStat]
-            cols: 2
-            type: simple-grid
-          }, @trait.FailuresMeter]
+          }, @trait.CircuitDivider, @trait.SuccessAlert, @trait.StatsGrid, @trait.FailuresMeter]
           direction: vertical
           gap: lg
           type: stack
