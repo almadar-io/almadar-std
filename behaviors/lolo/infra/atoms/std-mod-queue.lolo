@@ -28,6 +28,57 @@ orbital ModQueueItemOrbital {
     notes : string @description "Free-text comments or observations related to the item." @synonyms "comment, remark, observation, details"
   }
 
+  trait LoadingSpinner = Spinner.traits.SpinnerRender -> ModQueueItem {
+    config {}
+  }
+
+  trait ErrorSpinner = Spinner.traits.SpinnerRender -> ModQueueItem {
+    config {
+      size: sm
+    }
+  }
+
+  trait LoadingText = Typography.traits.TypographyRender -> ModQueueItem {
+    config {
+      color: muted
+      content: "Loading moderation queue…"
+      variant: caption
+    }
+  }
+
+  trait ShieldAlertIcon = Icon.traits.IconRender -> ModQueueItem {
+    config {
+      name: shield-alert
+    }
+  }
+
+  trait ModQueueTitle = Typography.traits.TypographyRender -> ModQueueItem {
+    config {
+      content: @config.title
+      variant: h3
+    }
+  }
+
+  trait CloseButton = Button.traits.ButtonRender -> ModQueueItem {
+    config {
+      action: CLOSE
+      icon: x
+      label: Close
+      variant: ghost
+    }
+  }
+
+  trait ModQueueDivider = Divider.traits.DividerRender -> ModQueueItem {
+    config {}
+  }
+
+  trait ErrorAlert = Alert.traits.AlertRender -> ModQueueItem {
+    config {
+      message: ?error
+      variant: error
+    }
+  }
+
   trait ModQueueItemReview -> ModQueueItem [interaction, collection, moderation] {
     initial: idle
 
@@ -44,7 +95,7 @@ orbital ModQueueItemOrbital {
         })
         (render-ui @config.reviewSlot {
           align: center
-          children: [<Spinner.traits.SpinnerRender linkedEntity={ModQueueItem} />, <Typography.traits.TypographyRender linkedEntity={ModQueueItem} color={muted} content={"Loading moderation queue…"} variant={caption} />]
+          children: [@trait.LoadingSpinner, @trait.LoadingText]
           className: py-12
           direction: vertical
           gap: md
@@ -59,16 +110,16 @@ orbital ModQueueItemOrbital {
             align: center
             children: [{
               align: center
-              children: [<Icon.traits.IconRender linkedEntity={ModQueueItem} name={shield-alert} />, <Typography.traits.TypographyRender linkedEntity={ModQueueItem} content={@config.title} variant={h3} />]
+              children: [@trait.ShieldAlertIcon, @trait.ModQueueTitle]
               direction: horizontal
               gap: sm
               type: stack
-            }, <Button.traits.ButtonRender linkedEntity={ModQueueItem} action={CLOSE} icon={x} label={Close} variant={ghost} />]
+            }, @trait.CloseButton]
             direction: horizontal
             gap: sm
             justify: between
             type: stack
-          }, <Divider.traits.DividerRender linkedEntity={ModQueueItem} />, {
+          }, @trait.ModQueueDivider, {
             cols: 1
             entity: ?data
             fields: [{
@@ -113,9 +164,10 @@ orbital ModQueueItemOrbital {
           type: stack
         })
       ModQueueItemLoadFailed -> error
-        (render-ui @config.reviewSlot <Stack>
-          <Alert.traits.AlertRender linkedEntity={ModQueueItem} message={?error} variant={error} />
-        </Stack>)
+        (render-ui @config.reviewSlot {
+          children: [@trait.ErrorAlert]
+          type: stack
+        })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
         (fetch ModQueueItem {
@@ -141,9 +193,10 @@ orbital ModQueueItemOrbital {
           emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
         })
       ModQueueItemReviewFailed -> reviewing
-        (render-ui @config.reviewSlot <Stack>
-          <Alert.traits.AlertRender linkedEntity={ModQueueItem} message={?error} variant={error} />
-        </Stack>)
+        (render-ui @config.reviewSlot {
+          children: [@trait.ErrorAlert]
+          type: stack
+        })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
         (fetch ModQueueItem {
@@ -156,9 +209,10 @@ orbital ModQueueItemOrbital {
         (fetch ModQueueItem {
           emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
         })
-        (render-ui @config.reviewSlot <Stack>
-          <Spinner.traits.SpinnerRender linkedEntity={ModQueueItem} size={sm} />
-        </Stack>)
+        (render-ui @config.reviewSlot {
+          children: [@trait.ErrorSpinner]
+          type: stack
+        })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
         (fetch ModQueueItem {
@@ -221,6 +275,7 @@ orbital ModQueueItemOrbital {
     }
 
     listens {
+      CloseButton.CLOSE -> CLOSE
       OPEN
         @description "Summons the moderation queue (host nav/affordance requests it)."
         @synonyms "open, show, review, view queue, moderation queue"

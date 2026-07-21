@@ -32,6 +32,57 @@ orbital ApprovalGateOrbital {
     payload : object @description "The held data of the gated action, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = {}
   }
 
+  trait LoadingSpinner = Spinner.traits.SpinnerRender -> ApprovalRequest {
+    config {}
+  }
+
+  trait ErrorSpinner = Spinner.traits.SpinnerRender -> ApprovalRequest {
+    config {
+      size: sm
+    }
+  }
+
+  trait LoadingText = Typography.traits.TypographyRender -> ApprovalRequest {
+    config {
+      color: muted
+      content: "Loading approval queue…"
+      variant: caption
+    }
+  }
+
+  trait ShieldCheckIcon = Icon.traits.IconRender -> ApprovalRequest {
+    config {
+      name: shield-check
+    }
+  }
+
+  trait ApprovalQueueTitle = Typography.traits.TypographyRender -> ApprovalRequest {
+    config {
+      content: "Approval queue"
+      variant: h3
+    }
+  }
+
+  trait CloseButton = Button.traits.ButtonRender -> ApprovalRequest {
+    config {
+      action: CLOSE
+      icon: x
+      label: Close
+      variant: ghost
+    }
+  }
+
+  trait ApprovalDivider = Divider.traits.DividerRender -> ApprovalRequest {
+    config {}
+  }
+
+  trait ErrorAlert = Alert.traits.AlertRender -> ApprovalRequest {
+    config {
+      message: ?error
+      variant: error
+    }
+  }
+
   trait ApprovalGateReview -> @rebindable ApprovalRequest [interaction, collection, approval] {
     initial: idle
 
@@ -48,7 +99,7 @@ orbital ApprovalGateOrbital {
         })
         (render-ui @config.reviewSlot {
           align: center
-          children: [<Spinner.traits.SpinnerRender linkedEntity={ApprovalRequest} />, <Typography.traits.TypographyRender linkedEntity={ApprovalRequest} color={muted} content={"Loading approval queue…"} variant={caption} />]
+          children: [@trait.LoadingSpinner, @trait.LoadingText]
           className: py-12
           direction: vertical
           gap: md
@@ -63,16 +114,16 @@ orbital ApprovalGateOrbital {
             align: center
             children: [{
               align: center
-              children: [<Icon.traits.IconRender linkedEntity={ApprovalRequest} name={shield-check} />, <Typography.traits.TypographyRender linkedEntity={ApprovalRequest} content={"Approval queue"} variant={h3} />]
+              children: [@trait.ShieldCheckIcon, @trait.ApprovalQueueTitle]
               direction: horizontal
               gap: sm
               type: stack
-            }, <Button.traits.ButtonRender linkedEntity={ApprovalRequest} action={CLOSE} icon={x} label={Close} variant={ghost} />]
+            }, @trait.CloseButton]
             direction: horizontal
             gap: sm
             justify: between
             type: stack
-          }, <Divider.traits.DividerRender linkedEntity={ApprovalRequest} />, {
+          }, @trait.ApprovalDivider, {
             cols: 1
             entity: ?data
             fields: [{
@@ -108,9 +159,10 @@ orbital ApprovalGateOrbital {
           type: stack
         })
       ApprovalRequestLoadFailed -> error
-        (render-ui @config.reviewSlot <Stack>
-          <Alert.traits.AlertRender linkedEntity={ApprovalRequest} message={?error} variant={error} />
-        </Stack>)
+        (render-ui @config.reviewSlot {
+          children: [@trait.ErrorAlert]
+          type: stack
+        })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }
@@ -137,9 +189,10 @@ orbital ApprovalGateOrbital {
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ApprovalRequestReviewFailed -> reviewing
-        (render-ui @config.reviewSlot <Stack>
-          <Alert.traits.AlertRender linkedEntity={ApprovalRequest} message={?error} variant={error} />
-        </Stack>)
+        (render-ui @config.reviewSlot {
+          children: [@trait.ErrorAlert]
+          type: stack
+        })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }
@@ -149,9 +202,10 @@ orbital ApprovalGateOrbital {
         (fetch ApprovalRequest {
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
-        (render-ui @config.reviewSlot <Stack>
-          <Spinner.traits.SpinnerRender linkedEntity={ApprovalRequest} size={sm} />
-        </Stack>)
+        (render-ui @config.reviewSlot {
+          children: [@trait.ErrorSpinner]
+          type: stack
+        })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }
@@ -217,6 +271,7 @@ orbital ApprovalGateOrbital {
     }
 
     listens {
+      CloseButton.CLOSE -> CLOSE
       OPEN
         @description "Summons the review queue (host nav/affordance requests it)."
         @synonyms "open, show, review, view queue, open approvals"

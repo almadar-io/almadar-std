@@ -29,6 +29,42 @@ orbital CacheEntryOrbital {
     cacheAge : number @description "Duration since the cache entry was last updated." @synonyms "age, duration, expiry" = 0
   }
 
+  trait FetchButton = Button.traits.ButtonRender -> CacheEntry {
+    config {
+      action: FETCH
+      icon: download
+      label: Fetch
+      variant: primary
+    }
+  }
+
+  trait InvalidateButton = Button.traits.ButtonRender -> CacheEntry {
+    config {
+      action: INVALIDATE
+      icon: trash
+      label: Invalidate
+      variant: ghost
+    }
+  }
+
+  trait RefreshButton = Button.traits.ButtonRender -> CacheEntry {
+    config {
+      action: REFRESH
+      icon: refresh-cw
+      label: Refresh
+      variant: primary
+    }
+  }
+
+  trait RetryButton = Button.traits.ButtonRender -> CacheEntry {
+    config {
+      action: FETCH
+      icon: rotate-ccw
+      label: Retry
+      variant: primary
+    }
+  }
+
   trait CacheEntryCacheManager -> CacheEntry [interaction, collection] {
     initial: empty
 
@@ -41,7 +77,7 @@ orbital CacheEntryOrbital {
               direction: horizontal
               gap: md
               type: stack
-            }, <Button.traits.ButtonRender linkedEntity={CacheEntry} action={FETCH} icon={download} label={Fetch} variant={primary} />]
+            }, @trait.FetchButton]
             direction: horizontal
             gap: md
             justify: between
@@ -76,7 +112,7 @@ orbital CacheEntryOrbital {
               type: stack
             }, {
               align: center
-              children: [<StatusDot.traits.StatusDotRender label={Cached} linkedEntity={CacheEntry} pulse={false} status={online} />, <Button.traits.ButtonRender linkedEntity={CacheEntry} action={INVALIDATE} icon={trash} label={Invalidate} variant={ghost} />]
+              children: [<StatusDot.traits.StatusDotRender label={Cached} linkedEntity={CacheEntry} pulse={false} status={online} />, @trait.InvalidateButton]
               direction: horizontal
               gap: sm
               type: stack
@@ -116,7 +152,7 @@ orbital CacheEntryOrbital {
       CacheEntryLoadFailed -> error
         (render-ui main {
           align: center
-          children: [<Icon.traits.IconRender color={error} linkedEntity={CacheEntry} name={alert-triangle} />, <Typography.traits.TypographyRender content={"Failed to load"} linkedEntity={CacheEntry} variant={h3} />, <Typography.traits.TypographyRender color={muted} content={?error} linkedEntity={CacheEntry} variant={body} />, <Button.traits.ButtonRender linkedEntity={CacheEntry} action={FETCH} icon={rotate-ccw} label={Retry} variant={primary} />]
+          children: [<Icon.traits.IconRender color={error} linkedEntity={CacheEntry} name={alert-triangle} />, <Typography.traits.TypographyRender content={"Failed to load"} linkedEntity={CacheEntry} variant={h3} />, <Typography.traits.TypographyRender color={muted} content={?error} linkedEntity={CacheEntry} variant={body} />, @trait.RetryButton]
           className: py-12
           direction: vertical
           gap: md
@@ -135,7 +171,7 @@ orbital CacheEntryOrbital {
               type: stack
             }, {
               align: center
-              children: [<StatusDot.traits.StatusDotRender label={Stale} linkedEntity={CacheEntry} pulse={true} status={warning} />, <Button.traits.ButtonRender linkedEntity={CacheEntry} action={REFRESH} icon={refresh-cw} label={Refresh} variant={primary} />]
+              children: [<StatusDot.traits.StatusDotRender label={Stale} linkedEntity={CacheEntry} pulse={true} status={warning} />, @trait.RefreshButton]
               direction: horizontal
               gap: sm
               type: stack
@@ -212,6 +248,10 @@ orbital CacheEntryOrbital {
     }
 
     listens {
+      FetchButton.FETCH -> FETCH
+      InvalidateButton.INVALIDATE -> INVALIDATE
+      RefreshButton.REFRESH -> REFRESH
+      RetryButton.FETCH -> FETCH
       CACHED {
         data : CacheEntry
       }
