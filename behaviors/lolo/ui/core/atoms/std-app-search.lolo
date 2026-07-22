@@ -12,6 +12,27 @@ orbital AppSearchOrbital {
     searchTerm : string @intrinsic @description "The current search query the user submitted." @synonyms "query, term, q" = ""
   }
 
+  trait AppSearchIdleHint -> AppSearchTarget [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: stack
+          align: center
+          direction: vertical
+          gap: sm
+          className: "py-12"
+          children: [{ type: icon, name: search, size: lg, color: muted }, {
+            type: typography
+            variant: caption
+            color: muted
+            content: "Start typing to search"
+          }]
+        })
+    }
+  }
+
   trait AppSearch -> @rebindable AppSearchTarget [interaction, collection] {
     initial: idle
 
@@ -161,7 +182,7 @@ orbital AppSearchOrbital {
     }
 
     config {
-      idleContent : trait
+      idleContent : trait = @trait.AppSearchIdleHint
         @label "Idle content"
         @description "The normal content view (e.g. the data ledger/browse trait) shown when no search is active."
         @tier "presentation"

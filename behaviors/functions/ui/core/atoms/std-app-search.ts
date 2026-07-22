@@ -30,39 +30,7 @@ const ALIAS = 'AppSearch';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAppSearchEventKey = 'APP_SEARCH' | 'AppSearchFailed' | 'AppSearchLoaded' | 'CLEAR_SEARCH' | 'INIT';
-
-/**
- * Payload shape for the `AppSearchLoaded` event.
- */
-export interface StdAppSearchAppSearchLoadedPayload {
-  data?: EntityRow[];
-}
-
-/**
- * Payload shape for the `AppSearchFailed` event.
- */
-export interface StdAppSearchAppSearchFailedPayload {
-  error?: string;
-}
-
-/**
- * Typed call-site config block for this trait — every
- * field maps to a `config { ... }` entry in the source
- * .lolo. The agent fills these to specialise the trait
- * without modifying its state-machine topology.
- */
-export interface StdAppSearchConfig {
-  idleContent?: TraitFieldRef;
-  /** Default: `[]` */
-  resultActions?: EntityRow[];
-  /** Default: `[{"label":"Name","name":"name","variant":"h4"}]` */
-  resultFields?: EntityRow[];
-  /** Default: `"Search results"` */
-  resultsTitle?: string;
-  /** Default: `"name"` */
-  searchField?: string;
-}
+export type StdAppSearchEventKey = 'INIT';
 
 /**
  * Params for the std-app-search descriptor helpers.
@@ -85,14 +53,29 @@ export interface StdAppSearchParams {
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdAppSearchConfig;
+  /** Nested config override (outer key = config field name). */
+  config?: TraitConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }
 
+/** Trait descriptor: `AppSearch.traits.AppSearchIdleHint`. */
+export function stdAppSearchAppSearchIdleHintTrait(params: StdAppSearchParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.AppSearchIdleHint`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `AppSearch.traits.AppSearch`. */
-export function stdAppSearchTrait(params: StdAppSearchParams): TraitReference {
+export function stdAppSearchAppSearchTrait(params: StdAppSearchParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.AppSearch`,
@@ -128,7 +111,8 @@ export function stdAppSearch(params: StdAppSearchParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdAppSearchTrait(params),
+      stdAppSearchAppSearchIdleHintTrait(params),
+      stdAppSearchAppSearchTrait(params),
     ],
     pages: [
       stdAppSearchPage(params),
