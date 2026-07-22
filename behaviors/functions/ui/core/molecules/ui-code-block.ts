@@ -61,7 +61,7 @@ export interface StdUiCodeBlockConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"text"` */
-  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
+  language?: string;
   /** Default: `"60vh"` */
   maxHeight?: string;
   /** Default: `"code"` */

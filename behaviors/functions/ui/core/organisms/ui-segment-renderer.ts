@@ -41,9 +41,10 @@ export type StdUiSegmentRendererEventKey = 'INIT';
 export interface StdUiSegmentRendererConfig {
   className?: string;
   containerClassName?: string;
-  /** Default: `[{"content":"Content","type":"Type"},{"content":"Content 2","type":"Type 2"}]` */
+  /** Default: `[]` */
   segments?: EntityRow[];
-  userProgress?: EntityRow;
+  /** Default: `{}` */
+  userProgress?: unknown;
 }
 
 type _StdUiSegmentRendererEntityName = 'SegmentRendererItem';
@@ -130,64 +131,21 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'type': 'string',
           },
           'segments': {
-            'default': [
-              {
-                'content': 'Content',
-                'type': 'Type',
-              },
-              {
-                'content': 'Content 2',
-                'type': 'Type 2',
-              },
-            ],
+            'default': [],
             'description': 'Parsed lesson segments (see `parseLessonSegments`)',
             'items': {
-              'properties': {
-                'content': {
-                  'name': 'content',
-                  'required': true,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
               'type': 'object',
             },
             'label': 'Segments',
             'tier': 'presentation',
-            'type': '[SegmentRendererSegmentsItem]',
+            'type': '[json]',
           },
           'userProgress': {
+            'default': {},
             'description': 'User progress for restoring activation/reflection state',
             'label': 'User Progress',
-            'properties': {
-              'activationResponse': {
-                'name': 'activationResponse',
-                'required': false,
-                'type': 'string',
-              },
-              'bloomAnswered': {
-                'items': {
-                  'type': 'boolean',
-                },
-                'name': 'bloomAnswered',
-                'required': false,
-                'type': 'object',
-              },
-              'reflectionNotes': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'reflectionNotes',
-                'required': false,
-                'type': 'array',
-              },
-            },
             'tier': 'presentation',
-            'type': 'SegmentRendererUserProgress',
+            'type': 'json',
           },
         },
         'entityContract': {

@@ -70,7 +70,7 @@ export interface StdUiDrawerConfig {
   position?: 'left' | 'right';
   /** Default: `true` */
   showCloseButton?: boolean;
-  title?: string;
+  title?: unknown;
   /** Default: `"md"` */
   width?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
