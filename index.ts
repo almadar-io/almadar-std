@@ -58,6 +58,7 @@ export {
   getStdPureOperators,
   validateStdOperatorArity,
   validateStdOperatorArity as validateOperatorArity,
+  assertOperatorArity,
   isStdGuardOperator,
   isStdEffectOperator,
   // Extended functions for integration with core operators

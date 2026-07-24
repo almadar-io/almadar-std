@@ -251,6 +251,25 @@ export function validateStdOperatorArity(operator: string, argCount: number): st
 }
 
 /**
+ * Throw when a registered operator is applied outside its canonical arity
+ * bounds — the interpreter-side (`@almadar/evaluator`) mirror of the compiled
+ * path's `resolve_sexpr_call` check, so a schema fails identically on both
+ * execution paths. Unregistered heads are a no-op: the interpreter treats them
+ * as data-array literals, not operator calls.
+ */
+export function assertOperatorArity(operator: string, argCount: number): void {
+  const meta = STD_OPERATORS[operator];
+  if (!meta) return;
+  const { minArity, maxArity } = meta;
+  if (argCount < minArity || (maxArity !== null && argCount > maxArity)) {
+    const range = maxArity === null ? `at least ${minArity}` : minArity === maxArity ? `${minArity}` : `${minArity}..${maxArity}`;
+    throw new Error(
+      `(${operator} …): expected ${range} argument(s), got ${argCount} — same bounds the compiled path enforces (canonical-operators.json)`,
+    );
+  }
+}
+
+/**
  * Check if a std operator is valid in guard context (no side effects).
  *
  * @param operator - Operator name

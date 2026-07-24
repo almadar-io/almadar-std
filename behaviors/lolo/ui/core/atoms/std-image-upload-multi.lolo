@@ -78,6 +78,23 @@ orbital UploadedImageOrbital {
     }
 
     state browsing {
+      INIT -> loading
+        (fetch UploadedImage {
+          emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading images…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       UPLOAD -> uploading
         (persist create UploadedImage ?files {
           emit: { failure: UploadedImageUploadFailed, success: UploadedImageCreated }

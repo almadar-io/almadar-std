@@ -114,6 +114,23 @@ orbital TagTaxonomyOrbital {
     }
 
     state browsing {
+      INIT -> loading
+        (fetch Tag {
+          emit: { failure: TagLoadFailed, success: TagLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading categories…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SELECT_TAG -> editing
         (set @entity.id ?tagId)
         (emit TagSelected { tagId: ?tagId })

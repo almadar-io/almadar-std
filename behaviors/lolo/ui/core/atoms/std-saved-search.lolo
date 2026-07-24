@@ -106,6 +106,23 @@ orbital SavedSearchOrbital {
     }
 
     state browsing {
+      INIT -> loading
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading saved searches…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       TOGGLE_ALERT -> browsing
         (set @entity.id ?id)
         (set @entity.alertEnabled ?enabled)
