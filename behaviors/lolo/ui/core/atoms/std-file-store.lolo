@@ -82,6 +82,23 @@ orbital StoredFileOrbital {
     }
 
     state browsing {
+      INIT -> loading
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       OPEN_FILE -> viewing_single
         (set @entity.id ?row.id)
         (set @entity.name ?row.name)

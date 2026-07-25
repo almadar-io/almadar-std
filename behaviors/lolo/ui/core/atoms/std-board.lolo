@@ -72,6 +72,14 @@ orbital BoardOrbital {
     }
 
     state viewing_board {
+      INIT -> loading
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+        })
+        (render-ui main {
+          title: "Loading board…"
+          type: loading-state
+        })
       OPEN_CARD -> viewing_card
         (set @entity.currentId ?row.id)
         (set @entity.currentTitle ?row.title)

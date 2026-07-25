@@ -75,6 +75,11 @@ orbital CalendarEventOrbital {
     }
 
     state month-view {
+      INIT -> loading
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+        })
+        (render-ui main { type: spinner })
       SELECT_DAY -> loading
         (set @entity.date ?value)
         (set @entity.selectedRange ?value)

@@ -141,6 +141,23 @@ orbital RevisionOrbital {
     }
 
     state browsing {
+      INIT -> loading
+        (fetch Revision {
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading version history…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       OPEN_REVISION -> viewing_single
         (set @entity.id ?row.id)
         (set @entity.documentId ?row.documentId)
