@@ -593,121 +593,176 @@
                   ],
                   [
                     "set",
-                    "@entity.queryVector",
-                    [
-                      "array/first",
-                      "@entity.embeddings"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.candidateVectors",
-                    [
-                      "array/drop",
-                      "@entity.embeddings",
-                      1.0
-                    ]
-                  ],
-                  [
-                    "set",
                     "@entity.status",
                     "resolved"
                   ],
                   [
-                    "let",
+                    "if",
                     [
+                      "<",
                       [
-                        "nearest",
-                        [
-                          "array/nearest",
-                          "@entity.queryVector",
-                          "@entity.candidateVectors"
-                        ]
+                        "array/len",
+                        "@payload.result"
+                      ],
+                      2.0
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.queryVector",
+                        []
+                      ],
+                      [
+                        "set",
+                        "@entity.candidateVectors",
+                        []
+                      ],
+                      [
+                        "set",
+                        "@entity.matchIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.matchScore",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.matchMargin",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.reason",
+                        "embedding result incomplete"
+                      ],
+                      [
+                        "emit",
+                        "SIMILARITY_ABSTAINED",
+                        {
+                          "reason": "embedding result incomplete",
+                          "request": "@entity.request"
+                        }
                       ]
                     ],
                     [
                       "do",
                       [
                         "set",
-                        "@entity.matchIndex",
+                        "@entity.queryVector",
                         [
-                          "object/get",
-                          "@nearest",
-                          "index"
+                          "array/first",
+                          "@entity.embeddings"
                         ]
                       ],
                       [
                         "set",
-                        "@entity.matchScore",
+                        "@entity.candidateVectors",
                         [
-                          "object/get",
-                          "@nearest",
-                          "score"
+                          "array/drop",
+                          "@entity.embeddings",
+                          1.0
                         ]
                       ],
                       [
-                        "set",
-                        "@entity.matchMargin",
+                        "let",
                         [
-                          "object/get",
-                          "@nearest",
-                          "margin"
-                        ]
-                      ],
-                      [
-                        "if",
-                        [
-                          "and",
                           [
-                            ">=",
-                            "@entity.matchScore",
-                            "@config.floor"
-                          ],
-                          [
-                            ">=",
-                            "@entity.matchMargin",
-                            "@config.margin"
-                          ]
-                        ],
-                        [
-                          "do",
-                          [
-                            "set",
-                            "@entity.reason",
-                            ""
-                          ],
-                          [
-                            "emit",
-                            "SIMILARITY_MATCHED",
-                            {
-                              "index": "@entity.matchIndex",
-                              "score": "@entity.matchScore"
-                            }
-                          ]
-                        ],
-                        [
-                          "do",
-                          [
-                            "set",
-                            "@entity.reason",
+                            "nearest",
                             [
-                              "if",
-                              [
-                                "<",
-                                "@entity.matchScore",
-                                "@config.floor"
-                              ],
-                              "below floor",
-                              "thin margin"
+                              "array/nearest",
+                              "@entity.queryVector",
+                              "@entity.candidateVectors"
+                            ]
+                          ]
+                        ],
+                        [
+                          "do",
+                          [
+                            "set",
+                            "@entity.matchIndex",
+                            [
+                              "object/get",
+                              "@nearest",
+                              "index"
                             ]
                           ],
                           [
-                            "emit",
-                            "SIMILARITY_ABSTAINED",
-                            {
-                              "reason": "@entity.reason",
-                              "request": "@entity.request"
-                            }
+                            "set",
+                            "@entity.matchScore",
+                            [
+                              "object/get",
+                              "@nearest",
+                              "score"
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.matchMargin",
+                            [
+                              "object/get",
+                              "@nearest",
+                              "margin"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "and",
+                              [
+                                ">=",
+                                "@entity.matchScore",
+                                "@config.floor"
+                              ],
+                              [
+                                ">=",
+                                "@entity.matchMargin",
+                                "@config.margin"
+                              ]
+                            ],
+                            [
+                              "do",
+                              [
+                                "set",
+                                "@entity.reason",
+                                ""
+                              ],
+                              [
+                                "emit",
+                                "SIMILARITY_MATCHED",
+                                {
+                                  "index": "@entity.matchIndex",
+                                  "score": "@entity.matchScore"
+                                }
+                              ]
+                            ],
+                            [
+                              "do",
+                              [
+                                "set",
+                                "@entity.reason",
+                                [
+                                  "if",
+                                  [
+                                    "<",
+                                    "@entity.matchScore",
+                                    "@config.floor"
+                                  ],
+                                  "below floor",
+                                  "thin margin"
+                                ]
+                              ],
+                              [
+                                "emit",
+                                "SIMILARITY_ABSTAINED",
+                                {
+                                  "reason": "@entity.reason",
+                                  "request": "@entity.request"
+                                }
+                              ]
+                            ]
                           ]
                         ]
                       ]

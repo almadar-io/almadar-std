@@ -55,11 +55,11 @@ orbital DungeonCombatOrbital {
         (let ((target (array/find @entity.enemies (fn e (== @e.id @payload.targetId)))))
           (let ((newHealth (math/max 0 (- (object/get @target health) @config.attackDamage))))
             (do
-              (set @entity.enemies (array/map @entity.enemies (fn e (if (== @e.id @payload.targetId) (object/merge @e { health: @newHealth, animation: (if (<= @newHealth 0) "death" "hit") }) e))))
+              (set @entity.enemies (array/map @entity.enemies (fn e (if (== @e.id @payload.targetId) (object/merge @e { health: @newHealth, animation: (if (<= @newHealth 0) "death" "hit") }) @e))))
               (if (<= @newHealth 0)
                 (do
                   (set @entity.combatScore (+ @entity.combatScore @config.pointsPerKill))
-                  (emit BURST { particles: (array/map (array/filter @entity.enemies (fn e (== @e.id @payload.targetId))) (fn t { id: (str/concat "fx-kill-" (object/get t id)), type: "explosion", x: (object/get (object/get t position) x), z: (object/get (object/get t position) y), ttl: 5 })) }))
+                  (emit BURST { particles: (array/map (array/filter @entity.enemies (fn e (== @e.id @payload.targetId))) (fn t { id: (str/concat "fx-kill-" (object/get @t id)), type: "explosion", x: (object/get (object/get @t position) x), z: (object/get (object/get @t position) y), ttl: 5 })) }))
                 true))))
 
       MONSTER_TICK -> active when @config.running

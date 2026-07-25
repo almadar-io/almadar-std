@@ -300,6 +300,28 @@
               "synonyms": "toolbar buttons, header actions, shortcut icons, quick actions",
               "tier": "presentation",
               "type": "[ItemAction]"
+            },
+            "viewerAvatar": {
+              "default": "",
+              "description": "Avatar image URL for the account menu.",
+              "label": "Signed-in avatar",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "viewerEmail": {
+              "default": "",
+              "description": "Email shown under the name in the account menu — typically @user.email.",
+              "label": "Signed-in email",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "viewerName": {
+              "default": "",
+              "description": "Display name of the signed-in viewer, shown in the app bar's account menu — typically @user.name. Blank renders no account menu, so people can see which account (and which persona) they are viewing the app as only when it is actually known.",
+              "label": "Who is signed in",
+              "synonyms": "signed in user, current user, account, profile, persona, who am i",
+              "tier": "presentation",
+              "type": "string"
             }
           },
           "emits": [
@@ -489,7 +511,17 @@
                           "notifications": "@config.notifications",
                           "searchEvent": "@config.searchEvent",
                           "topBarActions": "@config.topBarActions",
-                          "type": "@config.layoutPattern"
+                          "type": "@config.layoutPattern",
+                          "user": [
+                            "if",
+                            "@config.viewerName",
+                            {
+                              "avatar": "@config.viewerAvatar",
+                              "email": "@config.viewerEmail",
+                              "name": "@config.viewerName"
+                            },
+                            null
+                          ]
                         }
                       ],
                       "className": "min-h-screen w-full",

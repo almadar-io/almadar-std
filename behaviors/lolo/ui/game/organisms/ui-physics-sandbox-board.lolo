@@ -141,10 +141,10 @@ orbital PhysicsSandboxBoardOrbital {
 
     ticks {
       gravityTick every 300ms
-      (set @entity.blocks (array/map @entity.blocks (fn b (if (== (object/get b settled) true) b (if (or (== (+ (object/get b y) 1) @entity.gridHeight) (array/some @entity.blocks (fn o (and (== (object/get o settled) true) (and (== (object/get o x) (object/get b x)) (== (object/get o y) (+ (object/get b y) 1))))))) (object/merge b { settled: true }) (object/merge b { y: (+ (object/get b y) 1) }))))))
-      (let ((clearRow (array/find (array/range 0 @entity.gridHeight) (fn r (== (array/len (array/filter @entity.blocks (fn b (and (== (object/get b settled) true) (== (object/get b y) r))))) @entity.gridWidth)))))
+      (set @entity.blocks (array/map @entity.blocks (fn b (if (== (object/get @b settled) true) @b (if (or (== (+ (object/get @b y) 1) @entity.gridHeight) (array/some @entity.blocks (fn o (and (== (object/get @o settled) true) (and (== (object/get @o x) (object/get @b x)) (== (object/get @o y) (+ (object/get @b y) 1))))))) (object/merge @b { settled: true }) (object/merge @b { y: (+ (object/get @b y) 1) }))))))
+      (let ((clearRow (array/find (array/range 0 @entity.gridHeight) (fn r (== (array/len (array/filter @entity.blocks (fn b (and (== (object/get @b settled) true) (== (object/get @b y) @r))))) @entity.gridWidth)))))
         (do
-          (set @entity.blocks (if (!= @clearRow null) (array/map (array/filter @entity.blocks (fn b (!= (object/get b y) @clearRow))) (fn b (if (< (object/get b y) @clearRow) (object/merge b { y: (+ (object/get b y) 1) }) b))) @entity.blocks))
+          (set @entity.blocks (if (!= @clearRow null) (array/map (array/filter @entity.blocks (fn b (!= (object/get @b y) @clearRow))) (fn b (if (< (object/get @b y) @clearRow) (object/merge @b { y: (+ (object/get @b y) 1) }) @b))) @entity.blocks))
           (set @entity.score (if (!= @clearRow null) (+ @entity.score (* 10 @entity.gridWidth)) @entity.score))
           (set @entity.rowsCleared (if (!= @clearRow null) (+ @entity.rowsCleared 1) @entity.rowsCleared))))
       (render-ui main {

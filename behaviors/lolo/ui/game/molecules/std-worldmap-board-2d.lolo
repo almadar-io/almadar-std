@@ -168,7 +168,7 @@ orbital WorldMapBoard2DOrbital {
 
       HERO_MOVE -> playing when (and (== @entity.result "none") (and (!= @entity.selectedHeroId "") (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedHeroId))) position) { x: ?x, y: ?y }) @config.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?y)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))))
         (emit MOVE { unitId: @entity.selectedHeroId, x: ?x, y: ?y })
-        (if (== (object/get (array/find @config.features (fn f (and (== (object/get f x) ?x) (and (== (object/get f y) ?y) (== (object/get f type) "gold_mine"))))) type) "gold_mine") (emit MINE_HIT { id: "" }) null)
+        (if (== (object/get (array/find @config.features (fn f (and (== (object/get @f x) ?x) (and (== (object/get @f y) ?y) (== (object/get @f type) "gold_mine"))))) type) "gold_mine") (emit MINE_HIT { id: "" }) null)
         (set @entity.selectedHeroId "")
         (set @entity.validMoves [])
 

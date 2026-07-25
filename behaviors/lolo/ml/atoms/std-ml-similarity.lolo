@@ -74,21 +74,33 @@ orbital MlSimilarityOrbital {
     state embedding {
       EMBEDDED -> resolved
         (set @entity.embeddings ?result)
-        (set @entity.queryVector (array/first @entity.embeddings))
-        (set @entity.candidateVectors (array/drop @entity.embeddings 1))
         (set @entity.status resolved)
-        (let ((nearest (array/nearest @entity.queryVector @entity.candidateVectors)))
+        ;; An embed result without query + at least one candidate vector is an
+        ;; abstain, not a crash — the rung can prove nothing from it.
+        (if (< (array/len ?result) 2)
           (do
-            (set @entity.matchIndex (object/get @nearest "index"))
-            (set @entity.matchScore (object/get @nearest "score"))
-            (set @entity.matchMargin (object/get @nearest "margin"))
-            (if (and (>= @entity.matchScore @config.floor) (>= @entity.matchMargin @config.margin))
-                (do
-                  (set @entity.reason "")
-                  (emit SIMILARITY_MATCHED { index: @entity.matchIndex, score: @entity.matchScore }))
-                (do
-                  (set @entity.reason (if (< @entity.matchScore @config.floor) "below floor" "thin margin"))
-                  (emit SIMILARITY_ABSTAINED { reason: @entity.reason, request: @entity.request })))))
+            (set @entity.queryVector [])
+            (set @entity.candidateVectors [])
+            (set @entity.matchIndex 0)
+            (set @entity.matchScore 0)
+            (set @entity.matchMargin 0)
+            (set @entity.reason "embedding result incomplete")
+            (emit SIMILARITY_ABSTAINED { reason: "embedding result incomplete", request: @entity.request }))
+          (do
+            (set @entity.queryVector (array/first @entity.embeddings))
+            (set @entity.candidateVectors (array/drop @entity.embeddings 1))
+            (let ((nearest (array/nearest @entity.queryVector @entity.candidateVectors)))
+              (do
+                (set @entity.matchIndex (object/get @nearest "index"))
+                (set @entity.matchScore (object/get @nearest "score"))
+                (set @entity.matchMargin (object/get @nearest "margin"))
+                (if (and (>= @entity.matchScore @config.floor) (>= @entity.matchMargin @config.margin))
+                    (do
+                      (set @entity.reason "")
+                      (emit SIMILARITY_MATCHED { index: @entity.matchIndex, score: @entity.matchScore }))
+                    (do
+                      (set @entity.reason (if (< @entity.matchScore @config.floor) "below floor" "thin margin"))
+                      (emit SIMILARITY_ABSTAINED { reason: @entity.reason, request: @entity.request })))))))
 
       EMBED_FAILED -> resolved
         (set @entity.embeddings [])
