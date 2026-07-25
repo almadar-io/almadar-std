@@ -314,6 +314,14 @@
               "tier": "internal",
               "type": "render-ui"
             },
+            "bodySearch": {
+              "default": true,
+              "description": "The dense/feed/gallery looks embed their own search box above the rows. Set false when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.",
+              "label": "Show the list's own search box?",
+              "synonyms": "inline search, list search, built-in search, show search, duplicate search",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "browseLook": {
               "default": "table",
               "description": "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style sticky-header table with search bar (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any of the four bodies may still be overridden directly at the call site for a one-off layout.",
@@ -423,22 +431,31 @@
             "denseBodyContent": {
               "default": {
                 "children": [
-                  {
-                    "align": "center",
-                    "children": [
-                      {
-                        "className": "w-full max-w-2xl",
-                        "clearable": true,
-                        "event": "REFETCH_QUERY",
-                        "placeholder": "@config.searchPlaceholder",
-                        "type": "search-input"
-                      }
-                    ],
-                    "className": "w-full max-w-2xl",
-                    "direction": "horizontal",
-                    "gap": "sm",
-                    "type": "stack"
-                  },
+                  [
+                    "if",
+                    "@config.bodySearch",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "className": "w-full max-w-2xl",
+                          "clearable": true,
+                          "event": "REFETCH_QUERY",
+                          "placeholder": "@config.searchPlaceholder",
+                          "type": "search-input"
+                        }
+                      ],
+                      "className": "w-full max-w-2xl",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ],
                   {
                     "children": [
                       "@trait.DenseTableView"
@@ -477,22 +494,31 @@
             "feedBodyContent": {
               "default": {
                 "children": [
-                  {
-                    "align": "center",
-                    "children": [
-                      {
-                        "className": "w-full",
-                        "clearable": true,
-                        "event": "REFETCH_QUERY",
-                        "placeholder": "@config.searchPlaceholder",
-                        "type": "search-input"
-                      }
-                    ],
-                    "className": "w-full",
-                    "direction": "horizontal",
-                    "gap": "sm",
-                    "type": "stack"
-                  },
+                  [
+                    "if",
+                    "@config.bodySearch",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "className": "w-full",
+                          "clearable": true,
+                          "event": "REFETCH_QUERY",
+                          "placeholder": "@config.searchPlaceholder",
+                          "type": "search-input"
+                        }
+                      ],
+                      "className": "w-full",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ],
                   {
                     "entity": "@payload.data",
                     "fields": [],
@@ -694,22 +720,31 @@
             "galleryBodyContent": {
               "default": {
                 "children": [
-                  {
-                    "align": "center",
-                    "children": [
-                      {
-                        "className": "w-full",
-                        "clearable": true,
-                        "event": "REFETCH_QUERY",
-                        "placeholder": "@config.searchPlaceholder",
-                        "type": "search-input"
-                      }
-                    ],
-                    "className": "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]",
-                    "direction": "horizontal",
-                    "gap": "sm",
-                    "type": "stack"
-                  },
+                  [
+                    "if",
+                    "@config.bodySearch",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "className": "w-full",
+                          "clearable": true,
+                          "event": "REFETCH_QUERY",
+                          "placeholder": "@config.searchPlaceholder",
+                          "type": "search-input"
+                        }
+                      ],
+                      "className": "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ],
                   {
                     "className": "w-full",
                     "entity": "@payload.data",

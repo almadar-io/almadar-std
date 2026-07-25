@@ -305,6 +305,11 @@ orbital BrowseItemOrbital {
         @description "Actions beyond this count collapse into a '⋯' overflow menu. Set 2–3 for dense tables."
         @synonyms "inline actions limit, overflow threshold, max buttons per row"
         @tier "presentation"
+      bodySearch : boolean = true
+        @label "Show the list's own search box?"
+        @description "The dense/feed/gallery looks embed their own search box above the rows. Set false when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two."
+        @synonyms "inline search, list search, built-in search, show search, duplicate search"
+        @tier "presentation"
       searchPlaceholder : string = "Search…"
         @label "Search box placeholder text"
         @description "Hint text inside the list search box (e.g. 'Search orders…')."
@@ -327,7 +332,7 @@ orbital BrowseItemOrbital {
         @description "Render-ui SExpr rendered after rows load when browseLook = table (the default). Composes the canonical data-grid call wrapped in a stack. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens."
         @tier "internal"
       denseBodyContent : render-ui = {
-        children: [{
+        children: [(if @config.bodySearch {
           align: center
           children: [{
             className: "w-full max-w-2xl"
@@ -340,7 +345,11 @@ orbital BrowseItemOrbital {
           direction: horizontal
           gap: sm
           type: stack
-        }, {
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
           children: [@trait.DenseTableView]
           className: "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm"
           direction: vertical
@@ -356,7 +365,7 @@ orbital BrowseItemOrbital {
         @description "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B)."
         @tier "internal"
       feedBodyContent : render-ui = {
-        children: [{
+        children: [(if @config.bodySearch {
           align: center
           children: [{
             className: w-full
@@ -369,7 +378,11 @@ orbital BrowseItemOrbital {
           direction: horizontal
           gap: sm
           type: stack
-        }, {
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
           entity: ?data
           fields: []
           gap: md
@@ -451,7 +464,7 @@ orbital BrowseItemOrbital {
         @description "Render-ui SExpr rendered after rows load when browseLook = feed. Chronological card-per-item stream with avatar, title, meta, body, timestamp; composes titleBinding/descriptionBinding/categoryBinding/badgeBinding/metaBinding/searchPlaceholder/itemActions. Folded from std-browse-feed (Phase 5.B)."
         @tier "internal"
       galleryBodyContent : render-ui = {
-        children: [{
+        children: [(if @config.bodySearch {
           align: center
           children: [{
             className: w-full
@@ -464,7 +477,11 @@ orbital BrowseItemOrbital {
           direction: horizontal
           gap: sm
           type: stack
-        }, {
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
           className: w-full
           entity: ?data
           fields: []

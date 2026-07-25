@@ -459,8 +459,11 @@
                                               {
                                                 "action": "OPEN_CARD",
                                                 "actionPayload": {
+                                                  "description": "@config.cardDescriptionBinding",
                                                   "id": "@config.cardIdBinding",
-                                                  "row": "@item"
+                                                  "row": "@item",
+                                                  "stage": "@config.cardStageBinding",
+                                                  "title": "@config.cardTitleBinding"
                                                 },
                                                 "icon": "arrow-right",
                                                 "label": "Open",
@@ -743,8 +746,11 @@
                                               {
                                                 "action": "OPEN_CARD",
                                                 "actionPayload": {
+                                                  "description": "@config.cardDescriptionBinding",
                                                   "id": "@config.cardIdBinding",
-                                                  "row": "@item"
+                                                  "row": "@item",
+                                                  "stage": "@config.cardStageBinding",
+                                                  "title": "@config.cardTitleBinding"
                                                 },
                                                 "className": "ml-auto",
                                                 "icon": "arrow-right",
@@ -1056,6 +1062,20 @@
                 "tier": "internal"
               },
               {
+                "description": "Signals that board items have been successfully saved.",
+                "id": "evt_01KXG04FS8ZFPK0V29TASPD99M",
+                "key": "BoardItemsSaved",
+                "name": "Board items saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "saved, persisted, updated",
+                "tier": "domain"
+              },
+              {
                 "description": "Indicates a failure to save board items.",
                 "id": "evt_01KXG04FS8QRXR73QKGT1GFY20",
                 "key": "BoardItemsSaveFailed",
@@ -1088,6 +1108,18 @@
                     "name": "row",
                     "required": true,
                     "type": "object"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "stage",
+                    "type": "string"
                   }
                 ],
                 "synonyms": "select, choose, activate, display",
@@ -1171,20 +1203,6 @@
                 ],
                 "synonyms": "sort, rearrange, reposition",
                 "tier": "presentation"
-              },
-              {
-                "description": "Signals that board items have been successfully saved.",
-                "id": "evt_01KXG04FS8ZFPK0V29TASPD99M",
-                "key": "BoardItemsSaved",
-                "name": "Board items saved",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ],
-                "synonyms": "saved, persisted, updated",
-                "tier": "domain"
               },
               {
                 "description": "Signals a card is being dismissed or closed.",
@@ -1414,6 +1432,32 @@
               {
                 "effects": [
                   [
+                    "fetch",
+                    "BoardView",
+                    {
+                      "emit": {
+                        "failure": "BoardItemsLoadFailed",
+                        "success": "BoardItemsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Refreshing board…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ],
+                "event": "BoardItemsSaved",
+                "eventId": "evt_01KXG04FS8ZFPK0V29TASPD99M",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.errorMessage",
                     "@payload.error"
@@ -1464,22 +1508,22 @@
                   [
                     "set",
                     "@entity.currentId",
-                    "@payload.row.id"
+                    "@payload.id"
                   ],
                   [
                     "set",
                     "@entity.currentTitle",
-                    "@payload.row.title"
+                    "@payload.title"
                   ],
                   [
                     "set",
                     "@entity.currentDescription",
-                    "@payload.row.description"
+                    "@payload.description"
                   ],
                   [
                     "set",
                     "@entity.currentStage",
-                    "@payload.row.stage"
+                    "@payload.stage"
                   ],
                   [
                     "set",

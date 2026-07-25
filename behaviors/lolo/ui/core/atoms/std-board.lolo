@@ -62,6 +62,17 @@ orbital BoardOrbital {
           title: "Failed to load board"
           type: error-state
         })
+      ;; Card move/delete and add-card save all land here from their own
+      ;; states; without this the persist success is dropped and the spinner
+      ;; never resolves (only the failure twin below used to recover).
+      BoardItemsSaved -> loading
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+        })
+        (render-ui main {
+          title: "Refreshing board…"
+          type: loading-state
+        })
       BoardItemsSaveFailed -> error
         (set @entity.errorMessage ?error)
         (render-ui main {
@@ -81,10 +92,10 @@ orbital BoardOrbital {
           type: loading-state
         })
       OPEN_CARD -> viewing_card
-        (set @entity.currentId ?row.id)
-        (set @entity.currentTitle ?row.title)
-        (set @entity.currentDescription ?row.description)
-        (set @entity.currentStage ?row.stage)
+        (set @entity.currentId ?id)
+        (set @entity.currentTitle ?title)
+        (set @entity.currentDescription ?description)
+        (set @entity.currentStage ?stage)
         (set @entity.currentNotes ?row.notes)
         (render-ui main {
           children: [{
@@ -362,6 +373,9 @@ orbital BoardOrbital {
       OPEN_CARD {
         id : string!
         row : object!
+        title : string
+        description : string
+        stage : string
       }
         @description "A card within the board has been selected or activated."
         @synonyms "select, activate, view, show"
@@ -558,7 +572,7 @@ orbital BoardOrbital {
                       align: center
                       children: [{
                         action: OPEN_CARD
-                        actionPayload: { id: @config.cardIdBinding, row: @item }
+                        actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
                         icon: arrow-right
                         label: Open
                         type: button
@@ -670,7 +684,7 @@ orbital BoardOrbital {
                         variant: primary
                       }, {
                         action: OPEN_CARD
-                        actionPayload: { id: @config.cardIdBinding, row: @item }
+                        actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
                         className: ml-auto
                         icon: arrow-right
                         label: Open
