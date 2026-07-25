@@ -1,0 +1,150 @@
+[
+  {
+    "organism": "std-ml-classify",
+    "orbital": "MlClassifyOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-ml-classify.ts",
+    "entities": [
+      {
+        "name": "ClassifierVerdict",
+        "fields": [
+          {
+            "name": "text",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "reasoning",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ClassifyRun",
+        "emittedEvents": [
+          "CLASSIFIED_RAW",
+          "CLASSIFY_CALL_FAILED",
+          "CLASSIFIED",
+          "CLASSIFY_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CLASSIFIED_RAW",
+            "direction": "emit",
+            "description": "Raw llm.classify service result, flattened onto the payload by the call-service effect executor",
+            "tier": "secondary"
+          },
+          {
+            "name": "CLASSIFY_CALL_FAILED",
+            "direction": "emit",
+            "description": "call-service classify failure signal",
+            "tier": "secondary"
+          },
+          {
+            "name": "CLASSIFIED",
+            "direction": "emit",
+            "description": "Structured LLM verdict — closed-set category with confidence and reasoning",
+            "tier": "primary"
+          },
+          {
+            "name": "CLASSIFY_FAILED",
+            "direction": "emit",
+            "description": "The classify service call failed; this rung never abstains, only answers or fails",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "CLASSIFY",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "categories",
+            "type": "[string]",
+            "default": [],
+            "label": "Categories",
+            "description": "Closed set of category labels the LLM must choose from",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "model",
+            "type": "string",
+            "default": "",
+            "label": "Model",
+            "description": "Model override forwarded to the classify call",
+            "tier": "infra"
+          },
+          {
+            "key": "provider",
+            "type": "string",
+            "default": "",
+            "label": "Provider",
+            "description": "Reserved for provider selection; LLMServiceActions.classify (packages/almadar-llm/src/contracts.ts) takes no provider param today, so this knob is not forwarded to the call",
+            "tier": "infra"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "CLASSIFIED_RAW",
+          "CLASSIFY",
+          "CLASSIFY_CALL_FAILED",
+          "INIT",
+          "RESET"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlClassifyPage",
+        "defaultPath": "/ml-classify",
+        "primaryEntity": "ClassifierVerdict"
+      }
+    ],
+    "emittedEvents": [
+      "CLASSIFIED",
+      "CLASSIFIED_RAW",
+      "CLASSIFY_CALL_FAILED",
+      "CLASSIFY_FAILED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

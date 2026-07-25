@@ -1,0 +1,83 @@
+app std-ml-lookup "1.0.0"
+"Rung R1 of the intelligence ladder — finds the candidate value in a list of accepted values; abstains when nothing matches."
+
+orbital MlLookupOrbital {
+
+  entity KeyLookup [runtime] {
+    matched : boolean = false
+    status  : "idle" | "checked" = idle
+  }
+
+  trait LookupRun -> KeyLookup [lifecycle, instance] {
+    initial: idle
+
+    config {
+      matchField : string = ""
+        @label "Match field"
+        @description "When the accepted list holds objects rather than scalars, the field to compare against the candidate; empty compares each element itself"
+        @tier "domain"
+      normalize : boolean = true
+        @label "Normalize"
+        @description "Trim and lowercase both sides before comparing"
+        @tier "policy"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.matched false)
+        (set @entity.status idle)
+      LOOKUP -> checked
+        (let ((candStr (str/concat ?candidate))
+              (candNorm (if @config.normalize (str/lower (str/trim @candStr)) @candStr))
+              (found (array/find ?accepted
+                       (fn item
+                         (let ((raw (if (== @config.matchField "") @item (object/get @item @config.matchField)))
+                               (rawStr (str/concat @raw))
+                               (rawNorm (if @config.normalize (str/lower (str/trim @rawStr)) @rawStr)))
+                           (== @rawNorm @candNorm))))))
+          (if (!= @found null)
+            (do
+              (set @entity.matched true)
+              (set @entity.status checked)
+              (emit KEY_HIT { candidate: ?candidate, entry: @found }))
+            (do
+              (set @entity.matched false)
+              (set @entity.status checked)
+              (emit KEY_MISS { candidate: ?candidate, request: ?request }))))
+    }
+
+    state checked {
+      INIT -> checked
+        (set @entity.status checked)
+      RESET -> idle
+        (set @entity.matched false)
+        (set @entity.status idle)
+    }
+
+    emits {
+      KEY_HIT -> external {
+        candidate : any!
+        entry : any!
+      }
+        @description "Fired when the candidate matches an entry in the accepted list"
+        @tier "primary"
+
+      KEY_MISS -> external {
+        candidate : any!
+        request : object
+      }
+        @description "Abstain — candidate matches nothing in the accepted list; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it"
+        @tier "primary"
+    }
+
+    listens {
+      LOOKUP {
+        candidate : any!
+        accepted : [any]!
+        request : object
+      }
+    }
+  }
+
+  page "/ml-lookup" as MlLookupPage -> LookupRun
+}

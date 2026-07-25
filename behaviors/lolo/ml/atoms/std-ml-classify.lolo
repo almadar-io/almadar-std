@@ -1,0 +1,121 @@
+app std-ml-classify "1.0.0"
+"Generative rung (R5) — structured LLM verdict from a closed category set, via the llm.classify service seam. Bottom of the fall-through: always answers or fails, never abstains."
+
+orbital MlClassifyOrbital {
+
+  entity ClassifierVerdict [runtime] {
+    text         : string   = ""
+    category     : string   = ""
+    confidence   : float    = 0
+    reasoning    : string   = ""
+    errorMessage : string   = ""
+    request      : object   = {}
+    status       : "idle" | "classifying" | "done" = idle
+  }
+
+  trait ClassifyRun -> ClassifierVerdict [lifecycle, instance] {
+    initial: idle
+
+    config {
+      categories : [string] = []
+        @label "Categories"
+        @description "Closed set of category labels the LLM must choose from"
+        @tier "domain"
+      provider : string = ""
+        @label "Provider"
+        @description "Reserved for provider selection; LLMServiceActions.classify (packages/almadar-llm/src/contracts.ts) takes no provider param today, so this knob is not forwarded to the call"
+        @tier "infra"
+      model : string = ""
+        @label "Model"
+        @description "Model override forwarded to the classify call"
+        @tier "infra"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.text "")
+        (set @entity.category "")
+        (set @entity.confidence 0)
+        (set @entity.reasoning "")
+        (set @entity.errorMessage "")
+        (set @entity.request {})
+        (set @entity.status idle)
+
+      CLASSIFY -> classifying
+        (set @entity.text ?text)
+        (set @entity.request ?request)
+        (set @entity.status classifying)
+        (call-service "llm" "classify" { text: ?text, categories: @config.categories, model: @config.model }
+          { emit: { success: CLASSIFIED_RAW, failure: CLASSIFY_CALL_FAILED } })
+    }
+
+    state classifying {
+      CLASSIFIED_RAW -> done
+        (set @entity.category ?category)
+        (set @entity.confidence ?confidence)
+        (set @entity.reasoning ?reasoning)
+        (set @entity.status done)
+        (emit CLASSIFIED { category: @entity.category, confidence: @entity.confidence, reasoning: @entity.reasoning })
+
+      CLASSIFY_CALL_FAILED -> done
+        (set @entity.category "")
+        (set @entity.confidence 0)
+        (set @entity.reasoning "")
+        (set @entity.errorMessage ?error)
+        (set @entity.status done)
+        (emit CLASSIFY_FAILED { error: @entity.errorMessage })
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.status done)
+      RESET -> idle
+        (set @entity.text "")
+        (set @entity.category "")
+        (set @entity.confidence 0)
+        (set @entity.reasoning "")
+        (set @entity.errorMessage "")
+        (set @entity.request {})
+        (set @entity.status idle)
+    }
+
+    emits {
+      CLASSIFIED_RAW {
+        category   : string!
+        confidence : number!
+        reasoning  : string!
+      }
+        @description "Raw llm.classify service result, flattened onto the payload by the call-service effect executor"
+        @tier "secondary"
+
+      CLASSIFY_CALL_FAILED {
+        error : string!
+      }
+        @description "call-service classify failure signal"
+        @tier "secondary"
+
+      CLASSIFIED -> external {
+        category   : string!
+        confidence : float!
+        reasoning  : string!
+      }
+        @description "Structured LLM verdict — closed-set category with confidence and reasoning"
+        @tier "primary"
+
+      CLASSIFY_FAILED -> external {
+        error : string!
+      }
+        @description "The classify service call failed; this rung never abstains, only answers or fails"
+        @tier "primary"
+    }
+
+    listens {
+      CLASSIFY {
+        text : string!
+        request : object
+      }
+    }
+  }
+
+  page "/ml-classify" as MlClassifyPage -> ClassifyRun
+}

@@ -6,7 +6,7 @@
  * machines live in behaviors/registry/.
  *
  * Layout: <topic>/<tier>/std-X.ts (topic is any direct subdir of functions/).
- * Topics in this package: agent, infra, ui/core, ui/marketing, ui/game, ui/avl, ui/learning.
+ * Topics in this package: agent, infra, ml, ui/core, ui/marketing, ui/game, ui/avl, ui/learning.
  *
  * @packageDocumentation
  */
@@ -106,6 +106,13 @@ export * from './ui/learning/atoms/std-math-sequence.js';
 export * from './ui/learning/atoms/std-math-sinewave.js';
 export * from './ui/learning/atoms/std-math-unitcircle.js';
 export * from './ui/learning/atoms/std-math-vectors.js';
+export * from './ml/atoms/std-ml-classify.js';
+export * from './ml/atoms/std-ml-exact-check.js';
+export * from './ml/atoms/std-ml-infer.js';
+export * from './ml/atoms/std-ml-label-capture.js';
+export * from './ml/atoms/std-ml-lookup.js';
+export * from './ml/atoms/std-ml-posterior.js';
+export * from './ml/atoms/std-ml-similarity.js';
 export * from './infra/atoms/std-mod-queue.js';
 export * from './ui/core/atoms/std-modal.js';
 export * from './ui/core/atoms/std-multi-party-flow.js';
@@ -239,6 +246,7 @@ export * from './agent/molecules/std-agent-tool-loop.js';
 export * from './ui/game/molecules/std-arcade-board-3d.js';
 export * from './ui/game/molecules/std-crew-board-2d.js';
 export * from './ui/game/molecules/std-dungeon-board-2d.js';
+export * from './ml/molecules/std-knowledge-tracing.js';
 export * from './ui/game/molecules/std-market-board-3d.js';
 export * from './ui/game/molecules/std-objective-board-3d.js';
 export * from './ui/core/molecules/std-stat-rows.js';

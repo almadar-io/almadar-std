@@ -1,0 +1,179 @@
+[
+  {
+    "organism": "std-ml-infer",
+    "orbital": "MlInferOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-ml-infer.ts",
+    "entities": [
+      {
+        "name": "Inference",
+        "fields": [
+          {
+            "name": "input",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "output",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "violations",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "InferenceRun",
+        "emittedEvents": [
+          "INFERRED_RAW",
+          "INFER_CALL_FAILED",
+          "INFERRED",
+          "INFER_ABSTAINED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INFERRED_RAW",
+            "direction": "emit",
+            "description": "Raw ml.infer service result, flattened onto the payload by the call-service effect executor",
+            "tier": "secondary"
+          },
+          {
+            "name": "INFER_CALL_FAILED",
+            "direction": "emit",
+            "description": "call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error",
+            "tier": "secondary"
+          },
+          {
+            "name": "INFERRED",
+            "direction": "emit",
+            "description": "The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped",
+            "tier": "primary"
+          },
+          {
+            "name": "INFER_ABSTAINED",
+            "direction": "emit",
+            "description": "The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "INFER",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "confidenceFloor",
+            "type": "float",
+            "default": 0.7,
+            "label": "Confidence floor",
+            "description": "Minimum service-reported confidence required to answer; below this the atom abstains with reason low confidence",
+            "tier": "policy"
+          },
+          {
+            "key": "model",
+            "type": "string",
+            "default": "",
+            "label": "Model reference",
+            "description": "hf:<id> for off-the-shelf weights, or a masar checkpoint id, forwarded to the ml service infer action",
+            "tier": "infra"
+          },
+          {
+            "key": "outputContract",
+            "type": "OutputContract",
+            "default": {
+              "ranges": {}
+            },
+            "label": "Output contract",
+            "description": "Declared shape and per-dimension ranges the model output must satisfy; a failing check abstains with reason contract violation. Omit shape to assert ranges only — an empty shape [] asserts a SCALAR output, it does not mean unconstrained",
+            "tier": "domain",
+            "properties": {
+              "ranges": {
+                "name": "ranges",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "max": {
+                      "name": "max",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "min": {
+                      "name": "min",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "shape": {
+                "name": "shape",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "INFER",
+          "INFERRED_RAW",
+          "INFER_CALL_FAILED",
+          "INIT",
+          "RESET"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlInferPage",
+        "defaultPath": "/ml-infer",
+        "primaryEntity": "Inference"
+      }
+    ],
+    "emittedEvents": [
+      "INFERRED",
+      "INFERRED_RAW",
+      "INFER_ABSTAINED",
+      "INFER_CALL_FAILED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

@@ -11,10 +11,11 @@ orbital CalendarEventOrbital {
     description : string @description "event details or notes" @synonyms "details, notes, body, summary"
     status : "active" | "inactive" | "pending" @description "event lifecycle status" @synonyms "state, stage, phase" = active
     createdAt : string
-    date : datetime @intrinsic = ""
+    date : datetime @intrinsic
     time : string @description "event start time of day" @synonyms "start, scheduled time, begins, when, start time" = ""
     duration : number @description "event length in minutes" @synonyms "minutes, length, span, duration" = 60
     selectedRange : string @intrinsic = month
+    weekAnchor : date @intrinsic
   }
 
   trait CalendarEventCalendar -> @rebindable CalendarEvent [interaction, collection] {
@@ -22,6 +23,7 @@ orbital CalendarEventOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.weekAnchor (time/now))
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
         })
@@ -87,6 +89,16 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           filter: (time/isAfter (time/parse @entity.date) (if ["=", ?value, week] (time/subtract (time/now) 1 week) (if ["=", ?value, "3months"] (time/subtract (time/now) 3 month) (if ["=", ?value, year] (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month)))))
         })
+      CALENDAR_PREV_WEEK -> loading
+        (set @entity.weekAnchor (time/subtract @entity.weekAnchor 1 week))
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+        })
+      CALENDAR_NEXT_WEEK -> loading
+        (set @entity.weekAnchor (time/add @entity.weekAnchor 1 week))
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+        })
     }
 
     state error {
@@ -106,6 +118,11 @@ orbital CalendarEventOrbital {
         @description "Indicates a failure to load calendar events."
         @synonyms "error, failed, problem, loading issue"
         @tier "internal"
+      @config.onEventClick -> external {
+        event : object
+      }
+        @description "Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row."
+        @tier "presentation"
     }
 
     listens {
@@ -128,6 +145,14 @@ orbital CalendarEventOrbital {
         @description "Indicates a failure to load calendar events."
         @synonyms "error, failure, problem, failed"
         @tier "internal"
+      CALENDAR_PREV_WEEK
+        @description "Move the week timeline one week earlier."
+        @synonyms "previous week, back a week, earlier week, last week"
+        @tier "domain"
+      CALENDAR_NEXT_WEEK
+        @description "Move the week timeline one week later."
+        @synonyms "next week, forward a week, later week, following week"
+        @tier "domain"
     }
 
     config {
@@ -150,6 +175,16 @@ orbital CalendarEventOrbital {
       descriptionBinding : string = @item.description
         @label "Description binding"
         @description "Per-row binding for the event description slot."
+        @tier "presentation"
+      startField : string = "date"
+        @label "Start field"
+        @description "Row column holding the timestamp the calendar grid places each chip by. Rebound hosts point this at their own column (e.g. startTime, startsAt, dueAt); the chip's LABEL comes from titleBinding, not from here."
+        @synonyms "start column, date column, when field, timestamp field"
+        @tier "presentation"
+      onEventClick : string = ""
+        @label "On Event Click"
+        @description "Event emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row. Empty means chips are not clickable."
+        @synonyms "open event, event click, select event, chip click"
         @tier "presentation"
       calendarLook : "month" | "agenda-list" | "week-timeline" = month
         @label "Calendar look"
@@ -181,7 +216,17 @@ orbital CalendarEventOrbital {
           gap: md
           justify: between
           type: stack
-        }, { type: divider }, { events: ?data, type: calendar-grid }, { type: divider }, {
+        }, { type: divider }, {
+          events: ?data
+          onEventClick: @config.onEventClick
+          renderItem: (fn item {
+            content: @config.titleBinding
+            type: typography
+            variant: small
+          })
+          startField: @config.startField
+          type: calendar-grid
+        }, { type: divider }, {
           content: "Upcoming Events"
           type: typography
           variant: h4
@@ -332,6 +377,29 @@ orbital CalendarEventOrbital {
             gap: sm
             type: stack
           }, {
+            align: center
+            children: [{
+              action: CALENDAR_PREV_WEEK
+              icon: chevron-left
+              label: "Previous week"
+              type: button
+              variant: ghost
+            }, {
+              color: muted
+              content: (time/format @entity.weekAnchor "MMM D, YYYY")
+              type: typography
+              variant: caption
+            }, {
+              action: CALENDAR_NEXT_WEEK
+              icon: chevron-right
+              label: "Next week"
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: xs
+            type: stack
+          }, {
             onSelect: SELECT_DAY
             selected: @entity.selectedRange
             type: date-range-selector
@@ -344,7 +412,17 @@ orbital CalendarEventOrbital {
           className: w-full
           dayWindow: 7
           events: ?data
+          onEventClick: @config.onEventClick
+          renderItem: (fn item {
+            content: @config.titleBinding
+            type: typography
+            variant: small
+          })
+          startField: @config.startField
+          swipeLeftEvent: CALENDAR_NEXT_WEEK
+          swipeRightEvent: CALENDAR_PREV_WEEK
           type: calendar-grid
+          weekStart: @entity.weekAnchor
         }]
         direction: vertical
         gap: md

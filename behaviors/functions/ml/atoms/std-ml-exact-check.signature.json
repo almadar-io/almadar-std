@@ -1,0 +1,104 @@
+[
+  {
+    "organism": "std-ml-exact-check",
+    "orbital": "MlExactCheckOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-ml-exact-check.ts",
+    "entities": [
+      {
+        "name": "ExactCheck",
+        "fields": [
+          {
+            "name": "matched",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ExactCheckRun",
+        "emittedEvents": [
+          "EXACT_MATCHED",
+          "EXACT_UNMATCHED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "EXACT_MATCHED",
+            "direction": "emit",
+            "description": "Fired when the candidate exactly equals the key under the configured normalization",
+            "tier": "primary"
+          },
+          {
+            "name": "EXACT_UNMATCHED",
+            "direction": "emit",
+            "description": "Abstain — candidate does not equal the key; the next rung should take over",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "CHECK",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "caseSensitive",
+            "type": "boolean",
+            "default": false,
+            "label": "Case sensitive",
+            "description": "Compare candidate and key with case sensitivity; off lowercases both sides before comparing",
+            "tier": "policy"
+          },
+          {
+            "key": "numericTolerance",
+            "type": "float",
+            "default": 0,
+            "label": "Numeric tolerance",
+            "description": "Absolute tolerance applied when both candidate and key are numbers; 0 requires an exact numeric match",
+            "tier": "policy"
+          },
+          {
+            "key": "trimWhitespace",
+            "type": "boolean",
+            "default": true,
+            "label": "Trim whitespace",
+            "description": "Strip leading and trailing whitespace from both sides before comparing",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "CHECK",
+          "INIT"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlExactCheckPage",
+        "defaultPath": "/ml-exact-check",
+        "primaryEntity": "ExactCheck"
+      }
+    ],
+    "emittedEvents": [
+      "EXACT_MATCHED",
+      "EXACT_UNMATCHED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

@@ -1,0 +1,75 @@
+app std-ml-label-capture "1.0.0"
+"std-ml-label-capture — records a labeled example (input, verdict, source rung, observed outcome) so that expensive top-rung answers become training data for a cheaper rung later. Generic: it knows nothing about grading or students. sampleRate gates what fraction of examples are kept (1 = capture all); sink tags which named destination the example is attributed to."
+orbital MlLabelCaptureOrbital {
+
+  entity LabeledExample [persistent: ml_labels] {
+    id : string! @key
+    input : json @description "The input that was judged." = null
+    verdict : json @description "The verdict/output produced by the rung." = null
+    source : string @description "Which rung produced the verdict." = ""
+    outcome : json @description "The observed ground-truth outcome, once known." = null
+    sink : string @description "Named destination this example is attributed to." = ""
+    recordedAt : number = 0
+  }
+
+  trait LabelCaptureListener -> @rebindable LabeledExample [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.input null)
+        (set @entity.verdict null)
+        (set @entity.source "")
+        (set @entity.outcome null)
+        (set @entity.sink "")
+        (set @entity.recordedAt 0)
+      CAPTURE -> idle
+        (set @entity.input ?input)
+        (set @entity.verdict ?verdict)
+        (set @entity.source ?source)
+        (set @entity.outcome ?outcome)
+        (set @entity.sink @config.sink)
+        (set @entity.recordedAt @now)
+        (if (prob/flip @config.sampleRate)
+            (do
+              (persist create LabeledExample {
+                input: @entity.input
+                verdict: @entity.verdict
+                source: @entity.source
+                outcome: @entity.outcome
+                sink: @entity.sink
+                recordedAt: @entity.recordedAt
+              })
+              (emit LABEL_CAPTURED { source: @entity.source, sink: @entity.sink }))
+            null)
+    }
+
+    emits {
+      LABEL_CAPTURED -> external { source : string!, sink : string! }
+        @description "Fired after a labeled example is persisted."
+        @tier "primary"
+    }
+
+    listens {
+      CAPTURE {
+        input : json!
+        verdict : json!
+        source : string!
+        outcome : json
+      }
+    }
+
+    config {
+      sink : string = ""
+        @label "Label sink"
+        @description "Named destination this batch of examples is attributed to; interpreted downstream (the physical label store is not yet decided)."
+        @tier "infra"
+      sampleRate : float = 1
+        @label "Sample rate"
+        @description "Fraction of examples to keep (1 = capture all). A prob/flip trial per observation."
+        @tier "policy"
+    }
+  }
+
+  page "/ml-label-capture" as MlLabelCapturePage -> LabelCaptureListener
+}

@@ -1,0 +1,90 @@
+app std-ml-exact-check "1.0.0"
+"Rung R0 of the intelligence ladder — normalizes and compares a candidate value against a key value; abstains on no match."
+
+orbital MlExactCheckOrbital {
+
+  entity ExactCheck [runtime] {
+    matched : boolean = false
+    status  : "idle" | "checked" = idle
+  }
+
+  trait ExactCheckRun -> ExactCheck [lifecycle, instance] {
+    initial: idle
+
+    config {
+      caseSensitive : boolean = false
+        @label "Case sensitive"
+        @description "Compare candidate and key with case sensitivity; off lowercases both sides before comparing"
+        @tier "policy"
+      trimWhitespace : boolean = true
+        @label "Trim whitespace"
+        @description "Strip leading and trailing whitespace from both sides before comparing"
+        @tier "policy"
+      numericTolerance : float = 0
+        @label "Numeric tolerance"
+        @description "Absolute tolerance applied when both candidate and key are numbers; 0 requires an exact numeric match"
+        @tier "policy"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.matched false)
+        (set @entity.status idle)
+      CHECK -> checked
+        (let ((bothNumeric (and (validate/number ?candidate) (validate/number ?key)))
+              (candStr (str/concat ?candidate))
+              (keyStr (str/concat ?key))
+              (candTrim (if @config.trimWhitespace (str/trim @candStr) @candStr))
+              (keyTrim (if @config.trimWhitespace (str/trim @keyStr) @keyStr))
+              (candNorm (if @config.caseSensitive @candTrim (str/lower @candTrim)))
+              (keyNorm (if @config.caseSensitive @keyTrim (str/lower @keyTrim)))
+              (isMatch (if @bothNumeric
+                         (<= (math/abs (- ?candidate ?key)) @config.numericTolerance)
+                         (== @candNorm @keyNorm))))
+          (if @isMatch
+            (do
+              (set @entity.matched true)
+              (set @entity.status checked)
+              (emit EXACT_MATCHED { candidate: ?candidate, key: ?key }))
+            (do
+              (set @entity.matched false)
+              (set @entity.status checked)
+              (emit EXACT_UNMATCHED { candidate: ?candidate, key: ?key, request: ?request }))))
+    }
+
+    state checked {
+      INIT -> checked
+        (set @entity.status checked)
+      RESET -> idle
+        (set @entity.matched false)
+        (set @entity.status idle)
+    }
+
+    emits {
+      EXACT_MATCHED -> external {
+        candidate : any!
+        key : any!
+      }
+        @description "Fired when the candidate exactly equals the key under the configured normalization"
+        @tier "primary"
+
+      EXACT_UNMATCHED -> external {
+        candidate : any!
+        key : any!
+        request : object
+      }
+        @description "Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it"
+        @tier "primary"
+    }
+
+    listens {
+      CHECK {
+        candidate : any!
+        key : any!
+        request : object
+      }
+    }
+  }
+
+  page "/ml-exact-check" as MlExactCheckPage -> ExactCheckRun
+}

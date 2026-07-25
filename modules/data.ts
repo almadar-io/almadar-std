@@ -51,14 +51,14 @@ export const DATA_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'ml-data',
     minArity: 2,
     maxArity: 2,
-    description: 'Train/val/test split',
+    description: 'Train/validation split. Config carries `trainRatio` (default 0.8); the remainder is the validation split.',
     hasSideEffects: false,
     returnType: 'array',
     params: [
       { name: 'dataset', type: 'object', description: 'Dataset' },
-      { name: 'ratios', type: 'array', description: 'Split ratios e.g. [0.8, 0.1, 0.1]' },
+      { name: 'config', type: 'object', description: 'Split config, e.g. { trainRatio: 0.8 }' },
     ],
-    example: '["data/split", "@entity.dataset", [0.8, 0.1, 0.1]]',
+    example: '["data/split", "@entity.dataset", { "trainRatio": 0.8 }]',
   },
 
   // ============================================================================

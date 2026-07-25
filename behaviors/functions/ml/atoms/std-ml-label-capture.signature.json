@@ -1,0 +1,125 @@
+[
+  {
+    "organism": "std-ml-label-capture",
+    "orbital": "MlLabelCaptureOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-ml-label-capture.ts",
+    "entities": [
+      {
+        "name": "LabeledExample",
+        "fields": [
+          {
+            "name": "input",
+            "type": "string",
+            "required": false,
+            "description": "The input that was judged."
+          },
+          {
+            "name": "verdict",
+            "type": "string",
+            "required": false,
+            "description": "The verdict/output produced by the rung."
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "required": false,
+            "description": "Which rung produced the verdict."
+          },
+          {
+            "name": "outcome",
+            "type": "string",
+            "required": false,
+            "description": "The observed ground-truth outcome, once known."
+          },
+          {
+            "name": "sink",
+            "type": "string",
+            "required": false,
+            "description": "Named destination this example is attributed to."
+          },
+          {
+            "name": "recordedAt",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LabelCaptureListener",
+        "emittedEvents": [
+          "LABEL_CAPTURED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "LABEL_CAPTURED",
+            "direction": "emit",
+            "description": "Fired after a labeled example is persisted.",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "CAPTURE",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "sampleRate",
+            "type": "float",
+            "default": 1,
+            "label": "Sample rate",
+            "description": "Fraction of examples to keep (1 = capture all). A prob/flip trial per observation.",
+            "tier": "policy"
+          },
+          {
+            "key": "sink",
+            "type": "string",
+            "default": "",
+            "label": "Label sink",
+            "description": "Named destination this batch of examples is attributed to; interpreted downstream (the physical label store is not yet decided).",
+            "tier": "infra"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "CAPTURE",
+          "INIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "input",
+            "outcome",
+            "recordedAt",
+            "sink",
+            "source",
+            "verdict"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlLabelCapturePage",
+        "defaultPath": "/ml-label-capture",
+        "primaryEntity": "LabeledExample"
+      }
+    ],
+    "emittedEvents": [
+      "LABEL_CAPTURED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

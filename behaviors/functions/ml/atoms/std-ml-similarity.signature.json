@@ -1,0 +1,163 @@
+[
+  {
+    "organism": "std-ml-similarity",
+    "orbital": "MlSimilarityOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-ml-similarity.ts",
+    "entities": [
+      {
+        "name": "SimilarityComparison",
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "candidates",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "embeddings",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "queryVector",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "candidateVectors",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "matchIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "matchScore",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "matchMargin",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SimilarityRun",
+        "emittedEvents": [
+          "EMBEDDED",
+          "SIMILARITY_MATCHED",
+          "SIMILARITY_ABSTAINED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "EMBEDDED",
+            "direction": "emit",
+            "description": "Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order",
+            "tier": "secondary"
+          },
+          {
+            "name": "SIMILARITY_MATCHED",
+            "direction": "emit",
+            "description": "Candidate matched with high confidence — score at or above floor, with a clear margin over the runner-up",
+            "tier": "primary"
+          },
+          {
+            "name": "SIMILARITY_ABSTAINED",
+            "direction": "emit",
+            "description": "No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "COMPARE",
+            "direction": "listen"
+          },
+          {
+            "name": "EMBED_FAILED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "embedModel",
+            "type": "string",
+            "default": "",
+            "label": "Embedding model",
+            "description": "Reserved for embedding-model selection; llm/embed takes only a texts array today, so this knob is not yet wired into the call",
+            "tier": "infra"
+          },
+          {
+            "key": "floor",
+            "type": "float",
+            "default": 0.82,
+            "label": "Match floor",
+            "description": "Minimum cosine score for a confident match",
+            "tier": "policy"
+          },
+          {
+            "key": "margin",
+            "type": "float",
+            "default": 0.05,
+            "label": "Match margin",
+            "description": "Minimum gap between the best and second-best score required to trust the match",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "COMPARE",
+          "EMBEDDED",
+          "EMBED_FAILED",
+          "INIT",
+          "RESET"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlSimilarityPage",
+        "defaultPath": "/ml-similarity",
+        "primaryEntity": "SimilarityComparison"
+      }
+    ],
+    "emittedEvents": [
+      "EMBEDDED",
+      "SIMILARITY_ABSTAINED",
+      "SIMILARITY_MATCHED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

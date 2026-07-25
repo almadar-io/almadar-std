@@ -1,0 +1,141 @@
+app std-ml-infer "1.0.0"
+"std-ml-infer — the learned rung (R4) of the intelligence ladder, and the seam between a .lolo circuit and a trained model deployed on masar (or off-the-shelf HuggingFace weights) reached through the ml service. Sends the caller-supplied input straight to call-service ml infer, then guards the raw output before it ever becomes an effect: validates it against the declared outputContract, clamps it into range, and only then decides. Emits INFERRED when the output satisfies the contract and confidence clears confidenceFloor — carrying the clamped output, confidence, and an empty violations list. Otherwise abstains with INFER_ABSTAINED, whose reason is one of: low confidence (contract satisfied but below floor, violations empty), contract violation (violations populated via contract/violations for diagnosis), or unavailable (the service call itself failed — a masar cold start or a down endpoint, never surfaced as a user-visible error). Use when a numeric or tensor-shaped model answer needs a licensed guard before becoming a decision — classification scores, regressions, embedding-derived predictions — and the next rung (R5 generative) should take over on any abstain."
+
+type Range = { min: float!, max: float! }
+type OutputContract = { shape: [int], ranges: Map string Range }
+
+orbital MlInferOrbital {
+
+  entity Inference [runtime] {
+    input      : object   = {}
+    output     : [float]  = []
+    confidence : float    = 0
+    violations : [object] = []
+    reason     : string   = ""
+    request    : object   = {}
+    status     : "idle" | "inferring" | "resolved" = idle
+  }
+
+  trait InferenceRun -> Inference [lifecycle, instance] {
+    initial: idle
+
+    config {
+      model : string = ""
+        @label "Model reference"
+        @description "hf:<id> for off-the-shelf weights, or a masar checkpoint id, forwarded to the ml service infer action"
+        @tier "infra"
+      confidenceFloor : float = 0.7
+        @label "Confidence floor"
+        @description "Minimum service-reported confidence required to answer; below this the atom abstains with reason low confidence"
+        @tier "policy"
+      outputContract : OutputContract = { ranges: {} }
+        @label "Output contract"
+        @description "Declared shape and per-dimension ranges the model output must satisfy; a failing check abstains with reason contract violation. Omit shape to assert ranges only — an empty shape [] asserts a SCALAR output, it does not mean unconstrained"
+        @tier "domain"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.input {})
+        (set @entity.output [])
+        (set @entity.confidence 0)
+        (set @entity.violations [])
+        (set @entity.reason "")
+        (set @entity.request {})
+        (set @entity.status idle)
+
+      INFER -> inferring
+        (set @entity.input ?input)
+        (set @entity.request ?request)
+        (set @entity.status inferring)
+        (call-service "ml" "infer" { model: @config.model, input: @entity.input }
+          { emit: { success: INFERRED_RAW, failure: INFER_CALL_FAILED } })
+    }
+
+    state inferring {
+      INFERRED_RAW -> resolved
+        (set @entity.output ?output)
+        (set @entity.confidence ?confidence)
+        (let ((validation (contract/validate-output @entity.output @config.outputContract)))
+          (if (object/get @validation "valid")
+            (if (>= @entity.confidence @config.confidenceFloor)
+              (do
+                (set @entity.output (contract/clamp-output @entity.output @config.outputContract))
+                (set @entity.violations [])
+                (set @entity.reason "")
+                (set @entity.status resolved)
+                (emit INFERRED { output: @entity.output, confidence: @entity.confidence, violations: @entity.violations }))
+              (do
+                (set @entity.violations [])
+                (set @entity.reason "low confidence")
+                (set @entity.status resolved)
+                (emit INFER_ABSTAINED { reason: "low confidence", violations: @entity.violations, request: @entity.request })))
+            (do
+              (set @entity.violations (contract/violations @entity.output @config.outputContract))
+              (set @entity.reason "contract violation")
+              (set @entity.status resolved)
+              (emit INFER_ABSTAINED { reason: "contract violation", violations: @entity.violations, request: @entity.request }))))
+
+      INFER_CALL_FAILED -> resolved
+        (set @entity.output [])
+        (set @entity.confidence 0)
+        (set @entity.violations [])
+        (set @entity.reason "unavailable")
+        (set @entity.status resolved)
+        (emit INFER_ABSTAINED { reason: "unavailable", violations: @entity.violations, request: @entity.request })
+    }
+
+    state resolved {
+      INIT -> resolved
+        (set @entity.status resolved)
+      RESET -> idle
+        (set @entity.input {})
+        (set @entity.output [])
+        (set @entity.confidence 0)
+        (set @entity.violations [])
+        (set @entity.reason "")
+        (set @entity.request {})
+        (set @entity.status idle)
+    }
+
+    emits {
+      INFERRED_RAW {
+        output     : [float]!
+        confidence : number!
+      }
+        @description "Raw ml.infer service result, flattened onto the payload by the call-service effect executor"
+        @tier "secondary"
+
+      INFER_CALL_FAILED {
+        error : string!
+      }
+        @description "call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error"
+        @tier "secondary"
+
+      INFERRED -> external {
+        output     : [float]!
+        confidence : float!
+        violations : [object]!
+      }
+        @description "The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped"
+        @tier "primary"
+
+      INFER_ABSTAINED -> external {
+        reason     : string!
+        violations : [object]!
+        request    : object
+      }
+        @description "The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it"
+        @tier "primary"
+    }
+
+    listens {
+      INFER {
+        input : object!
+        request : object
+      }
+    }
+  }
+
+  page "/ml-infer" as MlInferPage -> InferenceRun
+}

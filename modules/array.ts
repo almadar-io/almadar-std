@@ -582,6 +582,34 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["array/dropLast", "@items", 2]',
   },
+  'array/cosine': {
+    module: 'array',
+    category: 'std-array',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Cosine similarity between two numeric vectors, in [-1, 1] (1 = identical direction). The building block for "is this answer semantically the reference answer" checks over embeddings. Pure math — usable in guards and value position, unlike the async llm/* substrate operators.',
+    hasSideEffects: false,
+    returnType: 'number',
+    params: [
+      { name: 'a', type: { kind: 'array', of: 'number' }, description: 'First vector' },
+      { name: 'b', type: { kind: 'array', of: 'number' }, description: 'Second vector' },
+    ],
+    example: '["array/cosine", "@entity.answerEmbedding", "@entity.referenceEmbedding"]',
+  },
+  'array/nearest': {
+    module: 'array',
+    category: 'std-array',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Find the candidate vector nearest a query vector by cosine similarity. Returns { index, score, margin } — index/score of the best match, and margin (best score minus second-best), which is what makes an abstaining gate possible: a small margin means the top match is not confidently distinguished from the runner-up.',
+    hasSideEffects: false,
+    returnType: 'object',
+    params: [
+      { name: 'query', type: { kind: 'array', of: 'number' }, description: 'Query vector' },
+      { name: 'candidates', type: { kind: 'array', of: { kind: 'array', of: 'number' } }, description: 'Candidate vectors to search' },
+    ],
+    example: '["array/nearest", "@entity.queryEmbedding", "@entity.candidateEmbeddings"]',
+  },
 };
 
 /**

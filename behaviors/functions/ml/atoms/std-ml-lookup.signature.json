@@ -1,0 +1,96 @@
+[
+  {
+    "organism": "std-ml-lookup",
+    "orbital": "MlLookupOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-ml-lookup.ts",
+    "entities": [
+      {
+        "name": "KeyLookup",
+        "fields": [
+          {
+            "name": "matched",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LookupRun",
+        "emittedEvents": [
+          "KEY_HIT",
+          "KEY_MISS"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "KEY_HIT",
+            "direction": "emit",
+            "description": "Fired when the candidate matches an entry in the accepted list",
+            "tier": "primary"
+          },
+          {
+            "name": "KEY_MISS",
+            "direction": "emit",
+            "description": "Abstain — candidate matches nothing in the accepted list; the next rung should take over",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "LOOKUP",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "matchField",
+            "type": "string",
+            "default": "",
+            "label": "Match field",
+            "description": "When the accepted list holds objects rather than scalars, the field to compare against the candidate; empty compares each element itself",
+            "tier": "domain"
+          },
+          {
+            "key": "normalize",
+            "type": "boolean",
+            "default": true,
+            "label": "Normalize",
+            "description": "Trim and lowercase both sides before comparing",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "INIT",
+          "LOOKUP"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlLookupPage",
+        "defaultPath": "/ml-lookup",
+        "primaryEntity": "KeyLookup"
+      }
+    ],
+    "emittedEvents": [
+      "KEY_HIT",
+      "KEY_MISS"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

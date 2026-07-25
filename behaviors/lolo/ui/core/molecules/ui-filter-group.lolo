@@ -30,6 +30,8 @@ orbital FilterGroupOrbital {
           query: @config.query
           isLoading: @config.isLoading
           look: @config.look
+          event: @config.event
+          clearEvent: @config.clearEvent
           type: filter-group
         })
     }
@@ -45,6 +47,16 @@ orbital FilterGroupOrbital {
         id : string
       }
         @description "Callback to clear all filters"
+        @tier "essential"
+      @config.event -> external {
+        id : string
+      }
+        @description "Declarative filter event — emits UI:{event} via eventBus on filter change (alongside canonical UI:FILTER)"
+        @tier "essential"
+      @config.clearEvent -> external {
+        id : string
+      }
+        @description "Declarative clear event — emits UI:{clearEvent} via eventBus on clear-all (alongside canonical UI:CLEAR_FILTERS)"
         @tier "essential"
     }
 
@@ -84,6 +96,14 @@ orbital FilterGroupOrbital {
       look : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
         @label "Look"
         @description "Layer 2 visual treatment — orthogonal to the semantic variant."
+        @tier "presentation"
+      event : string = "EVENT"
+        @label "Event"
+        @description "Declarative filter event — emits UI:{event} via eventBus on filter change (alongside canonical UI:FILTER)"
+        @tier "presentation"
+      clearEvent : string = "CLEAR"
+        @label "Clear Event"
+        @description "Declarative clear event — emits UI:{clearEvent} via eventBus on clear-all (alongside canonical UI:CLEAR_FILTERS)"
         @tier "presentation"
     }
   }

@@ -1,0 +1,180 @@
+[
+  {
+    "organism": "std-ml-posterior",
+    "orbital": "MlPosteriorOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-ml-posterior.ts",
+    "entities": [
+      {
+        "name": "Posterior",
+        "fields": [
+          {
+            "name": "alpha",
+            "type": "number",
+            "required": false,
+            "description": "Beta distribution success count (prior + observed successes)."
+          },
+          {
+            "name": "beta",
+            "type": "number",
+            "required": false,
+            "description": "Beta distribution failure count (prior + observed failures)."
+          },
+          {
+            "name": "mean",
+            "type": "number",
+            "required": false,
+            "description": "Posterior mean: alpha / (alpha + beta)."
+          },
+          {
+            "name": "intervalLow",
+            "type": "number",
+            "required": false,
+            "description": "Lower bound of the last computed credible interval."
+          },
+          {
+            "name": "intervalHigh",
+            "type": "number",
+            "required": false,
+            "description": "Upper bound of the last computed credible interval."
+          },
+          {
+            "name": "observations",
+            "type": "number",
+            "required": false,
+            "description": "Number of observations folded into the posterior so far."
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PosteriorBelief",
+        "emittedEvents": [
+          "MASTERY_REACHED",
+          "REMEDIATION_NEEDED",
+          "EVIDENCE_INSUFFICIENT"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MASTERY_REACHED",
+            "direction": "emit",
+            "description": "The posterior mean clears masteryFloor with a credible interval narrow enough to trust.",
+            "tier": "primary"
+          },
+          {
+            "name": "REMEDIATION_NEEDED",
+            "direction": "emit",
+            "description": "The posterior mean is at or below remediationCeiling with a credible interval narrow enough to trust.",
+            "tier": "primary"
+          },
+          {
+            "name": "EVIDENCE_INSUFFICIENT",
+            "direction": "emit",
+            "description": "The abstain — the credible interval is still wider than intervalWidthMax, so no verdict is licensed yet.",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "OBSERVE",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "intervalWidthMax",
+            "type": "float",
+            "default": 0.3,
+            "label": "Max credible-interval width",
+            "description": "Above this width the posterior is too uncertain to decide — abstain with EVIDENCE_INSUFFICIENT.",
+            "tier": "policy"
+          },
+          {
+            "key": "masteryFloor",
+            "type": "float",
+            "default": 0.8,
+            "label": "Mastery floor",
+            "description": "Posterior mean at or above this, with a tight interval, licenses MASTERY_REACHED.",
+            "tier": "policy"
+          },
+          {
+            "key": "priorAlpha",
+            "type": "float",
+            "default": 1,
+            "label": "Prior alpha",
+            "description": "Beta prior success pseudo-count before any observation.",
+            "tier": "domain"
+          },
+          {
+            "key": "priorBeta",
+            "type": "float",
+            "default": 1,
+            "label": "Prior beta",
+            "description": "Beta prior failure pseudo-count before any observation.",
+            "tier": "domain"
+          },
+          {
+            "key": "remediationCeiling",
+            "type": "float",
+            "default": 0.4,
+            "label": "Remediation ceiling",
+            "description": "Posterior mean at or below this, with a tight interval, licenses REMEDIATION_NEEDED.",
+            "tier": "policy"
+          },
+          {
+            "key": "sampleCount",
+            "type": "int",
+            "default": 200,
+            "label": "Posterior sample count",
+            "description": "Number of Monte Carlo draws from the Beta posterior used to estimate the credible interval.",
+            "tier": "infra"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "INIT",
+          "OBSERVE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "alpha",
+            "beta",
+            "intervalHigh",
+            "intervalLow",
+            "mean",
+            "observations",
+            "status"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlPosteriorPage",
+        "defaultPath": "/ml-posterior",
+        "primaryEntity": "Posterior"
+      }
+    ],
+    "emittedEvents": [
+      "EVIDENCE_INSUFFICIENT",
+      "MASTERY_REACHED",
+      "REMEDIATION_NEEDED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

@@ -1,0 +1,154 @@
+app std-ml-similarity "1.0.0"
+"Retrieval rung (R3) — embed a candidate against references and gate on cosine floor + margin; abstains when not confident."
+
+orbital MlSimilarityOrbital {
+
+  entity SimilarityComparison [runtime] {
+    query            : string    = ""
+    candidates       : [string]  = []
+    embeddings       : [[float]] = []
+    queryVector      : [float]   = []
+    candidateVectors : [[float]] = []
+    matchIndex       : int       = 0
+    matchScore       : float     = 0
+    matchMargin      : float     = 0
+    reason           : string    = ""
+    request          : object    = {}
+    status           : "idle" | "embedding" | "resolved" = idle
+  }
+
+  trait SimilarityRun -> SimilarityComparison [lifecycle, instance] {
+    initial: idle
+
+    config {
+      floor : float = 0.82
+        @label "Match floor"
+        @description "Minimum cosine score for a confident match"
+        @tier "policy"
+      margin : float = 0.05
+        @label "Match margin"
+        @description "Minimum gap between the best and second-best score required to trust the match"
+        @tier "policy"
+      embedModel : string = ""
+        @label "Embedding model"
+        @description "Reserved for embedding-model selection; llm/embed takes only a texts array today, so this knob is not yet wired into the call"
+        @tier "infra"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.query "")
+        (set @entity.candidates [])
+        (set @entity.embeddings [])
+        (set @entity.queryVector [])
+        (set @entity.candidateVectors [])
+        (set @entity.matchIndex 0)
+        (set @entity.matchScore 0)
+        (set @entity.matchMargin 0)
+        (set @entity.reason "")
+        (set @entity.request {})
+        (set @entity.status idle)
+
+      COMPARE -> embedding when (> (array/len ?candidates) 0)
+        (set @entity.query ?query)
+        (set @entity.candidates ?candidates)
+        (set @entity.request ?request)
+        (set @entity.status embedding)
+        (llm/embed (array/prepend ?candidates ?query) { emit: { success: EMBEDDED, failure: EMBED_FAILED } })
+
+      COMPARE -> resolved when (== (array/len ?candidates) 0)
+        (set @entity.query ?query)
+        (set @entity.candidates [])
+        (set @entity.embeddings [])
+        (set @entity.queryVector [])
+        (set @entity.candidateVectors [])
+        (set @entity.matchIndex 0)
+        (set @entity.matchScore 0)
+        (set @entity.matchMargin 0)
+        (set @entity.reason "empty candidate list")
+        (set @entity.request ?request)
+        (set @entity.status resolved)
+        (emit SIMILARITY_ABSTAINED { reason: "empty candidate list", request: @entity.request })
+    }
+
+    state embedding {
+      EMBEDDED -> resolved
+        (set @entity.embeddings ?result)
+        (set @entity.queryVector (array/first @entity.embeddings))
+        (set @entity.candidateVectors (array/drop @entity.embeddings 1))
+        (set @entity.status resolved)
+        (let ((nearest (array/nearest @entity.queryVector @entity.candidateVectors)))
+          (do
+            (set @entity.matchIndex (object/get @nearest "index"))
+            (set @entity.matchScore (object/get @nearest "score"))
+            (set @entity.matchMargin (object/get @nearest "margin"))
+            (if (and (>= @entity.matchScore @config.floor) (>= @entity.matchMargin @config.margin))
+                (do
+                  (set @entity.reason "")
+                  (emit SIMILARITY_MATCHED { index: @entity.matchIndex, score: @entity.matchScore }))
+                (do
+                  (set @entity.reason (if (< @entity.matchScore @config.floor) "below floor" "thin margin"))
+                  (emit SIMILARITY_ABSTAINED { reason: @entity.reason, request: @entity.request })))))
+
+      EMBED_FAILED -> resolved
+        (set @entity.embeddings [])
+        (set @entity.queryVector [])
+        (set @entity.candidateVectors [])
+        (set @entity.matchIndex 0)
+        (set @entity.matchScore 0)
+        (set @entity.matchMargin 0)
+        (set @entity.reason "embedding unavailable")
+        (set @entity.status resolved)
+        (emit SIMILARITY_ABSTAINED { reason: "embedding unavailable", request: @entity.request })
+    }
+
+    state resolved {
+      INIT -> resolved
+        (set @entity.status resolved)
+      RESET -> idle
+        (set @entity.query "")
+        (set @entity.candidates [])
+        (set @entity.embeddings [])
+        (set @entity.queryVector [])
+        (set @entity.candidateVectors [])
+        (set @entity.matchIndex 0)
+        (set @entity.matchScore 0)
+        (set @entity.matchMargin 0)
+        (set @entity.reason "")
+        (set @entity.request {})
+        (set @entity.status idle)
+    }
+
+    emits {
+      EMBEDDED {
+        result : [[float]]!
+      }
+        @description "Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order"
+        @tier "secondary"
+
+      SIMILARITY_MATCHED -> external {
+        index : int!
+        score : float!
+      }
+        @description "Candidate matched with high confidence — score at or above floor, with a clear margin over the runner-up"
+        @tier "primary"
+
+      SIMILARITY_ABSTAINED -> external {
+        reason : string!
+        request : object
+      }
+        @description "No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable. request echoes the originating request untouched so the next rung can project its own inputs out of it"
+        @tier "primary"
+    }
+
+    listens {
+      COMPARE {
+        query : string!
+        candidates : [string]!
+        request : object
+      }
+    }
+  }
+
+  page "/ml-similarity" as MlSimilarityPage -> SimilarityRun
+}

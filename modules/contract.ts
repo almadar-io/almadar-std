@@ -23,9 +23,9 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'ml-contract',
     minArity: 2,
     maxArity: 2,
-    description: 'Validate tensor against input contract',
+    description: 'Validate tensor against input contract. Returns { valid, violations } — guard on `valid`, or read `violations` for the detail.',
     hasSideEffects: false,
-    returnType: 'boolean',
+    returnType: 'object',
     params: [
       { name: 'tensor', type: 'tensor', description: 'Input tensor' },
       { name: 'contract', type: 'object', description: 'Input contract spec' },
@@ -37,9 +37,9 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'ml-contract',
     minArity: 2,
     maxArity: 2,
-    description: 'Validate tensor against output contract',
+    description: 'Validate tensor against output contract. Returns { valid, violations } — guard on `valid`, or read `violations` for the detail.',
     hasSideEffects: false,
-    returnType: 'boolean',
+    returnType: 'object',
     params: [
       { name: 'tensor', type: 'tensor', description: 'Output tensor' },
       { name: 'contract', type: 'object', description: 'Output contract spec' },
