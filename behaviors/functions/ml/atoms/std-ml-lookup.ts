@@ -30,7 +30,7 @@ const ALIAS = 'MlLookup';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdMlLookupEventKey = 'INIT' | 'KEY_HIT' | 'KEY_MISS' | 'LOOKUP';
+export type StdMlLookupEventKey = 'INIT' | 'KEY_HIT' | 'KEY_MISS' | 'LOOKUP' | 'RESET';
 
 /**
  * Payload shape for the `KEY_HIT` event.
@@ -45,6 +45,7 @@ export interface StdMlLookupKeyHitPayload {
  */
 export interface StdMlLookupKeyMissPayload {
   candidate: unknown;
+  request?: EntityRow;
 }
 
 /**

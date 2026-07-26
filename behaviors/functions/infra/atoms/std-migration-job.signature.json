@@ -1,0 +1,273 @@
+[
+  {
+    "organism": "std-migration-job",
+    "orbital": "MigrationJobOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-migration-job.ts",
+    "entities": [
+      {
+        "name": "MigrationJob",
+        "fields": [
+          {
+            "name": "source",
+            "type": "object",
+            "required": false,
+            "description": "ImportSource descriptor of the run (kind + options), supplied by the host."
+          },
+          {
+            "name": "files",
+            "type": "array",
+            "required": false,
+            "description": "Client-side file metadata for upload sources (name/size/type/lastModified)."
+          },
+          {
+            "name": "target",
+            "type": "string",
+            "required": false,
+            "description": "Name of the host entity this import writes into."
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Lifecycle position of the run."
+          },
+          {
+            "name": "documents",
+            "type": "array",
+            "required": false,
+            "description": "Document metadata listed from the source."
+          },
+          {
+            "name": "document",
+            "type": "object",
+            "required": false,
+            "description": "Most recently fetched document content."
+          },
+          {
+            "name": "stats",
+            "type": "object",
+            "required": false,
+            "description": "Staged/committed/failed/skipped counts."
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "required": false,
+            "description": "Failure detail when status is failed."
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MigrationJobLifecycle",
+        "emittedEvents": [
+          "DOCUMENTS_LISTED",
+          "DOCUMENT_FETCHED",
+          "COMMITTED",
+          "MIGRATION_CALL_FAILED",
+          "MIGRATION_FETCHED",
+          "MIGRATION_DOCUMENT",
+          "MIGRATION_REVIEW_READY",
+          "MIGRATION_COMPLETED",
+          "MIGRATION_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DOCUMENTS_LISTED",
+            "direction": "emit",
+            "description": "migration.listDocuments service result, flattened onto the payload by the call-service effect executor",
+            "tier": "secondary"
+          },
+          {
+            "name": "DOCUMENT_FETCHED",
+            "direction": "emit",
+            "description": "migration.fetchDocument service result, flattened onto the payload by the call-service effect executor",
+            "tier": "secondary"
+          },
+          {
+            "name": "COMMITTED",
+            "direction": "emit",
+            "description": "migration.commit service result — committed count plus per-unit failures",
+            "tier": "secondary"
+          },
+          {
+            "name": "MIGRATION_CALL_FAILED",
+            "direction": "emit",
+            "description": "migration service call failure signal — lands the run in failed, never a silent swallow",
+            "tier": "secondary"
+          },
+          {
+            "name": "MIGRATION_FETCHED",
+            "direction": "emit",
+            "description": "Source documents are listed and the run is ready for staging (deterministic pipeline or agent)",
+            "synonyms": "import fetched, source listed, documents ready",
+            "tier": "domain"
+          },
+          {
+            "name": "MIGRATION_DOCUMENT",
+            "direction": "emit",
+            "description": "A single fetched document's content, for the host staging layer to map into target units",
+            "synonyms": "document loaded, content fetched",
+            "tier": "domain"
+          },
+          {
+            "name": "MIGRATION_REVIEW_READY",
+            "direction": "emit",
+            "description": "Staging is complete; the preview is ready for the approval gate",
+            "synonyms": "preview ready, staging complete, review import",
+            "tier": "domain"
+          },
+          {
+            "name": "MIGRATION_COMPLETED",
+            "direction": "emit",
+            "description": "The commit drained through the host sink; stats carry committed and per-unit failed counts",
+            "synonyms": "import done, migration complete, data imported",
+            "tier": "domain"
+          },
+          {
+            "name": "MIGRATION_FAILED",
+            "direction": "emit",
+            "description": "The run failed; error carries the service-reported detail and the terminal job row was persisted",
+            "synonyms": "import failed, migration error",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MIGRATION_START",
+            "direction": "listen",
+            "description": "Starts an import run. source is the ImportSource descriptor; files carries client file metadata for upload sources. Also reached via a sibling std-import's IMPORT_REQUESTED.",
+            "synonyms": "start import, run migration, import data",
+            "tier": "domain"
+          },
+          {
+            "name": "FETCH_DOCUMENT",
+            "direction": "listen",
+            "description": "Fetch one document's full content from the source during staging",
+            "tier": "internal"
+          },
+          {
+            "name": "MIGRATION_STAGED",
+            "direction": "listen",
+            "description": "Host staging finished — units are staged and validated; stats summarize staged/skipped counts for the preview",
+            "tier": "internal"
+          },
+          {
+            "name": "MIGRATION_DISCARDED",
+            "direction": "listen",
+            "description": "The run was discarded before commit",
+            "tier": "internal"
+          },
+          {
+            "name": "MIGRATION_APPROVED",
+            "direction": "listen",
+            "description": "The user approved the preview; units are the staged ImportUnits to commit through the host sink",
+            "synonyms": "approve import, confirm migration",
+            "tier": "domain"
+          },
+          {
+            "name": "MIGRATION_REJECTED",
+            "direction": "listen",
+            "description": "The user sent the preview back for more staging",
+            "tier": "internal"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Returns the job to idle from a terminal state",
+            "tier": "internal"
+          },
+          {
+            "name": "MIGRATION_RETRY",
+            "direction": "listen",
+            "description": "Re-runs the fetch after a failure, with the same source",
+            "tier": "internal"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "connectionRef",
+            "type": "string",
+            "default": "",
+            "label": "Connection reference",
+            "description": "Secret-store / environment KEY holding the source credentials. The reference is stored; the secret itself never enters config, traces, or snapshots — the migration service resolves it at run time. (Typed `string` until the `secret` config-field type lands in the lolo language — tracked gap.)",
+            "synonyms": "credential key, connection string reference, secret name",
+            "tier": "internal"
+          },
+          {
+            "key": "target",
+            "type": "string",
+            "default": "",
+            "label": "Target entity",
+            "description": "Name of the host entity this import writes into (e.g. the organism's own entity). The migration service derives the full target descriptor from the running app's schema.",
+            "synonyms": "destination, import into, target type",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "COMMITTED",
+          "DOCUMENTS_LISTED",
+          "DOCUMENT_FETCHED",
+          "FETCH_DOCUMENT",
+          "INIT",
+          "MIGRATION_APPROVED",
+          "MIGRATION_CALL_FAILED",
+          "MIGRATION_COMPLETED",
+          "MIGRATION_DISCARDED",
+          "MIGRATION_DOCUMENT",
+          "MIGRATION_FAILED",
+          "MIGRATION_FETCHED",
+          "MIGRATION_REJECTED",
+          "MIGRATION_RETRY",
+          "MIGRATION_REVIEW_READY",
+          "MIGRATION_STAGED",
+          "MIGRATION_START",
+          "RESET"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "document",
+            "documents",
+            "error",
+            "files",
+            "source",
+            "stats",
+            "status",
+            "target"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MigrationJobPage",
+        "defaultPath": "/migration-job",
+        "primaryEntity": "MigrationJob"
+      }
+    ],
+    "emittedEvents": [
+      "COMMITTED",
+      "DOCUMENTS_LISTED",
+      "DOCUMENT_FETCHED",
+      "MIGRATION_CALL_FAILED",
+      "MIGRATION_COMPLETED",
+      "MIGRATION_DOCUMENT",
+      "MIGRATION_FAILED",
+      "MIGRATION_FETCHED",
+      "MIGRATION_REVIEW_READY"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

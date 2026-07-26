@@ -1,0 +1,132 @@
+app std-import "1.0.0"
+"std-import — a dropdown source menu (Paste text / Markdown files defaults; caller can override via config.sources) plus the OS file picker for file-kind sources. Emits IMPORT_REQUESTED { source, files } on the bus — source is the picked SourceOption descriptor; files carries file metadata when the picker ran (empty otherwise). The actual import work is delegated to a sibling std-migration-job, which listens for IMPORT_REQUESTED and drives the migration service. Mirrors std-export: the menu emits each entry's own literal event field, so overriding the event alone does not retarget the click — also set sources[].event to match."
+orbital ImportOrbital {
+    uses Button from "std/behaviors/ui-button"
+    uses Menu from "std/behaviors/ui-menu"
+
+    type SourceOption = { id : string!, kind : string!, label : string!, event : string }
+
+  entity ImportPanel [runtime] {
+    id : string!
+    pendingSource : object = {}
+    pendingFiles : [object] = []
+  }
+
+  trait Button1 = Button.traits.ButtonRender -> ImportPanel {
+    config {
+      action: OPEN_IMPORT
+      icon: upload
+      label: @config.buttonLabel
+      size: sm
+      variant: ghost
+    }
+  }
+
+  trait Menu1 = Menu.traits.MenuRender -> ImportPanel {
+    config {
+      items: @config.sources
+      position: bottom-start
+      trigger: [@trait.Button1]
+    }
+  }
+
+  trait ImportMenu -> ImportPanel [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { children: [@trait.Menu1], type: box })
+      OPEN_IMPORT -> idle
+      IMPORT_SOURCE_PICKED -> picking when (== (object/get (array/find @config.sources (fn s (== (object/get @s id) ?itemId))) kind "") "file")
+        (set @entity.pendingSource (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))
+        (browser/open-file-picker { accept: @config.accept, multiple: true }
+          { emit: { success: FILES_PICKED, failure: PICK_FAILED } })
+      IMPORT_SOURCE_PICKED -> idle when (!= (object/get (array/find @config.sources (fn s (== (object/get @s id) ?itemId))) kind "") "file")
+        (set @entity.pendingSource (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))
+        (emit IMPORT_REQUESTED { files: @entity.pendingFiles, source: @entity.pendingSource })
+      ;; Self-loops on the external emits so the validator sees in-atom
+      ;; listeners for events consumed by the sibling std-migration-job.
+      IMPORT_REQUESTED -> idle
+      IMPORT_FAILED -> idle
+    }
+
+    state picking {
+      FILES_PICKED -> idle
+        (set @entity.pendingFiles (object/get ?result files []))
+        (emit IMPORT_REQUESTED { files: @entity.pendingFiles, source: @entity.pendingSource })
+      PICK_FAILED -> idle
+        (emit IMPORT_FAILED { error: ?error })
+    }
+
+    emits {
+      IMPORT_REQUESTED -> external {
+        source : object!
+        files : [object]
+      }
+        @description "Requests an import from the picked source. source is the SourceOption descriptor (id/kind/label); files carries picker metadata (name/size/type/lastModified) for file-kind sources, empty otherwise. A sibling std-migration-job listens and drives the run."
+        @synonyms "import, upload, migrate, bring in data"
+        @tier "domain"
+      IMPORT_FAILED -> external {
+        error : string!
+      }
+        @description "The file picker failed or was cancelled at the OS level"
+        @synonyms "import error, picker failed"
+        @tier "internal"
+      FILES_PICKED {
+        result : object!
+      }
+        @description "browser/open-file-picker success envelope — result.files holds the picked file metadata"
+        @tier "secondary"
+      PICK_FAILED {
+        error : string!
+      }
+        @description "browser/open-file-picker failure signal"
+        @tier "secondary"
+    }
+
+    listens {
+      IMPORT_SOURCE_PICKED {
+        itemId : string!
+        label : string!
+      }
+        @description "A source entry was picked from the menu. itemId matches the SourceOption.id of the picked entry; kind is resolved from config.sources by id."
+        @synonyms "source selected, import source chosen"
+        @tier "domain"
+    }
+
+    config {
+      accept : string = ".md,.markdown,.txt"
+        @label "Accepted file types"
+        @description "File-extension filter for the OS file picker when a file-kind source is picked"
+        @synonyms "file filter, allowed extensions, accepted formats"
+        @tier "presentation"
+      buttonLabel : string = Import
+        @label "Button label"
+        @description "Text shown on the toolbar button that opens the import source popover"
+        @synonyms "the text on the import trigger button. user phrases: 'rename import button to X' / 'set the button label to X' -> X (e.g. 'Import Data', 'Add Sources')"
+        @tier "presentation"
+      event : string = IMPORT_SOURCE_PICKED
+        @label "Source-picked event"
+        @description "Event emitted when the user picks a source. Each entry in sources[] carries its own literal event field (no per-item templating in .lolo) — overriding this alone does not retarget the click; also set sources[].event to match."
+        @synonyms "bus event name. internal wiring; users rarely target directly"
+        @tier "internal"
+      sources : [SourceOption] = [{
+        event: IMPORT_SOURCE_PICKED
+        id: paste
+        kind: paste
+        label: "Paste text"
+      }, {
+        event: IMPORT_SOURCE_PICKED
+        id: markdown
+        kind: file
+        label: "Markdown files"
+      }]
+        @label "Import sources"
+        @description "Sources shown in the import popover. kind 'file' opens the OS file picker before IMPORT_REQUESTED; any other kind emits immediately (the host renders the matching input UI, e.g. a paste textarea)."
+        @synonyms "list of import source entries (paste / file / api / database). user phrases: 'only paste' -> keep only the paste entry; 'add database' -> append a database entry"
+        @tier "presentation"
+    }
+  }
+
+  page "/imports/menu" as ImportMenuPage -> ImportMenu, Button1, Menu1
+}

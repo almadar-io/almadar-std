@@ -1,0 +1,106 @@
+app std-weight-validator "1.0.0"
+"std-weight-validator — a constraint-checking atom for model weights, applying the same discipline as the zero-warning validator to weights: constrained and checked, not trusted (Almadar_Intelligence_Ladder.md §7.5). Checks a candidate weight tensor against three pure predicate constraints — magnitude bounds (every element's absolute value must clear maxMagnitude), forbidden regions (excluded [min,max] bands no weight may land in even within the magnitude bound), and a regression threshold against a baseline tensor (per-element drift must not exceed regressionThreshold; 0 disables the check) — and reports every violated check with its detail. Emits WEIGHTS_ACCEPTED when all three checks clear, or WEIGHTS_REJECTED carrying the full violations list otherwise. Pure circuit logic: predicates and comparisons only, no ML compute, no model call."
+
+type Range = { min: float!, max: float! }
+
+orbital MlWeightValidatorOrbital {
+
+  entity WeightValidation [runtime] {
+    weights    : [float]  = []
+    baseline   : [float]  = []
+    violations : [object] = []
+    valid      : boolean  = false
+    status     : "idle" | "checked" = idle
+  }
+
+  trait WeightValidatorRun -> WeightValidation [lifecycle, instance] {
+    initial: idle
+
+    config {
+      maxMagnitude : float = 10
+        @label "Max weight magnitude"
+        @description "Every weight's absolute value must not exceed this bound"
+        @tier "policy"
+      forbiddenRegions : [Range] = []
+        @label "Forbidden regions"
+        @description "Value ranges no weight may fall inside, even within the magnitude bound"
+        @tier "domain"
+      regressionThreshold : float = 0
+        @label "Regression threshold"
+        @description "Max allowed per-element absolute drift between candidate and baseline weights; 0 disables the regression check"
+        @tier "policy"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.weights [])
+        (set @entity.baseline [])
+        (set @entity.violations [])
+        (set @entity.valid false)
+        (set @entity.status idle)
+
+      VALIDATE_WEIGHTS -> checked
+        (let ((cand ?weights)
+              (base ?baseline)
+              (magnitudeHits (array/filter @cand (fn w (> (math/abs @w) @config.maxMagnitude))))
+              (regionHits (array/filter @cand (fn w (array/some @config.forbiddenRegions (fn r (and (>= @w @r.min) (<= @w @r.max)))))))
+              (regressionHits (if (> @config.regressionThreshold 0)
+                                 (array/filter (array/range 0 (array/len @cand))
+                                   (fn i (> (math/abs (- (array/nth @cand @i) (array/nth @base @i))) @config.regressionThreshold)))
+                                 []))
+              (violations (array/concat
+                            (array/map @magnitudeHits (fn w { check: "magnitude", value: @w }))
+                            (array/map @regionHits (fn w { check: "forbidden-region", value: @w }))
+                            (array/map @regressionHits (fn i { check: "regression", index: @i })))))
+          (do
+            (set @entity.weights @cand)
+            (set @entity.baseline @base)
+            (set @entity.violations @violations)
+            (if (== (array/len @violations) 0)
+              (do
+                (set @entity.valid true)
+                (set @entity.status checked)
+                (emit WEIGHTS_ACCEPTED { weights: @cand }))
+              (do
+                (set @entity.valid false)
+                (set @entity.status checked)
+                (emit WEIGHTS_REJECTED { violations: @violations, request: ?request })))))
+    }
+
+    state checked {
+      INIT -> checked
+        (set @entity.status checked)
+      RESET -> idle
+        (set @entity.weights [])
+        (set @entity.baseline [])
+        (set @entity.violations [])
+        (set @entity.valid false)
+        (set @entity.status idle)
+    }
+
+    emits {
+      WEIGHTS_ACCEPTED -> external {
+        weights : [float]!
+      }
+        @description "All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear"
+        @tier "primary"
+
+      WEIGHTS_REJECTED -> external {
+        violations : [object]!
+        request : object
+      }
+        @description "At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it"
+        @tier "primary"
+    }
+
+    listens {
+      VALIDATE_WEIGHTS {
+        weights  : [float]!
+        baseline : [float]
+        request  : object
+      }
+    }
+  }
+
+  page "/ml-weight-validator" as MlWeightValidatorPage -> WeightValidatorRun
+}

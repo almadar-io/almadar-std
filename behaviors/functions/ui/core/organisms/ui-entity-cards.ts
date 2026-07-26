@@ -595,18 +595,6 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               'from': 'idle',
               'to': 'idle',
             },
-            {
-              'effects': [
-                [
-                  'emit',
-                  'VIEW',
-                  {},
-                ],
-              ],
-              'event': 'VIEW',
-              'from': 'idle',
-              'to': 'idle',
-            },
           ],
         },
       } satisfies Trait,

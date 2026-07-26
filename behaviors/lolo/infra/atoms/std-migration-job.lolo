@@ -1,0 +1,269 @@
+app std-migration-job "1.0.0"
+"std-migration-job — one import run of external data into the host system, modeled as a persistent MigrationJob row with a lifecycle state machine: idle → fetching → mapping → reviewing → committing → done | failed. All source access goes through the migration service (call-service \"migration\" listDocuments / fetchDocument / commit) — the atom never talks to a source directly, and the host-injected service handler resolves credentials from the connectionRef knob (a reference, never the secret). Staging/mapping is host work (deterministic pipeline or agent): the atom fetches, the host stages and emits MIGRATION_STAGED, the user approves (MIGRATION_APPROVED) and only then does commit run. Terminal runs persist the job row for provenance. Rebind the entity to a host-owned job entity via linkedEntity; target and connectionRef are config knobs."
+orbital MigrationJobOrbital {
+
+  entity MigrationJob [persistent: migration_jobs] {
+    id : string!
+    source : object @description "ImportSource descriptor of the run (kind + options), supplied by the host." = {}
+    files : [object] @description "Client-side file metadata for upload sources (name/size/type/lastModified)." = []
+    target : string @description "Name of the host entity this import writes into." = ""
+    status : "idle" | "fetching" | "mapping" | "reviewing" | "committing" | "done" | "failed" @description "Lifecycle position of the run." = idle
+    documents : [object] @description "Document metadata listed from the source." = []
+    document : object @description "Most recently fetched document content." = {}
+    stats : object @description "Staged/committed/failed/skipped counts." = {}
+    error : string @description "Failure detail when status is failed." = ""
+    createdAt : number @description "Run start timestamp." = 0
+  }
+
+  trait MigrationJobLifecycle -> @rebindable MigrationJob [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.status idle)
+        (set @entity.error "")
+        (set @entity.documents [])
+        (set @entity.document {})
+        (set @entity.stats {})
+      MIGRATION_START -> fetching
+        (set @entity.source ?source)
+        (set @entity.files ?files)
+        (set @entity.target @config.target)
+        (set @entity.status fetching)
+        (set @entity.createdAt (time/now))
+        (call-service "migration" "listDocuments" { connectionRef: @config.connectionRef, files: @entity.files, source: @entity.source }
+          { emit: { success: DOCUMENTS_LISTED, failure: MIGRATION_CALL_FAILED } })
+    }
+
+    state fetching {
+      DOCUMENTS_LISTED -> mapping
+        (set @entity.documents ?documents)
+        (set @entity.status mapping)
+        (emit MIGRATION_FETCHED { documents: @entity.documents })
+      ;; Self-loops so the validator sees in-atom listeners for the
+      ;; externally-consumed staging events.
+      MIGRATION_FETCHED -> mapping
+      MIGRATION_DOCUMENT -> mapping
+      MIGRATION_CALL_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+    }
+
+    state mapping {
+      FETCH_DOCUMENT -> mapping
+        (call-service "migration" "fetchDocument" { connectionRef: @config.connectionRef, documentId: ?documentId, source: @entity.source }
+          { emit: { success: DOCUMENT_FETCHED, failure: MIGRATION_CALL_FAILED } })
+      DOCUMENT_FETCHED -> mapping
+        (set @entity.document ?document)
+        (emit MIGRATION_DOCUMENT { document: @entity.document })
+      MIGRATION_STAGED -> reviewing
+        (set @entity.stats ?stats)
+        (set @entity.status reviewing)
+        (emit MIGRATION_REVIEW_READY { stats: @entity.stats })
+      MIGRATION_DISCARDED -> idle
+        (set @entity.status idle)
+        (set @entity.documents [])
+        (set @entity.document {})
+        (set @entity.stats {})
+      MIGRATION_CALL_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+    }
+
+    state reviewing {
+      MIGRATION_APPROVED -> committing
+        (set @entity.status committing)
+        (call-service "migration" "commit" { jobId: @entity.id, units: ?units }
+          { emit: { success: COMMITTED, failure: MIGRATION_CALL_FAILED } })
+      MIGRATION_REJECTED -> mapping
+        (set @entity.status mapping)
+      MIGRATION_REVIEW_READY -> reviewing
+      MIGRATION_DISCARDED -> idle
+        (set @entity.status idle)
+        (set @entity.documents [])
+        (set @entity.document {})
+        (set @entity.stats {})
+    }
+
+    state committing {
+      COMMITTED -> done
+        (set @entity.stats (object/merge @entity.stats { committed: ?committed, failed: ?failed }))
+        (set @entity.status done)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: ""
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_COMPLETED { stats: @entity.stats })
+      MIGRATION_CALL_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+    }
+
+    state done {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.error "")
+        (set @entity.documents [])
+        (set @entity.document {})
+        (set @entity.stats {})
+      ;; Self-loop so the validator sees an in-atom listener for the
+      ;; externally-consumed completion event.
+      MIGRATION_COMPLETED -> done
+    }
+
+    state failed {
+      MIGRATION_RETRY -> fetching
+        (set @entity.status fetching)
+        (set @entity.error "")
+        (call-service "migration" "listDocuments" { connectionRef: @config.connectionRef, files: @entity.files, source: @entity.source }
+          { emit: { success: DOCUMENTS_LISTED, failure: MIGRATION_CALL_FAILED } })
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.error "")
+        (set @entity.documents [])
+        (set @entity.document {})
+        (set @entity.stats {})
+      ;; Mirrors the done self-loop: MIGRATION_FAILED is emitted for
+      ;; downstream consumers and listened to here for the validator.
+      MIGRATION_FAILED -> failed
+    }
+
+    emits {
+      DOCUMENTS_LISTED {
+        documents : [object]!
+      }
+        @description "migration.listDocuments service result, flattened onto the payload by the call-service effect executor"
+        @tier "secondary"
+      DOCUMENT_FETCHED {
+        document : object!
+      }
+        @description "migration.fetchDocument service result, flattened onto the payload by the call-service effect executor"
+        @tier "secondary"
+      COMMITTED {
+        committed : number!
+        failed : [object]!
+      }
+        @description "migration.commit service result — committed count plus per-unit failures"
+        @tier "secondary"
+      MIGRATION_CALL_FAILED {
+        error : string!
+      }
+        @description "migration service call failure signal — lands the run in failed, never a silent swallow"
+        @tier "secondary"
+      MIGRATION_FETCHED -> external {
+        documents : [object]!
+      }
+        @description "Source documents are listed and the run is ready for staging (deterministic pipeline or agent)"
+        @synonyms "import fetched, source listed, documents ready"
+        @tier "domain"
+      MIGRATION_DOCUMENT -> external {
+        document : object!
+      }
+        @description "A single fetched document's content, for the host staging layer to map into target units"
+        @synonyms "document loaded, content fetched"
+        @tier "domain"
+      MIGRATION_REVIEW_READY -> external {
+        stats : object!
+      }
+        @description "Staging is complete; the preview is ready for the approval gate"
+        @synonyms "preview ready, staging complete, review import"
+        @tier "domain"
+      MIGRATION_COMPLETED -> external {
+        stats : object!
+      }
+        @description "The commit drained through the host sink; stats carry committed and per-unit failed counts"
+        @synonyms "import done, migration complete, data imported"
+        @tier "domain"
+      MIGRATION_FAILED -> external {
+        error : string!
+      }
+        @description "The run failed; error carries the service-reported detail and the terminal job row was persisted"
+        @synonyms "import failed, migration error"
+        @tier "domain"
+    }
+
+    listens {
+      MIGRATION_START {
+        source : object!
+        files : [object]
+      }
+        @description "Starts an import run. source is the ImportSource descriptor; files carries client file metadata for upload sources. Also reached via a sibling std-import's IMPORT_REQUESTED."
+        @synonyms "start import, run migration, import data"
+        @tier "domain"
+      FETCH_DOCUMENT {
+        documentId : string!
+      }
+        @description "Fetch one document's full content from the source during staging"
+        @tier "internal"
+      MIGRATION_STAGED {
+        stats : object!
+      }
+        @description "Host staging finished — units are staged and validated; stats summarize staged/skipped counts for the preview"
+        @tier "internal"
+      MIGRATION_APPROVED {
+        units : [object]!
+      }
+        @description "The user approved the preview; units are the staged ImportUnits to commit through the host sink"
+        @synonyms "approve import, confirm migration"
+        @tier "domain"
+      MIGRATION_REJECTED
+        @description "The user sent the preview back for more staging"
+        @tier "internal"
+      MIGRATION_DISCARDED
+        @description "The run was discarded before commit"
+        @tier "internal"
+      MIGRATION_RETRY
+        @description "Re-runs the fetch after a failure, with the same source"
+        @tier "internal"
+      RESET
+        @description "Returns the job to idle from a terminal state"
+        @tier "internal"
+    }
+
+    config {
+      target : string = ""
+        @label "Target entity"
+        @description "Name of the host entity this import writes into (e.g. the organism's own entity). The migration service derives the full target descriptor from the running app's schema."
+        @synonyms "destination, import into, target type"
+        @tier "domain"
+      connectionRef : string = ""
+        @label "Connection reference"
+        @description "Secret-store / environment KEY holding the source credentials. The reference is stored; the secret itself never enters config, traces, or snapshots — the migration service resolves it at run time. (Typed `string` until the `secret` config-field type lands in the lolo language — tracked gap.)"
+        @synonyms "credential key, connection string reference, secret name"
+        @tier "internal"
+    }
+  }
+
+  page "/migration-job" as MigrationJobPage -> MigrationJobLifecycle
+}

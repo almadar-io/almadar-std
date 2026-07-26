@@ -91,6 +91,8 @@ export interface StdUiCalendarGridCalendarGridLoadedPayload {
  */
 export interface StdUiCalendarGridConfig {
   className?: string;
+  /** Default: `"color"` */
+  colorField?: string;
   dayWindow?: string;
   /** Default: `"LONG_PRESS"` */
   longPressEvent?: string;
@@ -102,12 +104,16 @@ export interface StdUiCalendarGridConfig {
   onEventClick?: string;
   /** Default: `"SLOT_CLICK"` */
   onSlotClick?: string;
+  /** Default: `"startTime"` */
+  startField?: string;
   /** Default: `"SWIPE_LEFT"` */
   swipeLeftEvent?: string;
   /** Default: `"SWIPE_RIGHT"` */
   swipeRightEvent?: string;
   /** Default: `[]` */
   timeSlots?: string[];
+  /** Default: `"title"` */
+  titleField?: string;
   /** Default: `"2024-01-01"` */
   weekStart?: string;
 }

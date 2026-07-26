@@ -1,0 +1,96 @@
+[
+  {
+    "organism": "std-data-collector",
+    "orbital": "MlDataCollectorOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-data-collector.ts",
+    "entities": [
+      {
+        "name": "DataBuffer",
+        "fields": [
+          {
+            "name": "buffer",
+            "type": "array",
+            "required": false,
+            "description": "Data points accumulated in the current cycle."
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "required": false,
+            "description": "Number of points currently in the buffer."
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DataCollectorRun",
+        "emittedEvents": [
+          "BUFFER_READY"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BUFFER_READY",
+            "direction": "emit",
+            "description": "Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle.",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "COLLECT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "bufferSize",
+            "type": "int",
+            "default": 100,
+            "label": "Buffer size",
+            "description": "Number of data points collected before BUFFER_READY fires.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "COLLECT",
+          "INIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "buffer",
+            "count",
+            "status"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlDataCollectorPage",
+        "defaultPath": "/ml-data-collector",
+        "primaryEntity": "DataBuffer"
+      }
+    ],
+    "emittedEvents": [
+      "BUFFER_READY"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

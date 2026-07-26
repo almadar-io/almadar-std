@@ -30,7 +30,7 @@ const ALIAS = 'MlExactCheck';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdMlExactCheckEventKey = 'CHECK' | 'EXACT_MATCHED' | 'EXACT_UNMATCHED' | 'INIT';
+export type StdMlExactCheckEventKey = 'CHECK' | 'EXACT_MATCHED' | 'EXACT_UNMATCHED' | 'INIT' | 'RESET';
 
 /**
  * Payload shape for the `EXACT_MATCHED` event.
@@ -46,6 +46,7 @@ export interface StdMlExactCheckExactMatchedPayload {
 export interface StdMlExactCheckExactUnmatchedPayload {
   candidate: unknown;
   key: unknown;
+  request?: EntityRow;
 }
 
 /**

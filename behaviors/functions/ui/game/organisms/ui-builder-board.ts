@@ -1637,12 +1637,12 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                         '!=',
                         [
                           'object/get',
-                          's',
+                          '@s',
                           'placedComponentId',
                         ],
                         [
                           'object/get',
-                          's',
+                          '@s',
                           'requiredComponentId',
                         ],
                       ],
@@ -1803,12 +1803,12 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                         '!=',
                         [
                           'object/get',
-                          's',
+                          '@s',
                           'placedComponentId',
                         ],
                         [
                           'object/get',
-                          's',
+                          '@s',
                           'requiredComponentId',
                         ],
                       ],

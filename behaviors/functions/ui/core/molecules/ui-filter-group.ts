@@ -30,7 +30,7 @@ const ALIAS = 'UiFilterGroup';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiFilterGroupEventKey = 'CLEAR_ALL' | 'FILTER_CHANGE' | 'INIT';
+export type StdUiFilterGroupEventKey = 'CLEAR' | 'CLEAR_ALL' | 'EVENT' | 'FILTER_CHANGE' | 'INIT';
 
 /**
  * Payload shape for the `FILTER_CHANGE` event.
@@ -48,6 +48,20 @@ export interface StdUiFilterGroupClearAllPayload {
 }
 
 /**
+ * Payload shape for the `EVENT` event.
+ */
+export interface StdUiFilterGroupEventPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CLEAR` event.
+ */
+export interface StdUiFilterGroupClearPayload {
+  id?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -55,6 +69,10 @@ export interface StdUiFilterGroupClearAllPayload {
  */
 export interface StdUiFilterGroupConfig {
   className?: string;
+  /** Default: `"CLEAR"` */
+  clearEvent?: string;
+  /** Default: `"EVENT"` */
+  event?: string;
   /** Default: `[{"field":"Field","label":"Label","options":["Item","Item 2"],"type":"checkbox"},{"field":"Field 2","label":"Label 2","options":["Item","Item 2"],"type":"select"}]` */
   filters?: EntityRow[];
   isLoading?: boolean;

@@ -1,0 +1,108 @@
+app std-tokenizer "1.0.0"
+"std-tokenizer — a text-preprocessing atom for tokenization. Splits raw text into a token sequence using a configurable method (whitespace, character, or arbitrary delimiter), normalizes and truncates the sequence, then maps each token to a vocabulary id (falling back to unkId when the token is absent from config.vocab). Feeds downstream embedding or sequence-model atoms. Pure circuit logic: str/* and array/* operators only, no ML compute, no model call."
+
+orbital MlTokenizerOrbital {
+
+  entity TokenSequence [runtime] {
+    text       : string  = ""
+    tokens     : [string] = []
+    tokenIds   : [int]    = []
+    tokenCount : int      = 0
+    request    : object   = {}
+    status     : "idle" | "checked" = idle
+  }
+
+  trait TokenizerRun -> TokenSequence [lifecycle, instance] {
+    initial: idle
+
+    config {
+      method : "whitespace" | "character" | "delimiter" = whitespace
+        @label "Method"
+        @description "Whitespace splits on single spaces, character splits into individual characters, delimiter splits on config.delimiter"
+        @tier "policy"
+      delimiter : string = ","
+        @label "Delimiter"
+        @description "Split delimiter used when method is delimiter; ignored otherwise"
+        @tier "domain"
+      lowercase : boolean = true
+        @label "Lowercase"
+        @description "Lowercase every token before vocabulary lookup"
+        @tier "policy"
+      trimWhitespace : boolean = true
+        @label "Trim whitespace"
+        @description "Trim each token and drop tokens that are empty afterward"
+        @tier "policy"
+      maxLength : int = 512
+        @label "Max length"
+        @description "Truncate the token sequence to at most this many tokens"
+        @tier "policy"
+      vocab : Map string int = {}
+        @label "Vocabulary"
+        @description "Token-to-id map; a token absent from this map resolves to unkId"
+        @tier "domain"
+      unkId : int = 0
+        @label "Unknown token id"
+        @description "Id assigned to a token that is not present in config.vocab"
+        @tier "policy"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.text "")
+        (set @entity.tokens [])
+        (set @entity.tokenIds [])
+        (set @entity.tokenCount 0)
+        (set @entity.request {})
+        (set @entity.status idle)
+
+      TOKENIZE -> checked
+        (let ((split (if (== @config.method "character")
+                        (str/split ?text "")
+                        (str/split ?text (if (== @config.method "delimiter") @config.delimiter " "))))
+              (trimmed (if @config.trimWhitespace (array/map @split (fn t (str/trim @t))) @split))
+              (normalized (if @config.lowercase (array/map @trimmed (fn t (str/lower @t))) @trimmed))
+              (nonEmpty (array/filter @normalized (fn t (> (str/len @t) 0))))
+              (truncated (array/slice @nonEmpty 0 @config.maxLength))
+              (ids (array/map @truncated (fn t (object/get @config.vocab @t @config.unkId)))))
+          (do
+            (set @entity.text ?text)
+            (set @entity.tokens @truncated)
+            (set @entity.tokenIds @ids)
+            (set @entity.tokenCount (array/len @truncated))
+            (set @entity.request ?request)
+            (set @entity.status checked)
+            (emit TOKENIZED { tokens: @entity.tokens, tokenIds: @entity.tokenIds, tokenCount: @entity.tokenCount })))
+    }
+
+    state checked {
+      INIT -> checked
+        (set @entity.status checked)
+      RESET -> idle
+        (set @entity.text "")
+        (set @entity.tokens [])
+        (set @entity.tokenIds [])
+        (set @entity.tokenCount 0)
+        (set @entity.request {})
+        (set @entity.status idle)
+    }
+
+    emits {
+      TOKENIZED -> external {
+        tokens : [string]!
+        tokenIds : [int]!
+        tokenCount : int!
+      }
+        @description "Text tokenized into a normalized, truncated token sequence with vocabulary ids"
+        @tier "primary"
+    }
+
+    listens {
+      TOKENIZE {
+        text : string!
+        request : object
+      }
+    }
+  }
+
+  page "/ml-tokenizer" as MlTokenizerPage -> TokenizerRun
+}

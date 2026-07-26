@@ -93,6 +93,12 @@ export interface StdAppLayoutConfig {
   theme?: string;
   /** Default: `[]` */
   topBarActions?: EntityRow[];
+  /** Default: `""` */
+  viewerAvatar?: string;
+  /** Default: `""` */
+  viewerEmail?: string;
+  /** Default: `""` */
+  viewerName?: string;
 }
 
 /**

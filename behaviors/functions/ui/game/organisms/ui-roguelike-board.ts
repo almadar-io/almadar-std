@@ -15541,7 +15541,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                               ],
                               [
                                 '+',
-                                'acc',
+                                '@acc',
                                 '@e.attack',
                               ],
                             ],

@@ -3761,12 +3761,12 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                         '==',
                         [
                           'object/get',
-                          'b',
+                          '@b',
                           'settled',
                         ],
                         true,
                       ],
-                      'b',
+                      '@b',
                       [
                         'if',
                         [
@@ -3777,7 +3777,7 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                               '+',
                               [
                                 'object/get',
-                                'b',
+                                '@b',
                                 'y',
                               ],
                               1,
@@ -3796,7 +3796,7 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                                   '==',
                                   [
                                     'object/get',
-                                    'o',
+                                    '@o',
                                     'settled',
                                   ],
                                   true,
@@ -3807,12 +3807,12 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                                     '==',
                                     [
                                       'object/get',
-                                      'o',
+                                      '@o',
                                       'x',
                                     ],
                                     [
                                       'object/get',
-                                      'b',
+                                      '@b',
                                       'x',
                                     ],
                                   ],
@@ -3820,14 +3820,14 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                                     '==',
                                     [
                                       'object/get',
-                                      'o',
+                                      '@o',
                                       'y',
                                     ],
                                     [
                                       '+',
                                       [
                                         'object/get',
-                                        'b',
+                                        '@b',
                                         'y',
                                       ],
                                       1,
@@ -3840,20 +3840,20 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                         ],
                         [
                           'object/merge',
-                          'b',
+                          '@b',
                           {
                             'settled': true,
                           },
                         ],
                         [
                           'object/merge',
-                          'b',
+                          '@b',
                           {
                             'y': [
                               '+',
                               [
                                 'object/get',
-                                'b',
+                                '@b',
                                 'y',
                               ],
                               1,
@@ -3896,7 +3896,7 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                                     '==',
                                     [
                                       'object/get',
-                                      'b',
+                                      '@b',
                                       'settled',
                                     ],
                                     true,
@@ -3905,10 +3905,10 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                                     '==',
                                     [
                                       'object/get',
-                                      'b',
+                                      '@b',
                                       'y',
                                     ],
-                                    'r',
+                                    '@r',
                                   ],
                                 ],
                               ],
@@ -3944,7 +3944,7 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                               '!=',
                               [
                                 'object/get',
-                                'b',
+                                '@b',
                                 'y',
                               ],
                               '@clearRow',
@@ -3960,27 +3960,27 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                               '<',
                               [
                                 'object/get',
-                                'b',
+                                '@b',
                                 'y',
                               ],
                               '@clearRow',
                             ],
                             [
                               'object/merge',
-                              'b',
+                              '@b',
                               {
                                 'y': [
                                   '+',
                                   [
                                     'object/get',
-                                    'b',
+                                    '@b',
                                     'y',
                                   ],
                                   1,
                                 ],
                               },
                             ],
-                            'b',
+                            '@b',
                           ],
                         ],
                       ],

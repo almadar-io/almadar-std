@@ -1,0 +1,570 @@
+{
+  "description": "std-tokenizer — a text-preprocessing atom for tokenization. Splits raw text into a token sequence using a configurable method (whitespace, character, or arbitrary delimiter), normalizes and truncates the sequence, then maps each token to a vocabulary id (falling back to unkId when the token is absent from config.vocab). Feeds downstream embedding or sequence-model atoms. Pure circuit logic: str/* and array/* operators only, no ML compute, no model call.",
+  "ledger": {
+    "entries": {
+      "ent_01KYE96EQDXHZW8EEBAPXVGCJ9": {
+        "bakedName": "TokenSequence",
+        "curName": "TokenSequence",
+        "id": "ent_01KYE96EQDXHZW8EEBAPXVGCJ9",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KYE96EQD2E079R1R27YGFD2K": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01KYE96EQD2E079R1R27YGFD2K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KYE96EQD252DEG0B9GCBAE53",
+        "renames": []
+      },
+      "evt_01KYE96EQD4VVS2H9ZRZ7YZR7H": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KYE96EQD4VVS2H9ZRZ7YZR7H",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KYE96EQD252DEG0B9GCBAE53",
+        "renames": []
+      },
+      "evt_01KYE96EQDBA5GSTJF9E6AMHKZ": {
+        "bakedName": "TOKENIZE",
+        "curName": "TOKENIZE",
+        "id": "evt_01KYE96EQDBA5GSTJF9E6AMHKZ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KYE96EQD252DEG0B9GCBAE53",
+        "renames": []
+      },
+      "evt_01KYE96EQDY3EE67X7BCTN38HK": {
+        "bakedName": "TOKENIZED",
+        "curName": "TOKENIZED",
+        "id": "evt_01KYE96EQDY3EE67X7BCTN38HK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KYE96EQD252DEG0B9GCBAE53",
+        "renames": []
+      },
+      "orb_01KYE96EQDV2VER7C40TY7DBRG": {
+        "bakedName": "MlTokenizerOrbital",
+        "curName": "MlTokenizerOrbital",
+        "id": "orb_01KYE96EQDV2VER7C40TY7DBRG",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KYE96EQESP0TQCX827Z91D9M": {
+        "bakedName": "MlTokenizerPage",
+        "curName": "MlTokenizerPage",
+        "id": "pag_01KYE96EQESP0TQCX827Z91D9M",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KYE96EQD252DEG0B9GCBAE53": {
+        "bakedName": "TokenizerRun",
+        "curName": "TokenizerRun",
+        "id": "trt_01KYE96EQD252DEG0B9GCBAE53",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-tokenizer",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "name": "text",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "name": "tokens",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "type": "number"
+            },
+            "name": "tokenIds",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "tokenCount",
+            "type": "number"
+          },
+          {
+            "default": {},
+            "name": "request",
+            "type": "object"
+          },
+          {
+            "default": "idle",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "idle",
+              "checked"
+            ]
+          }
+        ],
+        "id": "ent_01KYE96EQDXHZW8EEBAPXVGCJ9",
+        "name": "TokenSequence",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KYE96EQDV2VER7C40TY7DBRG",
+      "name": "MlTokenizerOrbital",
+      "pages": [
+        {
+          "id": "pag_01KYE96EQESP0TQCX827Z91D9M",
+          "name": "MlTokenizerPage",
+          "path": "/ml-tokenizer",
+          "traits": [
+            {
+              "ref": "TokenizerRun",
+              "refId": "trt_01KYE96EQD252DEG0B9GCBAE53"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "delimiter": {
+              "default": ",",
+              "description": "Split delimiter used when method is delimiter; ignored otherwise",
+              "label": "Delimiter",
+              "tier": "domain",
+              "type": "string"
+            },
+            "lowercase": {
+              "default": true,
+              "description": "Lowercase every token before vocabulary lookup",
+              "label": "Lowercase",
+              "tier": "policy",
+              "type": "boolean"
+            },
+            "maxLength": {
+              "default": 512.0,
+              "description": "Truncate the token sequence to at most this many tokens",
+              "label": "Max length",
+              "tier": "policy",
+              "type": "int"
+            },
+            "method": {
+              "default": "whitespace",
+              "description": "Whitespace splits on single spaces, character splits into individual characters, delimiter splits on config.delimiter",
+              "label": "Method",
+              "tier": "policy",
+              "type": "string",
+              "values": [
+                "whitespace",
+                "character",
+                "delimiter"
+              ]
+            },
+            "trimWhitespace": {
+              "default": true,
+              "description": "Trim each token and drop tokens that are empty afterward",
+              "label": "Trim whitespace",
+              "tier": "policy",
+              "type": "boolean"
+            },
+            "unkId": {
+              "default": 0.0,
+              "description": "Id assigned to a token that is not present in config.vocab",
+              "label": "Unknown token id",
+              "tier": "policy",
+              "type": "int"
+            },
+            "vocab": {
+              "default": {},
+              "description": "Token-to-id map; a token absent from this map resolves to unkId",
+              "items": {
+                "type": "number"
+              },
+              "label": "Vocabulary",
+              "tier": "domain",
+              "type": "Map<string,int>"
+            }
+          },
+          "emits": [
+            {
+              "description": "Text tokenized into a normalized, truncated token sequence with vocabulary ids",
+              "event": "TOKENIZED",
+              "eventId": "evt_01KYE96EQDY3EE67X7BCTN38HK",
+              "payloadSchema": [
+                {
+                  "name": "tokens",
+                  "required": true,
+                  "type": "[string]"
+                },
+                {
+                  "name": "tokenIds",
+                  "required": true,
+                  "type": "[int]"
+                },
+                {
+                  "name": "tokenCount",
+                  "required": true,
+                  "type": "int"
+                }
+              ],
+              "scope": "external",
+              "tier": "primary"
+            }
+          ],
+          "entityRefIds": {
+            "TokenSequence": "ent_01KYE96EQDXHZW8EEBAPXVGCJ9"
+          },
+          "id": "trt_01KYE96EQD252DEG0B9GCBAE53",
+          "linkedEntity": "TokenSequence",
+          "linkedEntityId": "ent_01KYE96EQDXHZW8EEBAPXVGCJ9",
+          "name": "TokenizerRun",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KYE96EQD4VVS2H9ZRZ7YZR7H",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "id": "evt_01KYE96EQDBA5GSTJF9E6AMHKZ",
+                "key": "TOKENIZE",
+                "name": "Tokenize",
+                "payloadSchema": [
+                  {
+                    "name": "text",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "request",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01KYE96EQD2E079R1R27YGFD2K",
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "description": "Text tokenized into a normalized, truncated token sequence with vocabulary ids",
+                "id": "evt_01KYE96EQDY3EE67X7BCTN38HK",
+                "key": "TOKENIZED",
+                "name": "Tokenized",
+                "payloadSchema": [
+                  {
+                    "name": "tokens",
+                    "required": true,
+                    "type": "[string]"
+                  },
+                  {
+                    "name": "tokenIds",
+                    "required": true,
+                    "type": "[int]"
+                  },
+                  {
+                    "name": "tokenCount",
+                    "required": true,
+                    "type": "int"
+                  }
+                ],
+                "tier": "primary"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "checked"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.text",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.tokens",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenIds",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.request",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KYE96EQD4VVS2H9ZRZ7YZR7H",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "split",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@config.method",
+                            "character"
+                          ],
+                          [
+                            "str/split",
+                            "@payload.text",
+                            ""
+                          ],
+                          [
+                            "str/split",
+                            "@payload.text",
+                            [
+                              "if",
+                              [
+                                "==",
+                                "@config.method",
+                                "delimiter"
+                              ],
+                              "@config.delimiter",
+                              " "
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "trimmed",
+                        [
+                          "if",
+                          "@config.trimWhitespace",
+                          [
+                            "array/map",
+                            "@split",
+                            [
+                              "fn",
+                              "t",
+                              [
+                                "str/trim",
+                                "@t"
+                              ]
+                            ]
+                          ],
+                          "@split"
+                        ]
+                      ],
+                      [
+                        "normalized",
+                        [
+                          "if",
+                          "@config.lowercase",
+                          [
+                            "array/map",
+                            "@trimmed",
+                            [
+                              "fn",
+                              "t",
+                              [
+                                "str/lower",
+                                "@t"
+                              ]
+                            ]
+                          ],
+                          "@trimmed"
+                        ]
+                      ],
+                      [
+                        "nonEmpty",
+                        [
+                          "array/filter",
+                          "@normalized",
+                          [
+                            "fn",
+                            "t",
+                            [
+                              ">",
+                              [
+                                "str/len",
+                                "@t"
+                              ],
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "truncated",
+                        [
+                          "array/slice",
+                          "@nonEmpty",
+                          0.0,
+                          "@config.maxLength"
+                        ]
+                      ],
+                      [
+                        "ids",
+                        [
+                          "array/map",
+                          "@truncated",
+                          [
+                            "fn",
+                            "t",
+                            [
+                              "object/get",
+                              "@config.vocab",
+                              "@t",
+                              "@config.unkId"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.text",
+                        "@payload.text"
+                      ],
+                      [
+                        "set",
+                        "@entity.tokens",
+                        "@truncated"
+                      ],
+                      [
+                        "set",
+                        "@entity.tokenIds",
+                        "@ids"
+                      ],
+                      [
+                        "set",
+                        "@entity.tokenCount",
+                        [
+                          "array/len",
+                          "@truncated"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.request",
+                        "@payload.request"
+                      ],
+                      [
+                        "set",
+                        "@entity.status",
+                        "checked"
+                      ],
+                      [
+                        "emit",
+                        "TOKENIZED",
+                        {
+                          "tokenCount": "@entity.tokenCount",
+                          "tokenIds": "@entity.tokenIds",
+                          "tokens": "@entity.tokens"
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "TOKENIZE",
+                "eventId": "evt_01KYE96EQDBA5GSTJF9E6AMHKZ",
+                "from": "idle",
+                "to": "checked"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "checked"
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KYE96EQD4VVS2H9ZRZ7YZR7H",
+                "from": "checked",
+                "to": "checked"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.text",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.tokens",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenIds",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.request",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01KYE96EQD2E079R1R27YGFD2K",
+                "from": "checked",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

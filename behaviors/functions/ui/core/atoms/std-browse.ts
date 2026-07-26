@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-browse';
 const ALIAS = 'Browse';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdBrowseListenKey = 'BrowseItemLoaded';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

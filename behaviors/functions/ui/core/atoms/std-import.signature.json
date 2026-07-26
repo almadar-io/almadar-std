@@ -1,0 +1,244 @@
+[
+  {
+    "organism": "std-import",
+    "orbital": "ImportOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-import.ts",
+    "entities": [
+      {
+        "name": "ImportPanel",
+        "fields": [
+          {
+            "name": "pendingSource",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "pendingFiles",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Button1",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "OPEN_IMPORT"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "upload"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "@config.buttonLabel"
+          },
+          {
+            "key": "size",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "ghost"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender"
+      },
+      {
+        "name": "Menu1",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "items",
+            "type": "unknown",
+            "default": "@config.sources"
+          },
+          {
+            "key": "position",
+            "type": "unknown",
+            "default": "bottom-start"
+          },
+          {
+            "key": "trigger",
+            "type": "unknown",
+            "default": [
+              "@trait.Button1"
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "Menu.traits.MenuRender"
+      },
+      {
+        "name": "ImportMenu",
+        "emittedEvents": [
+          "IMPORT_REQUESTED",
+          "IMPORT_FAILED",
+          "FILES_PICKED",
+          "PICK_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "IMPORT_REQUESTED",
+            "direction": "emit",
+            "description": "Requests an import from the picked source. source is the SourceOption descriptor (id/kind/label); files carries picker metadata (name/size/type/lastModified) for file-kind sources, empty otherwise. A sibling std-migration-job listens and drives the run.",
+            "synonyms": "import, upload, migrate, bring in data",
+            "tier": "domain"
+          },
+          {
+            "name": "IMPORT_FAILED",
+            "direction": "emit",
+            "description": "The file picker failed or was cancelled at the OS level",
+            "synonyms": "import error, picker failed",
+            "tier": "internal"
+          },
+          {
+            "name": "FILES_PICKED",
+            "direction": "emit",
+            "description": "browser/open-file-picker success envelope — result.files holds the picked file metadata",
+            "tier": "secondary"
+          },
+          {
+            "name": "PICK_FAILED",
+            "direction": "emit",
+            "description": "browser/open-file-picker failure signal",
+            "tier": "secondary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "OPEN_IMPORT",
+            "direction": "listen"
+          },
+          {
+            "name": "IMPORT_SOURCE_PICKED",
+            "direction": "listen",
+            "description": "A source entry was picked from the menu. itemId matches the SourceOption.id of the picked entry; kind is resolved from config.sources by id.",
+            "synonyms": "source selected, import source chosen",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "accept",
+            "type": "string",
+            "default": ".md,.markdown,.txt",
+            "label": "Accepted file types",
+            "description": "File-extension filter for the OS file picker when a file-kind source is picked",
+            "synonyms": "file filter, allowed extensions, accepted formats",
+            "tier": "presentation"
+          },
+          {
+            "key": "buttonLabel",
+            "type": "string",
+            "default": "Import",
+            "label": "Button label",
+            "description": "Text shown on the toolbar button that opens the import source popover",
+            "synonyms": "the text on the import trigger button. user phrases: 'rename import button to X' / 'set the button label to X' -> X (e.g. 'Import Data', 'Add Sources')",
+            "tier": "presentation"
+          },
+          {
+            "key": "event",
+            "type": "string",
+            "default": "IMPORT_SOURCE_PICKED",
+            "label": "Source-picked event",
+            "description": "Event emitted when the user picks a source. Each entry in sources[] carries its own literal event field (no per-item templating in .lolo) — overriding this alone does not retarget the click; also set sources[].event to match.",
+            "synonyms": "bus event name. internal wiring; users rarely target directly",
+            "tier": "internal"
+          },
+          {
+            "key": "sources",
+            "type": "[SourceOption]",
+            "default": [
+              {
+                "event": "IMPORT_SOURCE_PICKED",
+                "id": "paste",
+                "kind": "paste",
+                "label": "Paste text"
+              },
+              {
+                "event": "IMPORT_SOURCE_PICKED",
+                "id": "markdown",
+                "kind": "file",
+                "label": "Markdown files"
+              }
+            ],
+            "label": "Import sources",
+            "description": "Sources shown in the import popover. kind 'file' opens the OS file picker before IMPORT_REQUESTED; any other kind emits immediately (the host renders the matching input UI, e.g. a paste textarea).",
+            "synonyms": "list of import source entries (paste / file / api / database). user phrases: 'only paste' -> keep only the paste entry; 'add database' -> append a database entry",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "FILES_PICKED",
+          "IMPORT_FAILED",
+          "IMPORT_REQUESTED",
+          "IMPORT_SOURCE_PICKED",
+          "INIT",
+          "OPEN_IMPORT",
+          "PICK_FAILED"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "ImportMenuPage",
+        "defaultPath": "/imports/menu",
+        "primaryEntity": "ImportPanel"
+      }
+    ],
+    "emittedEvents": [
+      "FILES_PICKED",
+      "IMPORT_FAILED",
+      "IMPORT_REQUESTED",
+      "PICK_FAILED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

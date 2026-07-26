@@ -30,7 +30,7 @@ const ALIAS = 'Calendar';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdCalendarEventKey = 'CalendarEventLoadFailed' | 'CalendarEventLoaded' | 'INIT' | 'SELECT_DAY' | 'SELECT_SLOT';
+export type StdCalendarEventKey = '' | 'CALENDAR_NEXT_WEEK' | 'CALENDAR_PREV_WEEK' | 'CalendarEventLoadFailed' | 'CalendarEventLoaded' | 'INIT' | 'SELECT_DAY' | 'SELECT_SLOT';
 
 /**
  * Payload shape for the `CalendarEventLoaded` event.
@@ -48,6 +48,13 @@ export interface StdCalendarCalendarEventLoadFailedPayload {
 }
 
 /**
+ * Payload shape for the `` event.
+ */
+export interface StdCalendarPayload {
+  event?: EntityRow;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -58,12 +65,16 @@ export interface StdCalendarConfig {
   agendaListBodyContent?: unknown;
   /** Default: `"@item.status"` */
   badgeBinding?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"events":"@payload.data","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}],"itemActions":[{"event":"SELECT_DAY","icon":"eye","label":"View"}],"look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}],"itemActions":[{"event":"SELECT_DAY","icon":"eye","label":"View"}],"look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `"month"` */
   calendarLook?: 'month' | 'agenda-list' | 'week-timeline';
   /** Default: `"@item.description"` */
   descriptionBinding?: string;
+  /** Default: `""` */
+  onEventClick?: string;
+  /** Default: `"date"` */
+  startField?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"@item.time"` */
@@ -72,7 +83,7 @@ export interface StdCalendarConfig {
   title?: string;
   /** Default: `"@item.name"` */
   titleBinding?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"Week","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"className":"w-full","dayWindow":7,"events":"@payload.data","type":"calendar-grid"}],"direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"Week","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"align":"center","children":[{"action":"CALENDAR_PREV_WEEK","icon":"chevron-left","label":"Previous week","type":"button","variant":"ghost"},{"color":"muted","content":["time/format","@entity.weekAnchor","MMM D, YYYY"],"type":"typography","variant":"caption"},{"action":"CALENDAR_NEXT_WEEK","icon":"chevron-right","label":"Next week","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"className":"w-full","dayWindow":7,"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","swipeLeftEvent":"CALENDAR_NEXT_WEEK","swipeRightEvent":"CALENDAR_PREV_WEEK","type":"calendar-grid","weekStart":"@entity.weekAnchor"}],"direction":"vertical","gap":"md","type":"stack"}` */
   weekTimelineBodyContent?: unknown;
 }
 

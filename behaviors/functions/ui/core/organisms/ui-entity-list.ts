@@ -438,9 +438,9 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               'tier': 'essential',
             },
             {
-              'description': 'User opened a record from the list.',
-              'key': 'VIEW',
-              'name': 'View',
+              'description': 'Item actions - schema-driven or function-based',
+              'key': 'ITEM_ACTIONS',
+              'name': 'Item Actions',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -450,9 +450,9 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               'tier': 'essential',
             },
             {
-              'description': 'Item actions - schema-driven or function-based',
-              'key': 'ITEM_ACTIONS',
-              'name': 'Item Actions',
+              'description': 'User opened a record from the list.',
+              'key': 'VIEW',
+              'name': 'View',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -545,18 +545,6 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                 ],
               ],
               'event': 'EntityListLoaded',
-              'from': 'idle',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'emit',
-                  'VIEW',
-                  {},
-                ],
-              ],
-              'event': 'VIEW',
               'from': 'idle',
               'to': 'idle',
             },

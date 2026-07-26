@@ -1,0 +1,195 @@
+{
+  "description": "ImportProgress — UI factory (1:1 with the @almadar/ui import-progress pattern).",
+  "ledger": {
+    "entries": {
+      "ent_01KYEH6M2N4JD9AVNYDDM1MNWX": {
+        "bakedName": "ImportProgressItem",
+        "curName": "ImportProgressItem",
+        "id": "ent_01KYEH6M2N4JD9AVNYDDM1MNWX",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KYEH6M2NVB372R30A7XR559S": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KYEH6M2NVB372R30A7XR559S",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KYEH6M2N8HH3KZKFH85HEKGS",
+        "renames": []
+      },
+      "orb_01KYEH6M2NH6740PTMP4V1HX41": {
+        "bakedName": "ImportProgressOrbital",
+        "curName": "ImportProgressOrbital",
+        "id": "orb_01KYEH6M2NH6740PTMP4V1HX41",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KYEH6M2ZP4YSGGEXCXRAD276": {
+        "bakedName": "ImportProgressPage",
+        "curName": "ImportProgressPage",
+        "id": "pag_01KYEH6M2ZP4YSGGEXCXRAD276",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KYEH6M2N8HH3KZKFH85HEKGS": {
+        "bakedName": "ImportProgressRender",
+        "curName": "ImportProgressRender",
+        "id": "trt_01KYEH6M2N8HH3KZKFH85HEKGS",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "ui-import-progress",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01KYEH6M2N4JD9AVNYDDM1MNWX",
+        "name": "ImportProgressItem",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KYEH6M2NH6740PTMP4V1HX41",
+      "name": "ImportProgressOrbital",
+      "pages": [
+        {
+          "id": "pag_01KYEH6M2ZP4YSGGEXCXRAD276",
+          "name": "ImportProgressPage",
+          "path": "/import-progress",
+          "traits": [
+            {
+              "ref": "ImportProgressRender",
+              "refId": "trt_01KYEH6M2N8HH3KZKFH85HEKGS"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "counts": {
+              "description": "Unit counts",
+              "label": "Counts",
+              "properties": {
+                "committed": {
+                  "name": "committed",
+                  "required": false,
+                  "type": "number"
+                },
+                "failed": {
+                  "name": "failed",
+                  "required": false,
+                  "type": "number"
+                },
+                "staged": {
+                  "name": "staged",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "tier": "presentation",
+              "type": "ImportProgressCounts"
+            },
+            "labels": {
+              "default": {
+                "item": "Item"
+              },
+              "description": "Step label overrides",
+              "items": {
+                "type": "string"
+              },
+              "label": "Labels",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
+            "step": {
+              "default": "fetching",
+              "description": "Current lifecycle step",
+              "label": "Step",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "fetching",
+                "mapping",
+                "reviewing",
+                "committing",
+                "done",
+                "failed"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "ImportProgressItem": "ent_01KYEH6M2N4JD9AVNYDDM1MNWX"
+          },
+          "id": "trt_01KYEH6M2N8HH3KZKFH85HEKGS",
+          "linkedEntity": "ImportProgressItem",
+          "linkedEntityId": "ent_01KYEH6M2N4JD9AVNYDDM1MNWX",
+          "name": "ImportProgressRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KYEH6M2NVB372R30A7XR559S",
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "counts": "@config.counts",
+                      "labels": "@config.labels",
+                      "step": "@config.step",
+                      "type": "import-progress"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KYEH6M2NVB372R30A7XR559S",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

@@ -1,0 +1,90 @@
+app std-graph-builder "1.0.0"
+"Graph construction atom — builds node/edge structures from an entity collection for downstream GNN pipelines; pure array/object transform, no ML compute."
+
+orbital GraphBuilderOrbital {
+
+  entity GraphStructure [runtime] {
+    nodes     : [object] = []
+    edges     : [object] = []
+    nodeCount : int = 0
+    edgeCount : int = 0
+    status    : "idle" | "built" = idle
+  }
+
+  trait GraphBuilderRun -> GraphStructure [lifecycle, instance] {
+    initial: idle
+
+    config {
+      edgeField : string = ""
+        @label "Edge field"
+        @description "Field on each source entity holding its adjacency — an array of target ids"
+        @tier "domain"
+      nodeFeatures : [string] = []
+        @label "Node features"
+        @description "Entity fields carried onto each node alongside id"
+        @tier "domain"
+      directed : boolean = false
+        @label "Directed"
+        @description "Carried through for downstream consumers; edges are emitted once per adjacency entry, so an undirected reader should treat each edge as bidirectional"
+        @tier "policy"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.nodes [])
+        (set @entity.edges [])
+        (set @entity.nodeCount 0)
+        (set @entity.edgeCount 0)
+        (set @entity.status idle)
+
+      BUILD_GRAPH -> built
+        (let ((nodeFields (array/unique (array/append @config.nodeFeatures "id")))
+              (nodes (array/map ?entities (fn e (object/pick @e @nodeFields))))
+              (edges (array/flatten (array/map ?entities (fn e
+                        (array/map (object/get @e @config.edgeField [])
+                          (fn target { source: (object/get @e "id"), target: @target })))))))
+          (do
+            (set @entity.nodes @nodes)
+            (set @entity.edges @edges)
+            (set @entity.nodeCount (array/len @nodes))
+            (set @entity.edgeCount (array/len @edges))
+            (set @entity.status built)
+            (emit GRAPH_READY {
+              nodes: @nodes,
+              edges: @edges,
+              nodeCount: (array/len @nodes),
+              edgeCount: (array/len @edges)
+            })))
+    }
+
+    state built {
+      INIT -> built
+        (set @entity.status built)
+      RESET -> idle
+        (set @entity.nodes [])
+        (set @entity.edges [])
+        (set @entity.nodeCount 0)
+        (set @entity.edgeCount 0)
+        (set @entity.status idle)
+    }
+
+    emits {
+      GRAPH_READY -> external {
+        nodes : [object]!
+        edges : [object]!
+        nodeCount : int!
+        edgeCount : int!
+      }
+        @description "Fired when node/edge structures have been built from the source entity collection"
+        @tier "primary"
+    }
+
+    listens {
+      BUILD_GRAPH {
+        entities : [object]!
+      }
+    }
+  }
+
+  page "/graph-builder" as GraphBuilderPage -> GraphBuilderRun
+}

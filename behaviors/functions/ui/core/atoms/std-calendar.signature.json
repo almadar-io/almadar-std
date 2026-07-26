@@ -54,6 +54,12 @@
             "type": "string",
             "required": false,
             "intrinsic": true
+          },
+          {
+            "name": "weekAnchor",
+            "type": "date",
+            "required": false,
+            "intrinsic": true
           }
         ],
         "persistence": "runtime"
@@ -64,7 +70,8 @@
         "name": "CalendarEventCalendar",
         "emittedEvents": [
           "CalendarEventLoaded",
-          "CalendarEventLoadFailed"
+          "CalendarEventLoadFailed",
+          ""
         ],
         "listenedEvents": [],
         "events": [
@@ -83,6 +90,12 @@
             "tier": "internal"
           },
           {
+            "name": "",
+            "direction": "emit",
+            "description": "Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.",
+            "tier": "presentation"
+          },
+          {
             "name": "INIT",
             "direction": "listen"
           },
@@ -91,6 +104,20 @@
             "direction": "listen",
             "description": "A day has been chosen within the calendar view.",
             "synonyms": "choose, pick, set, highlight",
+            "tier": "domain"
+          },
+          {
+            "name": "CALENDAR_PREV_WEEK",
+            "direction": "listen",
+            "description": "Move the week timeline one week earlier.",
+            "synonyms": "previous week, back a week, earlier week, last week",
+            "tier": "domain"
+          },
+          {
+            "name": "CALENDAR_NEXT_WEEK",
+            "direction": "listen",
+            "description": "Move the week timeline one week later.",
+            "synonyms": "next week, forward a week, later week, following week",
             "tier": "domain"
           },
           {
@@ -289,6 +316,17 @@
                 },
                 {
                   "events": "@payload.data",
+                  "onEventClick": "@config.onEventClick",
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "content": "@config.titleBinding",
+                      "type": "typography",
+                      "variant": "small"
+                    }
+                  ],
+                  "startField": "@config.startField",
                   "type": "calendar-grid"
                 },
                 {
@@ -366,6 +404,24 @@
             "tier": "presentation"
           },
           {
+            "key": "onEventClick",
+            "type": "string",
+            "default": "",
+            "label": "On Event Click",
+            "description": "Event emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row. Empty means chips are not clickable.",
+            "synonyms": "open event, event click, select event, chip click",
+            "tier": "presentation"
+          },
+          {
+            "key": "startField",
+            "type": "string",
+            "default": "date",
+            "label": "Start field",
+            "description": "Row column holding the timestamp the calendar grid places each chip by. Rebound hosts point this at their own column (e.g. startTime, startsAt, dueAt); the chip's LABEL comes from titleBinding, not from here.",
+            "synonyms": "start column, date column, when field, timestamp field",
+            "tier": "presentation"
+          },
+          {
             "key": "tableLook",
             "type": "string",
             "default": "dense",
@@ -430,6 +486,38 @@
                       "type": "stack"
                     },
                     {
+                      "align": "center",
+                      "children": [
+                        {
+                          "action": "CALENDAR_PREV_WEEK",
+                          "icon": "chevron-left",
+                          "label": "Previous week",
+                          "type": "button",
+                          "variant": "ghost"
+                        },
+                        {
+                          "color": "muted",
+                          "content": [
+                            "time/format",
+                            "@entity.weekAnchor",
+                            "MMM D, YYYY"
+                          ],
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "action": "CALENDAR_NEXT_WEEK",
+                          "icon": "chevron-right",
+                          "label": "Next week",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "xs",
+                      "type": "stack"
+                    },
+                    {
                       "onSelect": "SELECT_DAY",
                       "selected": "@entity.selectedRange",
                       "type": "date-range-selector"
@@ -447,7 +535,21 @@
                   "className": "w-full",
                   "dayWindow": 7,
                   "events": "@payload.data",
-                  "type": "calendar-grid"
+                  "onEventClick": "@config.onEventClick",
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "content": "@config.titleBinding",
+                      "type": "typography",
+                      "variant": "small"
+                    }
+                  ],
+                  "startField": "@config.startField",
+                  "swipeLeftEvent": "CALENDAR_NEXT_WEEK",
+                  "swipeRightEvent": "CALENDAR_PREV_WEEK",
+                  "type": "calendar-grid",
+                  "weekStart": "@entity.weekAnchor"
                 }
               ],
               "direction": "vertical",
@@ -461,6 +563,8 @@
         ],
         "capabilities": [],
         "transitionEvents": [
+          "CALENDAR_NEXT_WEEK",
+          "CALENDAR_PREV_WEEK",
           "CalendarEventLoadFailed",
           "CalendarEventLoaded",
           "INIT",
@@ -471,7 +575,8 @@
           "requires": [],
           "provides": [
             "date",
-            "selectedRange"
+            "selectedRange",
+            "weekAnchor"
           ]
         }
       }
@@ -484,6 +589,7 @@
       }
     ],
     "emittedEvents": [
+      "",
       "CalendarEventLoadFailed",
       "CalendarEventLoaded"
     ],

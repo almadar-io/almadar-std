@@ -1,0 +1,96 @@
+app ui-import-preview-tree "1.0.0"
+"ImportPreviewTree — UI factory (1:1 with the @almadar/ui import-preview-tree pattern)."
+orbital ImportPreviewTreeOrbital {
+  type ImportPreviewTreeUnitsItem = {
+    ref : string!
+    targetEntity : string!
+    fields : Map string json!
+    parentRef : string
+  }
+  type ImportPreviewTreeSkippedItem = {
+    ref : string!
+    reason : string!
+  }
+  type ImportPreviewTreeEntityDisplayValue = {
+    singular : string!
+    plural : string!
+  }
+
+  entity ImportPreviewTreeItem [runtime] {
+    id : string!
+  }
+
+  trait ImportPreviewTreeRender -> @rebindable ImportPreviewTreeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          units: @config.units
+          skipped: @config.skipped
+          entityDisplay: @config.entityDisplay
+          onConfirm: @config.onConfirm
+          onCancel: @config.onCancel
+          confirmLabel: @config.confirmLabel
+          cancelLabel: @config.cancelLabel
+          indent: @config.indent
+          className: @config.className
+          type: import-preview-tree
+        })
+    }
+
+    emits {
+      @config.onConfirm -> external {
+        id : string
+      }
+        @description "Called when the user confirms the staged import"
+        @tier "essential"
+      @config.onCancel -> external {
+        id : string
+      }
+        @description "Called when the user cancels the staged import"
+        @tier "essential"
+    }
+
+    config {
+      units : [ImportPreviewTreeUnitsItem] = [{ ref: "Ref", targetEntity: "Target Entity", fields: {}, parentRef: "Parent Ref" }, { ref: "Ref 2", targetEntity: "Target Entity 2", fields: {}, parentRef: "Parent Ref 2" }]
+        @label "Units"
+        @description "Staged units to preview"
+        @tier "presentation"
+      skipped : [ImportPreviewTreeSkippedItem] = []
+        @label "Skipped"
+        @description "Elements skipped during extraction, with reasons"
+        @tier "presentation"
+      entityDisplay : Map string ImportPreviewTreeEntityDisplayValue = { item: { singular: "Singular", plural: "Plural" } }
+        @label "Entity Display"
+        @description "Entity name → display labels; falls back to the entity name"
+        @tier "presentation"
+      onConfirm : string = "CONFIRM"
+        @label "On Confirm"
+        @description "Called when the user confirms the staged import"
+        @tier "presentation"
+      onCancel : string = "CANCEL"
+        @label "On Cancel"
+        @description "Called when the user cancels the staged import"
+        @tier "presentation"
+      confirmLabel : string = "Confirm import"
+        @label "Confirm Label"
+        @description "Confirm button label"
+        @tier "presentation"
+      cancelLabel : string = Cancel
+        @label "Cancel Label"
+        @description "Cancel button label"
+        @tier "presentation"
+      indent : number = 16
+        @label "Indent"
+        @description "Indent per tree depth in px (default: 16)"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/import-preview-tree" as ImportPreviewTreePage -> ImportPreviewTreeRender
+}

@@ -30,13 +30,20 @@ const ALIAS = 'UiSearchInput';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiSearchInputEventKey = 'INIT' | 'SEARCH';
+export type StdUiSearchInputEventKey = 'EVENT' | 'INIT' | 'SEARCH';
 
 /**
  * Payload shape for the `SEARCH` event.
  */
 export interface StdUiSearchInputSearchPayload {
   value?: string;
+}
+
+/**
+ * Payload shape for the `EVENT` event.
+ */
+export interface StdUiSearchInputEventPayload {
+  id?: string;
 }
 
 /**
@@ -51,6 +58,7 @@ export interface StdUiSearchInputConfig {
   clearable?: boolean;
   /** Default: `300` */
   debounceMs?: number;
+  /** Default: `"EVENT"` */
   event?: string;
   /** Default: `false` */
   isLoading?: boolean;

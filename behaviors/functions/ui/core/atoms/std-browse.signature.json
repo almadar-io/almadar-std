@@ -37,7 +37,9 @@
       {
         "name": "DataGrid1",
         "emittedEvents": [],
-        "listenedEvents": [],
+        "listenedEvents": [
+          "BrowseItemLoaded"
+        ],
         "overridableConfigKeys": [
           {
             "key": "cols",
@@ -76,7 +78,9 @@
       {
         "name": "DenseTableView",
         "emittedEvents": [],
-        "listenedEvents": [],
+        "listenedEvents": [
+          "BrowseItemLoaded"
+        ],
         "overridableConfigKeys": [
           {
             "key": "columns",
@@ -221,6 +225,15 @@
             "tier": "internal"
           },
           {
+            "key": "bodySearch",
+            "type": "boolean",
+            "default": true,
+            "label": "Show the list's own search box?",
+            "description": "The dense/feed/gallery looks embed their own search box above the rows. Set false when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.",
+            "synonyms": "inline search, list search, built-in search, show search, duplicate search",
+            "tier": "presentation"
+          },
+          {
             "key": "browseLook",
             "type": "string",
             "default": "table",
@@ -335,22 +348,31 @@
             "type": "render-ui",
             "default": {
               "children": [
-                {
-                  "align": "center",
-                  "children": [
-                    {
-                      "className": "w-full max-w-2xl",
-                      "clearable": true,
-                      "event": "REFETCH_QUERY",
-                      "placeholder": "@config.searchPlaceholder",
-                      "type": "search-input"
-                    }
-                  ],
-                  "className": "w-full max-w-2xl",
-                  "direction": "horizontal",
-                  "gap": "sm",
-                  "type": "stack"
-                },
+                [
+                  "if",
+                  "@config.bodySearch",
+                  {
+                    "align": "center",
+                    "children": [
+                      {
+                        "className": "w-full max-w-2xl",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "className": "w-full max-w-2xl",
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 {
                   "children": [
                     "@trait.DenseTableView"
@@ -392,22 +414,31 @@
             "type": "render-ui",
             "default": {
               "children": [
-                {
-                  "align": "center",
-                  "children": [
-                    {
-                      "className": "w-full",
-                      "clearable": true,
-                      "event": "REFETCH_QUERY",
-                      "placeholder": "@config.searchPlaceholder",
-                      "type": "search-input"
-                    }
-                  ],
-                  "className": "w-full",
-                  "direction": "horizontal",
-                  "gap": "sm",
-                  "type": "stack"
-                },
+                [
+                  "if",
+                  "@config.bodySearch",
+                  {
+                    "align": "center",
+                    "children": [
+                      {
+                        "className": "w-full",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "className": "w-full",
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 {
                   "entity": "@payload.data",
                   "fields": [],
@@ -612,22 +643,31 @@
             "type": "render-ui",
             "default": {
               "children": [
-                {
-                  "align": "center",
-                  "children": [
-                    {
-                      "className": "w-full",
-                      "clearable": true,
-                      "event": "REFETCH_QUERY",
-                      "placeholder": "@config.searchPlaceholder",
-                      "type": "search-input"
-                    }
-                  ],
-                  "className": "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]",
-                  "direction": "horizontal",
-                  "gap": "sm",
-                  "type": "stack"
-                },
+                [
+                  "if",
+                  "@config.bodySearch",
+                  {
+                    "align": "center",
+                    "children": [
+                      {
+                        "className": "w-full",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "className": "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]",
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 {
                   "className": "w-full",
                   "entity": "@payload.data",
@@ -770,7 +810,7 @@
               "properties": {
                 "event": {
                   "name": "event",
-                  "required": true,
+                  "required": false,
                   "type": "string"
                 },
                 "icon": {
@@ -781,6 +821,11 @@
                 "label": {
                   "name": "label",
                   "required": true,
+                  "type": "string"
+                },
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -890,7 +935,9 @@
       "EDIT",
       "VIEW"
     ],
-    "listenedEvents": [],
+    "listenedEvents": [
+      "BrowseItemLoaded"
+    ],
     "exposure": "both",
     "provenance": "authored",
     "substrateSignature": "f2d70a52cbaf7dc5",

@@ -3410,7 +3410,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                         ],
                         [
                           'object/merge',
-                          'p',
+                          '@p',
                           {
                             'position': {
                               'x': [
@@ -3435,7 +3435,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                             'trackIndex': '@entity.playerIndex',
                           },
                         ],
-                        'p',
+                        '@p',
                       ],
                     ],
                   ],
@@ -5277,7 +5277,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                       ],
                       [
                         'object/merge',
-                        'p',
+                        '@p',
                         {
                           'position': {
                             'x': [
@@ -5302,7 +5302,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                           'trackIndex': '@entity.rivalIndex',
                         },
                       ],
-                      'p',
+                      '@p',
                     ],
                   ],
                 ],

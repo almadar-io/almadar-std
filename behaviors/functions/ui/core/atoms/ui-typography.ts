@@ -50,16 +50,16 @@ export interface StdUiTypographyConfig {
   level?: number;
   /** Default: `"visible"` */
   overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
-  /** Default: `"xs"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  /** Default: `"none"` */
+  size?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   /** Default: `{}` */
   style?: unknown;
   /** Default: `false` */
   truncate?: boolean;
   /** Default: `"h1"` */
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
-  /** Default: `"light"` */
-  weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
+  /** Default: `"none"` */
+  weight?: 'none' | 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
 }
 
 /**

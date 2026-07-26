@@ -1,0 +1,56 @@
+app std-data-collector "1.0.0"
+"std-data-collector — pure buffer-accumulation atom, parameterized for any ML domain. Collects data points into a buffer and fires BUFFER_READY with the full accumulated buffer once it reaches config.bufferSize, then resets for the next cycle. No ML compute, no model call — state machine + array operators only. Use ahead of a training loop, a batch inference call, or any downstream rung that needs a fixed-size window of accumulated observations."
+orbital MlDataCollectorOrbital {
+
+  entity DataBuffer [runtime] {
+    buffer : [any] @description "Data points accumulated in the current cycle." = []
+    count : int @description "Number of points currently in the buffer." = 0
+    status : "idle" | "collecting" = idle
+  }
+
+  trait DataCollectorRun -> @rebindable DataBuffer [lifecycle, instance] {
+    initial: collecting
+
+    state collecting {
+      INIT -> collecting
+        (set @entity.buffer [])
+        (set @entity.count 0)
+        (set @entity.status idle)
+
+      COLLECT -> collecting
+        (let ((newBuffer (array/append @entity.buffer ?point))
+              (newCount (+ @entity.count 1)))
+          (if (>= @newCount @config.bufferSize)
+              (do
+                (set @entity.buffer [])
+                (set @entity.count 0)
+                (set @entity.status idle)
+                (emit BUFFER_READY { buffer: @newBuffer, count: @newCount }))
+              (do
+                (set @entity.buffer @newBuffer)
+                (set @entity.count @newCount)
+                (set @entity.status collecting))))
+    }
+
+    emits {
+      BUFFER_READY -> external { buffer : [any]!, count : int! }
+        @description "Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle."
+        @tier "primary"
+    }
+
+    listens {
+      COLLECT {
+        point : any!
+      }
+    }
+
+    config {
+      bufferSize : int = 100
+        @label "Buffer size"
+        @description "Number of data points collected before BUFFER_READY fires."
+        @tier "domain"
+    }
+  }
+
+  page "/ml-data-collector" as MlDataCollectorPage -> DataCollectorRun
+}

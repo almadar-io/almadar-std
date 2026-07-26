@@ -1,0 +1,139 @@
+[
+  {
+    "organism": "std-weight-validator",
+    "orbital": "MlWeightValidatorOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-weight-validator.ts",
+    "entities": [
+      {
+        "name": "WeightValidation",
+        "fields": [
+          {
+            "name": "weights",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "baseline",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "violations",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "valid",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "WeightValidatorRun",
+        "emittedEvents": [
+          "WEIGHTS_ACCEPTED",
+          "WEIGHTS_REJECTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "WEIGHTS_ACCEPTED",
+            "direction": "emit",
+            "description": "All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear",
+            "tier": "primary"
+          },
+          {
+            "name": "WEIGHTS_REJECTED",
+            "direction": "emit",
+            "description": "At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "VALIDATE_WEIGHTS",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "forbiddenRegions",
+            "type": "[Range]",
+            "default": [],
+            "label": "Forbidden regions",
+            "description": "Value ranges no weight may fall inside, even within the magnitude bound",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "max": {
+                  "name": "max",
+                  "required": true,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "maxMagnitude",
+            "type": "float",
+            "default": 10,
+            "label": "Max weight magnitude",
+            "description": "Every weight's absolute value must not exceed this bound",
+            "tier": "policy"
+          },
+          {
+            "key": "regressionThreshold",
+            "type": "float",
+            "default": 0,
+            "label": "Regression threshold",
+            "description": "Max allowed per-element absolute drift between candidate and baseline weights; 0 disables the regression check",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "INIT",
+          "RESET",
+          "VALIDATE_WEIGHTS"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlWeightValidatorPage",
+        "defaultPath": "/ml-weight-validator",
+        "primaryEntity": "WeightValidation"
+      }
+    ],
+    "emittedEvents": [
+      "WEIGHTS_ACCEPTED",
+      "WEIGHTS_REJECTED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

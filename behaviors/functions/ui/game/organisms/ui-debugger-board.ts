@@ -862,26 +862,26 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           '==',
                           [
                             'object/get',
-                            'l',
+                            '@l',
                             'id',
                           ],
                           '@payload.lineId',
                         ],
                         [
                           'object/merge',
-                          'l',
+                          '@l',
                           {
                             'isFlagged': [
                               'not',
                               [
                                 'object/get',
-                                'l',
+                                '@l',
                                 'isFlagged',
                               ],
                             ],
                           },
                         ],
-                        'l',
+                        '@l',
                       ],
                     ],
                   ],
@@ -1120,14 +1120,14 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           'and',
                           [
                             'object/get',
-                            'l',
+                            '@l',
                             'isBug',
                           ],
                           [
                             'not',
                             [
                               'object/get',
-                              'l',
+                              '@l',
                               'isFlagged',
                             ],
                           ],
@@ -1153,13 +1153,13 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                             'not',
                             [
                               'object/get',
-                              'l',
+                              '@l',
                               'isBug',
                             ],
                           ],
                           [
                             'object/get',
-                            'l',
+                            '@l',
                             'isFlagged',
                           ],
                         ],
@@ -1298,14 +1298,14 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           'and',
                           [
                             'object/get',
-                            'l',
+                            '@l',
                             'isBug',
                           ],
                           [
                             'not',
                             [
                               'object/get',
-                              'l',
+                              '@l',
                               'isFlagged',
                             ],
                           ],
@@ -1331,13 +1331,13 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                             'not',
                             [
                               'object/get',
-                              'l',
+                              '@l',
                               'isBug',
                             ],
                           ],
                           [
                             'object/get',
-                            'l',
+                            '@l',
                             'isFlagged',
                           ],
                         ],

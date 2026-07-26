@@ -1,0 +1,67 @@
+app ui-import-source-picker "1.0.0"
+"ImportSourcePicker — UI factory (1:1 with the @almadar/ui import-source-picker pattern)."
+orbital ImportSourcePickerOrbital {
+  type ImportSourcePickerSourcesItem = {
+    id : string!
+    label : string!
+    description : string
+    icon : icon
+    kind : "action" | "file"
+    accept : string
+    multiple : boolean
+    disabled : boolean
+  }
+
+  entity ImportSourcePickerItem [runtime] {
+    id : string!
+  }
+
+  trait ImportSourcePickerRender -> @rebindable ImportSourcePickerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          sources: @config.sources
+          onSelect: @config.onSelect
+          title: @config.title
+          moreSources: @config.moreSources
+          className: @config.className
+          type: import-source-picker
+        })
+    }
+
+    emits {
+      @config.onSelect -> external {
+        sourceId : string
+      }
+        @description "Called with the source id when an 'action' option is picked"
+        @tier "essential"
+    }
+
+    config {
+      sources : [ImportSourcePickerSourcesItem] = [{ id: "Id", label: "Label", description: "Description", icon: "circle", kind: action, accept: "Accept", multiple: false, disabled: false }, { id: "Id 2", label: "Label 2", description: "Description 2", icon: "circle", kind: file, accept: "Accept 2", multiple: true, disabled: true }]
+        @label "Sources"
+        @description "Source options to render"
+        @tier "presentation"
+      onSelect : string = "SELECT"
+        @label "On Select"
+        @description "Called with the source id when an 'action' option is picked"
+        @tier "presentation"
+      title : string
+        @label "Title"
+        @description "Optional heading above the options"
+        @tier "presentation"
+      moreSources : node
+        @label "More Sources"
+        @description "Generic slot for additional sources rendered below the options"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/import-source-picker" as ImportSourcePickerPage -> ImportSourcePickerRender
+}

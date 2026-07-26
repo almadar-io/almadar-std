@@ -1,0 +1,161 @@
+[
+  {
+    "organism": "std-tokenizer",
+    "orbital": "MlTokenizerOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-tokenizer.ts",
+    "entities": [
+      {
+        "name": "TokenSequence",
+        "fields": [
+          {
+            "name": "text",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "tokens",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tokenIds",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tokenCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "request",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TokenizerRun",
+        "emittedEvents": [
+          "TOKENIZED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TOKENIZED",
+            "direction": "emit",
+            "description": "Text tokenized into a normalized, truncated token sequence with vocabulary ids",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "TOKENIZE",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "delimiter",
+            "type": "string",
+            "default": ",",
+            "label": "Delimiter",
+            "description": "Split delimiter used when method is delimiter; ignored otherwise",
+            "tier": "domain"
+          },
+          {
+            "key": "lowercase",
+            "type": "boolean",
+            "default": true,
+            "label": "Lowercase",
+            "description": "Lowercase every token before vocabulary lookup",
+            "tier": "policy"
+          },
+          {
+            "key": "maxLength",
+            "type": "int",
+            "default": 512,
+            "label": "Max length",
+            "description": "Truncate the token sequence to at most this many tokens",
+            "tier": "policy"
+          },
+          {
+            "key": "method",
+            "type": "string",
+            "default": "whitespace",
+            "label": "Method",
+            "description": "Whitespace splits on single spaces, character splits into individual characters, delimiter splits on config.delimiter",
+            "tier": "policy",
+            "enumValues": [
+              "whitespace",
+              "character",
+              "delimiter"
+            ]
+          },
+          {
+            "key": "trimWhitespace",
+            "type": "boolean",
+            "default": true,
+            "label": "Trim whitespace",
+            "description": "Trim each token and drop tokens that are empty afterward",
+            "tier": "policy"
+          },
+          {
+            "key": "unkId",
+            "type": "int",
+            "default": 0,
+            "label": "Unknown token id",
+            "description": "Id assigned to a token that is not present in config.vocab",
+            "tier": "policy"
+          },
+          {
+            "key": "vocab",
+            "type": "Map<string,int>",
+            "default": {},
+            "label": "Vocabulary",
+            "description": "Token-to-id map; a token absent from this map resolves to unkId",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "INIT",
+          "RESET",
+          "TOKENIZE"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "MlTokenizerPage",
+        "defaultPath": "/ml-tokenizer",
+        "primaryEntity": "TokenSequence"
+      }
+    ],
+    "emittedEvents": [
+      "TOKENIZED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

@@ -1,0 +1,119 @@
+[
+  {
+    "organism": "std-graph-builder",
+    "orbital": "GraphBuilderOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ml/atoms/std-graph-builder.ts",
+    "entities": [
+      {
+        "name": "GraphStructure",
+        "fields": [
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "nodeCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "edgeCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GraphBuilderRun",
+        "emittedEvents": [
+          "GRAPH_READY"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "GRAPH_READY",
+            "direction": "emit",
+            "description": "Fired when node/edge structures have been built from the source entity collection",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BUILD_GRAPH",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "directed",
+            "type": "boolean",
+            "default": false,
+            "label": "Directed",
+            "description": "Carried through for downstream consumers; edges are emitted once per adjacency entry, so an undirected reader should treat each edge as bidirectional",
+            "tier": "policy"
+          },
+          {
+            "key": "edgeField",
+            "type": "string",
+            "default": "",
+            "label": "Edge field",
+            "description": "Field on each source entity holding its adjacency — an array of target ids",
+            "tier": "domain"
+          },
+          {
+            "key": "nodeFeatures",
+            "type": "[string]",
+            "default": [],
+            "label": "Node features",
+            "description": "Entity fields carried onto each node alongside id",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "capabilities": [],
+        "transitionEvents": [
+          "BUILD_GRAPH",
+          "INIT",
+          "RESET"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "GraphBuilderPage",
+        "defaultPath": "/graph-builder",
+        "primaryEntity": "GraphStructure"
+      }
+    ],
+    "emittedEvents": [
+      "GRAPH_READY"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

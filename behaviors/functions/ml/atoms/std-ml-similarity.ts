@@ -52,6 +52,7 @@ export interface StdMlSimilaritySimilarityMatchedPayload {
  */
 export interface StdMlSimilaritySimilarityAbstainedPayload {
   reason: string;
+  request?: EntityRow;
 }
 
 /**

@@ -1,0 +1,49 @@
+app ui-import-progress "1.0.0"
+"ImportProgress — UI factory (1:1 with the @almadar/ui import-progress pattern)."
+orbital ImportProgressOrbital {
+  type ImportProgressCounts = {
+    staged : number
+    committed : number
+    failed : number
+  }
+
+  entity ImportProgressItem [runtime] {
+    id : string!
+  }
+
+  trait ImportProgressRender -> @rebindable ImportProgressItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          step: @config.step
+          counts: @config.counts
+          labels: @config.labels
+          className: @config.className
+          type: import-progress
+        })
+    }
+
+    config {
+      step : "fetching" | "mapping" | "reviewing" | "committing" | "done" | "failed" = fetching
+        @label "Step"
+        @description "Current lifecycle step"
+        @tier "presentation"
+      counts : ImportProgressCounts
+        @label "Counts"
+        @description "Unit counts"
+        @tier "presentation"
+      labels : Map string string = { item: "Item" }
+        @label "Labels"
+        @description "Step label overrides"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/import-progress" as ImportProgressPage -> ImportProgressRender
+}
