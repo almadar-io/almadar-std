@@ -25,49 +25,10 @@ const BEHAVIOR_PATH = 'std/behaviors/std-billable-hour';
 const ALIAS = 'BillableHour';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
  */
-export type StdBillableHourEventKey = 'BillableHourLoadFailed' | 'BillableHourLoaded' | 'CLOSE_VIEW' | 'INIT' | 'INVOICE_HOURS' | 'OPEN_HOURS' | 'WRITE_OFF_HOURS';
-
-/**
- * Payload shape for the `OPEN_HOURS` event.
- */
-export interface StdBillableHourOpenHoursPayload {
-  id: string;
-  row?: EntityRow;
-}
-
-/**
- * Payload shape for the `INVOICE_HOURS` event.
- */
-export interface StdBillableHourInvoiceHoursPayload {
-  id: string;
-}
-
-/**
- * Payload shape for the `WRITE_OFF_HOURS` event.
- */
-export interface StdBillableHourWriteOffHoursPayload {
-  id: string;
-}
-
-/**
- * Payload shape for the `BillableHourLoaded` event.
- */
-export interface StdBillableHourBillableHourLoadedPayload {
-  data?: EntityRow[];
-}
-
-/**
- * Payload shape for the `BillableHourLoadFailed` event.
- */
-export interface StdBillableHourBillableHourLoadFailedPayload {
-  error?: string;
-  code?: string;
-}
+export type StdBillableHourListenKey = 'BillableHourLoaded';
 
 /**
  * Typed call-site config block for this trait — every
@@ -76,12 +37,16 @@ export interface StdBillableHourBillableHourLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBillableHourConfig {
-  /** Default: `"elevated"` */
-  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Time Entries"` */
-  title?: string;
+  /** Default: `"@config.columns"` */
+  columns?: unknown;
+  /** Default: `"No time entries"` */
+  emptyMessage?: unknown;
+  /** Default: `"@config.itemActions"` */
+  itemActions?: unknown;
+  /** Default: `"@config.tableLook"` */
+  look?: unknown;
+  /** Default: `2` */
+  maxInlineActions?: unknown;
 }
 
 /**
@@ -100,8 +65,8 @@ export interface StdBillableHourParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdBillableHourEventKey, string>>;
+  /** Per-key event rename map (atom key → caller key). */
+  events?: Record<string, string>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -114,8 +79,23 @@ export interface StdBillableHourParams {
   pagePath?: string;
 }
 
+/** Trait descriptor: `BillableHour.traits.DenseHoursTable`. */
+export function stdBillableHourDenseHoursTableTrait(params: StdBillableHourParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.DenseHoursTable`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `BillableHour.traits.BillableHourTimesheet`. */
-export function stdBillableHourTrait(params: StdBillableHourParams): TraitReference {
+export function stdBillableHourBillableHourTimesheetTrait(params: StdBillableHourParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.BillableHourTimesheet`,
@@ -151,7 +131,8 @@ export function stdBillableHour(params: StdBillableHourParams): OrbitalDefinitio
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdBillableHourTrait(params),
+      stdBillableHourDenseHoursTableTrait(params),
+      stdBillableHourBillableHourTimesheetTrait(params),
     ],
     pages: [
       stdBillableHourPage(params),

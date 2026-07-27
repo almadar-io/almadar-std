@@ -42,31 +42,37 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "entity": "@entity.cards",
-              "fields": [],
-              "renderItem": [
-                "fn",
-                "card",
+              "children": [
                 {
-                  "clickEvent": "@card.clickEvent",
-                  "format": "@card.format",
-                  "icon": "@card.icon",
-                  "label": "@card.label",
-                  "look": "@config.statLook",
-                  "max": "@card.max",
-                  "prefix": "@card.prefix",
-                  "sparklineData": "@card.sparklineData",
-                  "suffix": "@card.suffix",
-                  "target": "@card.target",
-                  "trend": "@card.trend",
-                  "trendFormat": "@card.trendFormat",
-                  "trendPolarity": "@card.trendPolarity",
-                  "type": "stat-display",
-                  "value": "@card.value",
-                  "variant": "@card.variant"
+                  "entity": "@entity.cards",
+                  "fields": [],
+                  "renderItem": [
+                    "fn",
+                    "card",
+                    {
+                      "clickEvent": "@card.clickEvent",
+                      "format": "@card.format",
+                      "icon": "@card.icon",
+                      "label": "@card.label",
+                      "look": "@config.statLook",
+                      "max": "@card.max",
+                      "prefix": "@card.prefix",
+                      "sparklineData": "@card.sparklineData",
+                      "suffix": "@card.suffix",
+                      "target": "@card.target",
+                      "trend": "@card.trend",
+                      "trendFormat": "@card.trendFormat",
+                      "trendPolarity": "@card.trendPolarity",
+                      "type": "stat-display",
+                      "value": "@card.value",
+                      "variant": "@card.variant"
+                    }
+                  ],
+                  "type": "@config.viewPattern"
                 }
               ],
-              "type": "@config.viewPattern"
+              "data-theme": "@config.theme",
+              "type": "box"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after metrics aggregate for statsLook='cards' — the canonical data-grid call mapping @entity.cards through stat-display. Other statsLook values render kpiTilesBodyContent / heroMetricBodyContent / sparklineRowBodyContent instead; all four share this trait's state machine, aggregation pipeline, and listens.",
@@ -76,106 +82,112 @@
             "key": "heroMetricBodyContent",
             "type": "render-ui",
             "default": {
-              "entity": "@entity.cards",
-              "fields": [],
-              "gap": "none",
-              "renderItem": [
-                "fn",
-                "card",
+              "children": [
                 {
-                  "children": [
+                  "entity": "@entity.cards",
+                  "fields": [],
+                  "gap": "none",
+                  "renderItem": [
+                    "fn",
+                    "card",
                     {
                       "children": [
                         {
-                          "align": "center",
                           "children": [
                             {
                               "align": "center",
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "name": "@card.icon",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "name": "@card.icon",
+                                      "size": "md",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "className": "uppercase tracking-widest",
+                                      "color": "muted",
+                                      "content": "@card.label",
+                                      "type": "typography",
+                                      "variant": "overline",
+                                      "weight": "bold"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "center",
+                                  "type": "stack"
+                                },
+                                {
+                                  "align": "baseline",
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": "@card.prefix",
+                                      "type": "typography",
+                                      "variant": "h2",
+                                      "weight": "normal"
+                                    },
+                                    {
+                                      "className": "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]",
+                                      "format": "@card.format",
+                                      "type": "animated-counter",
+                                      "value": "@card.value"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "content": "@card.suffix",
+                                      "type": "typography",
+                                      "variant": "h2",
+                                      "weight": "normal"
+                                    }
+                                  ],
+                                  "className": "py-section",
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "justify": "center",
+                                  "type": "stack"
+                                },
+                                {
+                                  "showValue": true,
                                   "size": "md",
-                                  "type": "icon"
-                                },
-                                {
-                                  "className": "uppercase tracking-widest",
-                                  "color": "muted",
-                                  "content": "@card.label",
-                                  "type": "typography",
-                                  "variant": "overline",
-                                  "weight": "bold"
+                                  "type": "trend-indicator",
+                                  "value": "@card.trend"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "center",
+                              "className": "relative z-10 w-full max-w-2xl mx-auto text-center",
+                              "direction": "vertical",
+                              "gap": "md",
                               "type": "stack"
                             },
                             {
-                              "align": "baseline",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "content": "@card.prefix",
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "weight": "normal"
-                                },
-                                {
-                                  "className": "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]",
-                                  "format": "@card.format",
-                                  "type": "animated-counter",
-                                  "value": "@card.value"
-                                },
-                                {
-                                  "color": "muted",
-                                  "content": "@card.suffix",
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "weight": "normal"
-                                }
-                              ],
-                              "className": "py-section",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "justify": "center",
-                              "type": "stack"
-                            },
-                            {
-                              "showValue": true,
-                              "size": "md",
-                              "type": "trend-indicator",
-                              "value": "@card.trend"
+                              "className": "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none",
+                              "color": "auto",
+                              "data": "@card.sparklineData",
+                              "fill": true,
+                              "height": 96,
+                              "strokeWidth": 1,
+                              "type": "sparkline"
                             }
                           ],
-                          "className": "relative z-10 w-full max-w-2xl mx-auto text-center",
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "className": "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none",
-                          "color": "auto",
-                          "data": "@card.sparklineData",
-                          "fill": true,
-                          "height": 96,
-                          "strokeWidth": 1,
-                          "type": "sparkline"
+                          "look": "elevated",
+                          "padding": "lg",
+                          "type": "card"
                         }
                       ],
-                      "look": "elevated",
-                      "padding": "lg",
-                      "type": "card"
+                      "className": "relative w-full rounded-xl shadow-lg overflow-hidden",
+                      "direction": "vertical",
+                      "gap": "none",
+                      "type": "stack"
                     }
                   ],
-                  "className": "relative w-full rounded-xl shadow-lg overflow-hidden",
-                  "direction": "vertical",
-                  "gap": "none",
-                  "type": "stack"
+                  "type": "data-list"
                 }
               ],
-              "type": "data-list"
+              "data-theme": "@config.theme",
+              "type": "box"
             },
             "label": "Hero metric body content tree",
             "description": "Render-ui SExpr for statsLook='hero-metric' — one elevated card, one oversize number, background sparkline.",
@@ -185,95 +197,101 @@
             "key": "kpiTilesBodyContent",
             "type": "render-ui",
             "default": {
-              "className": "w-full",
-              "entity": "@entity.cards",
-              "fields": [],
-              "gap": "lg",
-              "minCardWidth": 220,
-              "renderItem": [
-                "fn",
-                "card",
+              "children": [
                 {
-                  "children": [
+                  "className": "w-full",
+                  "entity": "@entity.cards",
+                  "fields": [],
+                  "gap": "lg",
+                  "minCardWidth": 220,
+                  "renderItem": [
+                    "fn",
+                    "card",
                     {
-                      "align": "center",
                       "children": [
                         {
-                          "className": "uppercase tracking-wide",
-                          "color": "muted",
-                          "content": "@card.label",
-                          "type": "typography",
-                          "variant": "caption",
-                          "weight": "medium"
+                          "align": "center",
+                          "children": [
+                            {
+                              "className": "uppercase tracking-wide",
+                              "color": "muted",
+                              "content": "@card.label",
+                              "type": "typography",
+                              "variant": "caption",
+                              "weight": "medium"
+                            },
+                            {
+                              "color": "muted",
+                              "name": "@card.icon",
+                              "size": "sm",
+                              "type": "icon"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "xs",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
-                          "color": "muted",
-                          "name": "@card.icon",
-                          "size": "sm",
-                          "type": "icon"
+                          "align": "baseline",
+                          "children": [
+                            {
+                              "color": "muted",
+                              "content": "@card.prefix",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "className": "text-4xl font-bold tracking-tight",
+                              "format": "@card.format",
+                              "type": "animated-counter",
+                              "value": "@card.value"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@card.suffix",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "xs",
+                          "type": "stack"
+                        },
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "showValue": true,
+                              "size": "sm",
+                              "type": "trend-indicator",
+                              "value": "@card.trend"
+                            },
+                            {
+                              "className": "flex-1",
+                              "color": "auto",
+                              "data": "@card.sparklineData",
+                              "fill": true,
+                              "height": 24,
+                              "type": "sparkline"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         }
                       ],
-                      "direction": "horizontal",
-                      "gap": "xs",
-                      "justify": "between",
-                      "type": "stack"
-                    },
-                    {
-                      "align": "baseline",
-                      "children": [
-                        {
-                          "color": "muted",
-                          "content": "@card.prefix",
-                          "type": "typography",
-                          "variant": "caption"
-                        },
-                        {
-                          "className": "text-4xl font-bold tracking-tight",
-                          "format": "@card.format",
-                          "type": "animated-counter",
-                          "value": "@card.value"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "@card.suffix",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "xs",
-                      "type": "stack"
-                    },
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "showValue": true,
-                          "size": "sm",
-                          "type": "trend-indicator",
-                          "value": "@card.trend"
-                        },
-                        {
-                          "className": "flex-1",
-                          "color": "auto",
-                          "data": "@card.sparklineData",
-                          "fill": true,
-                          "height": 24,
-                          "type": "sparkline"
-                        }
-                      ],
-                      "direction": "horizontal",
+                      "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
+                      "direction": "vertical",
                       "gap": "sm",
                       "type": "stack"
                     }
                   ],
-                  "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
-                  "direction": "vertical",
-                  "gap": "sm",
-                  "type": "stack"
+                  "type": "data-grid"
                 }
               ],
-              "type": "data-grid"
+              "data-theme": "@config.theme",
+              "type": "box"
             },
             "label": "KPI tiles body content tree",
             "description": "Render-ui SExpr for statsLook='kpi-tiles' — Stripe-dashboard style tile grid: huge typography number, label, trend indicator, sparkline hint.",
@@ -432,71 +450,34 @@
             "key": "sparklineRowBodyContent",
             "type": "render-ui",
             "default": {
-              "className": "w-full",
-              "entity": "@entity.cards",
-              "fields": [],
-              "gap": "md",
-              "minCardWidth": 260,
-              "renderItem": [
-                "fn",
-                "card",
+              "children": [
                 {
-                  "children": [
+                  "className": "w-full",
+                  "entity": "@entity.cards",
+                  "fields": [],
+                  "gap": "md",
+                  "minCardWidth": 260,
+                  "renderItem": [
+                    "fn",
+                    "card",
                     {
-                      "align": "center",
                       "children": [
                         {
-                          "color": "muted",
-                          "name": "@card.icon",
-                          "size": "xs",
-                          "type": "icon"
-                        },
-                        {
-                          "className": "uppercase tracking-wide truncate",
-                          "color": "muted",
-                          "content": "@card.label",
-                          "type": "typography",
-                          "variant": "overline",
-                          "weight": "semibold"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "xs",
-                      "type": "stack"
-                    },
-                    {
-                      "className": "w-full",
-                      "color": "auto",
-                      "data": "@card.sparklineData",
-                      "fill": true,
-                      "height": 64,
-                      "strokeWidth": 2,
-                      "type": "sparkline"
-                    },
-                    {
-                      "align": "baseline",
-                      "children": [
-                        {
-                          "align": "baseline",
+                          "align": "center",
                           "children": [
                             {
                               "color": "muted",
-                              "content": "@card.prefix",
-                              "type": "typography",
-                              "variant": "caption"
+                              "name": "@card.icon",
+                              "size": "xs",
+                              "type": "icon"
                             },
                             {
-                              "className": "tabular-nums",
-                              "content": "@card.value",
-                              "type": "typography",
-                              "variant": "h3",
-                              "weight": "semibold"
-                            },
-                            {
+                              "className": "uppercase tracking-wide truncate",
                               "color": "muted",
-                              "content": "@card.suffix",
+                              "content": "@card.label",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "overline",
+                              "weight": "semibold"
                             }
                           ],
                           "direction": "horizontal",
@@ -504,25 +485,68 @@
                           "type": "stack"
                         },
                         {
-                          "showValue": true,
-                          "size": "sm",
-                          "type": "trend-indicator",
-                          "value": "@card.trend"
+                          "className": "w-full",
+                          "color": "auto",
+                          "data": "@card.sparklineData",
+                          "fill": true,
+                          "height": 64,
+                          "strokeWidth": 2,
+                          "type": "sparkline"
+                        },
+                        {
+                          "align": "baseline",
+                          "children": [
+                            {
+                              "align": "baseline",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "@card.prefix",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "className": "tabular-nums",
+                                  "content": "@card.value",
+                                  "type": "typography",
+                                  "variant": "h3",
+                                  "weight": "semibold"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@card.suffix",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "showValue": true,
+                              "size": "sm",
+                              "type": "trend-indicator",
+                              "value": "@card.trend"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "type": "stack"
                         }
                       ],
-                      "direction": "horizontal",
+                      "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]",
+                      "direction": "vertical",
                       "gap": "sm",
-                      "justify": "between",
                       "type": "stack"
                     }
                   ],
-                  "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]",
-                  "direction": "vertical",
-                  "gap": "sm",
-                  "type": "stack"
+                  "type": "data-grid"
                 }
               ],
-              "type": "data-grid"
+              "data-theme": "@config.theme",
+              "type": "box"
             },
             "label": "Sparkline row body content tree",
             "description": "Render-ui SExpr for statsLook='sparkline-row' — chart-first tiles where the mini trend line is the visual centerpiece, label above, value+delta footer.",
@@ -556,6 +580,14 @@
               "hero-metric",
               "sparkline-row"
             ]
+          },
+          {
+            "key": "theme",
+            "type": "string",
+            "default": "",
+            "label": "Theme",
+            "description": "Data-theme skin applied to the stat body root — for chrome-less pages composed without an AppShell.",
+            "tier": "presentation"
           },
           {
             "key": "title",

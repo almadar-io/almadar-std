@@ -30,7 +30,7 @@ const ALIAS = 'Board';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdBoardEventKey = 'ADD_CARD' | 'BoardItemsLoadFailed' | 'BoardItemsLoaded' | 'BoardItemsSaveFailed' | 'BoardItemsSaved' | 'CANCEL_ADD' | 'CLOSE_CARD' | 'DELETE_CARD' | 'INIT' | 'MOVE_CARD' | 'OPEN_CARD' | 'REORDER_CARD' | 'REORDER_POSITION' | 'SAVE_CARD';
+export type StdBoardEventKey = 'ADD_CARD' | 'BoardItemsLoadFailed' | 'BoardItemsLoaded' | 'BoardItemsSaveFailed' | 'BoardItemsSaved' | 'CANCEL_ADD' | 'CLOSE_CARD' | 'DELETE_CARD' | 'EDIT_CARD' | 'INIT' | 'MOVE_CARD' | 'OPEN_CARD' | 'REORDER_CARD' | 'REORDER_POSITION' | 'SAVE_CARD';
 
 /**
  * Payload shape for the `OPEN_CARD` event.
@@ -74,6 +74,14 @@ export interface StdBoardDeleteCardPayload {
 }
 
 /**
+ * Payload shape for the `EDIT_CARD` event.
+ */
+export interface StdBoardEditCardPayload {
+  id: string;
+  row?: EntityRow;
+}
+
+/**
  * Payload shape for the `BoardItemsLoaded` event.
  */
 export interface StdBoardBoardItemsLoadedPayload {
@@ -114,6 +122,8 @@ export interface StdBoardConfig {
   boardLook?: 'columns' | 'kanban-classic';
   /** Default: `{"children":[{"align":"center","children":[{"name":"kanban-square","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"},{"cols":"@config.gridCols","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"md","renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","type":"badge","variant":"@col.variant"}],"direction":"horizontal","gap":"xs","type":"stack"},{"accepts":"*","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"h4"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"icon":"arrow-right","label":"Open","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"look":"@config.cardLook","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"sm","type":"stack"}],"look":"@config.cardLook","type":"card"}],"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add item","type":"floating-action-button","variant":"primary"}],"direction":"vertical","gap":"md","type":"stack"}` */
   bodyContent?: unknown;
+  /** Default: `{"align":"center","children":[{"action":"DELETE_CARD","actionPayload":{"id":"@entity.currentId"},"icon":"trash-2","label":"Delete","type":"button","variant":"danger"}],"direction":"horizontal","gap":"sm","type":"stack"}` */
+  cardActionsContent?: unknown;
   /** Default: `"@item.description"` */
   cardDescriptionBinding?: string;
   /** Default: `"@item.id"` */
@@ -132,7 +142,7 @@ export interface StdBoardConfig {
   gridCols?: number;
   /** Default: `"stage"` */
   groupByField?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"name":"kanban-square","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"},{"className":"w-full pb-2","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":"*","className":"p-card-md min-h-[120px]","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"primary"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"elevated","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"}],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"name":"kanban-square","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"},{"className":"w-full pb-2","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":"*","className":"p-card-md min-h-[120px]","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"primary"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"@config.cardLook","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"}],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
   kanbanClassicBodyContent?: unknown;
   /** Default: `"Board"` */
   title?: string;

@@ -80,6 +80,12 @@
             "intrinsic": true
           },
           {
+            "name": "currentRow",
+            "type": "object",
+            "required": false,
+            "intrinsic": true
+          },
+          {
             "name": "errorMessage",
             "type": "string",
             "required": false,
@@ -101,6 +107,7 @@
           "MOVE_CARD",
           "REORDER_CARD",
           "DELETE_CARD",
+          "EDIT_CARD",
           "BoardItemsLoaded",
           "BoardItemsLoadFailed",
           "BoardItemsSaved",
@@ -163,6 +170,13 @@
             "description": "Signals removal of a card from the board.",
             "synonyms": "remove, delete, discard",
             "tier": "presentation"
+          },
+          {
+            "name": "EDIT_CARD",
+            "direction": "emit",
+            "description": "Signals a request to edit the currently open card. The board renders no edit form itself — consumers override cardActionsContent with an Edit button and wire this emit to their edit modal/form trait.",
+            "synonyms": "edit, modify, update, change",
+            "tier": "domain"
           },
           {
             "name": "BoardItemsLoaded",
@@ -366,6 +380,31 @@
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after the board loads for boardLook='columns' — the canonical column data-grid with nested per-column data-lists. boardLook='kanban-classic' renders kanbanClassicBodyContent instead; both share this trait's state machine, emits, and listens.",
             "tier": "internal"
+          },
+          {
+            "key": "cardActionsContent",
+            "type": "render-ui",
+            "default": {
+              "align": "center",
+              "children": [
+                {
+                  "action": "DELETE_CARD",
+                  "actionPayload": {
+                    "id": "@entity.currentId"
+                  },
+                  "icon": "trash-2",
+                  "label": "Delete",
+                  "type": "button",
+                  "variant": "danger"
+                }
+              ],
+              "direction": "horizontal",
+              "gap": "sm",
+              "type": "stack"
+            },
+            "label": "Card panel actions",
+            "description": "Actions row of the open-card panel. Default is the Delete button only. Override to add consumer-wired actions — e.g. an Edit button with action: EDIT_CARD and actionPayload: { id: @entity.currentId, row: @entity.currentRow }, listened to by the organism's edit modal. Never leave a button here without a listener.",
+            "tier": "presentation"
           },
           {
             "key": "cardDescriptionBinding",
@@ -632,7 +671,7 @@
                                     }
                                   ],
                                   "className": "cursor-grab hover:shadow-lg transition-shadow",
-                                  "look": "elevated",
+                                  "look": "@config.cardLook",
                                   "padding": "sm",
                                   "type": "card"
                                 }
@@ -670,7 +709,7 @@
               "type": "stack"
             },
             "label": "Kanban classic body content tree",
-            "description": "Render-ui SExpr for boardLook='kanban-classic' — Trello-style wide elevated columns with sticky headers, dense cards with a status badge, always-elevated card look.",
+            "description": "Render-ui SExpr for boardLook='kanban-classic' — Trello-style wide elevated columns with sticky headers, dense cards with a status badge; per-item cards honor config.cardLook (the column wrapper stays elevated — it is column chrome, not a card).",
             "tier": "internal"
           },
           {
@@ -707,6 +746,7 @@
             "currentDescription",
             "currentId",
             "currentNotes",
+            "currentRow",
             "currentStage",
             "currentTitle",
             "errorMessage"
@@ -730,6 +770,7 @@
       "CANCEL_ADD",
       "CLOSE_CARD",
       "DELETE_CARD",
+      "EDIT_CARD",
       "MOVE_CARD",
       "OPEN_CARD",
       "REORDER_CARD",

@@ -84,6 +84,42 @@
     ],
     "traits": [
       {
+        "name": "DenseHoursTable",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "BillableHourLoaded"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "columns",
+            "type": "unknown",
+            "default": "@config.columns"
+          },
+          {
+            "key": "emptyMessage",
+            "type": "unknown",
+            "default": "No time entries"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": "@config.itemActions"
+          },
+          {
+            "key": "look",
+            "type": "unknown",
+            "default": "@config.tableLook"
+          },
+          {
+            "key": "maxInlineActions",
+            "type": "unknown",
+            "default": 2
+          }
+        ],
+        "capabilities": [],
+        "ref": "TableView.traits.TableViewRender"
+      },
+      {
         "name": "BillableHourTimesheet",
         "emittedEvents": [
           "OPEN_HOURS",
@@ -144,6 +180,161 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "columns",
+            "type": "[ColumnSpec]",
+            "default": [
+              {
+                "align": "left",
+                "field": "workerName",
+                "header": "Worker",
+                "key": "workerName",
+                "width": "minmax(8rem, 1fr)"
+              },
+              {
+                "align": "left",
+                "field": "matterId",
+                "header": "Matter",
+                "key": "matterId",
+                "width": "8rem"
+              },
+              {
+                "align": "left",
+                "field": "workDate",
+                "format": "date",
+                "header": "Date",
+                "key": "workDate",
+                "width": "8rem"
+              },
+              {
+                "align": "right",
+                "field": "hours",
+                "format": "number",
+                "header": "Hours",
+                "key": "hours",
+                "width": "6rem"
+              },
+              {
+                "align": "right",
+                "field": "rate",
+                "format": "currency",
+                "header": "Rate",
+                "key": "rate",
+                "width": "7rem"
+              },
+              {
+                "align": "center",
+                "field": "invoiceStatus",
+                "format": "badge",
+                "header": "Status",
+                "key": "invoiceStatus",
+                "width": "8rem"
+              }
+            ],
+            "label": "Table columns",
+            "description": "ColumnSpec list for the dense hours ledger table.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string"
+                },
+                "className": {
+                  "name": "className",
+                  "required": false,
+                  "type": "string"
+                },
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "string"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "OPEN_HOURS",
+                "icon": "arrow-right",
+                "label": "Open",
+                "variant": "ghost"
+              },
+              {
+                "event": "WRITE_OFF_HOURS",
+                "label": "Write Off",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Per-row actions rendered by the hours table.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "statLook",
             "type": "string",
             "default": "elevated",
@@ -170,7 +361,7 @@
               "spacious",
               "striped",
               "borderless",
-              "card-rows"
+              "bordered"
             ]
           },
           {
@@ -209,10 +400,12 @@
       "OPEN_HOURS",
       "WRITE_OFF_HOURS"
     ],
-    "listenedEvents": [],
+    "listenedEvents": [
+      "BillableHourLoaded"
+    ],
     "exposure": "both",
     "provenance": "authored",
-    "substrateSignature": "e3b0c44298fc1c14",
+    "substrateSignature": "38468cf8ab689149",
     "sourceValid": true
   }
 ]
