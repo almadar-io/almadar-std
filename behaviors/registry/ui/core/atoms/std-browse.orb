@@ -1,5 +1,5 @@
 {
-  "description": "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery) selects one of four render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B) and their consumers retarget by setting browseLook.",
+  "description": "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook.",
   "ledger": {
     "entries": {
       "ent_01KXG04FVGGWM52VJZVMAEG5H0": {
@@ -91,6 +91,15 @@
         "parent": "trt_01KXG04FVGGKHGXMTQZAJY1308",
         "renames": []
       },
+      "evt_01KYG176Z4DTZ2W62WXFKKSXJV": {
+        "bakedName": "CLOSE",
+        "curName": "CLOSE",
+        "id": "evt_01KYG176Z4DTZ2W62WXFKKSXJV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FVGGKHGXMTQZAJY1308",
+        "renames": []
+      },
       "orb_01KXG04FVG2QCHAX67XWPG65GZ": {
         "bakedName": "BrowseItemOrbital",
         "curName": "BrowseItemOrbital",
@@ -127,6 +136,14 @@
         "bakedName": "DataGrid1",
         "curName": "DataGrid1",
         "id": "trt_01KXZ44Y965J2Q55E5JN4JKVGR",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KYG176Z400JFKWZ2XPKJ4798": {
+        "bakedName": "MasterListView",
+        "curName": "MasterListView",
+        "id": "trt_01KYG176Z400JFKWZ2XPKJ4798",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -216,6 +233,10 @@
               "default": "@config.itemActions",
               "type": "unknown"
             },
+            "maxInlineActions": {
+              "default": "@config.maxInlineActions",
+              "type": "unknown"
+            },
             "pageSize": {
               "default": "@config.displayPageSize",
               "type": "unknown"
@@ -264,7 +285,7 @@
               "type": "unknown"
             },
             "selectable": {
-              "default": true,
+              "default": "@config.selectable",
               "type": "unknown"
             }
           },
@@ -283,6 +304,45 @@
           ],
           "name": "DenseTableView",
           "ref": "TableView.traits.TableViewRender"
+        },
+        {
+          "config": {
+            "fields": {
+              "default": "@config.fields",
+              "type": "unknown"
+            },
+            "itemActions": {
+              "default": "@config.itemActions",
+              "type": "unknown"
+            },
+            "itemClickEvent": {
+              "default": "VIEW",
+              "type": "unknown"
+            },
+            "maxInlineActions": {
+              "default": "@config.maxInlineActions",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "compact",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KYG176Z400JFKWZ2XPKJ4798",
+          "linkedEntity": "BrowseItem",
+          "linkedEntityId": "ent_01KXG04FVGGWM52VJZVMAEG5H0",
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "source": {
+                "kind": "trait",
+                "trait": "BrowseItemBrowse"
+              },
+              "triggers": "DataListLoaded"
+            }
+          ],
+          "name": "MasterListView",
+          "ref": "DataList.traits.DataListRender"
         },
         {
           "category": "interaction",
@@ -324,7 +384,7 @@
             },
             "browseLook": {
               "default": "table",
-              "description": "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style sticky-header table with search bar (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any of the four bodies may still be overridden directly at the call site for a one-off layout.",
+              "description": "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style table with toolbar search (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent); master-detail = record-work split view — dense list left, clicked record's detail right (masterDetailBodyContent); triage = inbox-register compact rows for queue work (triageBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any body may still be overridden directly at the call site for a one-off layout.",
               "label": "Browse look",
               "tier": "presentation",
               "type": "string",
@@ -332,7 +392,9 @@
                 "table",
                 "dense",
                 "feed",
-                "gallery"
+                "gallery",
+                "master-detail",
+                "triage"
               ]
             },
             "categoryBinding": {
@@ -437,14 +499,14 @@
                     {
                       "children": [
                         {
-                          "className": "w-full",
+                          "className": "w-full max-w-md",
                           "clearable": true,
                           "event": "REFETCH_QUERY",
                           "placeholder": "@config.searchPlaceholder",
                           "type": "search-input"
                         }
                       ],
-                      "className": "w-full",
+                      "className": "px-card-md py-card-sm border-b border-[var(--color-border)]",
                       "direction": "horizontal",
                       "gap": "sm",
                       "type": "stack"
@@ -459,14 +521,15 @@
                     "children": [
                       "@trait.DenseTableView"
                     ],
-                    "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm",
+                    "className": "overflow-x-auto",
                     "direction": "vertical",
                     "gap": "none",
                     "type": "stack"
                   }
                 ],
+                "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden",
                 "direction": "vertical",
-                "gap": "sm",
+                "gap": "none",
                 "type": "stack"
               },
               "description": "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B).",
@@ -480,6 +543,22 @@
               "label": "Description field binding",
               "tier": "internal",
               "type": "string"
+            },
+            "detailFields": {
+              "default": [
+                "name",
+                "description",
+                "status",
+                "createdAt"
+              ],
+              "description": "Field names shown in the detail panel when browseLook = master-detail; the first entry doubles as the pane title. Consumers overriding columns/fields should override this list to match their entity.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Which fields appear in the master-detail record pane?",
+              "synonyms": "detail columns, record fields, detail pane fields",
+              "tier": "presentation",
+              "type": "[string]"
             },
             "displayPageSize": {
               "default": 10.0,
@@ -603,6 +682,7 @@
                         ],
                         "className": "rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px",
                         "look": "flat-bordered",
+                        "padding": "none",
                         "type": "card"
                       }
                     ],
@@ -732,7 +812,7 @@
                           "type": "search-input"
                         }
                       ],
-                      "className": "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]",
+                      "className": "sticky top-0 z-10 py-3 bg-[var(--color-surface)]/95 backdrop-blur",
                       "direction": "horizontal",
                       "gap": "sm",
                       "type": "stack"
@@ -746,95 +826,12 @@
                   {
                     "className": "w-full",
                     "entity": "@payload.data",
-                    "fields": [],
+                    "fields": "@config.fields",
                     "gap": "lg",
+                    "imageField": "@config.imageField",
                     "itemActions": "@config.itemActions",
                     "maxInlineActions": "@config.maxInlineActions",
                     "minCardWidth": 260.0,
-                    "renderItem": [
-                      "fn",
-                      "item",
-                      {
-                        "children": [
-                          {
-                            "align": "center",
-                            "children": [
-                              {
-                                "className": "text-muted-foreground opacity-50 transition-transform duration-normal group-hover:scale-105",
-                                "name": "image",
-                                "size": "lg",
-                                "type": "icon"
-                              },
-                              {
-                                "className": "px-2 text-center truncate max-w-full",
-                                "color": "muted",
-                                "content": "@config.imageLabelBinding",
-                                "type": "typography",
-                                "variant": "caption"
-                              },
-                              {
-                                "align": "center",
-                                "children": [
-                                  {
-                                    "label": "@config.priceBinding",
-                                    "type": "badge",
-                                    "variant": "primary"
-                                  }
-                                ],
-                                "className": "absolute top-2 right-2",
-                                "direction": "horizontal",
-                                "gap": "xs",
-                                "type": "stack"
-                              },
-                              {
-                                "align": "center",
-                                "children": [
-                                  {
-                                    "label": "@config.badgeBinding",
-                                    "type": "badge",
-                                    "variant": "neutral"
-                                  }
-                                ],
-                                "className": "absolute top-2 left-2",
-                                "direction": "horizontal",
-                                "gap": "xs",
-                                "type": "stack"
-                              }
-                            ],
-                            "className": "relative aspect-square w-full bg-muted overflow-hidden",
-                            "direction": "vertical",
-                            "gap": "xs",
-                            "justify": "center",
-                            "type": "stack"
-                          },
-                          {
-                            "children": [
-                              {
-                                "className": "truncate",
-                                "content": "@config.titleBinding",
-                                "type": "typography",
-                                "variant": "h4"
-                              },
-                              {
-                                "className": "line-clamp-2",
-                                "color": "muted",
-                                "content": "@config.descriptionBinding",
-                                "type": "typography",
-                                "variant": "caption"
-                              }
-                            ],
-                            "className": "p-card-md",
-                            "direction": "vertical",
-                            "gap": "xs",
-                            "type": "stack"
-                          }
-                        ],
-                        "className": "group rounded-lg overflow-hidden bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm hover:shadow-hover hover:-translate-y-0.5 transition-all duration-normal cursor-pointer",
-                        "direction": "vertical",
-                        "gap": "sm",
-                        "type": "stack"
-                      }
-                    ],
                     "type": "data-grid"
                   }
                 ],
@@ -843,7 +840,7 @@
                 "gap": "lg",
                 "type": "stack"
               },
-              "description": "Render-ui SExpr rendered after rows load when browseLook = gallery. Image-first responsive card grid with auto-fit minCardWidth; composes titleBinding/descriptionBinding/badgeBinding/imageLabelBinding/priceBinding/searchPlaceholder. Folded from std-browse-gallery (Phase 5.B).",
+              "description": "Render-ui SExpr rendered after rows load when browseLook = gallery. Image-first responsive card grid (auto-fit minCardWidth) on the data-grid fields path: imageField renders the card photo when set (falsy-safe when empty), fields drive title/badges/meta. One tree, no renderItem lambda — lambdas do not survive inside (if) arms (2026-07-27).",
               "label": "Gallery look body",
               "tier": "internal",
               "type": "render-ui"
@@ -909,8 +906,115 @@
               "tier": "presentation",
               "type": "[ItemAction]"
             },
+            "masterDetailBodyContent": {
+              "default": {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "className": "w-full max-w-md",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "className": "px-card-md py-card-sm border-b border-[var(--color-border)]",
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "detail": {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    },
+                    "emptyDetail": {
+                      "description": "Select a record from the list to see its details.",
+                      "icon": "mouse-pointer-click",
+                      "title": "Nothing selected",
+                      "type": "empty-state"
+                    },
+                    "hasSelection": false,
+                    "master": {
+                      "children": [
+                        "@trait.MasterListView"
+                      ],
+                      "className": "overflow-y-auto",
+                      "direction": "vertical",
+                      "gap": "none",
+                      "type": "stack"
+                    },
+                    "type": "master-detail-layout"
+                  }
+                ],
+                "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden",
+                "direction": "vertical",
+                "gap": "none",
+                "type": "stack"
+              },
+              "description": "Render-ui SExpr rendered after rows load when browseLook = master-detail: record-work split view — toolbar search, dense list left, empty-state pane right until a row is opened. Opening a row renders masterDetailRecordBodyContent. The toolbar is always present in this look (bodySearch does not apply).",
+              "label": "Master-detail look body (no selection)",
+              "tier": "internal",
+              "type": "render-ui"
+            },
+            "masterDetailRecordBodyContent": {
+              "default": {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "className": "w-full max-w-md",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "className": "px-card-md py-card-sm border-b border-[var(--color-border)]",
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "detail": {
+                      "actions": [
+                        {
+                          "event": "CLOSE",
+                          "label": "Close"
+                        }
+                      ],
+                      "fieldNames": "@config.detailFields",
+                      "initialData": "@payload.row",
+                      "showActions": false,
+                      "type": "detail-panel"
+                    },
+                    "hasSelection": true,
+                    "master": {
+                      "children": [
+                        "@trait.MasterListView"
+                      ],
+                      "className": "overflow-y-auto",
+                      "direction": "vertical",
+                      "gap": "none",
+                      "type": "stack"
+                    },
+                    "type": "master-detail-layout"
+                  }
+                ],
+                "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden",
+                "direction": "vertical",
+                "gap": "none",
+                "type": "stack"
+              },
+              "description": "Render-ui SExpr rendered by the VIEW transition when browseLook = master-detail: the same split view with the clicked record's detail panel on the right, fed by the VIEW payload row and detailFields.",
+              "label": "Master-detail look body (record open)",
+              "tier": "internal",
+              "type": "render-ui"
+            },
             "maxInlineActions": {
-              "default": 99.0,
+              "default": 3.0,
               "description": "Actions beyond this count collapse into a '⋯' overflow menu. Set 2–3 for dense tables.",
               "label": "How many row actions to show before collapsing?",
               "synonyms": "inline actions limit, overflow threshold, max buttons per row",
@@ -954,12 +1058,74 @@
               "tier": "presentation",
               "type": "string"
             },
+            "selectable": {
+              "default": false,
+              "description": "Adds a checkbox column with select-all to the dense table. Enable only when the surface offers bulk actions — checkboxes with nothing to act on are a dead affordance.",
+              "label": "Show row selection checkboxes?",
+              "synonyms": "row checkboxes, multi-select, bulk select, selection column",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "titleBinding": {
               "default": "@item.name",
               "description": "Binding path for the card title slot (e.g. @item.dishName).",
               "label": "Title field binding",
               "tier": "internal",
               "type": "string"
+            },
+            "triageBodyContent": {
+              "default": {
+                "children": [
+                  [
+                    "if",
+                    "@config.bodySearch",
+                    {
+                      "children": [
+                        {
+                          "className": "w-full max-w-md",
+                          "clearable": true,
+                          "event": "REFETCH_QUERY",
+                          "placeholder": "@config.searchPlaceholder",
+                          "type": "search-input"
+                        }
+                      ],
+                      "className": "px-card-md py-card-sm border-b border-[var(--color-border)]",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ],
+                  {
+                    "children": [
+                      {
+                        "entity": "@payload.data",
+                        "fields": "@config.fields",
+                        "itemActions": "@config.itemActions",
+                        "maxInlineActions": "@config.maxInlineActions",
+                        "type": "data-list",
+                        "variant": "compact"
+                      }
+                    ],
+                    "className": "overflow-x-auto",
+                    "direction": "vertical",
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
+                "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden",
+                "direction": "vertical",
+                "gap": "none",
+                "type": "stack"
+              },
+              "description": "Render-ui SExpr rendered after rows load when browseLook = triage. Inbox-register queue: one surface with a toolbar search and compact list rows (title + badges + inline meta) built for keyboard-pace queue work; row actions collapse per maxInlineActions. Composes fields/itemActions/searchPlaceholder/bodySearch.",
+              "label": "Triage look body",
+              "tier": "internal",
+              "type": "render-ui"
             },
             "viewPattern": {
               "default": "data-grid",
@@ -1286,6 +1452,11 @@
                 "tier": "domain"
               },
               {
+                "id": "evt_01KYG176Z4DTZ2W62WXFKKSXJV",
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
                 "description": "Signals a request to edit the selected item.",
                 "id": "evt_01KXG04FVGRP1SF2QXKEBQ3GNQ",
                 "key": "EDIT",
@@ -1403,8 +1574,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 4.0,
+                      "type": "skeleton"
                     }
                   ]
                 ],
@@ -1452,9 +1623,35 @@
                           "@config.galleryBodyContent"
                         ],
                         [
-                          "render-ui",
-                          "main",
-                          "@config.bodyContent"
+                          "if",
+                          [
+                            "=",
+                            "@config.browseLook",
+                            "master-detail"
+                          ],
+                          [
+                            "render-ui",
+                            "main",
+                            "@config.masterDetailBodyContent"
+                          ],
+                          [
+                            "if",
+                            [
+                              "=",
+                              "@config.browseLook",
+                              "triage"
+                            ],
+                            [
+                              "render-ui",
+                              "main",
+                              "@config.triageBodyContent"
+                            ],
+                            [
+                              "render-ui",
+                              "main",
+                              "@config.bodyContent"
+                            ]
+                          ]
                         ]
                       ]
                     ]
@@ -1471,16 +1668,10 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "color": "error",
-                          "content": "@payload.error",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "message": "@payload.error",
+                      "title": "Couldn't load this list",
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ],
@@ -1507,8 +1698,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 4.0,
+                      "type": "skeleton"
                     }
                   ]
                 ],
@@ -1622,6 +1813,42 @@
               {
                 "effects": [
                   [
+                    "render-ui",
+                    "main",
+                    "@config.masterDetailRecordBodyContent"
+                  ]
+                ],
+                "event": "VIEW",
+                "eventId": "evt_01KXG04FVGX3Q7N39AZ68VGPTJ",
+                "from": "browsing",
+                "guard": [
+                  "=",
+                  "@config.browseLook",
+                  "master-detail"
+                ],
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    "@config.masterDetailBodyContent"
+                  ]
+                ],
+                "event": "CLOSE",
+                "eventId": "evt_01KYG176Z4DTZ2W62WXFKKSXJV",
+                "from": "browsing",
+                "guard": [
+                  "=",
+                  "@config.browseLook",
+                  "master-detail"
+                ],
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
                     "if",
                     [
                       "=",
@@ -1658,9 +1885,35 @@
                           "@config.galleryBodyContent"
                         ],
                         [
-                          "render-ui",
-                          "main",
-                          "@config.bodyContent"
+                          "if",
+                          [
+                            "=",
+                            "@config.browseLook",
+                            "master-detail"
+                          ],
+                          [
+                            "render-ui",
+                            "main",
+                            "@config.masterDetailBodyContent"
+                          ],
+                          [
+                            "if",
+                            [
+                              "=",
+                              "@config.browseLook",
+                              "triage"
+                            ],
+                            [
+                              "render-ui",
+                              "main",
+                              "@config.triageBodyContent"
+                            ],
+                            [
+                              "render-ui",
+                              "main",
+                              "@config.bodyContent"
+                            ]
+                          ]
                         ]
                       ]
                     ]
@@ -1689,8 +1942,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 4.0,
+                      "type": "skeleton"
                     }
                   ]
                 ],
@@ -1703,7 +1956,8 @@
           },
           "traitEmbedIds": {
             "DataGrid1": "trt_01KXZ44Y965J2Q55E5JN4JKVGR",
-            "DenseTableView": "trt_01KXZ44Y963YXRJDNR4F2M5QHX"
+            "DenseTableView": "trt_01KXZ44Y963YXRJDNR4F2M5QHX",
+            "MasterListView": "trt_01KYG176Z400JFKWZ2XPKJ4798"
           }
         }
       ],
@@ -1719,6 +1973,10 @@
         {
           "as": "TableView",
           "from": "std/behaviors/ui-table-view"
+        },
+        {
+          "as": "DataList",
+          "from": "std/behaviors/ui-data-list"
         }
       ]
     }

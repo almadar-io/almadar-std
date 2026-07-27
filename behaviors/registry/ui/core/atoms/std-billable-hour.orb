@@ -96,6 +96,14 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01KYGG0J813545ADJDSSED6T49": {
+        "bakedName": "DenseHoursTable",
+        "curName": "DenseHoursTable",
+        "id": "trt_01KYGG0J813545ADJDSSED6T49",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -209,8 +217,200 @@
       ],
       "traits": [
         {
+          "config": {
+            "columns": {
+              "default": "@config.columns",
+              "type": "unknown"
+            },
+            "emptyMessage": {
+              "default": "No time entries",
+              "type": "unknown"
+            },
+            "itemActions": {
+              "default": "@config.itemActions",
+              "type": "unknown"
+            },
+            "look": {
+              "default": "@config.tableLook",
+              "type": "unknown"
+            },
+            "maxInlineActions": {
+              "default": 2.0,
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KYGG0J813545ADJDSSED6T49",
+          "linkedEntity": "BillableHour",
+          "linkedEntityId": "ent_01KXG04FQKJHPT5T65NNKMM8AM",
+          "listens": [
+            {
+              "event": "BillableHourLoaded",
+              "source": {
+                "kind": "trait",
+                "trait": "BillableHourTimesheet"
+              },
+              "triggers": "TableViewLoaded"
+            }
+          ],
+          "name": "DenseHoursTable",
+          "ref": "TableView.traits.TableViewRender"
+        },
+        {
           "category": "interaction",
           "config": {
+            "columns": {
+              "default": [
+                {
+                  "align": "left",
+                  "field": "workerName",
+                  "header": "Worker",
+                  "key": "workerName",
+                  "width": "minmax(8rem, 1fr)"
+                },
+                {
+                  "align": "left",
+                  "field": "matterId",
+                  "header": "Matter",
+                  "key": "matterId",
+                  "width": "8rem"
+                },
+                {
+                  "align": "left",
+                  "field": "workDate",
+                  "format": "date",
+                  "header": "Date",
+                  "key": "workDate",
+                  "width": "8rem"
+                },
+                {
+                  "align": "right",
+                  "field": "hours",
+                  "format": "number",
+                  "header": "Hours",
+                  "key": "hours",
+                  "width": "6rem"
+                },
+                {
+                  "align": "right",
+                  "field": "rate",
+                  "format": "currency",
+                  "header": "Rate",
+                  "key": "rate",
+                  "width": "7rem"
+                },
+                {
+                  "align": "center",
+                  "field": "invoiceStatus",
+                  "format": "badge",
+                  "header": "Status",
+                  "key": "invoiceStatus",
+                  "width": "8rem"
+                }
+              ],
+              "description": "ColumnSpec list for the dense hours ledger table.",
+              "items": {
+                "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Table columns",
+              "tier": "presentation",
+              "type": "[ColumnSpec]"
+            },
+            "itemActions": {
+              "default": [
+                {
+                  "event": "OPEN_HOURS",
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "variant": "ghost"
+                },
+                {
+                  "event": "WRITE_OFF_HOURS",
+                  "label": "Write Off",
+                  "variant": "danger"
+                }
+              ],
+              "description": "Per-row actions rendered by the hours table.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Row actions",
+              "tier": "presentation",
+              "type": "[ItemAction]"
+            },
             "statLook": {
               "default": "elevated",
               "description": "Layer 2 visual treatment for stat / KPI cards.",
@@ -236,7 +436,7 @@
                 "spacious",
                 "striped",
                 "borderless",
-                "card-rows"
+                "bordered"
               ]
             },
             "title": {
@@ -570,56 +770,13 @@
                           "type": "divider"
                         },
                         {
-                          "cols": 1.0,
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "label": "Worker",
-                              "name": "workerName",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Matter",
-                              "name": "matterId",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Date",
-                              "name": "workDate",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Hours",
-                              "name": "hours",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Rate",
-                              "name": "rate",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Status",
-                              "name": "invoiceStatus",
-                              "variant": "badge"
-                            }
+                          "children": [
+                            "@trait.DenseHoursTable"
                           ],
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "OPEN_HOURS",
-                              "icon": "arrow-right",
-                              "label": "Open",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "WRITE_OFF_HOURS",
-                              "label": "Write Off",
-                              "variant": "danger"
-                            }
-                          ],
-                          "look": "@config.tableLook",
-                          "type": "data-grid"
+                          "className": "overflow-x-auto",
+                          "direction": "vertical",
+                          "gap": "none",
+                          "type": "stack"
                         }
                       ],
                       "direction": "vertical",
@@ -649,6 +806,32 @@
                 "eventId": "evt_01KXG04FQNT675P8V0RXAHYJPT",
                 "from": "loading",
                 "to": "error"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "BillableHour",
+                    {
+                      "emit": {
+                        "failure": "BillableHourLoadFailed",
+                        "success": "BillableHourLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "rows": 4.0,
+                      "type": "skeleton"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04FQKQJP6SX8JCRF7HBP1",
+                "from": "browsing",
+                "to": "loading"
               },
               {
                 "effects": [
@@ -1074,7 +1257,16 @@
                 "to": "loading"
               }
             ]
+          },
+          "traitEmbedIds": {
+            "DenseHoursTable": "trt_01KYGG0J813545ADJDSSED6T49"
           }
+        }
+      ],
+      "uses": [
+        {
+          "as": "TableView",
+          "from": "std/behaviors/ui-table-view"
         }
       ]
     }

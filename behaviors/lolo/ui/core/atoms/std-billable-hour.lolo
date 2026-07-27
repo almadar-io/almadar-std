@@ -1,6 +1,10 @@
 app std-billable-hour "1.0.0"
 "std-billable-hour — generic billable-hour timesheet primitive for legal, agency, and consulting domains. Lists entries in `browsing`; opens entry detail in `viewing_single` with Invoice / Write Off actions."
+type ItemAction = { label : string!, event : string, navigatesTo : string, variant : string, icon : string }
+type ColumnSpec = { key : string!, field : string, header : string, width : string, align : string, className : string, weight : string, format : string, icon : string }
 orbital BillableHourOrbital {
+  uses TableView from "std/behaviors/ui-table-view"
+
     type BillableHourLoaded = Event { data : [BillableHour] } "Fired when the billable-hour collection finishes loading"
 
     type BillableHourLoadFailed = Event { error : string, code : string } "Fired when the billable-hour collection fails to load"
@@ -17,6 +21,20 @@ orbital BillableHourOrbital {
     description : string @description "A textual explanation of the hour entry." @synonyms "explanation, notes, details, comment" = ""
     isBillable : boolean @description "Indicates whether the hour is eligible for billing." @synonyms "billable flag, billing status, billable indicator" = true
     invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" @description "The current billing status of the hour entry." @synonyms "status, billing status, payment status" = unbilled
+  }
+
+  trait DenseHoursTable = TableView.traits.TableViewRender -> BillableHour {
+    config {
+      columns: @config.columns
+      emptyMessage: "No time entries"
+      itemActions: @config.itemActions
+      look: @config.tableLook
+      maxInlineActions: 2
+    }
+
+    listens {
+      BillableHourTimesheet.BillableHourLoaded -> TableViewLoaded
+    }
   }
 
   trait BillableHourTimesheet -> BillableHour [interaction, collection] {
@@ -53,46 +71,11 @@ orbital BillableHourOrbital {
             gap: sm
             type: stack
           }, { type: divider }, {
-            cols: 1
-            entity: ?data
-            fields: [{
-              label: Worker
-              name: workerName
-              variant: caption
-            }, {
-              label: Matter
-              name: matterId
-              variant: caption
-            }, {
-              label: Date
-              name: workDate
-              variant: caption
-            }, {
-              label: Hours
-              name: hours
-              variant: caption
-            }, {
-              label: Rate
-              name: rate
-              variant: caption
-            }, {
-              label: Status
-              name: invoiceStatus
-              variant: badge
-            }]
-            gap: sm
-            itemActions: [{
-              event: OPEN_HOURS
-              icon: arrow-right
-              label: Open
-              variant: primary
-            }, {
-              event: WRITE_OFF_HOURS
-              label: "Write Off"
-              variant: danger
-            }]
-            look: @config.tableLook
-            type: data-grid
+            children: [@trait.DenseHoursTable]
+            className: overflow-x-auto
+            direction: vertical
+            gap: none
+            type: stack
           }]
           direction: vertical
           gap: md
@@ -107,6 +90,11 @@ orbital BillableHourOrbital {
     }
 
     state browsing {
+      INIT -> loading
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+        })
+        (render-ui main { rows: 4, type: skeleton })
       OPEN_HOURS -> viewing_single
         (set @entity.id ?row.id)
         (set @entity.workerId ?row.workerId)
@@ -398,9 +386,66 @@ orbital BillableHourOrbital {
         @label "Section title"
         @description "Heading shown above the time-entries list"
         @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "bordered" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+      columns : [ColumnSpec] = [{
+        align: left
+        field: workerName
+        header: Worker
+        key: workerName
+        width: "minmax(8rem, 1fr)"
+      }, {
+        align: left
+        field: matterId
+        header: Matter
+        key: matterId
+        width: "8rem"
+      }, {
+        align: left
+        field: workDate
+        format: date
+        header: Date
+        key: workDate
+        width: "8rem"
+      }, {
+        align: right
+        field: hours
+        format: number
+        header: Hours
+        key: hours
+        width: "6rem"
+      }, {
+        align: right
+        field: rate
+        format: currency
+        header: Rate
+        key: rate
+        width: "7rem"
+      }, {
+        align: center
+        field: invoiceStatus
+        format: badge
+        header: Status
+        key: invoiceStatus
+        width: "8rem"
+      }]
+        @label "Table columns"
+        @description "ColumnSpec list for the dense hours ledger table."
+        @tier "presentation"
+      itemActions : [ItemAction] = [{
+        event: OPEN_HOURS
+        icon: arrow-right
+        label: Open
+        variant: ghost
+      }, {
+        event: WRITE_OFF_HOURS
+        label: "Write Off"
+        variant: danger
+      }]
+        @label "Row actions"
+        @description "Per-row actions rendered by the hours table."
         @tier "presentation"
       statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"

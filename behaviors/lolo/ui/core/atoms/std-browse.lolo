@@ -1,5 +1,5 @@
 app std-browse "2.3.0"
-"std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery) selects one of four render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B) and their consumers retarget by setting browseLook."
+"std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook."
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string, navigatesTo : string, variant : string, icon : string }
 type ColumnSpec = { key : string!, field : string, header : string, width : string, align : string, className : string, weight : string, format : string, icon : string }
@@ -20,6 +20,7 @@ orbital BrowseItemOrbital {
   uses Typography from "std/behaviors/ui-typography"
   uses DataGrid from "std/behaviors/ui-data-grid"
   uses TableView from "std/behaviors/ui-table-view"
+  uses DataList from "std/behaviors/ui-data-list"
 
   trait DataGrid1 = DataGrid.traits.DataGridRender -> BrowseItem {
     config {
@@ -28,6 +29,7 @@ orbital BrowseItemOrbital {
       gap: @config.gap
       imageField: @config.imageField
       itemActions: @config.itemActions
+      maxInlineActions: @config.maxInlineActions
       pageSize: @config.displayPageSize
     }
 
@@ -44,11 +46,25 @@ orbital BrowseItemOrbital {
       look: dense
       maxInlineActions: @config.maxInlineActions
       pageSize: @config.displayPageSize
-      selectable: true
+      selectable: @config.selectable
     }
 
     listens {
       BrowseItemBrowse.BrowseItemLoaded -> TableViewLoaded
+    }
+  }
+
+  trait MasterListView = DataList.traits.DataListRender -> BrowseItem {
+    config {
+      fields: @config.fields
+      itemActions: @config.itemActions
+      itemClickEvent: VIEW
+      maxInlineActions: @config.maxInlineActions
+      variant: compact
+    }
+
+    listens {
+      BrowseItemBrowse.BrowseItemLoaded -> DataListLoaded
     }
   }
 
@@ -62,7 +78,7 @@ orbital BrowseItemOrbital {
           limit: @config.pageSize
           offset: 0
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { rows: 4, type: skeleton })
       BrowseItemLoaded -> browsing
         (if ["=", @config.browseLook, dense]
           (render-ui main @config.denseBodyContent)
@@ -70,9 +86,13 @@ orbital BrowseItemOrbital {
             (render-ui main @config.feedBodyContent)
             (if ["=", @config.browseLook, gallery]
               (render-ui main @config.galleryBodyContent)
-              (render-ui main @config.bodyContent))))
+              (if ["=", @config.browseLook, master-detail]
+                (render-ui main @config.masterDetailBodyContent)
+                (if ["=", @config.browseLook, triage]
+                  (render-ui main @config.triageBodyContent)
+                  (render-ui main @config.bodyContent))))))
       BrowseItemLoadFailed -> error
-        (render-ui main { children: [{ color: error, content: ?error, type: typography, variant: caption }], direction: vertical, type: stack })
+        (render-ui main { message: ?error, title: "Couldn't load this list", type: alert, variant: error })
     }
 
     state browsing {
@@ -82,7 +102,7 @@ orbital BrowseItemOrbital {
           limit: @config.pageSize
           offset: 0
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { rows: 4, type: skeleton })
       ;; REFETCH_* stays in `browsing` and DOES NOT replace the data-grid
       ;; with a spinner. Replacing during search-as-you-type unmounts the
       ;; grid every keystroke and causes a visible flicker. The fetch fires
@@ -109,6 +129,14 @@ orbital BrowseItemOrbital {
           limit: @config.pageSize
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
+      ;; master-detail only: opening a row re-renders the split view with the
+      ;; clicked row's detail (payload ?row feeds the panel). Guard keeps every
+      ;; other look's machine untouched — VIEW still reaches external listeners
+      ;; either way, and no effect here re-emits the trigger.
+      VIEW -> browsing when ["=", @config.browseLook, "master-detail"]
+        (render-ui main @config.masterDetailRecordBodyContent)
+      CLOSE -> browsing when ["=", @config.browseLook, "master-detail"]
+        (render-ui main @config.masterDetailBodyContent)
       BrowseItemLoaded -> browsing
         (if ["=", @config.browseLook, dense]
           (render-ui main @config.denseBodyContent)
@@ -116,7 +144,11 @@ orbital BrowseItemOrbital {
             (render-ui main @config.feedBodyContent)
             (if ["=", @config.browseLook, gallery]
               (render-ui main @config.galleryBodyContent)
-              (render-ui main @config.bodyContent))))
+              (if ["=", @config.browseLook, master-detail]
+                (render-ui main @config.masterDetailBodyContent)
+                (if ["=", @config.browseLook, triage]
+                  (render-ui main @config.triageBodyContent)
+                  (render-ui main @config.bodyContent))))))
     }
 
     state error {
@@ -126,7 +158,7 @@ orbital BrowseItemOrbital {
           limit: @config.pageSize
           offset: 0
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { rows: 4, type: skeleton })
     }
 
     emits {
@@ -300,10 +332,15 @@ orbital BrowseItemOrbital {
         @description "Dropdown filter facets by field. Each fires a refetch when the user changes the selection. Empty = no filter bar."
         @synonyms "filter bar, faceted filters, field filters, column filters, dropdowns"
         @tier "presentation"
-      maxInlineActions : number = 99
+      maxInlineActions : number = 3
         @label "How many row actions to show before collapsing?"
         @description "Actions beyond this count collapse into a '⋯' overflow menu. Set 2–3 for dense tables."
         @synonyms "inline actions limit, overflow threshold, max buttons per row"
+        @tier "presentation"
+      selectable : boolean = false
+        @label "Show row selection checkboxes?"
+        @description "Adds a checkbox column with select-all to the dense table. Enable only when the surface offers bulk actions — checkboxes with nothing to act on are a dead affordance."
+        @synonyms "row checkboxes, multi-select, bulk select, selection column"
         @tier "presentation"
       bodySearch : boolean = true
         @label "Show the list's own search box?"
@@ -319,9 +356,14 @@ orbital BrowseItemOrbital {
         @label "Render pattern"
         @description "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob."
         @tier "internal"
-      browseLook : "table" | "dense" | "feed" | "gallery" = table
+      browseLook : "table" | "dense" | "feed" | "gallery" | "master-detail" | "triage" = table
         @label "Browse look"
-        @description "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style sticky-header table with search bar (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any of the four bodies may still be overridden directly at the call site for a one-off layout."
+        @description "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style table with toolbar search (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent); master-detail = record-work split view — dense list left, clicked record's detail right (masterDetailBodyContent); triage = inbox-register compact rows for queue work (triageBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any body may still be overridden directly at the call site for a one-off layout."
+        @tier "presentation"
+      detailFields : [string] = [name, description, status, createdAt]
+        @label "Which fields appear in the master-detail record pane?"
+        @description "Field names shown in the detail panel when browseLook = master-detail; the first entry doubles as the pane title. Consumers overriding columns/fields should override this list to match their entity."
+        @synonyms "detail columns, record fields, detail pane fields"
         @tier "presentation"
       bodyContent : render-ui = {
         children: [@trait.DataGrid1]
@@ -334,13 +376,13 @@ orbital BrowseItemOrbital {
       denseBodyContent : render-ui = {
         children: [(if @config.bodySearch {
           children: [{
-            className: w-full
+            className: "w-full max-w-md"
             clearable: true
             event: REFETCH_QUERY
             placeholder: @config.searchPlaceholder
             type: search-input
           }]
-          className: w-full
+          className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
           direction: horizontal
           gap: sm
           type: stack
@@ -350,13 +392,14 @@ orbital BrowseItemOrbital {
           type: stack
         }), {
           children: [@trait.DenseTableView]
-          className: "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm"
+          className: overflow-x-auto
           direction: vertical
           gap: none
           type: stack
         }]
+        className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden"
         direction: vertical
-        gap: sm
+        gap: none
         type: stack
       }
         @label "Dense look body"
@@ -448,6 +491,7 @@ orbital BrowseItemOrbital {
             }]
             className: "rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px"
             look: flat-bordered
+            padding: none
             type: card
           })
           type: data-list
@@ -471,7 +515,7 @@ orbital BrowseItemOrbital {
             placeholder: @config.searchPlaceholder
             type: search-input
           }]
-          className: "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]"
+          className: "sticky top-0 z-10 py-3 bg-[var(--color-surface)]/95 backdrop-blur"
           direction: horizontal
           gap: sm
           type: stack
@@ -482,76 +526,12 @@ orbital BrowseItemOrbital {
         }), {
           className: w-full
           entity: ?data
-          fields: []
+          fields: @config.fields
           gap: lg
+          imageField: @config.imageField
           itemActions: @config.itemActions
           maxInlineActions: @config.maxInlineActions
           minCardWidth: 260
-          renderItem: (fn item {
-            children: [{
-              align: center
-              children: [{
-                className: "text-muted-foreground opacity-50 transition-transform duration-normal group-hover:scale-105"
-                name: image
-                size: lg
-                type: icon
-              }, {
-                className: "px-2 text-center truncate max-w-full"
-                color: muted
-                content: @config.imageLabelBinding
-                type: typography
-                variant: caption
-              }, {
-                align: center
-                children: [{
-                  label: @config.priceBinding
-                  type: badge
-                  variant: primary
-                }]
-                className: "absolute top-2 right-2"
-                direction: horizontal
-                gap: xs
-                type: stack
-              }, {
-                align: center
-                children: [{
-                  label: @config.badgeBinding
-                  type: badge
-                  variant: neutral
-                }]
-                className: "absolute top-2 left-2"
-                direction: horizontal
-                gap: xs
-                type: stack
-              }]
-              className: "relative aspect-square w-full bg-muted overflow-hidden"
-              direction: vertical
-              gap: xs
-              justify: center
-              type: stack
-            }, {
-              children: [{
-                className: truncate
-                content: @config.titleBinding
-                type: typography
-                variant: h4
-              }, {
-                className: line-clamp-2
-                color: muted
-                content: @config.descriptionBinding
-                type: typography
-                variant: caption
-              }]
-              className: p-card-md
-              direction: vertical
-              gap: xs
-              type: stack
-            }]
-            className: "group rounded-lg overflow-hidden bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm hover:shadow-hover hover:-translate-y-0.5 transition-all duration-normal cursor-pointer"
-            direction: vertical
-            gap: sm
-            type: stack
-          })
           type: data-grid
         }]
         className: w-full
@@ -560,7 +540,131 @@ orbital BrowseItemOrbital {
         type: stack
       }
         @label "Gallery look body"
-        @description "Render-ui SExpr rendered after rows load when browseLook = gallery. Image-first responsive card grid with auto-fit minCardWidth; composes titleBinding/descriptionBinding/badgeBinding/imageLabelBinding/priceBinding/searchPlaceholder. Folded from std-browse-gallery (Phase 5.B)."
+        @description "Render-ui SExpr rendered after rows load when browseLook = gallery. Image-first responsive card grid (auto-fit minCardWidth) on the data-grid fields path: imageField renders the card photo when set (falsy-safe when empty), fields drive title/badges/meta. One tree, no renderItem lambda — lambdas do not survive inside (if) arms (2026-07-27)."
+        @tier "internal"
+      triageBodyContent : render-ui = {
+        children: [(if @config.bodySearch {
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
+          children: [{
+            entity: ?data
+            fields: @config.fields
+            itemActions: @config.itemActions
+            maxInlineActions: @config.maxInlineActions
+            type: data-list
+            variant: compact
+          }]
+          className: overflow-x-auto
+          direction: vertical
+          gap: none
+          type: stack
+        }]
+        className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden"
+        direction: vertical
+        gap: none
+        type: stack
+      }
+        @label "Triage look body"
+        @description "Render-ui SExpr rendered after rows load when browseLook = triage. Inbox-register queue: one surface with a toolbar search and compact list rows (title + badges + inline meta) built for keyboard-pace queue work; row actions collapse per maxInlineActions. Composes fields/itemActions/searchPlaceholder/bodySearch."
+        @tier "internal"
+      masterDetailBodyContent : render-ui = {
+        children: [{
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          detail: {
+            children: []
+            gap: none
+            type: stack
+          }
+          emptyDetail: {
+            description: "Select a record from the list to see its details."
+            icon: mouse-pointer-click
+            title: "Nothing selected"
+            type: empty-state
+          }
+          hasSelection: false
+          master: {
+            children: [@trait.MasterListView]
+            className: "overflow-y-auto"
+            direction: vertical
+            gap: none
+            type: stack
+          }
+          type: master-detail-layout
+        }]
+        className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden"
+        direction: vertical
+        gap: none
+        type: stack
+      }
+        @label "Master-detail look body (no selection)"
+        @description "Render-ui SExpr rendered after rows load when browseLook = master-detail: record-work split view — toolbar search, dense list left, empty-state pane right until a row is opened. Opening a row renders masterDetailRecordBodyContent. The toolbar is always present in this look (bodySearch does not apply)."
+        @tier "internal"
+      masterDetailRecordBodyContent : render-ui = {
+        children: [{
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          detail: {
+            actions: [{
+              event: CLOSE
+              label: Close
+            }]
+            fieldNames: @config.detailFields
+            initialData: ?row
+            showActions: false
+            type: detail-panel
+          }
+          hasSelection: true
+          master: {
+            children: [@trait.MasterListView]
+            className: "overflow-y-auto"
+            direction: vertical
+            gap: none
+            type: stack
+          }
+          type: master-detail-layout
+        }]
+        className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden"
+        direction: vertical
+        gap: none
+        type: stack
+      }
+        @label "Master-detail look body (record open)"
+        @description "Render-ui SExpr rendered by the VIEW transition when browseLook = master-detail: the same split view with the clicked record's detail panel on the right, fed by the VIEW payload row and detailFields."
         @tier "internal"
     }
   }
