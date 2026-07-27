@@ -177,6 +177,11 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'description': 'Bulk actions',
             'items': {
               'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
                 'icon': {
                   'name': 'icon',
                   'required': false,
