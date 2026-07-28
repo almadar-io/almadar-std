@@ -69,7 +69,6 @@ export interface StdUiDataGridDataGridLoadedPayload {
 export interface StdUiDataGridConfig {
   accepts?: string;
   className?: string;
-  /** Default: `1` */
   cols?: number;
   /** Default: `[]` */
   columns?: EntityRow[];
@@ -88,7 +87,7 @@ export interface StdUiDataGridConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[]` */
-  itemActions?: unknown;
+  itemActions?: EntityRow[];
   /** Default: `"LOAD_MORE"` */
   loadMoreEvent?: string;
   /** Default: `"dense"` */

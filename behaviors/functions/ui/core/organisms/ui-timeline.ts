@@ -60,7 +60,7 @@ export interface StdUiTimelineConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[]` */
-  itemActions?: unknown;
+  itemActions?: EntityRow[];
   /** Default: `[]` */
   items?: EntityRow[];
   /** Default: `"vertical-spacious"` */
@@ -195,8 +195,40 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
           },
           'itemActions': {
             'default': [],
+            'description': 'Actions per item',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Item Actions',
             'tier': 'presentation',
-            'type': 'json',
+            'type': '[TimelineItemActionsItem]',
           },
           'items': {
             'default': [],

@@ -194,6 +194,16 @@ orbital CalendarEventOrbital {
         @label "Title"
         @description "Header text shown above the calendar body."
         @tier "presentation"
+      agendaItemActions : json = [{ event: SELECT_DAY, icon: eye, label: View }]
+        @label "Agenda item actions"
+        @description "Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions."
+        @synonyms "agenda actions, row actions, event actions, list actions"
+        @tier "presentation"
+      agendaGroupBy : string = date
+        @label "Agenda group-by field"
+        @description "Row field the agenda list groups its day sections by. Rebound hosts point this at their own timestamp column (e.g. startTime, scheduledAt)."
+        @synonyms "group field, section field, day field"
+        @tier "presentation"
       bodyContent : render-ui = {
         children: [{
           align: center
@@ -292,7 +302,8 @@ orbital CalendarEventOrbital {
           entity: ?data
           fields: []
           gap: md
-          groupBy: date
+          groupBy: @config.agendaGroupBy
+          itemActions: @config.agendaItemActions
           renderItem: (fn item {
             children: [{
               align: start
@@ -301,6 +312,7 @@ orbital CalendarEventOrbital {
                 children: [{
                   color: muted
                   content: @config.timeBinding
+                  format: time
                   type: typography
                   variant: overline
                 }, {

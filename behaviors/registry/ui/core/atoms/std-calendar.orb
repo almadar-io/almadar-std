@@ -202,6 +202,28 @@
         {
           "category": "interaction",
           "config": {
+            "agendaGroupBy": {
+              "default": "date",
+              "description": "Row field the agenda list groups its day sections by. Rebound hosts point this at their own timestamp column (e.g. startTime, scheduledAt).",
+              "label": "Agenda group-by field",
+              "synonyms": "group field, section field, day field",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "agendaItemActions": {
+              "default": [
+                {
+                  "event": "SELECT_DAY",
+                  "icon": "eye",
+                  "label": "View"
+                }
+              ],
+              "description": "Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.",
+              "label": "Agenda item actions",
+              "synonyms": "agenda actions, row actions, event actions, list actions",
+              "tier": "presentation",
+              "type": "json"
+            },
             "agendaListBodyContent": {
               "default": {
                 "children": [
@@ -243,7 +265,8 @@
                     "entity": "@payload.data",
                     "fields": [],
                     "gap": "md",
-                    "groupBy": "date",
+                    "groupBy": "@config.agendaGroupBy",
+                    "itemActions": "@config.agendaItemActions",
                     "renderItem": [
                       "fn",
                       "item",
@@ -258,6 +281,7 @@
                                   {
                                     "color": "muted",
                                     "content": "@config.timeBinding",
+                                    "format": "time",
                                     "type": "typography",
                                     "variant": "overline"
                                   },

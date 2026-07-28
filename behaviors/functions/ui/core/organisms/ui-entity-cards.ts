@@ -72,8 +72,7 @@ export interface StdUiEntityCardsConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: unknown;
-  /** Default: `1` */
+  itemActions?: EntityRow[];
   maxCols?: number;
   /** Default: `280` */
   minCardWidth?: number;
@@ -345,11 +344,58 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 'variant': 'ghost',
               },
             ],
+            'description': 'Actions for each card item (schema-driven)',
+            'items': {
+              'properties': {
+                'action': {
+                  'name': 'action',
+                  'required': false,
+                  'type': 'string',
+                },
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'placement': {
+                  'name': 'placement',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'card',
+                    'footer',
+                    'row',
+                  ],
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Item Actions',
             'tier': 'presentation',
-            'type': 'json',
+            'type': '[EntityCardsItemActionsItem]',
           },
           'maxCols': {
-            'default': 1,
             'description': 'Maximum number of columns',
             'label': 'Max Cols',
             'tier': 'presentation',

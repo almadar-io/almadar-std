@@ -85,7 +85,7 @@ export interface StdMultiPartyFlowConfig {
   disputeIcon?: string;
   /** Default: `"Open dispute"` */
   disputeLabel?: string;
-  /** Default: `[{"actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","actionIcon":"credit-card","actionLabel":"Confirm payment","actor":"Alice Chen","description":"Funds the transaction and confirms receipt of the vehicle.","icon":"user","id":"buyer","stepLabel":"Step 1 of 2","title":"Buyer"},{"actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","actionIcon":"package","actionLabel":"Confirm shipment","actor":"Bob's Auto Sales LLC","description":"Ships the vehicle and uploads delivery proof.","icon":"user-check","id":"seller","stepLabel":"Step 2 of 2","title":"Seller"}]` */
+  /** Default: `[{"actionDescription":"Authorize the funds to be held in escrow until delivery is confirmed.","actionIcon":"credit-card","actionLabel":"Confirm payment","description":"Funds the transaction and confirms receipt.","icon":"user","id":"buyer","stepLabel":"Step 1 of 2","title":"Buyer"},{"actionDescription":"Mark the item as shipped. Funds release after the buyer confirms receipt.","actionIcon":"package","actionLabel":"Confirm shipment","description":"Ships the item and uploads delivery proof.","icon":"user-check","id":"seller","stepLabel":"Step 2 of 2","title":"Seller"}]` */
   parties?: EntityRow[];
   /** Default: `["reason"]` */
   reasonFields?: string[];
@@ -97,11 +97,11 @@ export interface StdMultiPartyFlowConfig {
   timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `"Escrow transaction"` */
   title?: string;
-  /** Default: `"$28,500"` */
+  /** Default: `"$0.00"` */
   transactionAmount?: string;
-  /** Default: `"TXN-A8B2C-2024-001"` */
+  /** Default: `""` */
   transactionReference?: string;
-  /** Default: `"Sale of 2024 Honda CR-V"` */
+  /** Default: `"Sale of item"` */
   transactionSubject?: string;
 }
 

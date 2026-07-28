@@ -291,6 +291,8 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                 'variant': 'ghost',
               },
             ],
+            'description': 'Item actions - schema-driven or function-based',
+            'label': 'Item Actions',
             'tier': 'presentation',
             'type': 'json',
           },

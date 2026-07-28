@@ -83,7 +83,7 @@ export interface StdUiTableViewConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[]` */
-  itemActions?: unknown;
+  itemActions?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
   maxInlineActions?: number;

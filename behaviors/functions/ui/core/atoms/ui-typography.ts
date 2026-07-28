@@ -46,7 +46,8 @@ export interface StdUiTypographyConfig {
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
   content?: unknown;
-  /** Default: `1` */
+  /** Default: `"none"` */
+  format?: 'none' | 'date' | 'time' | 'datetime' | 'number' | 'currency' | 'percent';
   level?: number;
   /** Default: `"visible"` */
   overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';

@@ -288,8 +288,12 @@ orbital BrowseItemOrbital {
         @tier "internal"
       metaBinding : string = @item.createdAt
         @label "Meta field binding"
-        @description "Binding path for the secondary meta slot (timestamp / category)."
+        @description "Binding path for the secondary meta slot (timestamp / category). Hosts binding a count or other non-date value should label it in the binding itself (e.g. (str/concat \"Vehicles: \" @item.vehicleCount)) and set metaFormat: none."
         @tier "internal"
+      metaFormat : "none" | "date" | "time" | "datetime" | "number" = date
+        @label "Meta value format"
+        @description "Typography format for the feed meta slot — date by default so the createdAt binding renders human-readable instead of raw ISO; set none for non-date bindings."
+        @tier "presentation"
       categoryBinding : string = @item.category
         @label "Category field binding"
         @description "Binding path for the category/tag slot."
@@ -364,6 +368,11 @@ orbital BrowseItemOrbital {
         @label "Which fields appear in the master-detail record pane?"
         @description "Field names shown in the detail panel when browseLook = master-detail; the first entry doubles as the pane title. Consumers overriding columns/fields should override this list to match their entity."
         @synonyms "detail columns, record fields, detail pane fields"
+        @tier "presentation"
+      detailActions : json = [{ event: CLOSE, label: Close }]
+        @label "Master-detail record pane actions"
+        @description "Action buttons on the master-detail record pane (detail-panel `actions` descriptors: label/event/icon/variant). Consumers add their own record actions (Edit/Delete/…) alongside or instead of Close."
+        @synonyms "record actions, detail actions, pane actions"
         @tier "presentation"
       bodyContent : render-ui = {
         children: [@trait.DataGrid1]
@@ -465,6 +474,7 @@ orbital BrowseItemOrbital {
                   children: [{
                     color: muted
                     content: @config.metaBinding
+                    format: @config.metaFormat
                     type: typography
                     variant: caption
                   }, {
@@ -639,13 +649,10 @@ orbital BrowseItemOrbital {
           type: stack
         }, {
           detail: {
-            actions: [{
-              event: CLOSE
-              label: Close
-            }]
+            actions: @config.detailActions
             fieldNames: @config.detailFields
             initialData: ?row
-            showActions: false
+            showActions: true
             type: detail-panel
           }
           hasSelection: true

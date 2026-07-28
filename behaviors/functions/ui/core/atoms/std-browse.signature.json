@@ -465,6 +465,20 @@
             "tier": "internal"
           },
           {
+            "key": "detailActions",
+            "type": "json",
+            "default": [
+              {
+                "event": "CLOSE",
+                "label": "Close"
+              }
+            ],
+            "label": "Master-detail record pane actions",
+            "description": "Action buttons on the master-detail record pane (detail-panel `actions` descriptors: label/event/icon/variant). Consumers add their own record actions (Edit/Delete/…) alongside or instead of Close.",
+            "synonyms": "record actions, detail actions, pane actions",
+            "tier": "presentation"
+          },
+          {
             "key": "detailFields",
             "type": "[string]",
             "default": [
@@ -575,6 +589,7 @@
                                     {
                                       "color": "muted",
                                       "content": "@config.metaBinding",
+                                      "format": "@config.metaFormat",
                                       "type": "typography",
                                       "variant": "caption"
                                     },
@@ -934,15 +949,10 @@
                 },
                 {
                   "detail": {
-                    "actions": [
-                      {
-                        "event": "CLOSE",
-                        "label": "Close"
-                      }
-                    ],
+                    "actions": "@config.detailActions",
                     "fieldNames": "@config.detailFields",
                     "initialData": "@payload.row",
-                    "showActions": false,
+                    "showActions": true,
                     "type": "detail-panel"
                   },
                   "hasSelection": true,
@@ -981,8 +991,23 @@
             "type": "string",
             "default": "@item.createdAt",
             "label": "Meta field binding",
-            "description": "Binding path for the secondary meta slot (timestamp / category).",
+            "description": "Binding path for the secondary meta slot (timestamp / category). Hosts binding a count or other non-date value should label it in the binding itself (e.g. (str/concat \"Vehicles: \" @item.vehicleCount)) and set metaFormat: none.",
             "tier": "internal"
+          },
+          {
+            "key": "metaFormat",
+            "type": "string",
+            "default": "date",
+            "label": "Meta value format",
+            "description": "Typography format for the feed meta slot — date by default so the createdAt binding renders human-readable instead of raw ISO; set none for non-date bindings.",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "date",
+              "time",
+              "datetime",
+              "number"
+            ]
           },
           {
             "key": "pageSize",
