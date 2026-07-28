@@ -46,6 +46,15 @@
         "parent": "trt_01KXG04PB8J9CDXQ5FQYCMQF3T",
         "renames": []
       },
+      "evt_01KYM63CSC8HWDZZDFN1CEXFH5": {
+        "bakedName": "@config.onMarkClick",
+        "curName": "@config.onMarkClick",
+        "id": "evt_01KYM63CSC8HWDZZDFN1CEXFH5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04PB8J9CDXQ5FQYCMQF3T",
+        "renames": []
+      },
       "orb_01KXG04PB8TC1C3CBCGPSN2HBS": {
         "bakedName": "GraphCanvasOrbital",
         "curName": "GraphCanvasOrbital",
@@ -313,6 +322,23 @@
                     "required": false,
                     "type": "string"
                   },
+                  "mark": {
+                    "name": "mark",
+                    "properties": {
+                      "kind": {
+                        "name": "kind",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "suggestionId": {
+                        "name": "suggestionId",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
                   "size": {
                     "name": "size",
                     "required": false,
@@ -342,6 +368,13 @@
               "tier": "presentation",
               "type": "string"
             },
+            "onMarkClick": {
+              "default": "MARK_CLICK",
+              "description": "On marked-node click (suggestion/proposal target). Takes priority over onNodeClick.",
+              "label": "On Mark Click",
+              "tier": "presentation",
+              "type": "string"
+            },
             "onNodeClick": {
               "default": "NODE_CLICK",
               "description": "On node click",
@@ -355,6 +388,43 @@
               "label": "On Node Double Click",
               "tier": "presentation",
               "type": "string"
+            },
+            "proposedEdges": {
+              "default": [],
+              "description": "Uncommitted proposal links — rendered dashed/faint in a separate pass, never folded into the layout springs.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "source": {
+                    "name": "source",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "target": {
+                    "name": "target",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Proposed Edges",
+              "tier": "presentation",
+              "type": "[GraphCanvasProposedEdgesItem]"
             },
             "repulsion": {
               "default": 800.0,
@@ -445,6 +515,22 @@
                       "type": "number"
                     },
                     {
+                      "name": "mark",
+                      "properties": [
+                        {
+                          "name": "kind",
+                          "required": true,
+                          "type": "json"
+                        },
+                        {
+                          "name": "suggestionId",
+                          "required": true,
+                          "type": "string"
+                        }
+                      ],
+                      "type": "object"
+                    },
+                    {
                       "name": "x",
                       "type": "number"
                     },
@@ -459,6 +545,70 @@
                   "name": "id",
                   "required": true,
                   "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "On marked-node click (suggestion/proposal target). Takes priority over onNodeClick.",
+              "event": "@config.onMarkClick",
+              "eventId": "evt_01KYM63CSC8HWDZZDFN1CEXFH5",
+              "payloadSchema": [
+                {
+                  "name": "node",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "label",
+                      "type": "string"
+                    },
+                    {
+                      "name": "group",
+                      "type": "string"
+                    },
+                    {
+                      "name": "color",
+                      "type": "string"
+                    },
+                    {
+                      "name": "size",
+                      "type": "number"
+                    },
+                    {
+                      "name": "badge",
+                      "type": "number"
+                    },
+                    {
+                      "name": "mark",
+                      "properties": [
+                        {
+                          "name": "kind",
+                          "required": true,
+                          "type": "json"
+                        },
+                        {
+                          "name": "suggestionId",
+                          "required": true,
+                          "type": "string"
+                        }
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "name": "x",
+                      "type": "number"
+                    },
+                    {
+                      "name": "y",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
                 }
               ],
               "scope": "external",
@@ -496,6 +646,22 @@
                     {
                       "name": "badge",
                       "type": "number"
+                    },
+                    {
+                      "name": "mark",
+                      "properties": [
+                        {
+                          "name": "kind",
+                          "required": true,
+                          "type": "json"
+                        },
+                        {
+                          "name": "suggestionId",
+                          "required": true,
+                          "type": "string"
+                        }
+                      ],
+                      "type": "object"
                     },
                     {
                       "name": "x",
@@ -544,6 +710,22 @@
                     {
                       "name": "badge",
                       "type": "number"
+                    },
+                    {
+                      "name": "mark",
+                      "properties": [
+                        {
+                          "name": "kind",
+                          "required": true,
+                          "type": "json"
+                        },
+                        {
+                          "name": "suggestionId",
+                          "required": true,
+                          "type": "string"
+                        }
+                      ],
+                      "type": "object"
                     },
                     {
                       "name": "x",
@@ -616,6 +798,22 @@
                         "type": "number"
                       },
                       {
+                        "name": "mark",
+                        "properties": [
+                          {
+                            "name": "kind",
+                            "required": true,
+                            "type": "json"
+                          },
+                          {
+                            "name": "suggestionId",
+                            "required": true,
+                            "type": "string"
+                          }
+                        ],
+                        "type": "object"
+                      },
+                      {
                         "name": "x",
                         "type": "number"
                       },
@@ -630,6 +828,70 @@
                     "name": "id",
                     "required": true,
                     "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "On marked-node click (suggestion/proposal target). Takes priority over onNodeClick.",
+                "id": "evt_01KYM63CSC8HWDZZDFN1CEXFH5",
+                "key": "@config.onMarkClick",
+                "name": "@config.on mark click",
+                "payloadSchema": [
+                  {
+                    "name": "node",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "group",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "size",
+                        "type": "number"
+                      },
+                      {
+                        "name": "badge",
+                        "type": "number"
+                      },
+                      {
+                        "name": "mark",
+                        "properties": [
+                          {
+                            "name": "kind",
+                            "required": true,
+                            "type": "json"
+                          },
+                          {
+                            "name": "suggestionId",
+                            "required": true,
+                            "type": "string"
+                          }
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
                   }
                 ],
                 "tier": "essential"
@@ -667,6 +929,22 @@
                       {
                         "name": "badge",
                         "type": "number"
+                      },
+                      {
+                        "name": "mark",
+                        "properties": [
+                          {
+                            "name": "kind",
+                            "required": true,
+                            "type": "json"
+                          },
+                          {
+                            "name": "suggestionId",
+                            "required": true,
+                            "type": "string"
+                          }
+                        ],
+                        "type": "object"
                       },
                       {
                         "name": "x",
@@ -717,6 +995,22 @@
                         "type": "number"
                       },
                       {
+                        "name": "mark",
+                        "properties": [
+                          {
+                            "name": "kind",
+                            "required": true,
+                            "type": "json"
+                          },
+                          {
+                            "name": "suggestionId",
+                            "required": true,
+                            "type": "string"
+                          }
+                        ],
+                        "type": "object"
+                      },
+                      {
                         "name": "x",
                         "type": "number"
                       },
@@ -759,8 +1053,10 @@
                       "nodeSpacing": "@config.nodeSpacing",
                       "nodes": "@config.nodes",
                       "onBadgeClick": "@config.onBadgeClick",
+                      "onMarkClick": "@config.onMarkClick",
                       "onNodeClick": "@config.onNodeClick",
                       "onNodeDoubleClick": "@config.onNodeDoubleClick",
+                      "proposedEdges": "@config.proposedEdges",
                       "repulsion": "@config.repulsion",
                       "selectedNodeId": "@config.selectedNodeId",
                       "showLabels": "@config.showLabels",

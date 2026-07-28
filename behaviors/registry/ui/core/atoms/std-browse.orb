@@ -1113,6 +1113,14 @@
               "tier": "internal",
               "type": "string"
             },
+            "scopeField": {
+              "default": "",
+              "description": "Name the field on this entity that holds the viewer's id (e.g. memberId, patientId, assignee). When set, the list loads ONLY rows whose that field equals @user.id — the 'my bookings' / 'my appointments' shape. Left blank the list loads every row, which is the default. Declared, never inferred: guessing the column from its name would silently scope the wrong one.",
+              "label": "Only show records owned by the signed-in user?",
+              "synonyms": "owner field, my records, only mine, only my own, scope to user, per-user list, mine only, owned by me",
+              "tier": "policy",
+              "type": "string"
+            },
             "searchPlaceholder": {
               "default": "Search…",
               "description": "Hint text inside the list search box (e.g. 'Search orders…').",
@@ -1629,6 +1637,23 @@
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.scopeField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.scopeField"
+                          ],
+                          "@user.id"
+                        ]
+                      ],
                       "limit": "@config.pageSize",
                       "offset": 0.0
                     }
@@ -1753,16 +1778,25 @@
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.scopeField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.scopeField"
+                          ],
+                          "@user.id"
+                        ]
+                      ],
                       "limit": "@config.pageSize",
                       "offset": 0.0
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "rows": 4.0,
-                      "type": "skeleton"
                     }
                   ]
                 ],
@@ -1782,20 +1816,40 @@
                         "success": "BrowseItemLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.searchTerm",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@config.scopeField",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "@config.scopeField"
+                            ],
+                            "@user.id"
+                          ]
                         ],
                         [
-                          "str/includes",
+                          "or",
                           [
-                            "object/get",
-                            "@entity",
-                            "name"
+                            "=",
+                            "@payload.searchTerm",
+                            ""
                           ],
-                          "@payload.searchTerm"
+                          [
+                            "str/includes",
+                            [
+                              "object/get",
+                              "@entity",
+                              "name"
+                            ],
+                            "@payload.searchTerm"
+                          ]
                         ]
                       ],
                       "limit": "@config.pageSize",
@@ -1819,20 +1873,40 @@
                         "success": "BrowseItemLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.value",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@config.scopeField",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "@config.scopeField"
+                            ],
+                            "@user.id"
+                          ]
                         ],
                         [
-                          "=",
+                          "or",
                           [
-                            "object/get",
-                            "@entity",
-                            "@payload.field"
+                            "=",
+                            "@payload.value",
+                            ""
                           ],
-                          "@payload.value"
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "@payload.field"
+                            ],
+                            "@payload.value"
+                          ]
                         ]
                       ],
                       "limit": "@config.pageSize",
@@ -1855,6 +1929,23 @@
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.scopeField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.scopeField"
+                          ],
+                          "@user.id"
+                        ]
+                      ],
                       "limit": "@config.pageSize",
                       "offset": [
                         "*",
@@ -1997,6 +2088,23 @@
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.scopeField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.scopeField"
+                          ],
+                          "@user.id"
+                        ]
+                      ],
                       "limit": "@config.pageSize",
                       "offset": 0.0
                     }
@@ -2045,5 +2153,5 @@
     }
   ],
   "schemaVersion": 1,
-  "version": "2.3.0"
+  "version": "2.4.0"
 }

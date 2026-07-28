@@ -1,4 +1,4 @@
-app std-browse "2.3.0"
+app std-browse "2.4.0"
 "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook."
 type FieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent, key : string, header : string }
 type ItemAction = { label : string!, event : string, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string }
@@ -75,6 +75,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
           limit: @config.pageSize
           offset: 0
         })
@@ -96,13 +97,17 @@ orbital BrowseItemOrbital {
     }
 
     state browsing {
+      ;; No skeleton repaint here, for the same reason REFETCH_* has none: from
+      ;; a POPULATED body a skeleton unmounts the grid and flickers. First mount
+      ;; is unaffected — `initial: loading` and `state loading`'s own INIT still
+      ;; paint it; `browsing` is only reachable after a successful load.
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
           limit: @config.pageSize
           offset: 0
         })
-        (render-ui main { rows: 4, type: skeleton })
       ;; REFETCH_* stays in `browsing` and DOES NOT replace the data-grid
       ;; with a spinner. Replacing during search-as-you-type unmounts the
       ;; grid every keystroke and causes a visible flicker. The fetch fires
@@ -112,20 +117,21 @@ orbital BrowseItemOrbital {
       REFETCH_QUERY -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm)))
           limit: @config.pageSize
           offset: 0
         })
       REFETCH_FILTER -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value]))
           limit: @config.pageSize
           offset: 0
         })
       REFETCH_PAGE -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
           limit: @config.pageSize
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
@@ -155,6 +161,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
           limit: @config.pageSize
           offset: 0
         })
@@ -341,6 +348,11 @@ orbital BrowseItemOrbital {
         @description "Actions beyond this count collapse into a '⋯' overflow menu. Set 2–3 for dense tables."
         @synonyms "inline actions limit, overflow threshold, max buttons per row"
         @tier "presentation"
+      scopeField : string = ""
+        @label "Only show records owned by the signed-in user?"
+        @description "Name the field on this entity that holds the viewer's id (e.g. memberId, patientId, assignee). When set, the list loads ONLY rows whose that field equals @user.id — the 'my bookings' / 'my appointments' shape. Left blank the list loads every row, which is the default. Declared, never inferred: guessing the column from its name would silently scope the wrong one."
+        @synonyms "owner field, my records, only mine, only my own, scope to user, per-user list, mine only, owned by me"
+        @tier "policy"
       selectable : boolean = false
         @label "Show row selection checkboxes?"
         @description "Adds a checkbox column with select-all to the dense table. Enable only when the surface offers bulk actions — checkboxes with nothing to act on are a dead affordance."
