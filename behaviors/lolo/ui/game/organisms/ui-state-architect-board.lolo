@@ -195,9 +195,9 @@ orbital StateArchitectBoardOrbital {
           ]
         })
 
-      RUN_TESTS -> complete when (and (> (array/len @entity.transitions) 0) (== @entity.totalTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st)) @entity.initialState) @tc.expectedState))))))
+      RUN_TESTS -> complete when (and (> (array/len @entity.transitions) 0) (== @entity.totalTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events @entity.initialState (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st))) @tc.expectedState))))))
         (set @entity.attempts (+ @entity.attempts 1))
-        (set @entity.passedTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st)) @entity.initialState) @tc.expectedState)))))
+        (set @entity.passedTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events @entity.initialState (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st))) @tc.expectedState)))))
         (set @entity.result "win")
         (render-ui main {
           type: game-shell
@@ -211,9 +211,9 @@ orbital StateArchitectBoardOrbital {
           ]
         })
 
-      RUN_TESTS -> playing when (or (== (array/len @entity.transitions) 0) (!= @entity.totalTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st)) @entity.initialState) @tc.expectedState))))))
+      RUN_TESTS -> playing when (or (== (array/len @entity.transitions) 0) (!= @entity.totalTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events @entity.initialState (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st))) @tc.expectedState))))))
         (set @entity.attempts (+ @entity.attempts 1))
-        (set @entity.passedTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st)) @entity.initialState) @tc.expectedState)))))
+        (set @entity.passedTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events @entity.initialState (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st))) @tc.expectedState)))))
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }

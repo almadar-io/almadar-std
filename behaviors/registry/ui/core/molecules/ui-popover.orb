@@ -19,6 +19,24 @@
         "parent": "trt_01KXG04QHPHB07PFRVRXWCZZZ3",
         "renames": []
       },
+      "evt_01KYQH4C8T000A3RVFDAXSCAXR": {
+        "bakedName": "OPEN_CHANGE",
+        "curName": "OPEN_CHANGE",
+        "id": "evt_01KYQH4C8T000A3RVFDAXSCAXR",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04QHPHB07PFRVRXWCZZZ3",
+        "renames": []
+      },
+      "evt_01KYQH4C8TH1DGZ4141EYBQ2JG": {
+        "bakedName": "@config.onOpenChange",
+        "curName": "@config.onOpenChange",
+        "id": "evt_01KYQH4C8TH1DGZ4141EYBQ2JG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04QHPHB07PFRVRXWCZZZ3",
+        "renames": []
+      },
       "orb_01KXG04QHN73J68Z4BJMKERHWN": {
         "bakedName": "PopoverOrbital",
         "curName": "PopoverOrbital",
@@ -55,6 +73,10 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "open",
+            "type": "boolean"
           }
         ],
         "id": "ent_01KXG04QHPFXYX2GXK0M1509YJ",
@@ -98,6 +120,19 @@
               "tier": "presentation",
               "type": "node"
             },
+            "onOpenChange": {
+              "default": "OPEN_CHANGE",
+              "description": "Fired when the popover wants to change visibility (trigger click, outside click)",
+              "label": "On Open Change",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "open": {
+              "description": "Controlled open state. When set, the host owns visibility and the popover reports intent through onOpenChange instead of toggling itself.",
+              "label": "Open",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "position": {
               "default": "bottom",
               "description": "Popover position",
@@ -130,8 +165,25 @@
               ]
             }
           },
+          "emits": [
+            {
+              "description": "Fired when the popover wants to change visibility (trigger click, outside click)",
+              "event": "@config.onOpenChange",
+              "eventId": "evt_01KYQH4C8TH1DGZ4141EYBQ2JG",
+              "payloadSchema": [
+                {
+                  "name": "open",
+                  "type": "boolean"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "open"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -149,6 +201,30 @@
                 "id": "evt_01KXG04QHPR5WWNS2YTHXGN3V7",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "id": "evt_01KYQH4C8T000A3RVFDAXSCAXR",
+                "key": "OPEN_CHANGE",
+                "name": "Open Change",
+                "payloadSchema": [
+                  {
+                    "name": "open",
+                    "type": "boolean"
+                  }
+                ]
+              },
+              {
+                "description": "Fired when the popover wants to change visibility (trigger click, outside click)",
+                "id": "evt_01KYQH4C8TH1DGZ4141EYBQ2JG",
+                "key": "@config.onOpenChange",
+                "name": "@config.on open change",
+                "payloadSchema": [
+                  {
+                    "name": "open",
+                    "type": "boolean"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -161,12 +237,19 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.open",
+                    "@config.open"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": "@config.children",
                       "className": "@config.className",
                       "content": "@config.content",
+                      "onOpenChange": "@config.onOpenChange",
+                      "open": "@entity.open",
                       "position": "@config.position",
                       "showArrow": "@config.showArrow",
                       "trigger": "@config.trigger",
@@ -176,6 +259,34 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04QHPR5WWNS2YTHXGN3V7",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.open",
+                    "@payload.open"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": "@config.children",
+                      "className": "@config.className",
+                      "content": "@config.content",
+                      "onOpenChange": "@config.onOpenChange",
+                      "open": "@entity.open",
+                      "position": "@config.position",
+                      "showArrow": "@config.showArrow",
+                      "trigger": "@config.trigger",
+                      "type": "popover"
+                    }
+                  ]
+                ],
+                "event": "OPEN_CHANGE",
+                "eventId": "evt_01KYQH4C8T000A3RVFDAXSCAXR",
                 "from": "idle",
                 "to": "idle"
               }

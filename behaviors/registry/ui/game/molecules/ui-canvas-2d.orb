@@ -207,6 +207,13 @@
               "tier": "presentation",
               "type": "Canvas2dError"
             },
+            "fit": {
+              "default": false,
+              "description": "Auto-fit the board's grid extent to the viewport (default false — boards render at their authored `scale` and overflow → pan). Opt in for whole-board-overview boards. User wheel/pinch zoom always wins after the initial fit.",
+              "label": "Fit",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "followTarget": {
               "description": "Follow-camera target in scene space (the neutral core `Camera.target`). When `camera:'follow'` the host lerps to keep this point centered.",
               "label": "Follow Target",
@@ -277,7 +284,7 @@
             },
             "scale": {
               "default": 0.4,
-              "description": "Render scale (0.4 = 40% zoom). Ignored by `free`/`side` (world-pixel-direct).",
+              "description": "Render scale, legacy-squared semantics: on-screen cell ≈ `256 × scale²` px (the authored contract every board tuned its value for). Converted internally to the single camera zoom against the board's native tile width, so the cell pitch follows the asset while the on-screen size stays as authored. Ignored when `fit` is on; passed through raw for `free`/`side` (world-pixel-direct).",
               "label": "Scale",
               "tier": "presentation",
               "type": "number"
@@ -309,6 +316,12 @@
               "label": "Tile Leave Event",
               "tier": "presentation",
               "type": "string"
+            },
+            "tileWidth": {
+              "description": "Native tile/cell width in source px for this board's asset (e.g. 16 for Kenney tiny-dungeon, ~128 for iso blocks). The grid cell pitch follows the asset, so tile textures map 1:1 (crisp, no stretch). Defaults to the detected atlas tile width, else 256.",
+              "label": "Tile Width",
+              "tier": "presentation",
+              "type": "number"
             },
             "unitClickEvent": {
               "default": "UNIT_CLICK",
@@ -491,6 +504,7 @@
                       "className": "@config.className",
                       "drawables": "@config.drawables",
                       "error": "@config.error",
+                      "fit": "@config.fit",
                       "followTarget": "@config.followTarget",
                       "isLoading": "@config.isLoading",
                       "keyMap": "@config.keyMap",
@@ -501,6 +515,7 @@
                       "tileClickEvent": "@config.tileClickEvent",
                       "tileHoverEvent": "@config.tileHoverEvent",
                       "tileLeaveEvent": "@config.tileLeaveEvent",
+                      "tileWidth": "@config.tileWidth",
                       "type": "canvas-2d",
                       "unitClickEvent": "@config.unitClickEvent"
                     }

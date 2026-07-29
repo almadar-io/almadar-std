@@ -66,6 +66,7 @@ orbital TableViewOrbital {
           fields: @config.fields
           itemActions: @config.itemActions
           maxInlineActions: @config.maxInlineActions
+          itemClickEvent: @config.itemClickEvent
           selectable: @config.selectable
           selectEvent: @config.selectEvent
           selectedIds: @config.selectedIds
@@ -96,6 +97,7 @@ orbital TableViewOrbital {
           fields: @config.fields
           itemActions: @config.itemActions
           maxInlineActions: @config.maxInlineActions
+          itemClickEvent: @config.itemClickEvent
           selectable: @config.selectable
           selectEvent: @config.selectEvent
           selectedIds: @config.selectedIds
@@ -114,6 +116,11 @@ orbital TableViewOrbital {
     }
 
     emits {
+      @config.itemClickEvent -> external {
+        id : string
+      }
+        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract."
+        @tier "essential"
       @config.selectEvent -> external {
         id : string
       }
@@ -183,6 +190,10 @@ orbital TableViewOrbital {
       maxInlineActions : number
         @label "Max Inline Actions"
         @description "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline."
+        @tier "presentation"
+      itemClickEvent : string = "ITEM_CLICK"
+        @label "Item Click Event"
+        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract."
         @tier "presentation"
       selectable : boolean = false
         @label "Selectable"

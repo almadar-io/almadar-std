@@ -42,6 +42,8 @@ orbital Canvas2dOrbital {
           keyUpMap: @config.keyUpMap
           camera: @config.camera
           scale: @config.scale
+          tileWidth: @config.tileWidth
+          fit: @config.fit
           showMinimap: @config.showMinimap
           followTarget: @config.followTarget
           cameraPos: @config.cameraPos
@@ -130,7 +132,15 @@ orbital Canvas2dOrbital {
         @tier "presentation"
       scale : number = 0.4
         @label "Scale"
-        @description "Render scale (0.4 = 40% zoom). Ignored by `free`/`side` (world-pixel-direct)."
+        @description "Render scale, legacy-squared semantics: on-screen cell ≈ `256 × scale²` px (the authored contract every board tuned its value for). Converted internally to the single camera zoom against the board's native tile width, so the cell pitch follows the asset while the on-screen size stays as authored. Ignored when `fit` is on; passed through raw for `free`/`side` (world-pixel-direct)."
+        @tier "presentation"
+      tileWidth : number
+        @label "Tile Width"
+        @description "Native tile/cell width in source px for this board's asset (e.g. 16 for Kenney tiny-dungeon, ~128 for iso blocks). The grid cell pitch follows the asset, so tile textures map 1:1 (crisp, no stretch). Defaults to the detected atlas tile width, else 256."
+        @tier "presentation"
+      fit : boolean = false
+        @label "Fit"
+        @description "Auto-fit the board's grid extent to the viewport (default false — boards render at their authored `scale` and overflow → pan). Opt in for whole-board-overview boards. User wheel/pinch zoom always wins after the initial fit."
         @tier "presentation"
       showMinimap : boolean = true
         @label "Show Minimap"

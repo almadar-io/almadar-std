@@ -2791,6 +2791,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           [
                             'array/reduce',
                             '@tc.events',
+                            '@entity.initialState',
                             [
                               'fn',
                               [
@@ -2824,7 +2825,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                                 '@st',
                               ],
                             ],
-                            '@entity.initialState',
                           ],
                           '@tc.expectedState',
                         ],
@@ -3103,6 +3103,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           [
                             'array/reduce',
                             '@tc.events',
+                            '@entity.initialState',
                             [
                               'fn',
                               [
@@ -3136,7 +3137,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                                 '@st',
                               ],
                             ],
-                            '@entity.initialState',
                           ],
                           '@tc.expectedState',
                         ],
@@ -3174,6 +3174,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           [
                             'array/reduce',
                             '@tc.events',
+                            '@entity.initialState',
                             [
                               'fn',
                               [
@@ -3207,7 +3208,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                                 '@st',
                               ],
                             ],
-                            '@entity.initialState',
                           ],
                           '@tc.expectedState',
                         ],
@@ -3481,6 +3481,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           [
                             'array/reduce',
                             '@tc.events',
+                            '@entity.initialState',
                             [
                               'fn',
                               [
@@ -3514,7 +3515,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                                 '@st',
                               ],
                             ],
-                            '@entity.initialState',
                           ],
                           '@tc.expectedState',
                         ],

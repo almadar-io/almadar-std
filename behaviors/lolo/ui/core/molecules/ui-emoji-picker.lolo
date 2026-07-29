@@ -1,0 +1,56 @@
+app ui-emoji-picker "1.0.0"
+"EmojiPicker — UI factory (1:1 with the @almadar/ui emoji-picker pattern)."
+orbital EmojiPickerOrbital {
+  entity EmojiPickerItem [runtime] {
+    id : string!
+  }
+
+  trait EmojiPickerRender -> @rebindable EmojiPickerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          pickEvent: @config.pickEvent
+          position: @config.position
+          triggerIcon: @config.triggerIcon
+          triggerLabel: @config.triggerLabel
+          className: @config.className
+          type: emoji-picker
+        })
+    }
+
+    emits {
+      @config.pickEvent -> external {
+        id : string
+      }
+        @description "Declarative event name — picking an emoji emits UI:{pickEvent} with { emoji } via eventBus"
+        @tier "essential"
+    }
+
+    config {
+      pickEvent : string = "PICK"
+        @label "Pick Event"
+        @description "Declarative event name — picking an emoji emits UI:{pickEvent} with { emoji } via eventBus"
+        @tier "presentation"
+      position : "top" | "bottom" = top
+        @label "Position"
+        @description "Which side of the trigger the panel opens on"
+        @tier "presentation"
+      triggerIcon : icon
+        @label "Trigger Icon"
+        @description "Icon shown on the trigger button"
+        @tier "presentation"
+      triggerLabel : string = "Add emoji"
+        @label "Trigger Label"
+        @description "Accessible label for the trigger button"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes applied to the trigger button"
+        @tier "presentation"
+    }
+  }
+
+  page "/emoji-picker" as EmojiPickerPage -> EmojiPickerRender
+}

@@ -134,6 +134,9 @@ export interface StdUiDataListConfig {
   reorderable?: boolean;
   senderField?: string;
   senderLabelField?: string;
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   sortable?: boolean;
   /** Default: `[]` */
   swipeLeftActions?: EntityRow[];

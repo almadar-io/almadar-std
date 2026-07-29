@@ -10,11 +10,13 @@
 
 import type { OrbitalSchema, SExpr } from '@almadar/core/types';
 
-export interface NavItemConfig {
+// Type alias (not interface) so the implicit index signature makes
+// NavItemConfig[] assignable into SExpr render-ui literals.
+export type NavItemConfig = {
   label: string;
   href: string;
   icon: string;
-}
+};
 
 /**
  * Optional chrome forwarded into the dashboard-layout pattern at every
@@ -32,14 +34,14 @@ export interface DashboardLayoutChrome {
    *  omit/null hides it. The value can be a literal payload binding
    *  string like `'@payload.data'` so render-ui resolves it from the
    *  trait's bus payload at render time. */
-  notifications?: unknown;
+  notifications?: SExpr;
   /** Event-name dispatched on bell click (`UI:{notificationClickEvent}`
    *  with empty payload). */
   notificationClickEvent?: string;
   /** Custom sidebar footer content (UI pattern subtree). Omitted →
    *  no footer. Apps that want Settings should add a navItems entry
    *  instead of stuffing it into the footer. */
-  sidebarFooter?: unknown;
+  sidebarFooter?: SExpr;
   /** Theme toggle visibility. Default true. */
   showThemeToggle?: boolean;
 }
@@ -68,7 +70,7 @@ export function wrapInDashboardLayout(
   // Strip undefined/null entries so the rendered tree only carries
   // explicit opt-ins (matches "omitted = hide" semantics in the
   // DashboardLayout component).
-  const chromeProps: Record<string, unknown> = {};
+  const chromeProps: Record<string, SExpr> = {};
   for (const [key, value] of Object.entries(chrome)) {
     if (value !== undefined && value !== null) {
       chromeProps[key] = value;

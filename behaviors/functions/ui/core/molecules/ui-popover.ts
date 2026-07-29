@@ -30,7 +30,14 @@ const ALIAS = 'UiPopover';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiPopoverEventKey = 'INIT';
+export type StdUiPopoverEventKey = 'INIT' | 'OPEN_CHANGE';
+
+/**
+ * Payload shape for the `OPEN_CHANGE` event.
+ */
+export interface StdUiPopoverOpenChangePayload {
+  open?: boolean;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -42,6 +49,9 @@ export interface StdUiPopoverConfig {
   children?: unknown;
   className?: string;
   content?: unknown;
+  /** Default: `"OPEN_CHANGE"` */
+  onOpenChange?: string;
+  open?: boolean;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
   /** Default: `true` */

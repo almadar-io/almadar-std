@@ -211,7 +211,11 @@ orbital DataErasureOrbital {
     }
 
     state browsing {
-      CANCEL_ERASURE -> loading
+      ;; Stays in `browsing`: this persist's result arms (ErasureSaved /
+      ;; ErasureSaveFailed) are declared here. Leaving for `loading` landed the
+      ;; save on a deaf state and wedged the panel on its spinner — the
+      ;; ErasureSaved arm below is what moves to `loading` to re-fetch.
+      CANCEL_ERASURE -> browsing
         (set @entity.id ?id)
         (set @entity.status cancelled)
         (persist update ErasureRequest @entity {

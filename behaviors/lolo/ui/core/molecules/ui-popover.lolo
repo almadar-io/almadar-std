@@ -3,6 +3,7 @@ app ui-popover "1.0.0"
 orbital PopoverOrbital {
   entity PopoverItem [runtime] {
     id : string!
+    open : boolean
   }
 
   trait PopoverRender -> @rebindable PopoverItem [interaction, instance] {
@@ -10,15 +11,45 @@ orbital PopoverOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.open @config.open)
         (render-ui main {
           content: @config.content
           children: @config.children
           position: @config.position
           trigger: @config.trigger
           showArrow: @config.showArrow
+          open: @entity.open
+          onOpenChange: @config.onOpenChange
           className: @config.className
           type: popover
         })
+      OPEN_CHANGE -> idle
+        (set @entity.open ?open)
+        (render-ui main {
+          content: @config.content
+          children: @config.children
+          position: @config.position
+          trigger: @config.trigger
+          showArrow: @config.showArrow
+          open: @entity.open
+          onOpenChange: @config.onOpenChange
+          className: @config.className
+          type: popover
+        })
+    }
+
+    emits {
+      @config.onOpenChange -> external {
+        open : boolean
+      }
+        @description "Fired when the popover wants to change visibility (trigger click, outside click)"
+        @tier "essential"
+    }
+
+    listens {
+      OPEN_CHANGE {
+        open : boolean
+      }
     }
 
     config {
@@ -41,6 +72,14 @@ orbital PopoverOrbital {
       showArrow : boolean = true
         @label "Show Arrow"
         @description "Show arrow"
+        @tier "presentation"
+      open : boolean
+        @label "Open"
+        @description "Controlled open state. When set, the host owns visibility and the popover reports intent through onOpenChange instead of toggling itself."
+        @tier "presentation"
+      onOpenChange : string = "OPEN_CHANGE"
+        @label "On Open Change"
+        @description "Fired when the popover wants to change visibility (trigger click, outside click)"
         @tier "presentation"
       className : string
         @label "Class Name"

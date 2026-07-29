@@ -7843,7 +7843,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     '@t',
                                     'terrainSprite',
                                   ],
-                                  'height': 0.5,
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -7857,7 +7857,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -11609,7 +11609,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     '@t',
                                     'terrainSprite',
                                   ],
-                                  'height': 0.5,
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -11623,7 +11623,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -12482,7 +12482,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     '@t',
                                     'terrainSprite',
                                   ],
-                                  'height': 0.5,
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -12496,7 +12496,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -13514,7 +13514,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     '@t',
                                     'terrainSprite',
                                   ],
-                                  'height': 0.5,
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -13528,7 +13528,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -14433,7 +14433,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   '@t',
                                   'terrainSprite',
                                 ],
-                                'height': 0.5,
+                                'height': 1,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -14447,7 +14447,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   ],
                                 },
                                 'type': 'draw-sprite',
-                                'width': 0.5,
+                                'width': 1,
                               },
                             ],
                           ],

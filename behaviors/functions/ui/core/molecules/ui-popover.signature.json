@@ -7,16 +7,30 @@
     "entities": [
       {
         "name": "PopoverItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "open",
+            "type": "boolean",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
     "traits": [
       {
         "name": "PopoverRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "OPEN_CHANGE"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "OPEN_CHANGE",
+            "direction": "emit",
+            "description": "Fired when the popover wants to change visibility (trigger click, outside click)",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -42,6 +56,21 @@
             "type": "node",
             "label": "Content",
             "description": "Popover content",
+            "tier": "presentation"
+          },
+          {
+            "key": "onOpenChange",
+            "type": "string",
+            "default": "OPEN_CHANGE",
+            "label": "On Open Change",
+            "description": "Fired when the popover wants to change visibility (trigger click, outside click)",
+            "tier": "presentation"
+          },
+          {
+            "key": "open",
+            "type": "boolean",
+            "label": "Open",
+            "description": "Controlled open state. When set, the host owns visibility and the popover reports intent through onOpenChange instead of toggling itself.",
             "tier": "presentation"
           },
           {
@@ -81,12 +110,15 @@
         ],
         "capabilities": [],
         "transitionEvents": [
-          "INIT"
+          "INIT",
+          "OPEN_CHANGE"
         ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "open"
+          ]
         }
       }
     ],
@@ -97,7 +129,9 @@
         "primaryEntity": "PopoverItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "OPEN_CHANGE"
+    ],
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",

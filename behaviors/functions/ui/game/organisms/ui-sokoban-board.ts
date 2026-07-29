@@ -2404,7 +2404,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     '@t',
                                     'terrainSprite',
                                   ],
-                                  'height': 0.5,
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2418,7 +2418,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4408,7 +4408,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     '@t',
                                     'terrainSprite',
                                   ],
-                                  'height': 0.5,
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4422,7 +4422,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4874,7 +4874,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     '@t',
                                     'terrainSprite',
                                   ],
-                                  'height': 0.5,
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4888,7 +4888,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -5396,7 +5396,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     '@t',
                                     'terrainSprite',
                                   ],
-                                  'height': 0.5,
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -5410,7 +5410,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                     ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -5865,7 +5865,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   '@t',
                                   'terrainSprite',
                                 ],
-                                'height': 0.5,
+                                'height': 1,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -5879,7 +5879,7 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                                   ],
                                 },
                                 'type': 'draw-sprite',
-                                'width': 0.5,
+                                'width': 1,
                               },
                             ],
                           ],

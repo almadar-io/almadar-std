@@ -41,6 +41,7 @@ export type StdUiDrawShapeEventKey = 'INIT';
 export interface StdUiDrawShapeConfig {
   /** Default: `{}` */
   anchor?: unknown;
+  d?: string;
   fill?: string;
   height?: number;
   offsetX?: number;
@@ -53,7 +54,7 @@ export interface StdUiDrawShapeConfig {
   radiusX?: number;
   radiusY?: number;
   /** Default: `"cell"` */
-  shape?: 'cell' | 'rect' | 'ellipse' | 'poly';
+  shape?: 'cell' | 'rect' | 'ellipse' | 'poly' | 'path';
   stroke?: string;
   strokeWidth?: number;
   width?: number;

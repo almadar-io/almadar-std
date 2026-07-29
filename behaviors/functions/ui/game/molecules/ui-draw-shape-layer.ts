@@ -39,7 +39,7 @@ export type StdUiDrawShapeLayerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawShapeLayerConfig {
-  /** Default: `[{"fill":"Fill","height":1,"offsetX":1,"offsetY":1,"opacity":1,"points":[],"position":{"x":1,"y":1,"z":1},"radiusX":1,"radiusY":1,"shape":"cell","stroke":"Stroke","strokeWidth":1,"type":"Type","width":1},{"fill":"Fill 2","height":2,"offsetX":2,"offsetY":2,"opacity":2,"points":[],"position":{"x":2,"y":2,"z":2},"radiusX":2,"radiusY":2,"shape":"rect","stroke":"Stroke 2","strokeWidth":2,"type":"Type 2","width":2}]` */
+  /** Default: `[{"d":"D","fill":"Fill","height":1,"offsetX":1,"offsetY":1,"opacity":1,"points":[],"position":{"x":1,"y":1,"z":1},"radiusX":1,"radiusY":1,"shape":"cell","stroke":"Stroke","strokeWidth":1,"type":"Type","width":1},{"d":"D 2","fill":"Fill 2","height":2,"offsetX":2,"offsetY":2,"opacity":2,"points":[],"position":{"x":2,"y":2,"z":2},"radiusX":2,"radiusY":2,"shape":"rect","stroke":"Stroke 2","strokeWidth":2,"type":"Type 2","width":2}]` */
   items?: EntityRow[];
 }
 
