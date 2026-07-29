@@ -1,0 +1,98 @@
+app ui-svg-stage "1.0.0"
+"SvgStage — UI factory (1:1 with the @almadar/ui svg-stage pattern)."
+orbital SvgStageOrbital {
+  entity SvgStageItem [runtime] {
+    id : string!
+  }
+
+  trait SvgStageRender -> @rebindable SvgStageItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          cols: @config.cols
+          rows: @config.rows
+          tileSize: @config.tileSize
+          background: @config.background
+          tileClickEvent: @config.tileClickEvent
+          tileHoverEvent: @config.tileHoverEvent
+          tileLeaveEvent: @config.tileLeaveEvent
+          keyMap: @config.keyMap
+          keyUpMap: @config.keyUpMap
+          className: @config.className
+          children: @config.children
+          type: svg-stage
+        })
+    }
+
+    emits {
+      @config.tileClickEvent -> external {
+        x : number!
+        y : number!
+      }
+        @description "Emitted as `UI:<event>` with `{ x, y }` cell coords on pointer up (<5px drag)."
+        @tier "essential"
+      @config.tileHoverEvent -> external {
+        x : number!
+        y : number!
+      }
+        @description "Emitted as `UI:<event>` with `{ x, y }` cell coords on pointer move."
+        @tier "essential"
+      @config.tileLeaveEvent -> external {
+        id : string
+      }
+        @description "Emitted as `UI:<event>` with `{}` when the pointer leaves the stage."
+        @tier "essential"
+    }
+
+    config {
+      cols : number = 1
+        @label "Cols"
+        @description "Grid width in cells."
+        @tier "presentation"
+      rows : number = 1
+        @label "Rows"
+        @description "Grid height in cells."
+        @tier "presentation"
+      tileSize : number = 32
+        @label "Tile Size"
+        @description "ViewBox units per cell (default 32); viewBox is `0 0 cols*tileSize rows*tileSize`."
+        @tier "presentation"
+      background : string = "var(--color-background)"
+        @label "Background"
+        @description "Background rect fill (default `var(--color-background)`)."
+        @tier "presentation"
+      tileClickEvent : string = "TILE_CLICK"
+        @label "Tile Click Event"
+        @description "Emitted as `UI:<event>` with `{ x, y }` cell coords on pointer up (<5px drag)."
+        @tier "presentation"
+      tileHoverEvent : string = "TILE_HOVER"
+        @label "Tile Hover Event"
+        @description "Emitted as `UI:<event>` with `{ x, y }` cell coords on pointer move."
+        @tier "presentation"
+      tileLeaveEvent : string = "TILE_LEAVE"
+        @label "Tile Leave Event"
+        @description "Emitted as `UI:<event>` with `{}` when the pointer leaves the stage."
+        @tier "presentation"
+      keyMap : Map string string = { item: "Item" }
+        @label "Key Map"
+        @description "Keyboard → semantic events: `e.code` → event name, emitted as `UI:<event>` with `{}`."
+        @tier "presentation"
+      keyUpMap : Map string string = { item: "Item" }
+        @label "Key Up Map"
+        @description "Keyup counterpart of `keyMap`."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-stage" as SvgStagePage -> SvgStageRender
+}

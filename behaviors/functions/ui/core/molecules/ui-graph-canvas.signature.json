@@ -16,6 +16,7 @@
         "name": "GraphCanvasRender",
         "emittedEvents": [
           "NODE_CLICK",
+          "MARK_CLICK",
           "NODE_DOUBLE_CLICK",
           "BADGE_CLICK"
         ],
@@ -25,6 +26,12 @@
             "name": "NODE_CLICK",
             "direction": "emit",
             "description": "On node click",
+            "tier": "essential"
+          },
+          {
+            "name": "MARK_CLICK",
+            "direction": "emit",
+            "description": "On marked-node click (suggestion/proposal target). Takes priority over onNodeClick.",
             "tier": "essential"
           },
           {
@@ -268,6 +275,23 @@
                   "required": false,
                   "type": "string"
                 },
+                "mark": {
+                  "name": "mark",
+                  "required": false,
+                  "properties": {
+                    "kind": {
+                      "name": "kind",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "suggestionId": {
+                      "name": "suggestionId",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
                 "size": {
                   "name": "size",
                   "required": false,
@@ -296,6 +320,14 @@
             "tier": "presentation"
           },
           {
+            "key": "onMarkClick",
+            "type": "string",
+            "default": "MARK_CLICK",
+            "label": "On Mark Click",
+            "description": "On marked-node click (suggestion/proposal target). Takes priority over onNodeClick.",
+            "tier": "presentation"
+          },
+          {
             "key": "onNodeClick",
             "type": "string",
             "default": "NODE_CLICK",
@@ -310,6 +342,44 @@
             "label": "On Node Double Click",
             "description": "On node double-click (e.g. to drill in)",
             "tier": "presentation"
+          },
+          {
+            "key": "proposedEdges",
+            "type": "[GraphCanvasProposedEdgesItem]",
+            "default": [],
+            "label": "Proposed Edges",
+            "description": "Uncommitted proposal links — rendered dashed/faint in a separate pass, never folded into the layout springs.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "source": {
+                  "name": "source",
+                  "required": true,
+                  "type": "string"
+                },
+                "target": {
+                  "name": "target",
+                  "required": true,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "repulsion",
@@ -390,6 +460,7 @@
     ],
     "emittedEvents": [
       "BADGE_CLICK",
+      "MARK_CLICK",
       "NODE_CLICK",
       "NODE_DOUBLE_CLICK"
     ],

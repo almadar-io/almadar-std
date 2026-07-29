@@ -1,0 +1,103 @@
+app ui-svg-draw-shape "1.0.0"
+"SvgDrawShape — UI factory (1:1 with the @almadar/ui svg-draw-shape pattern)."
+orbital SvgDrawShapeOrbital {
+  entity SvgDrawShapeItem [runtime] {
+    id : string!
+  }
+
+  trait SvgDrawShapeRender -> @rebindable SvgDrawShapeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          shape: @config.shape
+          x: @config.x
+          y: @config.y
+          width: @config.width
+          height: @config.height
+          radius: @config.radius
+          radiusY: @config.radiusY
+          points: @config.points
+          d: @config.d
+          x2: @config.x2
+          y2: @config.y2
+          fill: @config.fill
+          stroke: @config.stroke
+          strokeWidth: @config.strokeWidth
+          opacity: @config.opacity
+          className: @config.className
+          type: svg-draw-shape
+        })
+    }
+
+    config {
+      shape : "rect" | "circle" | "ellipse" | "polygon" | "polyline" | "path" | "line" = rect
+        @label "Shape"
+        @description "shape prop"
+        @tier "presentation"
+      x : number = 1
+        @label "X"
+        @description "Grid-cell x of the element's translated origin."
+        @tier "presentation"
+      y : number = 1
+        @label "Y"
+        @description "Grid-cell y of the element's translated origin."
+        @tier "presentation"
+      width : number
+        @label "Width"
+        @description "Rect width in cell units."
+        @tier "presentation"
+      height : number
+        @label "Height"
+        @description "Rect height in cell units."
+        @tier "presentation"
+      radius : number
+        @label "Radius"
+        @description "Circle radius / ellipse horizontal radius in cell units."
+        @tier "presentation"
+      radiusY : number
+        @label "Radius Y"
+        @description "Ellipse vertical radius in cell units; omitted → `radius` (a circle)."
+        @tier "presentation"
+      points : string
+        @label "Points"
+        @description "Polygon/polyline points, viewBox units relative to the translated origin."
+        @tier "presentation"
+      d : string
+        @label "D"
+        @description "Path data, viewBox units relative to the translated origin."
+        @tier "presentation"
+      x2 : number
+        @label "X2"
+        @description "Line end x in cell units."
+        @tier "presentation"
+      y2 : number
+        @label "Y2"
+        @description "Line end y in cell units."
+        @tier "presentation"
+      fill : string
+        @label "Fill"
+        @description "fill prop"
+        @tier "presentation"
+      stroke : string
+        @label "Stroke"
+        @description "stroke prop"
+        @tier "presentation"
+      strokeWidth : number
+        @label "Stroke Width"
+        @description "strokeWidth prop"
+        @tier "presentation"
+      opacity : number
+        @label "Opacity"
+        @description "0..1 opacity."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-draw-shape" as SvgDrawShapePage -> SvgDrawShapeRender
+}

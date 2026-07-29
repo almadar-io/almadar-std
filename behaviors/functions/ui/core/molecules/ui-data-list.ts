@@ -104,6 +104,7 @@ export interface StdUiDataListConfig {
   dndRoot?: boolean;
   dragGroup?: string;
   dropEvent?: string;
+  emptyMessage?: string;
   error?: EntityRow;
   /** Default: `[]` */
   fields?: EntityRow[];
@@ -132,6 +133,7 @@ export interface StdUiDataListConfig {
   reorderEvent?: string;
   reorderable?: boolean;
   senderField?: string;
+  senderLabelField?: string;
   sortable?: boolean;
   /** Default: `[]` */
   swipeLeftActions?: EntityRow[];

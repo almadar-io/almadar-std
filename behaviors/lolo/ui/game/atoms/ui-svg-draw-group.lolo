@@ -1,0 +1,58 @@
+app ui-svg-draw-group "1.0.0"
+"SvgDrawGroup — UI factory (1:1 with the @almadar/ui svg-draw-group pattern)."
+orbital SvgDrawGroupOrbital {
+  entity SvgDrawGroupItem [runtime] {
+    id : string!
+  }
+
+  trait SvgDrawGroupRender -> @rebindable SvgDrawGroupItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          x: @config.x
+          y: @config.y
+          scale: @config.scale
+          rotate: @config.rotate
+          opacity: @config.opacity
+          className: @config.className
+          children: @config.children
+          type: svg-draw-group
+        })
+    }
+
+    config {
+      x : number = 0
+        @label "X"
+        @description "Grid-cell x of the group's origin."
+        @tier "presentation"
+      y : number = 0
+        @label "Y"
+        @description "Grid-cell y of the group's origin."
+        @tier "presentation"
+      scale : number
+        @label "Scale"
+        @description "Uniform scale applied after the translate."
+        @tier "presentation"
+      rotate : number
+        @label "Rotate"
+        @description "Rotation in degrees applied after the translate."
+        @tier "presentation"
+      opacity : number
+        @label "Opacity"
+        @description "0..1 opacity."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-draw-group" as SvgDrawGroupPage -> SvgDrawGroupRender
+}

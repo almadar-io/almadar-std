@@ -1,4 +1,4 @@
-app std-browse "2.4.0"
+app std-browse "2.5.0"
 "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook."
 type FieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent, key : string, header : string }
 type ItemAction = { label : string!, event : string, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string }
@@ -75,7 +75,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
+          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
           limit: @config.pageSize
           offset: 0
         })
@@ -104,7 +104,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
+          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
           limit: @config.pageSize
           offset: 0
         })
@@ -161,7 +161,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
+          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
           limit: @config.pageSize
           offset: 0
         })
@@ -352,6 +352,16 @@ orbital BrowseItemOrbital {
         @label "Only show records owned by the signed-in user?"
         @description "Name the field on this entity that holds the viewer's id (e.g. memberId, patientId, assignee). When set, the list loads ONLY rows whose that field equals @user.id — the 'my bookings' / 'my appointments' shape. Left blank the list loads every row, which is the default. Declared, never inferred: guessing the column from its name would silently scope the wrong one."
         @synonyms "owner field, my records, only mine, only my own, scope to user, per-user list, mine only, owned by me"
+        @tier "policy"
+      initialFilterField : string = ""
+        @label "Which field does the first load filter on?"
+        @description "Name the field the INITIAL load filters on, paired with initialFilterValue. This is the detail half of a list-detail pair: a thread that must wait for a conversation to be picked sets the field to its parent key and leaves the value blank, so the first load matches nothing and the empty state shows instead of every record in the table. REFETCH_FILTER then supplies the real selection. Left blank the first load is unfiltered, which is the default."
+        @synonyms "initial filter, first load filter, wait for selection, detail pane filter, requires selection, start empty"
+        @tier "policy"
+      initialFilterValue : string = ""
+        @label "What value does the first load filter for?"
+        @description "The value initialFilterField must equal on the first load. Blank is meaningful: it matches only records whose field is itself blank, which for a detail pane is normally none — that is how a thread stays empty until its parent is selected."
+        @synonyms "initial filter value, first load value, default selection"
         @tier "policy"
       selectable : boolean = false
         @label "Show row selection checkboxes?"

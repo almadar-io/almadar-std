@@ -1,0 +1,58 @@
+app ui-svg-draw-text "1.0.0"
+"SvgDrawText — UI factory (1:1 with the @almadar/ui svg-draw-text pattern)."
+orbital SvgDrawTextOrbital {
+  entity SvgDrawTextItem [runtime] {
+    id : string!
+  }
+
+  trait SvgDrawTextRender -> @rebindable SvgDrawTextItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          x: @config.x
+          y: @config.y
+          text: @config.text
+          size: @config.size
+          fill: @config.fill
+          anchor: @config.anchor
+          className: @config.className
+          type: svg-draw-text
+        })
+    }
+
+    config {
+      x : number = 1
+        @label "X"
+        @description "Grid-cell x of the text anchor."
+        @tier "presentation"
+      y : number = 1
+        @label "Y"
+        @description "Grid-cell y of the text anchor."
+        @tier "presentation"
+      text : string = ""
+        @label "Text"
+        @description "The text content."
+        @tier "presentation"
+      size : number = 12
+        @label "Size"
+        @description "Font size in viewBox units (default 12)."
+        @tier "presentation"
+      fill : string = "var(--color-foreground)"
+        @label "Fill"
+        @description "fill prop"
+        @tier "presentation"
+      anchor : "start" | "middle" | "end" = middle
+        @label "Anchor"
+        @description "Text anchor (default 'middle')."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-draw-text" as SvgDrawTextPage -> SvgDrawTextRender
+}

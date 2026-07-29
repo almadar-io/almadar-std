@@ -1,0 +1,196 @@
+{
+  "description": "DrawGroup — UI factory (1:1 with the @almadar/ui draw-group pattern).",
+  "ledger": {
+    "entries": {
+      "ent_01KYMSJ0XC4FZ6XDMWJFY33XPW": {
+        "bakedName": "DrawGroupItem",
+        "curName": "DrawGroupItem",
+        "id": "ent_01KYMSJ0XC4FZ6XDMWJFY33XPW",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KYMSJ0XCMQ913RB16GM5PWV3": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KYMSJ0XCMQ913RB16GM5PWV3",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KYMSJ0XCXD36RE50XVZ2PJDP",
+        "renames": []
+      },
+      "orb_01KYMSJ0XCK8CKQ75MKSNFD3JY": {
+        "bakedName": "DrawGroupOrbital",
+        "curName": "DrawGroupOrbital",
+        "id": "orb_01KYMSJ0XCK8CKQ75MKSNFD3JY",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KYMSJ0XGAMW6KQFWSN214CQZ": {
+        "bakedName": "DrawGroupPage",
+        "curName": "DrawGroupPage",
+        "id": "pag_01KYMSJ0XGAMW6KQFWSN214CQZ",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KYMSJ0XCXD36RE50XVZ2PJDP": {
+        "bakedName": "DrawGroupRender",
+        "curName": "DrawGroupRender",
+        "id": "trt_01KYMSJ0XCXD36RE50XVZ2PJDP",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "ui-draw-group",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01KYMSJ0XC4FZ6XDMWJFY33XPW",
+        "name": "DrawGroupItem",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KYMSJ0XCK8CKQ75MKSNFD3JY",
+      "name": "DrawGroupOrbital",
+      "pages": [
+        {
+          "id": "pag_01KYMSJ0XGAMW6KQFWSN214CQZ",
+          "name": "DrawGroupPage",
+          "path": "/draw-group",
+          "traits": [
+            {
+              "ref": "DrawGroupRender",
+              "refId": "trt_01KYMSJ0XCXD36RE50XVZ2PJDP"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "items": {
+              "default": [],
+              "description": "The grouped drawables, painted through the normal dispatch.",
+              "items": {
+                "type": "object"
+              },
+              "label": "Items",
+              "tier": "presentation",
+              "type": "[json]"
+            },
+            "opacity": {
+              "description": "0..1 opacity.",
+              "label": "Opacity",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "position": {
+              "default": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+              },
+              "description": "Logical scene position; the projector maps it to pixels / world.",
+              "label": "Position",
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "tier": "presentation",
+              "type": "DrawGroupPosition"
+            },
+            "rotate": {
+              "description": "Rotation in radians (painter units).",
+              "label": "Rotate",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "scale": {
+              "description": "Uniform scale applied to the whole group.",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "DrawGroupItem": "ent_01KYMSJ0XC4FZ6XDMWJFY33XPW"
+          },
+          "id": "trt_01KYMSJ0XCXD36RE50XVZ2PJDP",
+          "linkedEntity": "DrawGroupItem",
+          "linkedEntityId": "ent_01KYMSJ0XC4FZ6XDMWJFY33XPW",
+          "name": "DrawGroupRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KYMSJ0XCMQ913RB16GM5PWV3",
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "items": "@config.items",
+                      "opacity": "@config.opacity",
+                      "position": "@config.position",
+                      "rotate": "@config.rotate",
+                      "scale": "@config.scale",
+                      "type": "draw-group"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KYMSJ0XCMQ913RB16GM5PWV3",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

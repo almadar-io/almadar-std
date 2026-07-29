@@ -1,0 +1,54 @@
+app ui-draw-group "1.0.0"
+"DrawGroup — UI factory (1:1 with the @almadar/ui draw-group pattern)."
+orbital DrawGroupOrbital {
+  type DrawGroupPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+
+  entity DrawGroupItem [runtime] {
+    id : string!
+  }
+
+  trait DrawGroupRender -> @rebindable DrawGroupItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          position: @config.position
+          scale: @config.scale
+          rotate: @config.rotate
+          opacity: @config.opacity
+          items: @config.items
+          type: draw-group
+        })
+    }
+
+    config {
+      position : DrawGroupPosition = { x: 1, y: 1, z: 1 }
+        @label "Position"
+        @description "Logical scene position; the projector maps it to pixels / world."
+        @tier "presentation"
+      scale : number
+        @label "Scale"
+        @description "Uniform scale applied to the whole group."
+        @tier "presentation"
+      rotate : number
+        @label "Rotate"
+        @description "Rotation in radians (painter units)."
+        @tier "presentation"
+      opacity : number
+        @label "Opacity"
+        @description "0..1 opacity."
+        @tier "presentation"
+      items : [json] = []
+        @label "Items"
+        @description "The grouped drawables, painted through the normal dispatch."
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-group" as DrawGroupPage -> DrawGroupRender
+}
