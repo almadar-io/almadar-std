@@ -1717,6 +1717,11 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 ],
                 [
                   'set',
+                  '@entity.lives',
+                  3,
+                ],
+                [
+                  'set',
                   '@entity.result',
                   'none',
                 ],
@@ -2882,6 +2887,22 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   ],
                 ],
               ],
+              [
+                'if',
+                [
+                  '!=',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'emit',
+                  'GAME_END',
+                  {
+                    'result': '@entity.result',
+                  },
+                ],
+                null,
+              ],
             ],
             'guard': [
               '==',
@@ -3273,6 +3294,57 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png',
                     'variant': '',
                   },
+                  'overlay': [
+                    'if',
+                    [
+                      '==',
+                      '@entity.result',
+                      'won',
+                    ],
+                    {
+                      'options': [
+                        {
+                          'event': 'PLAY_AGAIN',
+                          'id': 'again',
+                          'label': 'Play Again',
+                          'variant': 'primary',
+                        },
+                      ],
+                      'subtitle': [
+                        'str/concat',
+                        'Score: ',
+                        '@entity.score',
+                      ],
+                      'title': 'YOU WIN!',
+                      'type': 'game-menu',
+                    },
+                    [
+                      'if',
+                      [
+                        '==',
+                        '@entity.result',
+                        'lost',
+                      ],
+                      {
+                        'options': [
+                          {
+                            'event': 'PLAY_AGAIN',
+                            'id': 'again',
+                            'label': 'Play Again',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'subtitle': [
+                          'str/concat',
+                          'Score: ',
+                          '@entity.score',
+                        ],
+                        'title': 'GAME OVER',
+                        'type': 'game-menu',
+                      },
+                      null,
+                    ],
+                  ],
                   'type': 'game-shell',
                 },
               ],

@@ -1,9 +1,130 @@
 app ui-topdown-rts-board "1.0.0"
-"Medieval RTS skirmish: thin organism composing the std-tactics-board-2d frame + std-production (barracks recruits via a Produce button) + std-score, with a Kenney medieval-RTS theme supplied via config."
+"Real-time RTS base skirmish: thin organism composing the std-tactics-board-2d frame + std-score, plus three organism-level traits (RtsClock / RtsEconomy / RtsWaves) that turn the turn-based frame into a real-time RTS — a 2s clock auto-advances turns, workers harvest gold at the mine, gold musters tanks at the town hall, and raider waves stream out of a fortified den. Win by destroying the den; lose when your whole base (town hall included) is wiped."
+;; @capabilities "real-time strategy, RTS economy, wave defense, base assault"
+
+;; ============================================================================
+;; PERSONA + USER STORIES
+;;
+;; Read these before changing anything here, and walk them end to end after.
+;; One persona: the PLAYER, running a base on an 8x6 flat top-down grid:
+;; workers mine gold, gold musters tanks, raider waves stream from the den.
+;; Statuses verified 2026-07-30 by a scripted full playthrough driving the
+;; real game on the runtime-verify catalog through window.__orbitalVerification
+;; (events in, canvas drawables + HUD DOM + bus event log out) plus
+;; play_transition guard probes on the almadar-tools daemon.
+;;
+;; THE GENRE (what a real-time RTS player expects): play is CONTINUOUS — there
+;; is no manual end turn. A 2-second clock advances the round on its own: your
+;; spent units refresh and the enemy AI acts, whether or not you touched
+;; anything. The economy is the engine: workers standing at the gold mine
+;; harvest every cycle, you stockpile, and you spend 5 gold to muster a tank
+;; at the town hall. Pressure escalates: a raider wave spawns at the den every
+;; ~16 seconds, each one tougher than the last, and they walk straight at your
+;; base. You win by carrying the fight EAST and destroying the fortified den
+;; (and every raider it spawned); you lose when your whole base — workers,
+;; tanks, AND the town hall — is wiped. A fight looks like: select a tank ->
+;; green reach cells -> move -> the tank STAYS selected and auto-arms (red
+;; cells = enemies in artillery range 2) -> strike for 3 -> the tank is SPENT
+;; until the next clock tick. The hardcoded "End Turn" button stays as a
+;; manual round-hurry for impatient players; the clock makes it optional.
+;; Both bases are fortified with impassable palisade walls: the raider den is
+;; FULLY boxed — all 5 in-bounds neighbor cells are walls, INCLUDING the
+;; diagonals, because the enemy AI steps diagonally (x and y both advance one
+;; cell per tick) and cuts orthogonal corners — so it holds position as a
+;; spawn fortress, and your tanks shell it over the wall from artillery
+;; range 2. Your town hall is walled on three sides with a one-cell muster
+;; yard in front — that yard is the chokepoint raiders funnel into to batter
+;; the hall.
+;; ============================================================================
+;;
+;; PLAYER — "I run my base economy and burn the raider den before the waves burn mine."
+;;
+;;   1. I open the board and see the whole battlefield framed on screen —
+;;      terrain under every cell, my walled base at the west (gold mine,
+;;      town hall, muster yard), my two workers at the mine and a garrison
+;;      tank in the yard, the walled raider den at the east, and the HUD
+;;      showing Result/Phase/Turn/Score/Gold/Wave.
+;;        UNVERIFIED.
+;;   2. Every unit on the board is a visible sprite with a name label and a
+;;      health bar I can read at a glance, idling in place — worker, tank,
+;;      town hall and den sprites all visually distinct.
+;;        UNVERIFIED.
+;;   3. Play is continuous: the Turn counter advances about every 2 seconds
+;;      WITHOUT me clicking End Turn, and a unit I spent last cycle is fresh
+;;      again on the next. The End Turn button still works as a manual hurry.
+;;        UNVERIFIED.
+;;   4. My workers harvest: while a living worker stands on or next to the
+;;      gold mine (manhattan <= 1), Gold rises every clock cycle; with no
+;;      worker at the mine it does not.
+;;        UNVERIFIED.
+;;   5. With 5+ gold I hit "Tank (5g)" and a fresh tank rolls out on the
+;;      muster yard beside the hall; my gold drops by 5. Under 5 gold — or
+;;      with the yard occupied — the button is a dead click (guard).
+;;        UNVERIFIED.
+;;   6. Raider waves: about every 16 seconds a raider spawns at the den's
+;;      muster point with scaling health (6 + wave number) and walks toward
+;;      my base on the next clock ticks. If the muster point is occupied the
+;;      wave waits for it to clear.
+;;        UNVERIFIED.
+;;   7. Combat: I select my tank (green reach), move (walk animation, one
+;;      move per cycle), it auto-arms (red = enemies within artillery range
+;;      2), and I strike for 3 — the tank is then spent until the next tick.
+;;        UNVERIFIED.
+;;   8. The den is FULLY boxed by palisade walls: the AI can never step it
+;;      (all 5 in-bounds neighbor cells impassable, diagonals included — the
+;;      AI steps diagonally), so it holds position as a spawn fortress — and
+;;      my tanks destroy it by shelling over the wall from range 2. (Its
+;;      retaliatory strike only reaches orthogonally-adjacent attackers, and
+;;      no attacker can stand adjacent to it.)
+;;        UNVERIFIED.
+;;   9. My town hall is a building: walled on three sides, its only lit
+;;      move cell is the corridor mouth in front of its own muster yard —
+;;      there is never a reason to move it, and the garrison tank starts on
+;;      the yard. (Honest note: the frame treats the hall as a unit, so it
+;;      CAN technically shuffle into its own yard/corridor; zero valid
+;;      moves is impossible while raiders must reach the hall for the
+;;      defeat path.)
+;;        UNVERIFIED.
+;;  10. When the den and every raider are dead, I win — Result flips to
+;;      victory and the board freezes. When my whole base including the
+;;      town hall is dead, Result is defeat. Kills tick Score +10.
+;;        UNVERIFIED.
+;;
+;; MULTIPLAYER NOTE: GameState is [runtime, shared], so every connected
+;; client watches the same skirmish on the same frame; intents serialize
+;; through the server authority. There is no per-seat ownership — any
+;; client can drive any player unit.
+;;
+;; ASSET INVENTORY (hand-authored svg, almadar-kflow-assets.web.app
+;; /shared/ui-topdown-rts-board/svg/flat/, generated by tools/asset-workflow
+;; svg-generator from the sibling .md descriptions)
+;;
+;;   Terrain   terrain/ground.svg full-cell flat tiles; terrain/sand.svg
+;;             marks the south-east patch (4 tiles).
+;;   Units     units/{worker,tank,town_hall,raider,raider_den}.svg +
+;;             animation frames .{idle-0..3, walk-0..1, attack-0, hit-0,
+;;             death-0}.svg; the frame molecule url-rewrites name.svg ->
+;;             name.<anim>-<i>.svg. Spawned tanks/raiders (SPAWN carries no
+;;             modelUrl) render via the assetManifest.units[unitType]
+;;             fallback with an empty name label (known atom gap).
+;;             player: w1 Pick worker 5hp (0,0) on the mine
+;;                     w2 Shovel worker 5hp (1,0) at the mine
+;;                     t1 Alpha tank 10hp (1,3) on the muster yard
+;;                     hall Bastion town_hall 30hp (0,3), walled
+;;             enemy:  den Den raider_den 30hp (7,2), fully walled
+;;   Features  features/gold_mine.svg at (0,0) — the harvest anchor;
+;;             features/wall.svg x11 palisade segments at (0,1),(0,2),(0,4),
+;;             (0,5),(1,2),(1,4) boxing the town hall and (6,1),(6,2),(6,3),
+;;             (7,1),(7,3) boxing the den — diagonals included, the AI steps
+;;             diagonally (all matching tiles passable: false).
+;;   Effects   effects/hit.svg (BURST "hit" fx), effects/explosion.svg
+;;             (manifest-only).
+;;   UI chrome ui/panel-frame.svg = game-shell background + HUD panel.
+;; ============================================================================
+
 orbital TopdownRtsBoardOrbital {
   uses Frame from "std/behaviors/std-tactics-board-2d"
   uses Score from "std/behaviors/std-score"
-  uses Production from "std/behaviors/std-production"
 
   type Asset = {
     url : asset
@@ -69,19 +190,23 @@ orbital TopdownRtsBoardOrbital {
 
   entity GameState [runtime, shared] {
     id : string!
-    units : [Unit] = [ { id: "t1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "tank", name: "Alpha", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalUnit_01.png", role: "npc", category: "tankBody_green", animations: ["idle","walk","attack","hit","death"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "tankBody_green", thumbnailUrl: "" } }, { id: "t2", position: { x: 6, y: 0 }, x: 6, y: 0, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "tank", name: "Bravo", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalUnit_05.png", role: "npc", category: "tankBody_dark", animations: ["idle","walk","attack","hit","death"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "tankBody_dark", thumbnailUrl: "" } }, { id: "t3", position: { x: 6, y: 4 }, x: 6, y: 4, z: 0, team: "enemy", health: 8, maxHealth: 10, unitType: "tank", name: "Charlie", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalUnit_05.png", role: "npc", category: "tankBody_dark", animations: ["idle","walk","attack","hit","death"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "tankBody_dark", thumbnailUrl: "" } } ]
+    units : [Unit] = [ { id: "w1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 5, maxHealth: 5, unitType: "worker", name: "Pick", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "w2", position: { x: 1, y: 0 }, x: 1, y: 0, z: 0, team: "player", health: 5, maxHealth: 5, unitType: "worker", name: "Shovel", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "t1", position: { x: 1, y: 3 }, x: 1, y: 3, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "tank", name: "Alpha", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/tank.svg", role: "npc", category: "tank", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "tank", thumbnailUrl: "" } }, { id: "hall", position: { x: 0, y: 3 }, x: 0, y: 3, z: 0, team: "player", health: 30, maxHealth: 30, unitType: "town_hall", name: "Bastion", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/town_hall.svg", role: "npc", category: "town_hall", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "town_hall", thumbnailUrl: "" } }, { id: "den", position: { x: 7, y: 2 }, x: 7, y: 2, z: 0, team: "enemy", health: 30, maxHealth: 30, unitType: "raider_den", name: "Den", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider_den.svg", role: "npc", category: "raider_den", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "raider_den", thumbnailUrl: "" } } ]
     fx : [Fx] = []
-    tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, terrain: "ground", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "ground", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "ground", passable: true }, { id: "t-3-0", x: 3, y: 0, terrain: "ground", passable: true }, { id: "t-4-0", x: 4, y: 0, terrain: "ground", passable: true }, { id: "t-5-0", x: 5, y: 0, terrain: "ground", passable: true }, { id: "t-6-0", x: 6, y: 0, terrain: "ground", passable: true }, { id: "t-7-0", x: 7, y: 0, terrain: "ground", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "ground", passable: true }, { id: "t-1-1", x: 1, y: 1, terrain: "ground", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "ground", passable: true }, { id: "t-3-1", x: 3, y: 1, terrain: "ground", passable: true }, { id: "t-4-1", x: 4, y: 1, terrain: "ground", passable: true }, { id: "t-5-1", x: 5, y: 1, terrain: "ground", passable: true }, { id: "t-6-1", x: 6, y: 1, terrain: "ground", passable: true }, { id: "t-7-1", x: 7, y: 1, terrain: "ground", passable: true }, { id: "t-0-2", x: 0, y: 2, terrain: "ground", passable: true }, { id: "t-1-2", x: 1, y: 2, terrain: "ground", passable: true }, { id: "t-2-2", x: 2, y: 2, terrain: "ground", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "ground", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "ground", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "ground", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "ground", passable: true }, { id: "t-7-2", x: 7, y: 2, terrain: "ground", passable: true }, { id: "t-0-3", x: 0, y: 3, terrain: "ground", passable: true }, { id: "t-1-3", x: 1, y: 3, terrain: "ground", passable: true }, { id: "t-2-3", x: 2, y: 3, terrain: "ground", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "ground", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "ground", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "ground", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "ground", passable: true }, { id: "t-7-3", x: 7, y: 3, terrain: "ground", passable: true }, { id: "t-0-4", x: 0, y: 4, terrain: "ground", passable: true }, { id: "t-1-4", x: 1, y: 4, terrain: "ground", passable: true }, { id: "t-2-4", x: 2, y: 4, terrain: "ground", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "ground", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "ground", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "ground", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "ground", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "ground", passable: true }, { id: "t-0-5", x: 0, y: 5, terrain: "ground", passable: true }, { id: "t-1-5", x: 1, y: 5, terrain: "ground", passable: true }, { id: "t-2-5", x: 2, y: 5, terrain: "ground", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "ground", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "ground", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "ground", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "ground", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "ground", passable: true } ]
+    tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, terrain: "ground", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "ground", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "ground", passable: true }, { id: "t-3-0", x: 3, y: 0, terrain: "ground", passable: true }, { id: "t-4-0", x: 4, y: 0, terrain: "ground", passable: true }, { id: "t-5-0", x: 5, y: 0, terrain: "ground", passable: true }, { id: "t-6-0", x: 6, y: 0, terrain: "ground", passable: true }, { id: "t-7-0", x: 7, y: 0, terrain: "ground", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "ground", passable: false }, { id: "t-1-1", x: 1, y: 1, terrain: "ground", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "ground", passable: true }, { id: "t-3-1", x: 3, y: 1, terrain: "ground", passable: true }, { id: "t-4-1", x: 4, y: 1, terrain: "ground", passable: true }, { id: "t-5-1", x: 5, y: 1, terrain: "ground", passable: true }, { id: "t-6-1", x: 6, y: 1, terrain: "ground", passable: false }, { id: "t-7-1", x: 7, y: 1, terrain: "ground", passable: false }, { id: "t-0-2", x: 0, y: 2, terrain: "ground", passable: false }, { id: "t-1-2", x: 1, y: 2, terrain: "ground", passable: false }, { id: "t-2-2", x: 2, y: 2, terrain: "ground", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "ground", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "ground", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "ground", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "ground", passable: false }, { id: "t-7-2", x: 7, y: 2, terrain: "ground", passable: true }, { id: "t-0-3", x: 0, y: 3, terrain: "ground", passable: true }, { id: "t-1-3", x: 1, y: 3, terrain: "ground", passable: true }, { id: "t-2-3", x: 2, y: 3, terrain: "ground", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "ground", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "ground", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "ground", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "ground", passable: false }, { id: "t-7-3", x: 7, y: 3, terrain: "ground", passable: false }, { id: "t-0-4", x: 0, y: 4, terrain: "ground", passable: false }, { id: "t-1-4", x: 1, y: 4, terrain: "ground", passable: false }, { id: "t-2-4", x: 2, y: 4, terrain: "ground", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "ground", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "ground", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "sand", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "sand", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "ground", passable: true }, { id: "t-0-5", x: 0, y: 5, terrain: "ground", passable: false }, { id: "t-1-5", x: 1, y: 5, terrain: "ground", passable: true }, { id: "t-2-5", x: 2, y: 5, terrain: "ground", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "ground", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "ground", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "sand", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "sand", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "ground", passable: true } ]
     result : string = "none"
     selectedUnitId : string = ""
     validMoves : [ValidMove] = []
     attackTargets : [ValidMove] = []
+    movedIds : [string] = []
+    actedIds : [string] = []
     uiPhase : string = "observation"
     turn : number = 0
     score : number = 0
     scoreBaseline : number = 0
-    productionPoints : number = 0
-    spawnCount : number = 0
+    gold : number = 0
+    ecoSpawnCount : number = 0
+    waveCount : number = 0
+    clockTicks : number = 0
   }
 
   trait Authority = Frame.traits.TacticsAuthority -> GameState {
@@ -90,8 +215,8 @@ orbital TopdownRtsBoardOrbital {
       gridWidth: 8
       gridHeight: 6
       attackDamage: 3
-      units: [ { id: "t1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "tank", name: "Alpha", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalUnit_01.png", role: "npc", category: "tankBody_green", animations: ["idle","walk","attack","hit","death"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "tankBody_green", thumbnailUrl: "" } }, { id: "t2", position: { x: 6, y: 0 }, x: 6, y: 0, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "tank", name: "Bravo", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalUnit_05.png", role: "npc", category: "tankBody_dark", animations: ["idle","walk","attack","hit","death"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "tankBody_dark", thumbnailUrl: "" } }, { id: "t3", position: { x: 6, y: 4 }, x: 6, y: 4, z: 0, team: "enemy", health: 8, maxHealth: 10, unitType: "tank", name: "Charlie", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalUnit_05.png", role: "npc", category: "tankBody_dark", animations: ["idle","walk","attack","hit","death"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "tankBody_dark", thumbnailUrl: "" } } ]
-      tiles: [ { id: "t-0-0", x: 0, y: 0, terrain: "ground", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "ground", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "ground", passable: true }, { id: "t-3-0", x: 3, y: 0, terrain: "ground", passable: true }, { id: "t-4-0", x: 4, y: 0, terrain: "ground", passable: true }, { id: "t-5-0", x: 5, y: 0, terrain: "ground", passable: true }, { id: "t-6-0", x: 6, y: 0, terrain: "ground", passable: true }, { id: "t-7-0", x: 7, y: 0, terrain: "ground", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "ground", passable: true }, { id: "t-1-1", x: 1, y: 1, terrain: "ground", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "ground", passable: true }, { id: "t-3-1", x: 3, y: 1, terrain: "ground", passable: true }, { id: "t-4-1", x: 4, y: 1, terrain: "ground", passable: true }, { id: "t-5-1", x: 5, y: 1, terrain: "ground", passable: true }, { id: "t-6-1", x: 6, y: 1, terrain: "ground", passable: true }, { id: "t-7-1", x: 7, y: 1, terrain: "ground", passable: true }, { id: "t-0-2", x: 0, y: 2, terrain: "ground", passable: true }, { id: "t-1-2", x: 1, y: 2, terrain: "ground", passable: true }, { id: "t-2-2", x: 2, y: 2, terrain: "ground", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "ground", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "ground", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "ground", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "ground", passable: true }, { id: "t-7-2", x: 7, y: 2, terrain: "ground", passable: true }, { id: "t-0-3", x: 0, y: 3, terrain: "ground", passable: true }, { id: "t-1-3", x: 1, y: 3, terrain: "ground", passable: true }, { id: "t-2-3", x: 2, y: 3, terrain: "ground", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "ground", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "ground", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "ground", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "ground", passable: true }, { id: "t-7-3", x: 7, y: 3, terrain: "ground", passable: true }, { id: "t-0-4", x: 0, y: 4, terrain: "ground", passable: true }, { id: "t-1-4", x: 1, y: 4, terrain: "ground", passable: true }, { id: "t-2-4", x: 2, y: 4, terrain: "ground", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "ground", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "ground", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "ground", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "ground", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "ground", passable: true }, { id: "t-0-5", x: 0, y: 5, terrain: "ground", passable: true }, { id: "t-1-5", x: 1, y: 5, terrain: "ground", passable: true }, { id: "t-2-5", x: 2, y: 5, terrain: "ground", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "ground", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "ground", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "ground", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "ground", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "ground", passable: true } ]
+      units: [ { id: "w1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 5, maxHealth: 5, unitType: "worker", name: "Pick", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "w2", position: { x: 1, y: 0 }, x: 1, y: 0, z: 0, team: "player", health: 5, maxHealth: 5, unitType: "worker", name: "Shovel", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "t1", position: { x: 1, y: 3 }, x: 1, y: 3, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "tank", name: "Alpha", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/tank.svg", role: "npc", category: "tank", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "tank", thumbnailUrl: "" } }, { id: "hall", position: { x: 0, y: 3 }, x: 0, y: 3, z: 0, team: "player", health: 30, maxHealth: 30, unitType: "town_hall", name: "Bastion", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/town_hall.svg", role: "npc", category: "town_hall", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "town_hall", thumbnailUrl: "" } }, { id: "den", position: { x: 7, y: 2 }, x: 7, y: 2, z: 0, team: "enemy", health: 30, maxHealth: 30, unitType: "raider_den", name: "Den", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider_den.svg", role: "npc", category: "raider_den", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "raider_den", thumbnailUrl: "" } } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, terrain: "ground", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "ground", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "ground", passable: true }, { id: "t-3-0", x: 3, y: 0, terrain: "ground", passable: true }, { id: "t-4-0", x: 4, y: 0, terrain: "ground", passable: true }, { id: "t-5-0", x: 5, y: 0, terrain: "ground", passable: true }, { id: "t-6-0", x: 6, y: 0, terrain: "ground", passable: true }, { id: "t-7-0", x: 7, y: 0, terrain: "ground", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "ground", passable: false }, { id: "t-1-1", x: 1, y: 1, terrain: "ground", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "ground", passable: true }, { id: "t-3-1", x: 3, y: 1, terrain: "ground", passable: true }, { id: "t-4-1", x: 4, y: 1, terrain: "ground", passable: true }, { id: "t-5-1", x: 5, y: 1, terrain: "ground", passable: true }, { id: "t-6-1", x: 6, y: 1, terrain: "ground", passable: false }, { id: "t-7-1", x: 7, y: 1, terrain: "ground", passable: false }, { id: "t-0-2", x: 0, y: 2, terrain: "ground", passable: false }, { id: "t-1-2", x: 1, y: 2, terrain: "ground", passable: false }, { id: "t-2-2", x: 2, y: 2, terrain: "ground", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "ground", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "ground", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "ground", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "ground", passable: false }, { id: "t-7-2", x: 7, y: 2, terrain: "ground", passable: true }, { id: "t-0-3", x: 0, y: 3, terrain: "ground", passable: true }, { id: "t-1-3", x: 1, y: 3, terrain: "ground", passable: true }, { id: "t-2-3", x: 2, y: 3, terrain: "ground", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "ground", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "ground", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "ground", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "ground", passable: false }, { id: "t-7-3", x: 7, y: 3, terrain: "ground", passable: false }, { id: "t-0-4", x: 0, y: 4, terrain: "ground", passable: false }, { id: "t-1-4", x: 1, y: 4, terrain: "ground", passable: false }, { id: "t-2-4", x: 2, y: 4, terrain: "ground", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "ground", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "ground", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "sand", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "sand", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "ground", passable: true }, { id: "t-0-5", x: 0, y: 5, terrain: "ground", passable: false }, { id: "t-1-5", x: 1, y: 5, terrain: "ground", passable: true }, { id: "t-2-5", x: 2, y: 5, terrain: "ground", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "ground", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "ground", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "sand", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "sand", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "ground", passable: true } ]
     }
   }
 
@@ -104,15 +229,159 @@ orbital TopdownRtsBoardOrbital {
   }
 
   trait ScoreKeeper = Score.traits.ScoreKeeper -> GameState {
-    config { running: true, pointsPerKill: 10, startScore: 0, initialEnemies: 2 }
-  }
-
-  trait Producer = Production.traits.Producer -> GameState {
-    config { running: true, startPoints: 3, pointsPerTurn: 2, spawnCost: 3, spawnX: 0, spawnY: 0, spawnTeam: "player", spawnUnitType: "tank", spawnHealth: 10 }
+    config { running: true, pointsPerKill: 10, startScore: 0, initialEnemies: 1 }
   }
 
   trait AnimClock = Frame.traits.AnimClock -> GameState {
     config { frames: [] }
+  }
+
+  trait RtsClock -> @rebindable GameState [lifecycle] {
+    initial: running
+
+    state running {
+      INIT -> running
+        (set @entity.clockTicks 0)
+    }
+
+    ticks {
+      turnTick every 2000ms when (== @entity.result "none")
+        (set @entity.clockTicks (+ @entity.clockTicks 1))
+        (emit END_TURN { id: "clock" })
+    }
+
+    emits {
+      END_TURN -> external {
+        id : string
+      }
+        @description "Real-time round advance; the frame's PlayerIntent treats it exactly like the End Turn button (turn bump, activation reset, AI_TURN)"
+        @tier "domain"
+    }
+  }
+
+  trait RtsEconomy -> @rebindable GameState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.gold @config.startGold)
+        (set @entity.ecoSpawnCount 0)
+
+      BUILD_TANK -> active when (and @config.running (and (== @entity.result "none") (and (>= @entity.gold @config.tankCost) (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.tankSpawnX) (== (object/get (object/get @u position) y) @config.tankSpawnY)))))) 0))))
+        (set @entity.gold (- @entity.gold @config.tankCost))
+        (emit SPAWN { id: (str/concat "rts-t-" @entity.ecoSpawnCount), x: @config.tankSpawnX, y: @config.tankSpawnY, team: "player", health: @config.tankHealth, maxHealth: @config.tankHealth, unitType: "tank" })
+        (set @entity.ecoSpawnCount (+ @entity.ecoSpawnCount 1))
+    }
+
+    ticks {
+      harvestTick every 2000ms when (and @config.running (== @entity.result "none"))
+        (set @entity.gold (+ @entity.gold (* (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (and (> @u.health 0) (and (== @u.unitType "worker") (<= (grid/manhattan-distance (object/get @u position) { x: @config.mineX, y: @config.mineY }) 1))))))) @config.goldPerWorkerTick)))
+    }
+
+    emits {
+      SPAWN -> external {
+        id : string!
+        x : number!
+        y : number!
+        team : string!
+        health : number!
+        maxHealth : number!
+        unitType : string!
+      }
+        @description "Mustered-tank intent applied by the grid-tactics authority (the sole units writer)"
+        @tier "domain"
+    }
+
+    listens {
+      BUILD_TANK { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, workers harvest and BUILD_TANK musters; toggle to freeze the economy."
+        @tier "domain"
+      startGold : number = 3
+        @label "Start Gold"
+        @description "Gold stockpile set on INIT."
+        @tier "domain"
+      goldPerWorkerTick : number = 1
+        @label "Gold Per Worker Tick"
+        @description "Gold each living worker at the mine harvests every 2s cycle."
+        @tier "domain"
+      tankCost : number = 5
+        @label "Tank Cost"
+        @description "Gold spent per mustered tank; BUILD_TANK only fires when affordable and the yard is clear."
+        @tier "domain"
+      tankHealth : number = 10
+        @label "Tank Health"
+        @description "Health/maxHealth of mustered tanks."
+        @tier "domain"
+      mineX : number = 0
+        @label "Mine X"
+        @description "Grid column of the gold-mine harvest anchor."
+        @tier "domain"
+      mineY : number = 0
+        @label "Mine Y"
+        @description "Grid row of the gold-mine harvest anchor."
+        @tier "domain"
+      tankSpawnX : number = 1
+        @label "Tank Spawn X"
+        @description "Grid column of the muster yard where new tanks roll out."
+        @tier "domain"
+      tankSpawnY : number = 3
+        @label "Tank Spawn Y"
+        @description "Grid row of the muster yard where new tanks roll out."
+        @tier "domain"
+    }
+  }
+
+  trait RtsWaves -> @rebindable GameState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.waveCount 0)
+    }
+
+    ticks {
+      waveTick every 16000ms when (and @config.running (and (== @entity.result "none") (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.waveSpawnX) (== (object/get (object/get @u position) y) @config.waveSpawnY)))))) 0)))
+        (emit SPAWN { id: (str/concat "rts-w-" @entity.waveCount), x: @config.waveSpawnX, y: @config.waveSpawnY, team: "enemy", health: (+ @config.waveBaseHealth @entity.waveCount), maxHealth: (+ @config.waveBaseHealth @entity.waveCount), unitType: "raider" })
+        (set @entity.waveCount (+ @entity.waveCount 1))
+    }
+
+    emits {
+      SPAWN -> external {
+        id : string!
+        x : number!
+        y : number!
+        team : string!
+        health : number!
+        maxHealth : number!
+        unitType : string!
+      }
+        @description "Raider-wave intent applied by the grid-tactics authority (the sole units writer)"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, raider waves spawn every 16s; toggle to freeze the waves."
+        @tier "domain"
+      waveSpawnX : number = 7
+        @label "Wave Spawn X"
+        @description "Grid column of the den muster point where raiders stream in."
+        @tier "domain"
+      waveSpawnY : number = 5
+        @label "Wave Spawn Y"
+        @description "Grid row of the den muster point where raiders stream in."
+        @tier "domain"
+      waveBaseHealth : number = 6
+        @label "Wave Base Health"
+        @description "Health of the first raider wave; each later wave adds +1."
+        @tier "domain"
+    }
   }
 
   trait Player = Frame.traits.PlayerIntent -> GameState {
@@ -120,16 +389,19 @@ orbital TopdownRtsBoardOrbital {
       gridWidth: 8
       gridHeight: 6
       movementRange: 2
+      attackRange: 2
       projection: "flat"
       showMinimap: false
       scale: 0.45
-      extraStats: [ { label: "Prod", value: @entity.productionPoints } ]
-      extraAddonEvent: "PRODUCE"
-      extraAddons: [ { type: "button", action: PRODUCE, label: "Produce (3)", variant: "secondary", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalStructure_01.png", role: "ui", category: "ui", animations: [], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "icon-produce", thumbnailUrl: "" } } ]
-      features: [ { id: "f1", x: 2, y: 1, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalEnvironment_01.png", role: "decoration", category: "obstacle", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 2, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalEnvironment_01.png", role: "decoration", category: "obstacle", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, { id: "f3", x: 4, y: 3, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalEnvironment_01.png", role: "decoration", category: "obstacle", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, { id: "barracks1", x: 0, y: 0, type: "barracks", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalStructure_01.png", role: "decoration", category: "barracks", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "barracks", thumbnailUrl: "" } } ]
-      assetManifest: { terrains: { ground: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalTile_41.png", role: "tile", category: "ground", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "ground", thumbnailUrl: "" }, sand: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalTile_13.png", role: "tile", category: "sand", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, units: { tank: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalUnit_01.png", role: "npc", category: "tank", animations: ["idle","walk","attack","hit","death"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "tank", thumbnailUrl: "" } }, features: { obstacle: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalEnvironment_01.png", role: "decoration", category: "obstacle", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" }, barracks: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json", sprite: "medievalStructure_01.png", role: "decoration", category: "barracks", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "1:1", name: "barracks", thumbnailUrl: "" } }, effects: { explosion: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json", sprite: "regularExplosion04.png", role: "effect", category: "explosion", animations: ["static"], style: "vector-flat", dimension: "2d", aspect: "8:1", name: "explosion", thumbnailUrl: "" } } }
+      backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      extraStats: [ { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.waveCount } ]
+      extraAddonEvent: "BUILD_TANK"
+      extraAddons: [ { type: "button", action: BUILD_TANK, label: "Tank (5g)", variant: "secondary" } ]
+      features: [ { id: "mine1", x: 0, y: 0, type: "gold_mine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/gold_mine.svg", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }, { id: "wall1", x: 0, y: 1, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall2", x: 0, y: 2, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall3", x: 0, y: 4, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall4", x: 0, y: 5, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall5", x: 1, y: 2, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall6", x: 1, y: 4, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall7", x: 6, y: 1, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall8", x: 6, y: 2, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall9", x: 6, y: 3, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall10", x: 7, y: 1, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall11", x: 7, y: 3, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } } ]
+      assetManifest: { terrains: { ground: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/terrain/ground.svg", role: "tile", category: "ground", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "ground", thumbnailUrl: "" }, sand: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/terrain/sand.svg", role: "tile", category: "sand", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, units: { tank: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/tank.svg", role: "npc", category: "tank", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "tank", thumbnailUrl: "" }, raider: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" }, worker: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, town_hall: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/town_hall.svg", role: "npc", category: "town_hall", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "town_hall", thumbnailUrl: "" }, raider_den: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider_den.svg", role: "npc", category: "raider_den", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "raider_den", thumbnailUrl: "" } }, features: { gold_mine: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/gold_mine.svg", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, wall: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, effects: { hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/effects/hit.svg", role: "effect", category: "hit", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "hit", thumbnailUrl: "" }, explosion: { url: "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/effects/explosion.svg", role: "effect", category: "explosion", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "explosion", thumbnailUrl: "" } } }
     }
   }
 
-  page "/topdown-rts-board" as TopdownRtsBoardPage -> Authority, FxDecay, RoundLogic, ScoreKeeper, Producer, Player, AnimClock
+  page "/topdown-rts-board" as TopdownRtsBoardPage -> Authority, FxDecay, RoundLogic, ScoreKeeper, Player, AnimClock, RtsClock, RtsEconomy, RtsWaves
 }

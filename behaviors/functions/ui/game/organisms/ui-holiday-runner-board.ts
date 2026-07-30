@@ -2150,7 +2150,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                 [
                   'set',
                   '@entity.result',
-                  '',
+                  'none',
                 ],
                 [
                   'set',

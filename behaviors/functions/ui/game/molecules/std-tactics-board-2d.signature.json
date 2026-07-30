@@ -44,6 +44,16 @@
             "required": false
           },
           {
+            "name": "movedIds",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "actedIds",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "uiPhase",
             "type": "string",
             "required": false
@@ -60,6 +70,41 @@
           },
           {
             "name": "scoreBaseline",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "animCounter",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "frameName",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "animUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "animState",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "animTicksLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "animAttackerId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "animAtkTicksLeft",
             "type": "number",
             "required": false
           }
@@ -317,6 +362,20 @@
         ],
         "capabilities": [],
         "ref": "Score.traits.ScoreKeeper"
+      },
+      {
+        "name": "AnimClock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "frames",
+            "type": "unknown",
+            "default": []
+          }
+        ],
+        "capabilities": [],
+        "ref": "AnimTick.traits.AnimTick"
       },
       {
         "name": "PlayerIntent",
@@ -671,6 +730,14 @@
             }
           },
           {
+            "key": "attackRange",
+            "type": "number",
+            "default": 1,
+            "label": "Attack Range",
+            "description": "Max manhattan distance a selected unit may strike an enemy.",
+            "tier": "domain"
+          },
+          {
             "key": "backgroundAsset",
             "type": "Asset",
             "default": {},
@@ -853,6 +920,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
@@ -1099,9 +1171,11 @@
         ],
         "capabilities": [],
         "transitionEvents": [
+          "ATTACK",
           "CANCEL",
           "END_TURN",
           "INIT",
+          "MOVE",
           "TILE_CLICK",
           "UNIT_CLICK"
         ]

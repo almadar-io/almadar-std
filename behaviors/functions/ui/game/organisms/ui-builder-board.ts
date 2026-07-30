@@ -30,7 +30,7 @@ const ALIAS = 'UiBuilderBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBuilderBoardEventKey = 'CHECK' | 'COMPLETE' | 'INIT' | 'PLACE' | 'PLAY_AGAIN' | 'START';
+export type StdUiBuilderBoardEventKey = 'CHECK' | 'COMPLETE' | 'INIT' | 'PLACE' | 'PLAY_AGAIN';
 
 /**
  * Payload shape for the `COMPLETE` event.
@@ -830,10 +830,6 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
         'stateMachine': {
           'events': [
             {
-              'key': 'START',
-              'name': 'Start',
-            },
-            {
               'key': 'INIT',
               'name': 'Initialize',
             },
@@ -904,220 +900,10 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               'name': 'playing',
             },
             {
-              'name': 'menu',
-            },
-            {
               'name': 'complete',
             },
           ],
           'transitions': [
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.components',
-                  '@config.components',
-                ],
-                [
-                  'set',
-                  '@entity.slots',
-                  [
-                    'array/map',
-                    '@config.slots',
-                    [
-                      'fn',
-                      's',
-                      [
-                        'object/merge',
-                        '@s',
-                        {
-                          'options': [
-                            'array/map',
-                            '@config.components',
-                            [
-                              'fn',
-                              'c',
-                              {
-                                'componentId': [
-                                  'object/get',
-                                  '@c',
-                                  'id',
-                                ],
-                                'iconUrl': [
-                                  'object/get',
-                                  '@c',
-                                  'iconUrl',
-                                ],
-                                'label': [
-                                  'object/get',
-                                  '@c',
-                                  'label',
-                                ],
-                                'slotId': [
-                                  'object/get',
-                                  '@s',
-                                  'id',
-                                ],
-                              },
-                            ],
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.title',
-                  '@config.title',
-                ],
-                [
-                  'set',
-                  '@entity.description',
-                  '@config.description',
-                ],
-                [
-                  'set',
-                  '@entity.hint',
-                  '@config.hint',
-                ],
-                [
-                  'set',
-                  '@entity.attempts',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'content': '@entity.title',
-                            'type': 'typography',
-                            'variant': 'h4',
-                          },
-                          {
-                            'content': '@entity.description',
-                            'type': 'typography',
-                            'variant': 'body',
-                          },
-                        ],
-                        'type': 'card',
-                      },
-                      {
-                        'children': [
-                          {
-                            'entity': '@entity.slots',
-                            'fields': [],
-                            'gap': 'sm',
-                            'renderItem': [
-                              'fn',
-                              's',
-                              {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.id',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedComponentId',
-                                        'type': 'badge',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@s.options',
-                                    'fields': [],
-                                    'gap': 'sm',
-                                    'renderItem': [
-                                      'fn',
-                                      'opt',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'componentId': '@opt.componentId',
-                                          'slotId': '@opt.slotId',
-                                        },
-                                        'iconAsset': '@opt.iconUrl',
-                                        'label': '@opt.label',
-                                        'type': 'button',
-                                        'variant': 'primary',
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
-                              },
-                            ],
-                            'type': 'data-list',
-                          },
-                        ],
-                        'type': 'card',
-                      },
-                    ],
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'label': 'Attempts',
-                              'value': '@entity.attempts',
-                            },
-                            {
-                              'label': 'Status',
-                              'value': '@entity.result',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'children': [
-                            {
-                              'action': 'CHECK',
-                              'label': 'Check',
-                              'type': 'button',
-                              'variant': 'primary',
-                            },
-                            {
-                              'action': 'PLAY_AGAIN',
-                              'label': 'Reset',
-                              'type': 'button',
-                              'variant': 'secondary',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'START',
-              'from': 'menu',
-              'to': 'playing',
-            },
             {
               'effects': [
                 [
@@ -1823,6 +1609,11 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               'effects': [
                 [
                   'set',
+                  '@entity.components',
+                  '@config.components',
+                ],
+                [
+                  'set',
                   '@entity.slots',
                   [
                     'array/map',
@@ -1868,6 +1659,21 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                       ],
                     ],
                   ],
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.hint',
+                  '@config.hint',
                 ],
                 [
                   'set',
@@ -2004,7 +1810,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               ],
               'event': 'PLAY_AGAIN',
               'from': 'complete',
-              'to': 'menu',
+              'to': 'playing',
             },
           ],
         },

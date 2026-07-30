@@ -9547,9 +9547,17 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
               'event': 'WAVE_DEFEATED',
               'from': 'idle',
               'guard': [
-                '>=',
-                '@entity.wave',
-                3,
+                'and',
+                [
+                  '>=',
+                  '@entity.wave',
+                  3,
+                ],
+                [
+                  '>',
+                  '@entity.health',
+                  0,
+                ],
               ],
               'to': 'victory',
             },
@@ -12694,7 +12702,11 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   0,
                   [
                     '-',
-                    '@entity.wave',
+                    [
+                      '*',
+                      '@entity.wave',
+                      4,
+                    ],
                     [
                       'array/len',
                       '@entity.buildings',
@@ -13333,11 +13345,20 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                 },
               ],
               [
-                'emit',
-                'WAVE_DEFEATED',
-                {
-                  'wave': '@entity.wave',
-                },
+                'if',
+                [
+                  '>',
+                  '@entity.health',
+                  0,
+                ],
+                [
+                  'emit',
+                  'WAVE_DEFEATED',
+                  {
+                    'wave': '@entity.wave',
+                  },
+                ],
+                null,
               ],
             ],
             'guard': [

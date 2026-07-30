@@ -1,6 +1,143 @@
 app ui-tanks-board "1.0.0"
-"Sci-fi tank grid-tactics game: thin organism composing the std-tactics-board-2d frame with a tank theme (Kenney topdown-tanks assets, sci-fi UI panels) supplied entirely via config."
+"Sci-fi tank grid-tactics skirmish: thin organism composing the std-tactics-board-2d frame + std-score. Flat-projection hand-authored svg theme (desert ground, sand strip, sandbag cover, tank sprites) supplied entirely via config."
 ;; @capabilities "tank grid-tactics combat, top-down tank movement, sci-fi themed battle, turn-based tank strategy"
+
+;; ============================================================================
+;; PERSONA + USER STORIES
+;;
+;; Read these before changing anything here, and walk them end to end after.
+;; One persona: the PLAYER, commanding the lone tank Alpha on an 8x6 flat
+;; desert grid against two enemy tanks (Bravo, Charlie). Status re-verified
+;; 2026-07-30 by scripted playthroughs driving the real game on the
+;; runtime-verify catalog through window.__orbitalVerification — events in,
+;; canvas drawables + HUD DOM + bus event log out: victory run 33/35 (the 2
+;; anim-frame misses were 400ms-sampling artifacts, both proven by the
+;; focused probe), focused probe 7/7, defeat run 4/4.
+;;
+;; THE GENRE (what a tank-tactics player expects): armored warfare in
+;; miniature — one precious hull, not a swarm. You maneuver for firing
+;; position: your cannon reaches TWO cells (attackRange 2), so you can shell
+;; an enemy before it can answer, because the enemy AI only fires at
+;; point-blank (1 cell) and otherwise rolls 1 cell toward you each turn.
+;; Every shot and every move is a commitment: each tank moves ONCE and fires
+;; ONCE per turn (movedIds/actedIds), then sits spent until End Turn.
+;; Kills are the economy: each enemy destroyed scores 10. You win by
+;; destroying both enemy tanks; you lose the moment Alpha is destroyed.
+;; A round looks like: select Alpha -> green reach cells -> move -> Alpha
+;; STAYS selected and auto-arms (red cells = enemies in cannon reach) ->
+;; fire for 3 -> Alpha is SPENT (dims, cannot act again this turn) ->
+;; End Turn -> each living enemy strikes Alpha for 1 if adjacent, else
+;; steps 1 cell toward Alpha -> repeat.
+;; ============================================================================
+;;
+;; PLAYER — "I outmaneuver the enemy armor and destroy it before it closes
+;; to point-blank."
+;;
+;;   1. I open the board and see the whole battlefield framed on screen —
+;;      terrain under every cell (desert ground with a sand strip), my tank
+;;      at the west, the enemy tanks at the east, sandbag cover in the
+;;      middle, and the HUD showing Result/Phase/Turn/Score.
+;;        WORKS. Boot paints 48 full-cell flat terrain sprites (ground with
+;;        a sand strip), 3 tanks (Alpha (1,1) west; Bravo (6,0), Charlie
+;;        (6,4) east), 6 sandbag features ground-anchored 1x1 at
+;;        (2,1)(3,2)(4,3)(5,3)(5,4)(2,4); HUD reads
+;;        "none / observation / 0 / 0". Drawable descriptors point at the
+;;        svg/flat CDN URLs (browser 404s expected this wave — the CDN push
+;;        is coordinator-handled; verified at descriptor level).
+;;   2. Every tank on the board is a visible sprite with a name label and a
+;;      health bar I can read at a glance.
+;;        WORKS. Each tank paints its svg idle frame (4-frame breathing
+;;        squash/stretch anchored at the feet, cycled by the AnimClock) with
+;;        the black backing + green health fraction above and the name
+;;        label. All 3 bars read 1.00 at boot, all 3 labels paint. Dead
+;;        tanks drop the bar and label and switch to the death frame
+;;        (verified on both kills and on Alpha's own defeat).
+;;   3. I click Alpha and the cells it can reach light up green.
+;;        WORKS. Clicking t1 sets phase "selection" and lights exactly 10
+;;        green cells — the range-2 manhattan diamond from (1,1) minus
+;;        out-of-bounds cells (none occupied at boot).
+;;   4. I click a lit cell and Alpha moves there — and stays selected,
+;;      auto-armed, so I can fire immediately; it cannot move again this
+;;      turn.
+;;        WORKS. t1 walked (1,1)->(3,1): the walk animation plays (2-frame
+;;        cycle), the authority writes the position, phase lands on
+;;        "action", and the move is SPENT — a second TILE_CLICK is ignored
+;;        (tank stays at (3,1)) and a re-select lights zero green cells
+;;        (movedIds guard). One move per turn, no chaining.
+;;   5. Enemies inside my cannon reach (2 cells) light up red — right after
+;;      my move, or when I click Alpha again.
+;;        WORKS. With Alpha at (2,2) and Charlie at (4,2), the post-move
+;;        auto-arm lit exactly {(4,2)} red — every living enemy within
+;;        attackRange 2 of the NEW cell — and the manual re-click arm
+;;        recomputed the same red set (phase "action").
+;;   6. I click a red-lit enemy — or any enemy in reach, even without arming
+;;      first — and it takes a shell; Alpha is then spent for the turn. An
+;;      enemy OUT of reach does nothing when clicked.
+;;        WORKS. Direct enemy-click attack: t2 frac 1.00 -> 0.70 (10hp, -3),
+;;        BURST "-3" + hit.svg fx sprite at the target, attack frame on
+;;        Alpha, hit frame on the target (both caught by 100ms polling), and
+;;        Alpha joins actedIds: dims to 0.45 opacity, unselectable until End
+;;        Turn. Negative probe: clicking far-away t3 (distance 5) changed
+;;        nothing — phase and score untouched.
+;;   7. I change my mind mid-selection and back out cleanly.
+;;        WORKS. CANCEL clears selection, highlights, and phase — verified
+;;        green cells 10 -> 0 and phase back to "observation".
+;;   8. I end my turn and the enemy takes theirs — they close in and fight
+;;      back, and Alpha is fresh again.
+;;        WORKS. END_TURN bumps Turn, clears selection + both activation
+;;        lists (Alpha selectable again next turn), and emits AI_TURN; the
+;;        authority steps each living enemy 1 cell (diagonally — both axes)
+;;        toward Alpha and strikes for 1 when adjacent (verified: enemy
+;;        positions changed every turn; the defeat run ground Alpha 10->0).
+;;        LIMITATION: enemies POP to their new cell — the authority applies
+;;        the step silently and the single walk-anim slot is player-facing;
+;;        per-enemy MOVE fan-out is atom surgery, deferred.
+;;   9. When I destroy an enemy I am rewarded — score ticks up, and the
+;;      wreck stays on the field without blocking movement.
+;;        WORKS x2. Each kill: Score +10 (verified 10 then 20 on the HUD)
+;;        and the wreck renders its death frame. Corpses are excluded from
+;;        the occupancy filters (health > 0) so their cells stay walkable —
+;;        inherited from the frame molecule's guards.
+;;  10. When the last enemy tank falls, I win and the game tells me — then
+;;      the board freezes.
+;;        WORKS. Both enemies destroyed: Result flips to "victory"
+;;        (RoundLogic on UNITS_CHANGED), GAME_END fires, and the board is
+;;        FROZEN — post-game UNIT_CLICK selects nothing (phase stays
+;;        "observation", zero highlights). Reload to play again.
+;;  11. If Alpha is destroyed, I lose and the game tells me — then the
+;;      board freezes.
+;;        WORKS. Defeat run (Alpha marches to point-blank and never fires):
+;;        adjacent enemy fire ground Alpha to 0, Result flipped to "defeat",
+;;        GAME_END fired, and the board froze (post-game clicks do nothing).
+;;
+;; MULTIPLAYER NOTE: GameState is [runtime, shared], so every connected
+;; client watches the same skirmish on the same frame; intents serialize
+;; through the server authority. There is no per-seat turn ownership yet —
+;; any client can drive Alpha.
+;;
+;; ASSET INVENTORY (hand-authored svg, almadar-kflow-assets.web.app
+;; /shared/ui-tanks-board/svg/flat/, generated by tools/asset-workflow
+;; svg-generator from the sibling .md descriptions)
+;;
+;;   Terrain   terrain/ground.svg, terrain/sand.svg — full-cell flat tiles
+;;             (rounded-rect desert ground; sandy strip) drawn at
+;;             width/height 1.
+;;   Units     units/{tank,tank_enemy}.svg + animation frames
+;;             .{idle-0..3, walk-0..1, attack-0, hit-0, death-0}.svg; the
+;;             frame swaps url-rewrite name.svg -> name.<anim>-<i>.svg and a
+;;             hidden warm-up layer preloads every frame so swaps never pop.
+;;             player: t1 Alpha   10hp (1,1)  -> tank.svg
+;;             enemy:  t2 Bravo   10hp (6,0)  -> tank_enemy.svg
+;;                     t3 Charlie  8hp (6,4)  -> tank_enemy.svg
+;;   Features  features/obstacle.svg — six sandbag-cover cells at
+;;             (2,1) (3,2) (4,3) (5,3) (5,4) (2,4), drawn from
+;;             config.features anchored "ground" at 1x1 so they sit ON their
+;;             cell. Decorative: they do not block movement (all tiles
+;;             passable).
+;;   Effects   effects/hit.svg (BURST "hit" fx on every landed shell),
+;;             effects/explosion.svg (manifest-only).
+;;   UI chrome ui/panel-frame.svg = game-shell background + HUD panel.
+;; ============================================================================
 orbital TanksBoardOrbital {
   uses Frame from "std/behaviors/std-tactics-board-2d"
   uses Score from "std/behaviors/std-score"
@@ -69,13 +206,15 @@ orbital TanksBoardOrbital {
 
   entity GameState [runtime, shared] {
     id : string!
-    units : [Unit] = [ { id: "t1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "tank", name: "Alpha", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "tankBody_green.png", role: "npc", category: "tankBody_green", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tankBody_green", thumbnailUrl: "" } }, { id: "t2", position: { x: 6, y: 0 }, x: 6, y: 0, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "tank", name: "Bravo", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "tankBody_dark.png", role: "npc", category: "tankBody_dark", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tankBody_dark", thumbnailUrl: "" } }, { id: "t3", position: { x: 6, y: 4 }, x: 6, y: 4, z: 0, team: "enemy", health: 8, maxHealth: 10, unitType: "tank", name: "Charlie", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "tankBody_dark.png", role: "npc", category: "tankBody_dark", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tankBody_dark", thumbnailUrl: "" } } ]
+    units : [Unit] = [ { id: "t1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "tank", name: "Alpha", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/units/tank.svg", role: "npc", category: "tank", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank", thumbnailUrl: "" } }, { id: "t2", position: { x: 6, y: 0 }, x: 6, y: 0, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "tank", name: "Bravo", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/units/tank_enemy.svg", role: "npc", category: "tank_enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank_enemy", thumbnailUrl: "" } }, { id: "t3", position: { x: 6, y: 4 }, x: 6, y: 4, z: 0, team: "enemy", health: 8, maxHealth: 8, unitType: "tank", name: "Charlie", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/units/tank_enemy.svg", role: "npc", category: "tank_enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank_enemy", thumbnailUrl: "" } } ]
     fx : [Fx] = []
     tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, terrain: "ground", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "ground", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "ground", passable: true }, { id: "t-3-0", x: 3, y: 0, terrain: "ground", passable: true }, { id: "t-4-0", x: 4, y: 0, terrain: "ground", passable: true }, { id: "t-5-0", x: 5, y: 0, terrain: "ground", passable: true }, { id: "t-6-0", x: 6, y: 0, terrain: "ground", passable: true }, { id: "t-7-0", x: 7, y: 0, terrain: "ground", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "ground", passable: true }, { id: "t-1-1", x: 1, y: 1, terrain: "ground", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "ground", passable: true }, { id: "t-3-1", x: 3, y: 1, terrain: "ground", passable: true }, { id: "t-4-1", x: 4, y: 1, terrain: "ground", passable: true }, { id: "t-5-1", x: 5, y: 1, terrain: "ground", passable: true }, { id: "t-6-1", x: 6, y: 1, terrain: "ground", passable: true }, { id: "t-7-1", x: 7, y: 1, terrain: "ground", passable: true }, { id: "t-0-2", x: 0, y: 2, terrain: "ground", passable: true }, { id: "t-1-2", x: 1, y: 2, terrain: "ground", passable: true }, { id: "t-2-2", x: 2, y: 2, terrain: "ground", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "sand", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "sand", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "sand", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "ground", passable: true }, { id: "t-7-2", x: 7, y: 2, terrain: "ground", passable: true }, { id: "t-0-3", x: 0, y: 3, terrain: "ground", passable: true }, { id: "t-1-3", x: 1, y: 3, terrain: "ground", passable: true }, { id: "t-2-3", x: 2, y: 3, terrain: "sand", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "sand", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "sand", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "sand", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "ground", passable: true }, { id: "t-7-3", x: 7, y: 3, terrain: "ground", passable: true }, { id: "t-0-4", x: 0, y: 4, terrain: "ground", passable: true }, { id: "t-1-4", x: 1, y: 4, terrain: "ground", passable: true }, { id: "t-2-4", x: 2, y: 4, terrain: "ground", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "sand", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "sand", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "ground", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "ground", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "ground", passable: true }, { id: "t-0-5", x: 0, y: 5, terrain: "ground", passable: true }, { id: "t-1-5", x: 1, y: 5, terrain: "ground", passable: true }, { id: "t-2-5", x: 2, y: 5, terrain: "ground", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "ground", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "ground", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "ground", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "ground", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "ground", passable: true } ]
     result : string = "none"
     selectedUnitId : string = ""
     validMoves : [ValidMove] = []
     attackTargets : [ValidMove] = []
+    movedIds : [string] = []
+    actedIds : [string] = []
     uiPhase : string = "observation"
     turn : number = 0
     score : number = 0
@@ -88,7 +227,7 @@ orbital TanksBoardOrbital {
       gridWidth: 8
       gridHeight: 6
       attackDamage: 3
-      units: [ { id: "t1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "tank", name: "Alpha", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "tankBody_green.png", role: "npc", category: "tankBody_green", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tankBody_green", thumbnailUrl: "" } }, { id: "t2", position: { x: 6, y: 0 }, x: 6, y: 0, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "tank", name: "Bravo", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "tankBody_dark.png", role: "npc", category: "tankBody_dark", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tankBody_dark", thumbnailUrl: "" } }, { id: "t3", position: { x: 6, y: 4 }, x: 6, y: 4, z: 0, team: "enemy", health: 8, maxHealth: 10, unitType: "tank", name: "Charlie", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "tankBody_dark.png", role: "npc", category: "tankBody_dark", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tankBody_dark", thumbnailUrl: "" } } ]
+      units: [ { id: "t1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "tank", name: "Alpha", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/units/tank.svg", role: "npc", category: "tank", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank", thumbnailUrl: "" } }, { id: "t2", position: { x: 6, y: 0 }, x: 6, y: 0, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "tank", name: "Bravo", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/units/tank_enemy.svg", role: "npc", category: "tank_enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank_enemy", thumbnailUrl: "" } }, { id: "t3", position: { x: 6, y: 4 }, x: 6, y: 4, z: 0, team: "enemy", health: 8, maxHealth: 8, unitType: "tank", name: "Charlie", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/units/tank_enemy.svg", role: "npc", category: "tank_enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank_enemy", thumbnailUrl: "" } } ]
       tiles: [ { id: "t-0-0", x: 0, y: 0, terrain: "ground", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "ground", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "ground", passable: true }, { id: "t-3-0", x: 3, y: 0, terrain: "ground", passable: true }, { id: "t-4-0", x: 4, y: 0, terrain: "ground", passable: true }, { id: "t-5-0", x: 5, y: 0, terrain: "ground", passable: true }, { id: "t-6-0", x: 6, y: 0, terrain: "ground", passable: true }, { id: "t-7-0", x: 7, y: 0, terrain: "ground", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "ground", passable: true }, { id: "t-1-1", x: 1, y: 1, terrain: "ground", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "ground", passable: true }, { id: "t-3-1", x: 3, y: 1, terrain: "ground", passable: true }, { id: "t-4-1", x: 4, y: 1, terrain: "ground", passable: true }, { id: "t-5-1", x: 5, y: 1, terrain: "ground", passable: true }, { id: "t-6-1", x: 6, y: 1, terrain: "ground", passable: true }, { id: "t-7-1", x: 7, y: 1, terrain: "ground", passable: true }, { id: "t-0-2", x: 0, y: 2, terrain: "ground", passable: true }, { id: "t-1-2", x: 1, y: 2, terrain: "ground", passable: true }, { id: "t-2-2", x: 2, y: 2, terrain: "ground", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "sand", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "sand", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "sand", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "ground", passable: true }, { id: "t-7-2", x: 7, y: 2, terrain: "ground", passable: true }, { id: "t-0-3", x: 0, y: 3, terrain: "ground", passable: true }, { id: "t-1-3", x: 1, y: 3, terrain: "ground", passable: true }, { id: "t-2-3", x: 2, y: 3, terrain: "sand", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "sand", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "sand", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "sand", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "ground", passable: true }, { id: "t-7-3", x: 7, y: 3, terrain: "ground", passable: true }, { id: "t-0-4", x: 0, y: 4, terrain: "ground", passable: true }, { id: "t-1-4", x: 1, y: 4, terrain: "ground", passable: true }, { id: "t-2-4", x: 2, y: 4, terrain: "ground", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "sand", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "sand", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "ground", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "ground", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "ground", passable: true }, { id: "t-0-5", x: 0, y: 5, terrain: "ground", passable: true }, { id: "t-1-5", x: 1, y: 5, terrain: "ground", passable: true }, { id: "t-2-5", x: 2, y: 5, terrain: "ground", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "ground", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "ground", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "ground", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "ground", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "ground", passable: true } ]
     }
   }
@@ -114,13 +253,14 @@ orbital TanksBoardOrbital {
       gridWidth: 8
       gridHeight: 6
       movementRange: 2
+      attackRange: 2
       projection: "flat"
       showMinimap: false
       scale: 0.45
-      backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-      hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-      features: [ { id: "f1", x: 2, y: 1, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "sandbagBeige.png", role: "decoration", category: "sandbagBeige", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "sandbagBeige", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 2, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "sandbagBeige.png", role: "decoration", category: "sandbagBeige", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "sandbagBeige", thumbnailUrl: "" } }, { id: "f3", x: 4, y: 3, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "sandbagBeige.png", role: "decoration", category: "sandbagBeige", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "sandbagBeige", thumbnailUrl: "" } }, { id: "f4", x: 5, y: 3, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "sandbagBeige.png", role: "decoration", category: "sandbagBeige", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "sandbagBeige", thumbnailUrl: "" } }, { id: "f5", x: 5, y: 4, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "sandbagBeige.png", role: "decoration", category: "sandbagBeige", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "sandbagBeige", thumbnailUrl: "" } }, { id: "f6", x: 2, y: 4, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "sandbagBeige.png", role: "decoration", category: "sandbagBeige", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "sandbagBeige", thumbnailUrl: "" } } ]
-      assetManifest: { terrains: { ground: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json", sprite: "0,0", role: "tile", category: "ground", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "ground", thumbnailUrl: "" }, sand: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json", sprite: "0,2", role: "tile", category: "sand", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, units: { tank: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "tankBody_green.png", role: "npc", category: "tank", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank", thumbnailUrl: "" } }, features: { obstacle: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json", sprite: "sandbagBeige.png", role: "decoration", category: "obstacle", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, effects: { explosion: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json", sprite: "regularExplosion04.png", role: "effect", category: "explosion", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "8:1", name: "explosion", thumbnailUrl: "" } } }
+      backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      features: [ { id: "f1", x: 2, y: 1, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/features/obstacle.svg", role: "decoration", category: "obstacle", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 2, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/features/obstacle.svg", role: "decoration", category: "obstacle", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, { id: "f3", x: 4, y: 3, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/features/obstacle.svg", role: "decoration", category: "obstacle", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, { id: "f4", x: 5, y: 3, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/features/obstacle.svg", role: "decoration", category: "obstacle", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, { id: "f5", x: 5, y: 4, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/features/obstacle.svg", role: "decoration", category: "obstacle", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, { id: "f6", x: 2, y: 4, type: "obstacle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/features/obstacle.svg", role: "decoration", category: "obstacle", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } } ]
+      assetManifest: { terrains: { ground: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/terrain/ground.svg", role: "tile", category: "ground", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "ground", thumbnailUrl: "" }, sand: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/terrain/sand.svg", role: "tile", category: "sand", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, units: { tank: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/units/tank.svg", role: "npc", category: "tank", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank", thumbnailUrl: "" }, tank_enemy: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/units/tank_enemy.svg", role: "npc", category: "tank_enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "tank_enemy", thumbnailUrl: "" } }, features: { obstacle: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/features/obstacle.svg", role: "decoration", category: "obstacle", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "obstacle", thumbnailUrl: "" } }, effects: { hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/effects/hit.svg", role: "effect", category: "hit", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "hit", thumbnailUrl: "" }, explosion: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/svg/flat/effects/explosion.svg", role: "effect", category: "explosion", animations: ["static"], style: "sci-fi", dimension: "2d", aspect: "1:1", name: "explosion", thumbnailUrl: "" } } }
     }
   }
 

@@ -44,6 +44,16 @@
             "required": false
           },
           {
+            "name": "movedIds",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "actedIds",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "uiPhase",
             "type": "string",
             "required": false
@@ -179,7 +189,7 @@
               },
               {
                 "id": "t-2-1",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 2,
                 "y": 1
@@ -242,7 +252,7 @@
               },
               {
                 "id": "t-3-2",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 3,
                 "y": 2
@@ -305,7 +315,7 @@
               },
               {
                 "id": "t-4-3",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 4,
                 "y": 3
@@ -355,14 +365,14 @@
               {
                 "id": "t-3-4",
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "sand",
                 "x": 3,
                 "y": 4
               },
               {
                 "id": "t-4-4",
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "sand",
                 "x": 4,
                 "y": 4
               },
@@ -411,14 +421,14 @@
               {
                 "id": "t-3-5",
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "sand",
                 "x": 3,
                 "y": 5
               },
               {
                 "id": "t-4-5",
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "sand",
                 "x": 4,
                 "y": 5
               },
@@ -462,15 +472,13 @@
                     "death"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "tankBody_green",
+                  "category": "tank",
                   "dimension": "2d",
-                  "name": "tankBody_green",
+                  "name": "tank",
                   "role": "npc",
-                  "sprite": "medievalUnit_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/tank.svg"
                 },
                 "name": "Alpha",
                 "position": {
@@ -496,15 +504,13 @@
                     "death"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "tankBody_dark",
+                  "category": "raider",
                   "dimension": "2d",
-                  "name": "tankBody_dark",
+                  "name": "raider",
                   "role": "npc",
-                  "sprite": "medievalUnit_05.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider.svg"
                 },
                 "name": "Bravo",
                 "position": {
@@ -512,7 +518,7 @@
                   "y": 0
                 },
                 "team": "enemy",
-                "unitType": "tank",
+                "unitType": "raider",
                 "x": 6,
                 "y": 0,
                 "z": 0
@@ -530,15 +536,13 @@
                     "death"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "tankBody_dark",
+                  "category": "raider",
                   "dimension": "2d",
-                  "name": "tankBody_dark",
+                  "name": "raider",
                   "role": "npc",
-                  "sprite": "medievalUnit_05.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider.svg"
                 },
                 "name": "Charlie",
                 "position": {
@@ -546,7 +550,7 @@
                   "y": 4
                 },
                 "team": "enemy",
-                "unitType": "tank",
+                "unitType": "raider",
                 "x": 6,
                 "y": 4,
                 "z": 0
@@ -669,6 +673,20 @@
         "ref": "Production.traits.Producer"
       },
       {
+        "name": "AnimClock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "frames",
+            "type": "unknown",
+            "default": []
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.AnimClock"
+      },
+      {
         "name": "Player",
         "emittedEvents": [],
         "listenedEvents": [],
@@ -682,48 +700,55 @@
                   "animations": [
                     "static"
                   ],
-                  "aspect": "8:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json",
+                  "aspect": "1:1",
                   "category": "explosion",
                   "dimension": "2d",
                   "name": "explosion",
                   "role": "effect",
-                  "sprite": "regularExplosion04.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/effects/explosion.svg"
+                },
+                "hit": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "hit",
+                  "dimension": "2d",
+                  "name": "hit",
+                  "role": "effect",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/effects/hit.svg"
                 }
               },
               "features": {
-                "barracks": {
+                "gold_mine": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "barracks",
+                  "category": "gold_mine",
                   "dimension": "2d",
-                  "name": "barracks",
+                  "name": "gold_mine",
                   "role": "decoration",
-                  "sprite": "medievalStructure_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/gold_mine.svg"
                 },
-                "obstacle": {
+                "tree": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "obstacle",
+                  "category": "tree",
                   "dimension": "2d",
-                  "name": "obstacle",
+                  "name": "tree",
                   "role": "decoration",
-                  "sprite": "medievalEnvironment_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/tree.svg"
                 }
               },
               "terrains": {
@@ -732,33 +757,46 @@
                     "static"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
                   "category": "ground",
                   "dimension": "2d",
                   "name": "ground",
                   "role": "tile",
-                  "sprite": "medievalTile_41.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/terrain/ground.svg"
                 },
                 "sand": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
                   "category": "sand",
                   "dimension": "2d",
                   "name": "sand",
                   "role": "tile",
-                  "sprite": "medievalTile_13.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/terrain/sand.svg"
                 }
               },
               "units": {
+                "raider": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "raider",
+                  "dimension": "2d",
+                  "name": "raider",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider.svg"
+                },
                 "tank": {
                   "animations": [
                     "idle",
@@ -768,17 +806,30 @@
                     "death"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
                   "category": "tank",
                   "dimension": "2d",
                   "name": "tank",
                   "role": "npc",
-                  "sprite": "medievalUnit_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/tank.svg"
                 }
               }
+            }
+          },
+          {
+            "key": "backgroundAsset",
+            "type": "unknown",
+            "default": {
+              "animations": [],
+              "aspect": "1:1",
+              "category": "ui",
+              "dimension": "2d",
+              "name": "panel-frame",
+              "role": "ui",
+              "style": "",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/ui/panel-frame.svg"
             }
           },
           {
@@ -795,15 +846,13 @@
                 "iconAsset": {
                   "animations": [],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
                   "category": "ui",
                   "dimension": "2d",
                   "name": "icon-produce",
                   "role": "ui",
-                  "sprite": "medievalStructure_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/gold_mine.svg"
                 },
                 "label": "Produce (3)",
                 "type": "button",
@@ -831,18 +880,16 @@
                     "static"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "obstacle",
+                  "category": "tree",
                   "dimension": "2d",
-                  "name": "obstacle",
+                  "name": "tree",
                   "role": "decoration",
-                  "sprite": "medievalEnvironment_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/tree.svg"
                 },
                 "id": "f1",
-                "type": "obstacle",
+                "type": "tree",
                 "x": 2,
                 "y": 1
               },
@@ -852,18 +899,16 @@
                     "static"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "obstacle",
+                  "category": "tree",
                   "dimension": "2d",
-                  "name": "obstacle",
+                  "name": "tree",
                   "role": "decoration",
-                  "sprite": "medievalEnvironment_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/tree.svg"
                 },
                 "id": "f2",
-                "type": "obstacle",
+                "type": "tree",
                 "x": 3,
                 "y": 2
               },
@@ -873,18 +918,16 @@
                     "static"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "obstacle",
+                  "category": "tree",
                   "dimension": "2d",
-                  "name": "obstacle",
+                  "name": "tree",
                   "role": "decoration",
-                  "sprite": "medievalEnvironment_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/tree.svg"
                 },
                 "id": "f3",
-                "type": "obstacle",
+                "type": "tree",
                 "x": 4,
                 "y": 3
               },
@@ -894,18 +937,16 @@
                     "static"
                   ],
                   "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
-                  "category": "barracks",
+                  "category": "gold_mine",
                   "dimension": "2d",
-                  "name": "barracks",
+                  "name": "gold_mine",
                   "role": "decoration",
-                  "sprite": "medievalStructure_01.png",
-                  "style": "vector-flat",
+                  "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/features/gold_mine.svg"
                 },
-                "id": "barracks1",
-                "type": "barracks",
+                "id": "mine1",
+                "type": "gold_mine",
                 "x": 0,
                 "y": 0
               }
@@ -920,6 +961,21 @@
             "key": "gridWidth",
             "type": "unknown",
             "default": 8
+          },
+          {
+            "key": "hudBackgroundAsset",
+            "type": "unknown",
+            "default": {
+              "animations": [],
+              "aspect": "1:1",
+              "category": "ui",
+              "dimension": "2d",
+              "name": "panel-frame",
+              "role": "ui",
+              "style": "",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/ui/panel-frame.svg"
+            }
           },
           {
             "key": "movementRange",
@@ -957,6 +1013,7 @@
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",
+    "capabilities": "turn-based combat, RTS gameplay, strategy gameplay",
     "sourceValid": true
   }
 ]

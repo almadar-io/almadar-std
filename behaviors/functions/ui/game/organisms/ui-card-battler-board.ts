@@ -2127,6 +2127,22 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   ],
                 ],
                 [
+                  'if',
+                  [
+                    '!=',
+                    '@entity.result',
+                    'none',
+                  ],
+                  [
+                    'emit',
+                    'GAME_END',
+                    {
+                      'result': '@entity.result',
+                    },
+                  ],
+                  null,
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -2584,6 +2600,32 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'overlay': {
+                      'options': [
+                        {
+                          'event': 'PLAY_AGAIN',
+                          'id': 'again',
+                          'label': 'Play Again',
+                          'variant': 'primary',
+                        },
+                      ],
+                      'subtitle': [
+                        'str/concat',
+                        'Result: ',
+                        '@entity.result',
+                      ],
+                      'title': [
+                        'if',
+                        [
+                          '==',
+                          '@entity.result',
+                          'won',
+                        ],
+                        'VICTORY!',
+                        'DEFEAT',
+                      ],
+                      'type': 'game-menu',
                     },
                     'type': 'game-shell',
                   },

@@ -78,6 +78,8 @@ export interface StdUiCanvas2dConfig {
   /** Default: `[]` */
   drawables?: EntityRow[];
   error?: EntityRow;
+  /** Default: `false` */
+  fit?: boolean;
   followTarget?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
@@ -97,6 +99,7 @@ export interface StdUiCanvas2dConfig {
   tileHoverEvent?: string;
   /** Default: `"TILE_LEAVE"` */
   tileLeaveEvent?: string;
+  tileWidth?: number;
   /** Default: `"UNIT_CLICK"` */
   unitClickEvent?: string;
 }

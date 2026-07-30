@@ -948,7 +948,7 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
             'tier': 'domain',
           },
           {
-            'description': 'Right flipper flick (KeySlash / ArrowRight / Right Flipper button)',
+            'description': 'Right flipper flick (Slash / ArrowRight / Right Flipper button)',
             'event': 'RIGHT_FLIPPER',
             'payloadSchema': [
               {
@@ -1045,7 +1045,7 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
               'tier': 'domain',
             },
             {
-              'description': 'Right flipper flick (KeySlash / ArrowRight / Right Flipper button)',
+              'description': 'Right flipper flick (Slash / ArrowRight / Right Flipper button)',
               'key': 'RIGHT_FLIPPER',
               'name': 'Right Flipper',
               'payloadSchema': [
@@ -1431,8 +1431,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                         'keyMap': {
                           'ArrowLeft': 'LEFT_FLIPPER',
                           'ArrowRight': 'RIGHT_FLIPPER',
-                          'KeySlash': 'RIGHT_FLIPPER',
                           'KeyZ': 'LEFT_FLIPPER',
+                          'Slash': 'RIGHT_FLIPPER',
                           'Space': 'LAUNCH',
                         },
                         'projection': 'free',
@@ -1881,8 +1881,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                         'keyMap': {
                           'ArrowLeft': 'LEFT_FLIPPER',
                           'ArrowRight': 'RIGHT_FLIPPER',
-                          'KeySlash': 'RIGHT_FLIPPER',
                           'KeyZ': 'LEFT_FLIPPER',
+                          'Slash': 'RIGHT_FLIPPER',
                           'Space': 'LAUNCH',
                         },
                         'projection': 'free',
@@ -2251,8 +2251,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                         'keyMap': {
                           'ArrowLeft': 'LEFT_FLIPPER',
                           'ArrowRight': 'RIGHT_FLIPPER',
-                          'KeySlash': 'RIGHT_FLIPPER',
                           'KeyZ': 'LEFT_FLIPPER',
+                          'Slash': 'RIGHT_FLIPPER',
                           'Space': 'LAUNCH',
                         },
                         'projection': 'free',
@@ -2688,8 +2688,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                         'keyMap': {
                           'ArrowLeft': 'LEFT_FLIPPER',
                           'ArrowRight': 'RIGHT_FLIPPER',
-                          'KeySlash': 'RIGHT_FLIPPER',
                           'KeyZ': 'LEFT_FLIPPER',
+                          'Slash': 'RIGHT_FLIPPER',
                           'Space': 'LAUNCH',
                         },
                         'projection': 'free',
@@ -3763,8 +3763,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                       'keyMap': {
                         'ArrowLeft': 'LEFT_FLIPPER',
                         'ArrowRight': 'RIGHT_FLIPPER',
-                        'KeySlash': 'RIGHT_FLIPPER',
                         'KeyZ': 'LEFT_FLIPPER',
+                        'Slash': 'RIGHT_FLIPPER',
                         'Space': 'LAUNCH',
                       },
                       'projection': 'free',
@@ -4184,8 +4184,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                       'keyMap': {
                         'ArrowLeft': 'LEFT_FLIPPER',
                         'ArrowRight': 'RIGHT_FLIPPER',
-                        'KeySlash': 'RIGHT_FLIPPER',
                         'KeyZ': 'LEFT_FLIPPER',
+                        'Slash': 'RIGHT_FLIPPER',
                         'Space': 'LAUNCH',
                       },
                       'projection': 'free',

@@ -1,5 +1,123 @@
 app ui-tactics-demo-2d "1.0.0"
-"Reference thin organism: a 2D grid-tactics game composed entirely from the std-tactics-board-2d frame molecule — supplies only units/theme via config."
+"Micro grid-tactics demo: thin organism composing the std-tactics-board-2d frame + std-score. Two soldiers vs one raider on a 3x3 flat grid — the minimal reference consumer of the tactics frame. Flat hand-authored svg theme supplied via config."
+;; @capabilities "turn-based combat, strategy gameplay"
+
+;; ============================================================================
+;; PERSONA + USER STORIES
+;;
+;; Read these before changing anything here, and walk them end to end after.
+;; One persona: the PLAYER, commanding two soldiers on a 3x3 flat grid
+;; against a single raider. Statuses verified 2026-07-30 by guard-truth
+;; probes (almadar-tools play_transition, 8/8) and a scripted playthrough
+;; (29/29 checks) driving the real game on the runtime-verify catalog
+;; through window.__orbitalVerification — events in, canvas drawables +
+;; HUD DOM + bus event log out. Asset sprites 404 until the CDN push
+;; lands; they are verified at the drawable-descriptor (URL) level.
+;;
+;; THE GENRE (what a grid-tactics player expects, at demo scale): you command
+;; a tiny squad, not an army. Positioning is the whole game — you read the
+;; grid, step each soldier inside the raider's reach, and commit to the
+;; strike. Every End Turn hands the board to the raider AI, which closes the
+;; distance and punishes an adjacent soldier. The kill is the economy: it
+;; scores, and wiping the enemy wins the skirmish. A round looks like:
+;; select a soldier -> green reach cells -> move -> the soldier STAYS
+;; selected and auto-arms (red cells = enemies in reach) -> strike for 2 ->
+;; the soldier is SPENT (dims, cannot act again this turn) -> activate the
+;; next soldier -> End Turn -> the raider strikes an adjacent soldier for 1
+;; or steps 1 cell toward the nearest soldier -> repeat. Each unit may move
+;; ONCE and attack ONCE per turn (movedIds/actedIds track the activation;
+;; End Turn resets both). The raider has 2 hp, so one 2-damage strike kills
+;; it; a kill scores 10 and flips the Result to victory.
+;; ============================================================================
+;;
+;; PLAYER — "I maneuver my two soldiers and take the raider down."
+;;
+;;   1. I open the board and see the whole skirmish framed on screen —
+;;      grass under every cell, my soldiers on the west column, the raider
+;;      on the east, and the HUD showing Result/Phase/Turn/Score.
+;;        WORKS. Boot paints 9 flat cells whose terrain drawables all point
+;;        at svg/flat/terrain/grass.svg, 3 units (2v1: soldiers x=0, raider
+;;        x=2), HUD reads "none / observation / 0 / 0". Verified in the
+;;        catalog playthrough (s01-boot.png).
+;;   2. Every unit on the board is a visible sprite with a name label and a
+;;      health bar I can read at a glance.
+;;        WORKS. Each unit's drawable url-rewrites to its svg idle frame
+;;        (4-frame breathing, cycled by the AnimClock tick — descriptors
+;;        showed soldier.idle-N.svg cycling) anchored "ground", with the
+;;        black backing + green health fraction above and the name label.
+;;        All 3 bars read full (1.00) at boot; labels Soldier A / Soldier B
+;;        / Raider all painted.
+;;   3. I click one of MY soldiers and the cells it can reach light up.
+;;        WORKS. Clicking p1 sets phase "selection" and lights exactly 4
+;;        green cells — the range-2 manhattan diamond from (0,0) minus the
+;;        two occupied cells (s03-select.png). SPENT soldiers (in actedIds)
+;;        are not selectable: play_transition on the attack arm with
+;;        actedIds ["p1"] returns guard=fail.
+;;   4. I click a lit cell and the soldier moves there — and stays selected,
+;;      auto-armed, so I can strike immediately. One move per turn.
+;;        WORKS. p1 walked (0,0)->(1,1): the walk animation plays (caught
+;;        mid-cycle, s04-walk.png), the authority re-validates and writes
+;;        the position, and the unit lands in phase "action". A second
+;;        TILE_CLICK the same turn is denied (movedIds guard — unit held
+;;        at (1,1)), and re-clicking the moved unit lights zero green
+;;        cells. Guard truth: play_transition move pass / already-moved
+;;        fail / out-of-bounds fail.
+;;   5. Adjacent enemies I can strike light up red — right after my move,
+;;      or when I click my selected soldier again.
+;;        WORKS. Post-move auto-arm computes red cells from the NEW position:
+;;        after p1 -> (1,1) the raider's cell (2,1) lit red (s05-armed.png).
+;;        Living enemies at manhattan distance <= attackRange (config,
+;;        default 1) light red.
+;;   6. I click a red-lit enemy — or any enemy in reach, even without arming
+;;      first — and it takes a hit; my soldier is then spent for the turn.
+;;        WORKS. The attack arm fires whenever a living selected unit has a
+;;        living enemy in reach, regardless of phase — a direct click on the
+;;        raider from phase "selection" landed the 2-damage kill. A "-2"
+;;        damage number + hit fx sprite spawn at the target (BURST, ttl 3),
+;;        and the attacker joins actedIds: it dimmed to 0.45 opacity.
+;;        Guard truth via play_transition: in-range pass, out-of-range
+;;        fail, already-acted fail. (On this 2hp-raider board the first
+;;        strike also ends the game, so spent-select denial is proven by
+;;        the guard probe rather than a mid-game click.)
+;;   7. I change my mind mid-selection and back out cleanly.
+;;        WORKS. CANCEL clears selection, highlights, and phase back to
+;;        "observation" (green 4 -> 0). Guard truth: play_transition pass.
+;;   8. I end my turn and the raider takes theirs — it closes in and fights
+;;      back, and my soldiers are fresh again.
+;;        WORKS. END_TURN bumps Turn (0 -> 1), clears selection + both
+;;        activation lists, and emits AI_TURN; the authority struck the
+;;        adjacent p1 for 1 (hp 3 -> 2, health bar shrank) — the raider was
+;;        already in reach, so no step was needed (s08-ai-turn.png). After
+;;        the reset p1 was selectable again (phase "selection").
+;;   9. When I kill the raider I am rewarded — score ticks up and the
+;;      corpse stays on the field.
+;;        WORKS. The kill scored +10 (ScoreKeeper on UNITS_CHANGED; HUD
+;;        Score 0 -> 10), the corpse renders its death frame
+;;        (raider.death-0.svg descriptor), and its health bar + name label
+;;        dropped from the canvas (s09-kill.png).
+;;  10. When the raider falls, I win and the game tells me — then the
+;;      board freezes.
+;;        WORKS. Result flips to "victory" (RoundLogic on UNITS_CHANGED),
+;;        GAME_END fires on the bus, and every UNIT_CLICK / TILE_CLICK arm
+;;        is guarded on result == "none" — a post-game click on p2 selected
+;;        nothing and lit zero cells (s10-victory.png).
+;;
+;; ASSET INVENTORY (hand-authored svg, almadar-kflow-assets.web.app
+;; /shared/ui-tactics-demo-2d/svg/flat/, generated by tools/asset-workflow
+;; svg-generator from the sibling .md descriptions)
+;;
+;;   Terrain   terrain/grass.svg — full-cell flat tile, drawn at
+;;             width/height 1 so no gaps show between cells.
+;;   Units     units/{soldier,raider}.svg + animation frames
+;;             .{idle-0..3, walk-0..1, attack-0, hit-0, death-0}.svg; the
+;;             frame swaps url-rewrites name.svg -> name.<anim>-<i>.svg and a
+;;             hidden warm-up layer preloads every frame so swaps never pop.
+;;             player: p1 Soldier A 3hp (0,0)   p2 Soldier B 3hp (0,2)
+;;             enemy:  e1 Raider    2hp (2,1)
+;;   Effects   effects/hit.svg (BURST "hit" fx at the struck cell).
+;;   UI chrome ui/panel-frame.svg = game-shell background + HUD panel.
+;; ============================================================================
+
 orbital TacticsDemo2DOrbital {
   uses Frame from "std/behaviors/std-tactics-board-2d"
   uses Score from "std/behaviors/std-score"
@@ -68,13 +186,15 @@ orbital TacticsDemo2DOrbital {
 
   entity GameState [runtime, shared] {
     id : string!
-    units : [Unit] = [ { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "soldier", name: "Soldier A", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_square.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "player-unit", thumbnailUrl: "" } }, { id: "p2", position: { x: 0, y: 2 }, x: 0, y: 2, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "soldier", name: "Soldier B", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_square.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "player-unit", thumbnailUrl: "" } }, { id: "e1", position: { x: 2, y: 1 }, x: 2, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider", name: "Raider", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "red_body_square.png", role: "enemy", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "enemy-unit", thumbnailUrl: "" } } ]
+    units : [Unit] = [ { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "soldier", name: "Soldier A", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/units/soldier.svg", role: "npc", category: "soldier", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "soldier", thumbnailUrl: "" } }, { id: "p2", position: { x: 0, y: 2 }, x: 0, y: 2, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "soldier", name: "Soldier B", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/units/soldier.svg", role: "npc", category: "soldier", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "soldier", thumbnailUrl: "" } }, { id: "e1", position: { x: 2, y: 1 }, x: 2, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider", name: "Raider", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } } ]
     fx : [Fx] = []
-    tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-1-0", x: 1, y: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-0", x: 2, y: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-0-1", x: 0, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-1-1", x: 1, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-1", x: 2, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-0-2", x: 0, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-1-2", x: 1, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-2", x: 2, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } } ]
+    tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, terrain: "grass", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "grass", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "grass", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "grass", passable: true }, { id: "t-1-1", x: 1, y: 1, terrain: "grass", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "grass", passable: true }, { id: "t-0-2", x: 0, y: 2, terrain: "grass", passable: true }, { id: "t-1-2", x: 1, y: 2, terrain: "grass", passable: true }, { id: "t-2-2", x: 2, y: 2, terrain: "grass", passable: true } ]
     result : string = "none"
     selectedUnitId : string = ""
     validMoves : [ValidMove] = []
     attackTargets : [ValidMove] = []
+    movedIds : [string] = []
+    actedIds : [string] = []
     uiPhase : string = "observation"
     turn : number = 0
     score : number = 0
@@ -87,8 +207,8 @@ orbital TacticsDemo2DOrbital {
       gridWidth: 3
       gridHeight: 3
       attackDamage: 2
-      units: [ { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "soldier", name: "Soldier A", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_square.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "player-unit", thumbnailUrl: "" } }, { id: "p2", position: { x: 0, y: 2 }, x: 0, y: 2, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "soldier", name: "Soldier B", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_square.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "player-unit", thumbnailUrl: "" } }, { id: "e1", position: { x: 2, y: 1 }, x: 2, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider", name: "Raider", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "red_body_square.png", role: "enemy", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "enemy-unit", thumbnailUrl: "" } } ]
-      tiles: [ { id: "t-0-0", x: 0, y: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-1-0", x: 1, y: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-0", x: 2, y: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-0-1", x: 0, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-1-1", x: 1, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-1", x: 2, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-0-2", x: 0, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-1-2", x: 1, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-2", x: 2, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_grey.png", role: "tile", category: "grass", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } } ]
+      units: [ { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "soldier", name: "Soldier A", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/units/soldier.svg", role: "npc", category: "soldier", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "soldier", thumbnailUrl: "" } }, { id: "p2", position: { x: 0, y: 2 }, x: 0, y: 2, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "soldier", name: "Soldier B", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/units/soldier.svg", role: "npc", category: "soldier", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "soldier", thumbnailUrl: "" } }, { id: "e1", position: { x: 2, y: 1 }, x: 2, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider", name: "Raider", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, terrain: "grass", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "grass", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "grass", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "grass", passable: true }, { id: "t-1-1", x: 1, y: 1, terrain: "grass", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "grass", passable: true }, { id: "t-0-2", x: 0, y: 2, terrain: "grass", passable: true }, { id: "t-1-2", x: 1, y: 2, terrain: "grass", passable: true }, { id: "t-2-2", x: 2, y: 2, terrain: "grass", passable: true } ]
     }
   }
 
@@ -101,7 +221,7 @@ orbital TacticsDemo2DOrbital {
   }
 
   trait ScoreKeeper = Score.traits.ScoreKeeper -> GameState {
-    config { running: true, initialEnemies: 1 }
+    config { running: true, pointsPerKill: 10, startScore: 0, initialEnemies: 1 }
   }
 
   trait AnimClock = Frame.traits.AnimClock -> GameState {
@@ -113,11 +233,13 @@ orbital TacticsDemo2DOrbital {
       gridWidth: 3
       gridHeight: 3
       movementRange: 2
-      features: []
-      assetManifest: { terrains: {}, units: {}, features: {}, effects: {} }
       projection: "flat"
       showMinimap: false
       scale: 1
+      backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "adventure", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "adventure", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      features: []
+      assetManifest: { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/terrain/grass.svg", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, units: { soldier: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/units/soldier.svg", role: "npc", category: "soldier", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "soldier", thumbnailUrl: "" }, raider: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } }, features: {}, effects: { hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/effects/hit.svg", role: "effect", category: "hit", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "hit", thumbnailUrl: "" } }, ui: { panel-frame: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "adventure", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" } } }
     }
   }
 

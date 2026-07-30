@@ -5258,6 +5258,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -5288,6 +5289,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -5299,6 +5301,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -5409,6 +5412,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -5966,6 +5970,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -5996,6 +6001,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -6007,6 +6013,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -6117,6 +6124,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -6679,6 +6687,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -6709,6 +6718,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -6720,6 +6730,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -6830,6 +6841,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -7392,6 +7404,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -7422,6 +7435,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -7433,6 +7447,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -7543,6 +7558,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -8105,6 +8121,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -8135,6 +8152,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -8146,6 +8164,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -8256,6 +8275,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -8570,6 +8590,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -8600,6 +8621,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -8611,6 +8633,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -8721,6 +8744,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -8999,6 +9023,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -9029,6 +9054,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -9040,6 +9066,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -9150,6 +9177,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -9519,6 +9547,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -9549,6 +9578,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -9560,6 +9590,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -9670,6 +9701,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -10044,6 +10076,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -10074,6 +10107,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -10085,6 +10119,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -10195,6 +10230,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -10569,6 +10605,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                   'fn',
                                   'u',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -10599,6 +10636,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.35,
                                     'id': [
                                       'object/get',
                                       '@u',
@@ -10610,6 +10648,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
+                                    'width': 0.35,
                                   },
                                 ],
                               ],
@@ -10720,6 +10759,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                             'type': 'draw-text-layer',
                           },
                         ],
+                        'fit': true,
                         'keyMap': {
                           'ArrowDown': 'PUTT_DOWN',
                           'ArrowLeft': 'PUTT_LEFT',
@@ -10975,6 +11015,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'if',
                                     [
@@ -11005,6 +11046,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                       ],
                                     ],
                                   ],
+                                  'height': 0.35,
                                   'id': [
                                     'object/get',
                                     '@u',
@@ -11016,6 +11058,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                                     'position',
                                   ],
                                   'type': 'draw-sprite',
+                                  'width': 0.35,
                                 },
                               ],
                             ],
@@ -11126,6 +11169,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
                           'type': 'draw-text-layer',
                         },
                       ],
+                      'fit': true,
                       'keyMap': {
                         'ArrowDown': 'PUTT_DOWN',
                         'ArrowLeft': 'PUTT_LEFT',

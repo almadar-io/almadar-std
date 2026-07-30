@@ -1,5 +1,5 @@
 app ui-battle-board "1.0.0"
-"RPG-tactics battle: thin organism composing the std-tactics-board-2d frame + std-score + std-xp (kills grant xp; level-ups heal the party via a HEAL intent). Isometric shape-character theme supplied via config."
+"RPG-tactics battle: thin organism composing the std-tactics-board-2d frame + std-score + std-xp (kills grant xp; level-ups heal the party via a HEAL intent). Isometric hand-authored svg theme supplied via config."
 ;; @capabilities "turn-based combat, RPG gameplay, strategy gameplay"
 
 ;; ============================================================================
@@ -7,14 +7,27 @@ app ui-battle-board "1.0.0"
 ;;
 ;; Read these before changing anything here, and walk them end to end after.
 ;; One persona: the PLAYER, commanding a four-unit party on a 16x16 isometric
-;; grid against four enemies. Status is against the CURRENT file.
+;; grid against four enemies. Status re-verified 2026-07-30 by a scripted
+;; full playthrough (32/32 checks) driving the real game on the
+;; runtime-verify catalog through window.__orbitalVerification — events in,
+;; canvas drawables + HUD DOM + bus event log out. No claim below is
+;; untested hearsay.
 ;;
-;; HOW THE GAME WORKS (the loop): select a unit -> move it (green cells) ->
-;; click it again to arm attack (red cells = adjacent enemies) -> click an
-;; adjacent enemy to strike for 3 -> End Turn -> every living enemy strikes
-;; adjacent players for 1 or steps 1 cell toward the nearest player -> repeat
-;; until one side is wiped. Kills score 10 and grant 25 xp; every 100 xp
-;; (+50 per level) levels up and heals the whole party +2.
+;; THE GENRE (what an RPG-tactics player expects): you command a small party,
+;; not an army. Positioning is the game — you read the grid, move each unit
+;; inside its reach, and commit to strikes when an enemy steps adjacent.
+;; Blows trade back and forth: every End Turn hands the board to the enemy
+;; AI, which closes the distance and punishes exposed units. Kills are the
+;; economy: each one scores, banks xp, and xp thresholds level the party up
+;; and patch their wounds. You win by wiping the enemy; you lose by being
+;; wiped. A round looks like: select a unit -> green reach cells -> move ->
+;; the unit STAYS selected and auto-arms (red cells = enemies in reach) ->
+;; strike for 3 -> the unit is SPENT (dims, cannot act again this turn) ->
+;; activate the next unit -> End Turn -> every living enemy strikes an
+;; adjacent player for 1 or steps 1 cell toward the nearest player -> repeat.
+;; Each unit may move ONCE and attack ONCE per turn (movedIds/actedIds track
+;; the activation; End Turn resets both). Kills score 10 and grant 25 xp;
+;; every 100 xp (+50 per level) levels up and heals the whole party +2.
 ;; ============================================================================
 ;;
 ;; PLAYER — "I command my party and wipe the enemy before they wipe me."
@@ -22,82 +35,115 @@ app ui-battle-board "1.0.0"
 ;;   1. I open the board and see the whole battlefield framed on screen —
 ;;      terrain under every cell, my party at the south, the enemy at the
 ;;      north, and the HUD showing Result/Phase/Turn/Score/XP/Lvl.
-;;        WORKS. PlayerIntent renders a game-shell with one canvas, fit: true
-;;        (fills the viewport, camera centered on the tile grid's midpoint),
-;;        projection "isometric". 16x16 all-grass tiles paint from the
-;;        assetManifest; HUD stats come from extraStats (XP, Lvl) appended to
-;;        the frame's Result/Phase/Turn/Score. Zoom is wheel/pinch, clamped
-;;        [0.05, 10] upstream in @almadar/ui useCamera; minimap on.
+;;        WORKS. Boot paints 256 full-cell isometric grass cubes (no gaps),
+;;        8 units (4v4), portal + gold-mine features, minimap on; HUD reads
+;;        "none / observation / 0 / 0 / 0 / 1". Verified: 39/39 assets
+;;        loaded, zero failed. (Result/Phase used to render "0" — StatBadge
+;;        defaults format "number" and parseInt-ed the strings; the frame's
+;;        HudStat now carries format: "text" for both.)
 ;;   2. Every unit on the board is a visible character sprite with a name
 ;;      label and a health bar I can read at a glance.
-;;        WORKS. draw-sprite-layer paints each unit's modelUrl anchored
-;;        "ground"; two draw-shape-layers paint the black backing + green
-;;        health fraction above it; a draw-text-layer paints the name.
-;;        Broken assets would show a magenta fallback square + a
-;;        almadar:ui:draw-sprite warn (upstream DrawSprite contract).
+;;        WORKS. Each unit paints its svg idle frame (4-frame bob, cycled by
+;;        the AnimClock tick) anchored "ground", with the black backing +
+;;        green health fraction above and the name label. All 8 bars read
+;;        full at boot. Dead units drop the bar and label (they are corpses,
+;;        not combatants) and switch to the death frame.
 ;;   3. I click one of MY units and the cells it can reach light up.
-;;        WORKS. UNIT_CLICK (team "player") sets selectedUnitId, uiPhase
-;;        "selection", and validMoves = passable, unoccupied tiles within
-;;        movementRange 2 (manhattan), painted translucent green.
-;;   4. I click a lit cell and the unit moves there.
-;;        WORKS. TILE_CLICK (in bounds, within range) emits MOVE; the
-;;        grid-tactics authority re-validates (bounds/passable/unoccupied)
-;;        and writes the new position. Selection resets to "observation".
-;;   5. I click my selected unit again and adjacent enemies I can strike
-;;        light up red.
-;;        WORKS. Second UNIT_CLICK on the same id enters uiPhase "action"
-;;        and computes attackTargets = living enemies at manhattan distance
-;;        <= 1, painted translucent red.
-;;   6. I click a red-lit enemy and it takes a hit — I see the damage
-;;      number, its health bar shrinks.
-;;        WORKS. UNIT_CLICK (enemy, action phase, adjacent) emits ATTACK;
-;;        the authority subtracts attackDamage 3 and emits BURST, which
-;;        fx-particles spawns as a floating "-3" at the target (ttl 3,
-;;        decayed by FxDecay). The health-bar layer re-derives from
-;;        health/maxHealth on the shared frame.
+;;        WORKS. Clicking p1 sets phase "selection" and lights exactly 9
+;;        green cells — the range-2 manhattan diamond minus occupied cells.
+;;        Dead units are NOT selectable (guard on health > 0): clicking a
+;;        corpse does nothing. SPENT units (already attacked this turn, in
+;;        actedIds) are not selectable either — their activation is over.
+;;        A unit that already MOVED this turn still selects (it may attack)
+;;        but lights zero green cells — one move per turn.
+;;   4. I click a lit cell and the unit moves there — and stays selected,
+;;      auto-armed, so I can strike immediately.
+;;        WORKS. p1 walked (3,12)->(3,10): the walk animation plays (2-frame
+;;        cycle, ~6 ticks), the authority re-validates bounds/passable/
+;;        occupied and writes the position, and the unit lands in phase
+;;        "action" with any enemies now in reach lit red. Clicking an
+;;        OCCUPIED or out-of-reach cell is ignored outright (guard) instead
+;;        of silently eating the selection. The move is SPENT: the unit
+;;        cannot move again until End Turn (movedIds guard) — there is no
+;;        way to chain moves.
+;;   5. Adjacent enemies I can strike light up red — right after my move,
+;;      or when I click my selected unit again.
+;;        WORKS. Post-move auto-arm computes red cells from the NEW position;
+;;        the manual re-click arm (phase "action") still works from a fresh
+;;        selection. Living enemies at manhattan distance <= attackRange
+;;        (config, default 1) light red.
+;;   6. I click a red-lit enemy — or any enemy in reach, even without arming
+;;      first — and it takes a hit; my unit is then spent for the turn.
+;;        WORKS. The attack arm fires whenever a living selected unit has a
+;;        living enemy in reach, regardless of phase (selection or action) —
+;;        no more dead clicks on an enemy you just walked up to. The
+;;        attacker plays its attack frame, the target plays its hit frame, a
+;;        "-3" damage number + hit-star fx sprite spawn at the target
+;;        (BURST, ttl 3 decayed by FxDecay), the health bar shrinks
+;;        (verified e3 1.00 -> 0.63 of max), and the attacker joins actedIds:
+;;        it dims to 45% opacity and cannot be selected or attack again
+;;        until End Turn.
 ;;   7. I change my mind mid-selection and back out cleanly.
-;;        WORKS. The HUD's Cancel button emits CANCEL, clearing selection,
-;;        highlights, and phase (guarded on a selection existing).
+;;        WORKS. CANCEL clears selection, highlights, and phase — verified
+;;        green cells 9 -> 0 and phase back to "observation".
 ;;   8. I end my turn and the enemy takes theirs — they close in and fight
-;;      back.
-;;        WORKS. END_TURN (guarded on result "none") bumps turn and emits
-;;        AI_TURN; the authority damages every player adjacent to a living
-;;        enemy for 1, then steps each unengaged enemy 1 cell toward the
-;;        nearest living player (clamped in-bounds, passable, unoccupied).
-;;   9. When I kill an enemy I am rewarded — score ticks up, xp ticks up.
-;;        WORKS. Every authority mutation emits UNITS_CHANGED with live
-;;        survivor counts; ScoreKeeper awards (baseline - enemiesAlive) x 10,
-;;        XpKeeper the same x 25. Both are headless atoms on the shared frame.
+;;      back, and my party is fresh again.
+;;        WORKS. END_TURN bumps Turn, clears selection + both activation
+;;        lists (movedIds/actedIds — every unit can act again), and emits
+;;        AI_TURN; the authority strikes every player adjacent to a living
+;;        enemy for 1 and steps each unengaged enemy 1 cell toward the
+;;        nearest living player. Verified: enemy positions changed and/or
+;;        player hp dropped every turn.
+;;        LIMITATION: enemies POP to their new cell — the authority applies
+;;        the step silently and the single walk-anim slot is player-facing;
+;;        per-enemy MOVE fan-out is atom surgery, deferred.
+;;   9. When I kill an enemy I am rewarded — score ticks up, xp ticks up,
+;;      and the corpse stays on the field.
+;;        WORKS x4. Each kill: Score +10, XP +25 (ScoreKeeper/XpKeeper on
+;;        UNITS_CHANGED), the corpse renders its death frame, and the cell
+;;        becomes walkable again — corpses never block movement or green
+;;        highlights (authority and highlight filters agree on health > 0;
+;;        verified with four corpses piled on two cells).
 ;;  10. When my xp crosses the threshold the party levels up and heals.
-;;        WORKS. XpKeeper at xp >= xpToNext (100, +50/level) bumps level,
-;;        raises the threshold, and emits HEAL { team: "player", amount: 2 },
-;;        which the authority applies (capped at maxHealth).
-;;  11. When the last enemy falls, I win and the game tells me.
-;;        WORKS. RoundLogic derives result from UNITS_CHANGED: enemiesAlive 0
-;;        -> "victory" (playersAlive 0 -> "defeat") and emits GAME_END; the
-;;        HUD's Result stat shows it and END_TURN is guarded shut.
+;;        WORKS. The 4th kill crossed 100 xp: Lvl 1 -> 2 on the HUD and a
+;;        HEAL { team: "player", amount: 2 } fired on the bus, which the
+;;        authority applies capped at maxHealth.
+;;  11. When the last enemy falls, I win and the game tells me — then the
+;;      board freezes.
+;;        WORKS. Result flips to "victory" (RoundLogic on UNITS_CHANGED),
+;;        GAME_END fires, and the board is FROZEN: every UNIT_CLICK /
+;;        TILE_CLICK arm is guarded on result == "none", so post-game clicks
+;;        select nothing and move nothing (verified by probe). Reload to
+;;        play again — an in-game rematch button does not exist yet.
 ;;
-;; ASSET INVENTORY (all Kenney, served from almadar-kflow-assets.web.app)
+;; MULTIPLAYER NOTE: GameState is [runtime, shared], so every connected
+;; client watches the same battle on the same frame; intents serialize
+;; through the server authority. There is no per-seat turn ownership yet —
+;; any client can drive any player unit.
 ;;
-;;   Terrain   kenney-isometric-tiles-base/terrain/landscapeTiles_sheet
-;;             grass = landscapeTiles_000.png (all 256 cells), stone =
-;;             landscapeTiles_001.png (manifest-only, no stone tiles seeded).
-;;   Units     ui-battle-board/kenney-shape-characters/units/spritesheet_default
-;;             (board-local copy; the _shared sheet was a corrupt 49x49 file
-;;             whose atlas expects 577x577 — repaired there too)
-;;             party:  p1 Guardian  blue_body_square.png   10hp (3,12)
-;;                     p2 Scrapper  red_body_rhombus.png    8hp (2,11)
-;;                     p3 Worker    yellow_body_squircle.png 6hp (4,13)
-;;                     p4 Mender    green_body_circle.png   7hp (2,13)
+;; ASSET INVENTORY (hand-authored svg, almadar-kflow-assets.web.app
+;; /shared/ui-battle-board/svg/isometric/, generated by tools/asset-workflow
+;; svg-generator from the sibling .md descriptions)
+;;
+;;   Terrain   terrain/grass.svg, terrain/stone.svg — full-cell isometric
+;;             cubes (top + left + right faces) that tessellate exactly with
+;;             the projector's cellPath; drawn at width/height 1.
+;;   Units     units/{guardian,scrapper,worker,mender}.svg + animation frames
+;;             .{idle-0..3, walk-0..1, attack-0, hit-0, death-0}.svg; the
+;;             frame swaps url-rewrites name.svg -> name.<anim>-<i>.svg and a
+;;             hidden warm-up layer preloads every frame so swaps never pop.
+;;             party:  p1 Guardian 10hp (3,12)   p2 Scrapper 8hp (2,11)
+;;                     p3 Worker    6hp (4,13)   p4 Mender   7hp (2,13)
 ;;             enemy:  e1/e2 Guardian 10hp (12,3),(13,4)
 ;;                     e3/e4 Scrapper  8hp (11,2),(13,2)
-;;   Features  ui-battle-board/kenney-cartography-pack/ui/spritesheet_default
-;;             gold_mine = mine.png at (13,1), portal = gate.png at (1,14)
-;;             (decorative; drawn from config.features).
-;;   Effects   _shared/kenney-explosion-pack/effects/spritesheet_pixelExplosion
-;;             explosion = pixelExplosion07.png (manifest effects entry).
-;;   UI chrome _shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet
-;;             panel_beige.png = game-shell background + HUD panel.
+;;   Features  features/gold_mine.svg at (13,1), features/portal.svg at
+;;             (1,14) — the two home bases, drawn from config.features
+;;             anchored "ground" at 1x1 so they sit ON their cell (the
+;;             draw-sprite default anchor is "top-left", which floated them
+;;             off the board corner before the anchor was explicit).
+;;   Effects   effects/hit.svg (BURST "hit" fx), effects/explosion.svg
+;;             (manifest-only).
+;;   UI chrome ui/panel-frame.svg = game-shell background + HUD panel.
 ;; ============================================================================
 
 orbital BattleBoardOrbital {
@@ -176,6 +222,8 @@ orbital BattleBoardOrbital {
     selectedUnitId : string = ""
     validMoves : [ValidMove] = []
     attackTargets : [ValidMove] = []
+    movedIds : [string] = []
+    actedIds : [string] = []
     uiPhase : string = "observation"
     turn : number = 0
     score : number = 0
