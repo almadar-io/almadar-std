@@ -9535,9 +9535,17 @@
                 "eventId": "evt_01KXG04WYVZ6D7S7BVHPFGDR2J",
                 "from": "idle",
                 "guard": [
-                  ">=",
-                  "@entity.wave",
-                  3.0
+                  "and",
+                  [
+                    ">=",
+                    "@entity.wave",
+                    3.0
+                  ],
+                  [
+                    ">",
+                    "@entity.health",
+                    0.0
+                  ]
                 ],
                 "to": "victory"
               },
@@ -12686,7 +12694,11 @@
                     0.0,
                     [
                       "-",
-                      "@entity.wave",
+                      [
+                        "*",
+                        "@entity.wave",
+                        4.0
+                      ],
                       [
                         "array/len",
                         "@entity.buildings"
@@ -13325,11 +13337,20 @@
                   }
                 ],
                 [
-                  "emit",
-                  "WAVE_DEFEATED",
-                  {
-                    "wave": "@entity.wave"
-                  }
+                  "if",
+                  [
+                    ">",
+                    "@entity.health",
+                    0.0
+                  ],
+                  [
+                    "emit",
+                    "WAVE_DEFEATED",
+                    {
+                      "wave": "@entity.wave"
+                    }
+                  ],
+                  null
                 ]
               ],
               "guard": [

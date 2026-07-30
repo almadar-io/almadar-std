@@ -85,6 +85,7 @@ orbital CardBattlerBoardOrbital {
         (set @entity.hand (array/concat @entity.hand (array/slice @entity.deck 0 @config.drawPerTurn)))
         (set @entity.deck (array/slice @entity.deck @config.drawPerTurn (array/len @entity.deck)))
         (set @entity.result (if (>= @entity.turn @config.turnsToWin) "won" @entity.result))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Mana", value: @entity.mana }, { label: "Turn", value: @entity.turn } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: secondary } ] } ] }
@@ -97,6 +98,7 @@ orbital CardBattlerBoardOrbital {
       GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
         (render-ui main {
           type: game-shell
+          overlay: { type: game-menu, title: (if (== @entity.result "won") "VICTORY!" "DEFEAT"), subtitle: (str/concat "Result: " @entity.result), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Mana", value: @entity.mana }, { label: "Turn", value: @entity.turn } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: secondary } ] } ] }
           children: [
             { type: data-list, entity: @entity.board, fields: [], gap: sm, renderItem: (fn c { type: button, variant: ghost, children: [ { type: atlas-image, asset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/kenney-boardgame-pack/ui/diceWhite_border.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/kenney-boardgame-pack/ui/diceWhite_border.json", sprite: "dieWhite_border6.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, fill: true, fit: "fill" }, { type: stack, direction: vertical, gap: xs, align: center, children: [ { type: badge, label: @c.cost, variant: info }, { type: game-icon, assetUrl: @c.sprite, icon: "image", size: 52, alt: @c.title }, { type: typography, variant: caption, content: @c.title }, { type: stack, direction: horizontal, gap: xs, justify: between, children: [ { type: typography, variant: caption, content: (str/concat "⚔" @c.attack) }, { type: typography, variant: caption, content: (str/concat "🛡" @c.defense) } ] } ] } ] }) },

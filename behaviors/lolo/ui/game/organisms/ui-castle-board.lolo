@@ -325,7 +325,7 @@ orbital CastleBoardOrbital {
   ] } ]
         })
 
-      WAVE_DEFEATED -> victory when (>= @entity.wave 3)
+      WAVE_DEFEATED -> victory when (and (>= @entity.wave 3) (> @entity.health 0))
         (set @entity.result "victory")
         (render-ui main {
           type: game-shell
@@ -518,7 +518,7 @@ orbital CastleBoardOrbital {
       waveTick every 8s
         when (and (== @entity.result "none") (and (> @entity.health 0) (< @entity.wave 3)))
         (set @entity.wave (+ @entity.wave 1))
-        (set @entity.lastWaveDamage (math/max 0 (- @entity.wave (array/len @entity.buildings))))
+        (set @entity.lastWaveDamage (math/max 0 (- (* @entity.wave 4) (array/len @entity.buildings))))
         (set @entity.health (math/max 0 (- @entity.health @entity.lastWaveDamage)))
         (set @entity.units (array/map @entity.units (fn u (if (== @u.team "enemy") (object/merge @u { animation: "attack" }) (if (== @u.team "player") (object/merge @u { animation: (if (<= @entity.health 0) "hit" "idle") }) @u)))))
         (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "enemy")))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "enemy")))) position) y), ttl: 4 }))
@@ -543,7 +543,7 @@ orbital CastleBoardOrbital {
   ] } ]
         })
         (emit CASTLE_HIT { damage: @entity.lastWaveDamage })
-        (emit WAVE_DEFEATED { wave: @entity.wave })
+        (if (> @entity.health 0) (emit WAVE_DEFEATED { wave: @entity.wave }) null)
     }
 
     emits {

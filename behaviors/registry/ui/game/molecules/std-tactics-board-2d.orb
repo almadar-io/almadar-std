@@ -146,6 +146,14 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01KYR8XVRJYJJPAW6NZ6NZ7NQ2": {
+        "bakedName": "AnimClock",
+        "curName": "AnimClock",
+        "id": "trt_01KYR8XVRJYJJPAW6NZ6NZ7NQ2",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -670,6 +678,41 @@
             "default": 0.0,
             "name": "scoreBaseline",
             "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "animCounter",
+            "type": "number"
+          },
+          {
+            "default": "0",
+            "name": "frameName",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "animUnitId",
+            "type": "string"
+          },
+          {
+            "default": "idle",
+            "name": "animState",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "animTicksLeft",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "name": "animAttackerId",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "animAtkTicksLeft",
+            "type": "number"
           }
         ],
         "id": "ent_01KXG04VM7YPKBFY12VFNBQ3RS",
@@ -704,6 +747,10 @@
             {
               "ref": "PlayerIntent",
               "refId": "trt_01KXG04VM7WQJEH8FBPFFPNHJV"
+            },
+            {
+              "ref": "AnimClock",
+              "refId": "trt_01KYR8XVRJYJJPAW6NZ6NZ7NQ2"
             }
           ]
         }
@@ -894,8 +941,7 @@
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01KXG04VM7YPKBFY12VFNBQ3RS",
           "name": "TacticsAuthority",
-          "ref": "Tactics.traits.GridTactics",
-          "refId": "trt_01KXG04THREP6VTN7SEQ5QND02"
+          "ref": "Tactics.traits.GridTactics"
         },
         {
           "config": {
@@ -908,8 +954,7 @@
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01KXG04VM7YPKBFY12VFNBQ3RS",
           "name": "FxDecay",
-          "ref": "Particles.traits.FxParticles",
-          "refId": "trt_01KXG04TFZQZVT3F7J3DTM2PXF"
+          "ref": "Particles.traits.FxParticles"
         },
         {
           "config": {
@@ -922,8 +967,7 @@
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01KXG04VM7YPKBFY12VFNBQ3RS",
           "name": "RoundLogic",
-          "ref": "Round.traits.RoundFlow",
-          "refId": "trt_01KXG04TNCJQBQBHH17BMMRPXT"
+          "ref": "Round.traits.RoundFlow"
         },
         {
           "config": {
@@ -948,8 +992,20 @@
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01KXG04VM7YPKBFY12VFNBQ3RS",
           "name": "ScoreKeeper",
-          "ref": "Score.traits.ScoreKeeper",
-          "refId": "trt_01KXG04TNS3RZ75H9PBTJ6F5HQ"
+          "ref": "Score.traits.ScoreKeeper"
+        },
+        {
+          "config": {
+            "frames": {
+              "default": [],
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KYR8XVRJYJJPAW6NZ6NZ7NQ2",
+          "linkedEntity": "GameState",
+          "linkedEntityId": "ent_01KXG04VM7YPKBFY12VFNBQ3RS",
+          "name": "AnimClock",
+          "ref": "AnimTick.traits.AnimTick"
         },
         {
           "category": "interaction",
@@ -2000,32 +2056,7 @@
                                 ],
                                 2.0
                               ]
-                            },
-                            "zoom": [
-                              "math/min",
-                              1.0,
-                              [
-                                "/",
-                                5.0,
-                                [
-                                  "+",
-                                  1.0,
-                                  [
-                                    "math/max",
-                                    [
-                                      "array/max",
-                                      "@entity.tiles",
-                                      "x"
-                                    ],
-                                    [
-                                      "array/max",
-                                      "@entity.tiles",
-                                      "y"
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ]
+                            }
                           },
                           "children": [
                             {
@@ -2099,7 +2130,7 @@
                                           ]
                                         ]
                                       ],
-                                      "height": 0.5,
+                                      "height": 1.0,
                                       "position": {
                                         "x": [
                                           "object/get",
@@ -2113,7 +2144,7 @@
                                         ]
                                       },
                                       "type": "draw-sprite",
-                                      "width": 0.5
+                                      "width": 1.0
                                     }
                                   ]
                                 ],
@@ -2285,52 +2316,200 @@
                                   [
                                     "fn",
                                     "u",
-                                    {
-                                      "anchor": "ground",
-                                      "asset": [
-                                        "if",
+                                    [
+                                      "let",
+                                      [
                                         [
-                                          "object/get",
+                                          "unitAsset",
                                           [
-                                            "object/get",
-                                            "@u",
-                                            "modelUrl"
-                                          ],
-                                          "url"
+                                            "if",
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "modelUrl"
+                                              ],
+                                              "url"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "modelUrl"
+                                            ],
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@config.assetManifest",
+                                                "units"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "unitType"
+                                              ]
+                                            ]
+                                          ]
                                         ],
                                         [
-                                          "object/get",
-                                          "@u",
-                                          "modelUrl"
+                                          "unitUrl",
+                                          [
+                                            "object/get",
+                                            "@unitAsset",
+                                            "url"
+                                          ]
                                         ],
                                         [
-                                          "object/get",
+                                          "unitAnim",
                                           [
-                                            "object/get",
-                                            "@config.assetManifest",
-                                            "units"
-                                          ],
-                                          [
-                                            "object/get",
-                                            "@u",
-                                            "unitType"
+                                            "if",
+                                            [
+                                              "<=",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "health"
+                                              ],
+                                              0.0
+                                            ],
+                                            "death",
+                                            [
+                                              "if",
+                                              [
+                                                "and",
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    "@u",
+                                                    "id"
+                                                  ],
+                                                  "@entity.animAttackerId"
+                                                ],
+                                                [
+                                                  ">",
+                                                  "@entity.animAtkTicksLeft",
+                                                  0.0
+                                                ]
+                                              ],
+                                              "attack",
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    "@u",
+                                                    "id"
+                                                  ],
+                                                  "@entity.animUnitId"
+                                                ],
+                                                "@entity.animState",
+                                                "idle"
+                                              ]
+                                            ]
                                           ]
                                         ]
                                       ],
-                                      "height": 0.5,
-                                      "id": [
-                                        "object/get",
-                                        "@u",
-                                        "id"
-                                      ],
-                                      "position": [
-                                        "object/get",
-                                        "@u",
-                                        "position"
-                                      ],
-                                      "type": "draw-sprite",
-                                      "width": 0.5
-                                    }
+                                      {
+                                        "anchor": "ground",
+                                        "asset": [
+                                          "if",
+                                          [
+                                            "and",
+                                            "@unitUrl",
+                                            [
+                                              "str/includes",
+                                              "@unitUrl",
+                                              ".svg"
+                                            ]
+                                          ],
+                                          [
+                                            "object/merge",
+                                            "@unitAsset",
+                                            {
+                                              "url": [
+                                                "str/concat",
+                                                [
+                                                  "array/nth",
+                                                  [
+                                                    "str/split",
+                                                    "@unitUrl",
+                                                    ".svg"
+                                                  ],
+                                                  0.0
+                                                ],
+                                                [
+                                                  "str/concat",
+                                                  ".",
+                                                  [
+                                                    "str/concat",
+                                                    "@unitAnim",
+                                                    [
+                                                      "str/concat",
+                                                      "-",
+                                                      [
+                                                        "str/concat",
+                                                        [
+                                                          "if",
+                                                          [
+                                                            "==",
+                                                            "@unitAnim",
+                                                            "walk"
+                                                          ],
+                                                          [
+                                                            "%",
+                                                            "@entity.animCounter",
+                                                            2.0
+                                                          ],
+                                                          [
+                                                            "if",
+                                                            [
+                                                              "==",
+                                                              "@unitAnim",
+                                                              "idle"
+                                                            ],
+                                                            [
+                                                              "%",
+                                                              [
+                                                                "math/floor",
+                                                                [
+                                                                  "/",
+                                                                  "@entity.animCounter",
+                                                                  3.0
+                                                                ]
+                                                              ],
+                                                              4.0
+                                                            ],
+                                                            0.0
+                                                          ]
+                                                        ]
+                                                      ],
+                                                      ".svg"
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            }
+                                          ],
+                                          "@unitAsset"
+                                        ],
+                                        "height": 0.5,
+                                        "id": [
+                                          "object/get",
+                                          "@u",
+                                          "id"
+                                        ],
+                                        "position": [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "type": "draw-sprite",
+                                        "width": 0.5
+                                      }
+                                    ]
                                   ]
                                 ],
                                 [
@@ -2461,7 +2640,7 @@
                                       "y": [
                                         "object/get",
                                         "@f",
-                                        "y"
+                                        "z"
                                       ]
                                     },
                                     "text": [
@@ -2474,8 +2653,231 @@
                                 ]
                               ],
                               "type": "draw-text-layer"
+                            },
+                            {
+                              "items": [
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  "@entity.fx",
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "anchor": "center",
+                                      "asset": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@config.assetManifest",
+                                          "effects"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "type"
+                                        ]
+                                      ],
+                                      "height": 0.6,
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "z"
+                                        ]
+                                      },
+                                      "type": "draw-sprite",
+                                      "width": 0.6
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "s",
+                                  [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@s",
+                                      "asset"
+                                    ],
+                                    "url"
+                                  ]
+                                ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                [
+                                  "array/filter",
+                                  [
+                                    "array/flatten",
+                                    [
+                                      "array/map",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "array/flatten",
+                                          [
+                                            "array/map",
+                                            [
+                                              [
+                                                "idle",
+                                                4.0
+                                              ],
+                                              [
+                                                "walk",
+                                                2.0
+                                              ],
+                                              [
+                                                "attack",
+                                                1.0
+                                              ],
+                                              [
+                                                "hit",
+                                                1.0
+                                              ],
+                                              [
+                                                "death",
+                                                1.0
+                                              ]
+                                            ],
+                                            [
+                                              "fn",
+                                              "st",
+                                              [
+                                                "array/map",
+                                                [
+                                                  "array/range",
+                                                  0.0,
+                                                  [
+                                                    "array/nth",
+                                                    "@st",
+                                                    1.0
+                                                  ]
+                                                ],
+                                                [
+                                                  "fn",
+                                                  "i",
+                                                  [
+                                                    "if",
+                                                    [
+                                                      "and",
+                                                      [
+                                                        "object/get",
+                                                        [
+                                                          "object/get",
+                                                          "@u",
+                                                          "modelUrl"
+                                                        ],
+                                                        "url"
+                                                      ],
+                                                      [
+                                                        "str/includes",
+                                                        [
+                                                          "object/get",
+                                                          [
+                                                            "object/get",
+                                                            "@u",
+                                                            "modelUrl"
+                                                          ],
+                                                          "url"
+                                                        ],
+                                                        ".svg"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      "str/concat",
+                                                      [
+                                                        "array/nth",
+                                                        [
+                                                          "str/split",
+                                                          [
+                                                            "object/get",
+                                                            [
+                                                              "object/get",
+                                                              "@u",
+                                                              "modelUrl"
+                                                            ],
+                                                            "url"
+                                                          ],
+                                                          ".svg"
+                                                        ],
+                                                        0.0
+                                                      ],
+                                                      [
+                                                        "str/concat",
+                                                        ".",
+                                                        [
+                                                          "str/concat",
+                                                          [
+                                                            "array/nth",
+                                                            "@st",
+                                                            0.0
+                                                          ],
+                                                          [
+                                                            "str/concat",
+                                                            "-",
+                                                            [
+                                                              "str/concat",
+                                                              "@i",
+                                                              ".svg"
+                                                            ]
+                                                          ]
+                                                        ]
+                                                      ]
+                                                    ],
+                                                    ""
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "fn",
+                                    "w",
+                                    [
+                                      "!=",
+                                      "@w",
+                                      ""
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "warmUrl",
+                                  {
+                                    "asset": {
+                                      "url": "@warmUrl"
+                                    },
+                                    "height": 0.5,
+                                    "opacity": 0.0,
+                                    "position": {
+                                      "x": 0.0,
+                                      "y": 0.0
+                                    },
+                                    "type": "draw-sprite",
+                                    "width": 0.5
+                                  }
+                                ]
+                              ],
+                              "type": "draw-sprite-layer"
                             }
                           ],
+                          "fit": true,
                           "projection": "@config.projection",
                           "showMinimap": "@config.showMinimap",
                           "tileClickEvent": "TILE_CLICK",
@@ -2526,6 +2928,16 @@
                     {
                       "targetId": "@payload.unitId"
                     }
+                  ],
+                  [
+                    "set",
+                    "@entity.animAttackerId",
+                    "@entity.selectedUnitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.animAtkTicksLeft",
+                    4.0
                   ],
                   [
                     "set",
@@ -3057,12 +3469,136 @@
                   "none"
                 ],
                 "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.animUnitId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.animState",
+                    "walk"
+                  ],
+                  [
+                    "set",
+                    "@entity.animTicksLeft",
+                    6.0
+                  ]
+                ],
+                "event": "MOVE",
+                "eventId": "evt_01KXG04VM7QR10W55SPK4ZM75N",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.animUnitId",
+                    "@payload.targetId"
+                  ],
+                  [
+                    "set",
+                    "@entity.animState",
+                    "hit"
+                  ],
+                  [
+                    "set",
+                    "@entity.animTicksLeft",
+                    4.0
+                  ]
+                ],
+                "event": "ATTACK",
+                "eventId": "evt_01KXG04VM7FZRR6X4JFY78K7PC",
+                "from": "playing",
+                "to": "playing"
               }
             ]
           },
           "ticks": [
             {
               "effects": [
+                [
+                  "set",
+                  "@entity.animTicksLeft",
+                  [
+                    "if",
+                    [
+                      ">",
+                      "@entity.animTicksLeft",
+                      0.0
+                    ],
+                    [
+                      "-",
+                      "@entity.animTicksLeft",
+                      1.0
+                    ],
+                    0.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.animAtkTicksLeft",
+                  [
+                    "if",
+                    [
+                      ">",
+                      "@entity.animAtkTicksLeft",
+                      0.0
+                    ],
+                    [
+                      "-",
+                      "@entity.animAtkTicksLeft",
+                      1.0
+                    ],
+                    0.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.animState",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@entity.animTicksLeft",
+                      0.0
+                    ],
+                    "idle",
+                    "@entity.animState"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.animUnitId",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@entity.animTicksLeft",
+                      0.0
+                    ],
+                    "",
+                    "@entity.animUnitId"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.animAttackerId",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@entity.animAtkTicksLeft",
+                      0.0
+                    ],
+                    "",
+                    "@entity.animAttackerId"
+                  ]
+                ],
                 [
                   "render-ui",
                   "main",
@@ -3129,32 +3665,7 @@
                               ],
                               2.0
                             ]
-                          },
-                          "zoom": [
-                            "math/min",
-                            1.0,
-                            [
-                              "/",
-                              5.0,
-                              [
-                                "+",
-                                1.0,
-                                [
-                                  "math/max",
-                                  [
-                                    "array/max",
-                                    "@entity.tiles",
-                                    "x"
-                                  ],
-                                  [
-                                    "array/max",
-                                    "@entity.tiles",
-                                    "y"
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ]
+                          }
                         },
                         "children": [
                           {
@@ -3228,7 +3739,7 @@
                                         ]
                                       ]
                                     ],
-                                    "height": 0.5,
+                                    "height": 1.0,
                                     "position": {
                                       "x": [
                                         "object/get",
@@ -3242,7 +3753,7 @@
                                       ]
                                     },
                                     "type": "draw-sprite",
-                                    "width": 0.5
+                                    "width": 1.0
                                   }
                                 ]
                               ],
@@ -3414,52 +3925,200 @@
                                 [
                                   "fn",
                                   "u",
-                                  {
-                                    "anchor": "ground",
-                                    "asset": [
-                                      "if",
+                                  [
+                                    "let",
+                                    [
                                       [
-                                        "object/get",
+                                        "unitAsset",
                                         [
-                                          "object/get",
-                                          "@u",
-                                          "modelUrl"
-                                        ],
-                                        "url"
+                                          "if",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "modelUrl"
+                                            ],
+                                            "url"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "modelUrl"
+                                          ],
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@config.assetManifest",
+                                              "units"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "unitType"
+                                            ]
+                                          ]
+                                        ]
                                       ],
                                       [
-                                        "object/get",
-                                        "@u",
-                                        "modelUrl"
+                                        "unitUrl",
+                                        [
+                                          "object/get",
+                                          "@unitAsset",
+                                          "url"
+                                        ]
                                       ],
                                       [
-                                        "object/get",
+                                        "unitAnim",
                                         [
-                                          "object/get",
-                                          "@config.assetManifest",
-                                          "units"
-                                        ],
-                                        [
-                                          "object/get",
-                                          "@u",
-                                          "unitType"
+                                          "if",
+                                          [
+                                            "<=",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "health"
+                                            ],
+                                            0.0
+                                          ],
+                                          "death",
+                                          [
+                                            "if",
+                                            [
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "id"
+                                                ],
+                                                "@entity.animAttackerId"
+                                              ],
+                                              [
+                                                ">",
+                                                "@entity.animAtkTicksLeft",
+                                                0.0
+                                              ]
+                                            ],
+                                            "attack",
+                                            [
+                                              "if",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "id"
+                                                ],
+                                                "@entity.animUnitId"
+                                              ],
+                                              "@entity.animState",
+                                              "idle"
+                                            ]
+                                          ]
                                         ]
                                       ]
                                     ],
-                                    "height": 0.5,
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": [
-                                      "object/get",
-                                      "@u",
-                                      "position"
-                                    ],
-                                    "type": "draw-sprite",
-                                    "width": 0.5
-                                  }
+                                    {
+                                      "anchor": "ground",
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "and",
+                                          "@unitUrl",
+                                          [
+                                            "str/includes",
+                                            "@unitUrl",
+                                            ".svg"
+                                          ]
+                                        ],
+                                        [
+                                          "object/merge",
+                                          "@unitAsset",
+                                          {
+                                            "url": [
+                                              "str/concat",
+                                              [
+                                                "array/nth",
+                                                [
+                                                  "str/split",
+                                                  "@unitUrl",
+                                                  ".svg"
+                                                ],
+                                                0.0
+                                              ],
+                                              [
+                                                "str/concat",
+                                                ".",
+                                                [
+                                                  "str/concat",
+                                                  "@unitAnim",
+                                                  [
+                                                    "str/concat",
+                                                    "-",
+                                                    [
+                                                      "str/concat",
+                                                      [
+                                                        "if",
+                                                        [
+                                                          "==",
+                                                          "@unitAnim",
+                                                          "walk"
+                                                        ],
+                                                        [
+                                                          "%",
+                                                          "@entity.animCounter",
+                                                          2.0
+                                                        ],
+                                                        [
+                                                          "if",
+                                                          [
+                                                            "==",
+                                                            "@unitAnim",
+                                                            "idle"
+                                                          ],
+                                                          [
+                                                            "%",
+                                                            [
+                                                              "math/floor",
+                                                              [
+                                                                "/",
+                                                                "@entity.animCounter",
+                                                                3.0
+                                                              ]
+                                                            ],
+                                                            4.0
+                                                          ],
+                                                          0.0
+                                                        ]
+                                                      ]
+                                                    ],
+                                                    ".svg"
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          }
+                                        ],
+                                        "@unitAsset"
+                                      ],
+                                      "height": 0.5,
+                                      "id": [
+                                        "object/get",
+                                        "@u",
+                                        "id"
+                                      ],
+                                      "position": [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "type": "draw-sprite",
+                                      "width": 0.5
+                                    }
+                                  ]
                                 ]
                               ],
                               [
@@ -3590,7 +4249,7 @@
                                     "y": [
                                       "object/get",
                                       "@f",
-                                      "y"
+                                      "z"
                                     ]
                                   },
                                   "text": [
@@ -3603,8 +4262,67 @@
                               ]
                             ],
                             "type": "draw-text-layer"
+                          },
+                          {
+                            "items": [
+                              "array/filter",
+                              [
+                                "array/map",
+                                "@entity.fx",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "anchor": "center",
+                                    "asset": [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@config.assetManifest",
+                                        "effects"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@f",
+                                        "type"
+                                      ]
+                                    ],
+                                    "height": 0.6,
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@f",
+                                        "z"
+                                      ]
+                                    },
+                                    "type": "draw-sprite",
+                                    "width": 0.6
+                                  }
+                                ]
+                              ],
+                              [
+                                "fn",
+                                "s",
+                                [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@s",
+                                    "asset"
+                                  ],
+                                  "url"
+                                ]
+                              ]
+                            ],
+                            "type": "draw-sprite-layer"
                           }
                         ],
+                        "fit": true,
                         "projection": "@config.projection",
                         "showMinimap": "@config.showMinimap",
                         "tileClickEvent": "TILE_CLICK",
@@ -3664,6 +4382,10 @@
         {
           "as": "Score",
           "from": "std/behaviors/std-score"
+        },
+        {
+          "as": "AnimTick",
+          "from": "std/behaviors/std-anim-tick"
         }
       ]
     }
