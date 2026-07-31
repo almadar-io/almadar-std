@@ -8,9 +8,17 @@ app ui-uncontrolled-battle-board "1.0.0"
 ;; Read these before changing anything here, and walk them end to end after.
 ;; One persona: the SPECTATOR. This is an auto-battler — you do not command
 ;; units, you watch two AI sides fight it out on a 5x5 isometric board.
-;; Statuses verified 2026-07-31 via orb validate (0/0) + a live headless
-;; session (almadar-tools orbital_play) driving the real runtime: ticks in,
-;; unit positions/hp/result out, plus play_transition guard probes.
+;; Statuses verified 2026-07-31 (gate-4 catalog playthrough, post-deploy):
+;; standalone playground + Playwright against the compiled .orb, polling the
+;; __orbitalVerification bridge (getLastDrawables / assetStatus / eventLog /
+;; getTransitions) and the HUD DOM over three full battles plus a Play Again
+;; re-run; one screenshot per story under
+;; docs/runtime-verification-screenshots/gate4-ui-uncontrolled-battle-board/.
+;; All 34 board svg URLs return 200 on the CDN; assetStatus reports loaded /
+;; 0 failed and each run saw zero failed requests. This pass fixed the
+;; end-of-battle overlay (story 8): the tick emitted GAME_END before its own
+;; render-ui, and the tick's deferred slot write landed after the
+;; transition's overlay render and erased it.
 ;;
 ;; THE GENRE (what an auto-battler spectator expects): the fight is the show.
 ;; You set the stage and the battle runs itself — both sides seek each other
@@ -34,52 +42,65 @@ app ui-uncontrolled-battle-board "1.0.0"
 ;;      full-cell isometric terrain under every cell, barrels/chest features
 ;;      on the flanks, both units with a name label and a health bar, and
 ;;      the HUD reading Round / Allies / Enemies.
-;;        WORKS. INIT paints 25 full-cell iso tiles (stone/grass/dirt/planks/
-;;        stairs svg cubes), 2 ground-anchored features, both units with
-;;        black backing + green health fraction + name, HUD 1 / 1 / 1.
+;;        WORKS. Boot probe at Round 1: HUD DOM reads Round 1 / Allies 1 /
+;;        Enemies 1, the draw list carries 25 tile sprites + 2 ground-anchored
+;;        features (barrels/chest) + 2 unit sprites + 2 name labels (Mender /
+;;        Shadow Legion) + per-unit black backing and full green hp bar
+;;        (width 0.8). All art 200s; zero failed requests. story-1 shot.
 ;;   2. The battle starts on its own — I never issue an order.
-;;        WORKS. autoBattleTick fires every 2s guarded on result == "none"
-;;        AND both sides having a living unit; no transition listens to
-;;        TILE_CLICK / UNIT_CLICK (spectator by design).
+;;        WORKS. Three observed battles ran start to finish with zero input
+;;        (no sendEvent, no clicks): Round 1 -> 5 in ~10.5s on autoBattleTick
+;;        (2s, guarded on result == "none" AND both sides alive); no
+;;        transition listens to TILE_CLICK / UNIT_CLICK — spectator by design.
 ;;   3. Unengaged units breathe in place (4-frame idle, feet-anchored).
 ;;        WORKS. The first step of every battle round resets living units to
-;;        "idle"; the 100ms renderTick advances each unit's frame counter and
-;;        the unit layer url-rewrites modelUrl -> <name>.idle-<f/3 % 4>.svg.
-;;        (Pre-fix the animation slot latched "attack" forever after the
-;;        first engagement — the reset step is the fix.)
+;;        "idle"; across the 100ms renderTick the draw-list unit URLs cycled
+;;        mender.idle-0/1/2/3 and shadow.idle-0..3 (frame = floor(f/3) % 4;
+;;        all four idle svgs 200 on the CDN). story-3 shot.
 ;;   4. Units seek each other without orders — every round, every unit with
 ;;      no adjacent enemy steps 1 cell toward the nearest living enemy.
-;;        WORKS. Both teams step (sign of dx/dy, clamped to the 5x5 grid)
-;;        and play their walk frame while closing. Verified live: round
-;;        over round the manhattan gap shrank 2 -> 1 -> contact.
-;;        (Pre-fix only enemies sought; allies stood still — mirrored the
-;;        seek step for the player team.)
+;;        WORKS (enemy seek live; ally seek symmetric but unexercised).
+;;        Shadow Legion painted walk frames (shadow.walk-0/walk-1) and
+;;        converged (3,2) -> (2,2), distance 2 -> 1, with no input. In the
+;;        default 1v1 the ally never needs to step: the enemy seek step runs
+;;        first each tick and reaches adjacency immediately, so the mirrored
+;;        player-seek branch is present but not exercised by this roster.
+;;        story-4 shot.
 ;;   5. Adjacent enemies trade blows automatically — attack frame on the
 ;;      attacker, hit frame on the target, the health bar shrinks, and a
 ;;      slash fx pops at the stricken unit then fades.
-;;        WORKS. Engaged pairs exchange atk each round (hp verified dropping
-;;        20 -> 15 -> 10 live); the slash spawns at the unit whose animation
-;;        is "hit"/"death" and renderTick decays fx ttl -1/100ms, filtering
-;;        at 0. (Pre-fix the slash spawned at the first unit's cell every
-;;        round and never decayed — permanent pileup.)
+;;        WORKS with one honest caveat. At contact both units painted hit-0,
+;;        the green hp widths stepped 0.8 -> 0.64/0.53 -> 0.32/0, and the
+;;        slash fx sprite popped at the stricken unit then faded while the
+;;        battle kept playing (fx layer observed non-empty then empty
+;;        mid-battle; renderTick decays ttl -1/100ms). Caveat: attack-0 never
+;;        reached the draw list — in the mirrored 1v1 every engaged unit is
+;;        simultaneously attacker and target, and the damage step overwrites
+;;        the attack raise with hit/death in the same tick. story-5 shot.
 ;;   6. A unit reduced to 0 hp dies — death frame, empty bar, and it stops
 ;;      seeking and fighting.
-;;        WORKS. All combat/seek steps guard on hp > 0; the unit layer maps
-;;        hp <= 0 to the death frame regardless of the animation slot.
+;;        WORKS. Kill round: shadow.death-0 painted, Enemies 1 -> 0 on the
+;;        HUD, hp bar 0; the corpse's position froze and the battle ended
+;;        the same tick. All combat/seek steps guard on hp > 0. story-6 shot.
 ;;   7. The HUD tracks the battle live — Round increments and the Allies /
 ;;      Enemies counts drop as units fall.
-;;        WORKS. turn +1 per round; HUD counts filter hp > 0 per team and
-;;        recompute on every tick render.
+;;        WORKS. HUD DOM tracked live across probes: Round 1 -> 3 -> 5,
+;;        Allies 1 throughout, Enemies 1 -> 0 on the kill round. story-7 shot.
 ;;   8. When one side is wiped the battle ends — VICTORY if the allies
 ;;      stand, DEFEAT otherwise — and the board freezes behind the overlay.
-;;        WORKS. The tick computes result from living counts, emits
-;;        GAME_END, and the complete state paints the game-menu overlay with
-;;        Play Again; both ticks are guarded on result == "none" so the
-;;        board is frozen post-game (probe: no hp/position drift after end).
+;;        WORKS (fixed this gate). GAME_END is in the eventLog and the
+;;        transition trace (playing -> complete, guard pass); the VICTORY /
+;;        "Battle complete" game-menu overlay renders with two Play Again
+;;        buttons; the board freezes — identical drawables 1.5s apart and
+;;        zero tick activity after GAME_END in the runtime log. Pre-fix the
+;;        tick emitted GAME_END before its own render-ui, and the tick's
+;;        deferred slot write landed after the transition's overlay render
+;;        so the overlay never painted; now the tick render-ui is gated on
+;;        result == "none" and the emit runs last. story-8 shot.
 ;;   9. I press Play Again and the battle resets and runs again.
-;;        WORKS. PLAY_AGAIN (complete -> playing) re-seeds units, turn 1,
-;;        result "none", effects/selection cleared — the auto-battle resumes
-;;        on the next tick.
+;;        WORKS. Play Again click -> playing with Round reset, both hp bars
+;;        full (0.8), units re-seeded idle-0 at (1,2)/(3,2); the second
+;;        battle ran to complete + VICTORY again with no input. story-9 shot.
 ;; ============================================================================
 
 orbital UncontrolledBattleBoardOrbital {
@@ -284,15 +305,16 @@ orbital UncontrolledBattleBoardOrbital {
 
       autoBattleTick every 2s
         when (and (== @entity.result "none") (and (> (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.hp 0))))) 0) (> (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.hp 0))))) 0)))
+        (set @entity.units (array/map @entity.units (fn u (if (> @u.hp 0) (object/merge @u { animation: "idle" }) @u))))
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.hp 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.hp 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { animation: "attack" }) @u) (if (and (== @u.team "enemy") (> @u.hp 0)) (if (> (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.hp 0)) (== (grid/manhattan-distance (object/get @p position) (object/get @u position)) 1))))) 0) (object/merge @u { animation: "attack" }) @u) @u)))))
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.hp 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.hp 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { hp: (math/max 0 (- @u.hp (object/get (array/first (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.hp 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) atk))), animation: (if (<= (math/max 0 (- @u.hp (object/get (array/first (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.hp 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) atk))) 0) "death" "hit") }) @u) @u))))
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.hp 0)) (if (> (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.hp 0)) (== (grid/manhattan-distance (object/get @p position) (object/get @u position)) 1))))) 0) (object/merge @u { hp: (math/max 0 (- @u.hp (object/get (array/first (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.hp 0)) (== (grid/manhattan-distance (object/get @p position) (object/get @u position)) 1))))) atk))), animation: (if (<= (math/max 0 (- @u.hp (object/get (array/first (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.hp 0)) (== (grid/manhattan-distance (object/get @p position) (object/get @u position)) 1))))) atk))) 0) "death" "hit") }) @u) @u))))
-        (set @entity.units (array/map @entity.units (fn u (if (and (and (== @u.team "enemy") (> @u.hp 0)) (and (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.hp 0)) (== (grid/manhattan-distance (object/get @p position) (object/get @u position)) 1))))) 0) (> (array/len (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.hp 0))))) 0))) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.hp 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 4), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 4) } })) @u))))
-        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first @entity.units) position) x), y: (object/get (object/get (array/first @entity.units) position) y), ttl: 4 }))
+        (set @entity.units (array/map @entity.units (fn u (if (and (and (== @u.team "enemy") (> @u.hp 0)) (and (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.hp 0)) (== (grid/manhattan-distance (object/get @p position) (object/get @u position)) 1))))) 0) (> (array/len (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.hp 0))))) 0))) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.hp 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 4), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 4) }, animation: "walk" })) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (and (and (== @u.team "player") (> @u.hp 0)) (and (== (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.hp 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (> (array/len (array/filter @entity.units (fn e (and (== @e.team "enemy") (> @e.hp 0))))) 0))) (let ((target (array/first (array/filter @entity.units (fn e (and (== @e.team "enemy") (> @e.hp 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 4), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 4) }, animation: "walk" })) @u))))
+        (if (> (array/len (array/filter @entity.units (fn u (or (== @u.animation "hit") (== @u.animation "death"))))) 0) (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (or (== @u.animation "hit") (== @u.animation "death"))))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (or (== @u.animation "hit") (== @u.animation "death"))))) position) y), ttl: 4 })) null)
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.hp 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.hp 0))))) 0) "victory" "none")))
         (set @entity.turn (+ @entity.turn 1))
-        (if (!= @entity.result "none") (emit GAME_END) null)
-        (render-ui main {
+        (if (== @entity.result "none") (render-ui main {
           type: game-shell
           fontFamily: "future"
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg", role: "ui", category: "ui", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
@@ -309,7 +331,8 @@ orbital UncontrolledBattleBoardOrbital {
             { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
             { type: draw-sprite-layer, items: (array/map @entity.effects (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @f key)) })) }
           ] } ]
-        })
+        }) null)
+        (if (!= @entity.result "none") (emit GAME_END) null)
     }
 
     emits {

@@ -106,12 +106,12 @@ export interface StdUiPirateBoardPlayAgainPayload {
 export interface StdUiPirateBoardConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `{"effects":{"explosion":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json","category":"explosion","dimension":"2d","name":"explosion","role":"effect","sprite":"regularExplosion04.png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png","variant":""}},"features":{"port":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json","category":"port","dimension":"2d","name":"port","role":"decoration","sprite":"1,5","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png","variant":""},"treasure":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json","category":"treasure","dimension":"2d","name":"treasure","role":"decoration","sprite":"14,7","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png","variant":""}},"terrains":{"island":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"sea":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""}},"units":{"ship":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-galleon","dimension":"2d","name":"ship-galleon","role":"npc","sprite":"ship (5).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""}}}` */
+  /** Default: `{"effects":{"explosion":{"animations":["static"],"aspect":"1:1","category":"explosion","dimension":"2d","name":"explosion","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/effects/explosion.svg","variant":""}},"features":{"port":{"animations":["static"],"aspect":"1:1","category":"port","dimension":"2d","name":"port","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/features/port.svg","variant":""},"treasure":{"animations":["static"],"aspect":"1:1","category":"treasure","dimension":"2d","name":"treasure","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/features/treasure.svg","variant":""}},"terrains":{"island":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"sea":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""}},"units":{"ship":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ship","dimension":"2d","name":"ship","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/units/ship.svg","variant":""}}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json","category":"port","dimension":"2d","name":"port","role":"decoration","sprite":"1,5","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png","variant":""},"id":"f1","type":"port","x":4,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json","category":"treasure","dimension":"2d","name":"treasure","role":"decoration","sprite":"14,7","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png","variant":""},"id":"f2","type":"treasure","x":5,"y":5}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"port","dimension":"2d","name":"port","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/features/port.svg","variant":""},"id":"f1","type":"port","x":4,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"treasure","dimension":"2d","name":"treasure","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/features/treasure.svg","variant":""},"id":"f2","type":"treasure","x":5,"y":5}]` */
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
@@ -129,13 +129,13 @@ export interface StdUiPirateBoardConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":0,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":1,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":2,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":3,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":4,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":5,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":6,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":7,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":0,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":1,"y":1},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":2,"y":1},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":3,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":4,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":5,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":6,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":7,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":0,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":1,"y":2},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":2,"y":2},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":3,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":4,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":5,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":6,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":7,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":0,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":1,"y":3},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":2,"y":3},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":3,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":4,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":5,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":6,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":7,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":0,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":1,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":2,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":3,"y":4},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":4,"y":4},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":5,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":6,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":7,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":0,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":1,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":2,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":3,"y":5},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":4,"y":5},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":5,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":6,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":7,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":0,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":1,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":2,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":3,"y":6},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":4,"y":6},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"island","dimension":"2d","name":"island","role":"tile","sprite":"1,1","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":5,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":6,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":7,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":0,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":1,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":2,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":3,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":4,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":5,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":6,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json","category":"sea","dimension":"2d","name":"sea","role":"tile","sprite":"9,4","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png","variant":""},"x":7,"y":7}]` */
+  /** Default: `[{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":0,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":1,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":2,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":3,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":4,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":5,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":6,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":7,"y":0},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":0,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":1,"y":1},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":2,"y":1},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":3,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":4,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":5,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":6,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":7,"y":1},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":0,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":1,"y":2},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":2,"y":2},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":3,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":4,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":5,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":6,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":7,"y":2},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":0,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":1,"y":3},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":2,"y":3},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":3,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":4,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":5,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":6,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":7,"y":3},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":0,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":1,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":2,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":3,"y":4},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":4,"y":4},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":5,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":6,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":7,"y":4},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":0,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":1,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":2,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":3,"y":5},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":4,"y":5},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":5,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":6,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":7,"y":5},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":0,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":1,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":2,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":3,"y":6},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":4,"y":6},{"passable":false,"terrain":"island","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"island","dimension":"2d","name":"island","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg","variant":""},"x":5,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":6,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":7,"y":6},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":0,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":1,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":2,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":3,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":4,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":5,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":6,"y":7},{"passable":true,"terrain":"sea","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sea","dimension":"2d","name":"sea","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg","variant":""},"x":7,"y":7}]` */
   tiles?: EntityRow[];
   /** Default: `0` */
   totalCount?: number;
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-galleon","dimension":"2d","name":"ship-galleon","role":"npc","sprite":"ship (5).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"name":"Galleon","position":{"x":1,"y":4},"team":"player","unitType":"ship"},{"animation":"idle","frame":0,"health":8,"id":"u2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-corsair","dimension":"2d","name":"ship-corsair","role":"npc","sprite":"ship (2).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"name":"Corsair","position":{"x":6,"y":2},"team":"enemy","unitType":"ship"},{"animation":"idle","frame":0,"health":6,"id":"u3","maxHealth":6,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json","category":"ship-scout","dimension":"2d","name":"ship-scout","role":"npc","sprite":"ship (1).png","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png","variant":""},"name":"Scout","position":{"x":4,"y":0},"team":"neutral","unitType":"ship"}]` */
+  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ship","dimension":"2d","name":"ship","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/units/ship.svg","variant":""},"name":"Galleon","position":{"x":1,"y":4},"team":"player","unitType":"ship"},{"animation":"idle","frame":0,"health":8,"id":"u2","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ship","dimension":"2d","name":"ship","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/units/ship.svg","variant":""},"name":"Corsair","position":{"x":6,"y":2},"team":"enemy","unitType":"ship"},{"animation":"idle","frame":0,"health":6,"id":"u3","maxHealth":6,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ship","dimension":"2d","name":"ship","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/units/ship.svg","variant":""},"name":"Scout","position":{"x":4,"y":0},"team":"neutral","unitType":"ship"}]` */
   units?: EntityRow[];
 }
 
@@ -615,6 +615,52 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
             'name': 'visited',
             'type': 'array',
           },
+          {
+            'default': 0,
+            'name': 'animCounter',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'name': 'animUnitId',
+            'type': 'string',
+          },
+          {
+            'default': 'idle',
+            'name': 'animState',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'animTicksLeft',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'name': 'animAttackerId',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'animAtkTicksLeft',
+            'type': 'number',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+            'name': 'movedIds',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+            'name': 'actedIds',
+            'type': 'array',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -641,15 +687,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json',
                   'category': 'explosion',
                   'dimension': '2d',
                   'name': 'explosion',
                   'role': 'effect',
-                  'sprite': 'regularExplosion04.png',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/effects/explosion.svg',
                   'variant': '',
                 },
               },
@@ -659,15 +703,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                   'category': 'port',
                   'dimension': '2d',
                   'name': 'port',
                   'role': 'decoration',
-                  'sprite': '1,5',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/features/port.svg',
                   'variant': '',
                 },
                 'treasure': {
@@ -675,15 +717,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                   'category': 'treasure',
                   'dimension': '2d',
                   'name': 'treasure',
                   'role': 'decoration',
-                  'sprite': '14,7',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/features/treasure.svg',
                   'variant': '',
                 },
               },
@@ -693,15 +733,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'sea': {
@@ -709,15 +747,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
               },
@@ -731,15 +767,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'death',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
-                  'category': 'ship-galleon',
+                  'category': 'ship',
                   'dimension': '2d',
-                  'name': 'ship-galleon',
+                  'name': 'ship',
                   'role': 'npc',
-                  'sprite': 'ship (5).png',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/units/ship.svg',
                   'variant': '',
                 },
               },
@@ -1086,15 +1120,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                   'category': 'port',
                   'dimension': '2d',
                   'name': 'port',
                   'role': 'decoration',
-                  'sprite': '1,5',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/features/port.svg',
                   'variant': '',
                 },
                 'id': 'f1',
@@ -1108,15 +1140,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                   'category': 'treasure',
                   'dimension': '2d',
                   'name': 'treasure',
                   'role': 'decoration',
-                  'sprite': '14,7',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/features/treasure.svg',
                   'variant': '',
                 },
                 'id': 'f2',
@@ -1384,15 +1414,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1406,15 +1434,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1428,15 +1454,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1450,15 +1474,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -1472,15 +1494,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -1494,15 +1514,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 5,
@@ -1516,15 +1534,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 6,
@@ -1538,15 +1554,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 7,
@@ -1560,15 +1574,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1582,15 +1594,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1604,15 +1614,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1626,15 +1634,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -1648,15 +1654,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -1670,15 +1674,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 5,
@@ -1692,15 +1694,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 6,
@@ -1714,15 +1714,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 7,
@@ -1736,15 +1734,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1758,15 +1754,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1780,15 +1774,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1802,15 +1794,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -1824,15 +1814,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -1846,15 +1834,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 5,
@@ -1868,15 +1854,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 6,
@@ -1890,15 +1874,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 7,
@@ -1912,15 +1894,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1934,15 +1914,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1956,15 +1934,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1978,15 +1954,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -2000,15 +1974,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -2022,15 +1994,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 5,
@@ -2044,15 +2014,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 6,
@@ -2066,15 +2034,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 7,
@@ -2088,15 +2054,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -2110,15 +2074,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -2132,15 +2094,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -2154,15 +2114,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -2176,15 +2134,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -2198,15 +2154,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 5,
@@ -2220,15 +2174,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 6,
@@ -2242,15 +2194,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 7,
@@ -2264,15 +2214,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -2286,15 +2234,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -2308,15 +2254,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -2330,15 +2274,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -2352,15 +2294,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -2374,15 +2314,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 5,
@@ -2396,15 +2334,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 6,
@@ -2418,15 +2354,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 7,
@@ -2440,15 +2374,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -2462,15 +2394,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -2484,15 +2414,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -2506,15 +2434,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -2528,15 +2454,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -2550,15 +2474,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'island',
                   'dimension': '2d',
                   'name': 'island',
                   'role': 'tile',
-                  'sprite': '1,1',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/island.svg',
                   'variant': '',
                 },
                 'x': 5,
@@ -2572,15 +2494,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 6,
@@ -2594,15 +2514,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 7,
@@ -2616,15 +2534,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -2638,15 +2554,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -2660,15 +2574,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -2682,15 +2594,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -2704,15 +2614,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -2726,15 +2634,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 5,
@@ -2748,15 +2654,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 6,
@@ -2770,15 +2674,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/Tilesheet_tiles_sheet.tiles.json',
                   'category': 'sea',
                   'dimension': '2d',
                   'name': 'sea',
                   'role': 'tile',
-                  'sprite': '9,4',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/terrain/tiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/terrain/sea.svg',
                   'variant': '',
                 },
                 'x': 7,
@@ -3016,15 +2918,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'death',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
-                  'category': 'ship-galleon',
+                  'category': 'ship',
                   'dimension': '2d',
-                  'name': 'ship-galleon',
+                  'name': 'ship',
                   'role': 'npc',
-                  'sprite': 'ship (5).png',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/units/ship.svg',
                   'variant': '',
                 },
                 'name': 'Galleon',
@@ -3050,15 +2950,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'death',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
-                  'category': 'ship-corsair',
+                  'category': 'ship',
                   'dimension': '2d',
-                  'name': 'ship-corsair',
+                  'name': 'ship',
                   'role': 'npc',
-                  'sprite': 'ship (2).png',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/units/ship.svg',
                   'variant': '',
                 },
                 'name': 'Corsair',
@@ -3084,15 +2982,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'death',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
-                  'category': 'ship-scout',
+                  'category': 'ship',
                   'dimension': '2d',
-                  'name': 'ship-scout',
+                  'name': 'ship',
                   'role': 'npc',
-                  'sprite': 'ship (1).png',
-                  'style': 'adventure',
+                  'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/units/ship.svg',
                   'variant': '',
                 },
                 'name': 'Scout',
@@ -3538,12 +3434,20 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
         ],
         'entityContract': {
           'provides': [
+            'actedIds',
+            'animAtkTicksLeft',
+            'animAttackerId',
+            'animCounter',
+            'animState',
+            'animTicksLeft',
+            'animUnitId',
             'effects',
             'enemyTurn',
             'firingRange',
             'gold',
             'gridHeight',
             'gridWidth',
+            'movedIds',
             'movementRange',
             'phase',
             'result',
@@ -3768,6 +3672,46 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 ],
                 [
                   'set',
+                  '@entity.movedIds',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.actedIds',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.animCounter',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.animUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.animState',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.animTicksLeft',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.animAttackerId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.animAtkTicksLeft',
+                  0,
+                ],
+                [
+                  'set',
                   '@entity.gridWidth',
                   8,
                 ],
@@ -3797,15 +3741,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -3817,15 +3759,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -3840,15 +3780,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -3865,11 +3803,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3883,6 +3823,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3898,11 +3839,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -3916,6 +3859,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -4012,49 +3956,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -4076,13 +4200,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -4091,7 +4397,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4100,13 +4406,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -4117,7 +4441,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -4140,7 +4464,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -4173,38 +4513,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -4218,6 +4541,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -4253,15 +4577,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -4271,15 +4593,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -4289,15 +4609,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -4332,15 +4650,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -4374,15 +4690,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -4394,15 +4708,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -4417,15 +4729,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -4442,11 +4752,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4460,6 +4772,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4475,11 +4788,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -4493,6 +4808,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -4589,49 +4905,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -4653,13 +5149,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -4668,7 +5346,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -4677,13 +5355,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -4694,7 +5390,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -4717,7 +5413,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -4750,38 +5462,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -4795,6 +5490,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -4830,15 +5526,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -4848,15 +5542,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -4866,15 +5558,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -4909,15 +5599,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -4968,55 +5656,36 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'set',
                   '@entity.validMoves',
                   [
-                    'array/map',
+                    'if',
                     [
-                      'array/filter',
-                      '@config.tiles',
+                      'array/includes',
+                      '@entity.movedIds',
+                      '@payload.unitId',
+                    ],
+                    [],
+                    [
+                      'array/map',
                       [
-                        'fn',
-                        't',
+                        'array/filter',
+                        '@config.tiles',
                         [
-                          'and',
-                          [
-                            'grid/in-bounds',
-                            {
-                              'x': [
-                                'object/get',
-                                '@t',
-                                'x',
-                              ],
-                              'y': [
-                                'object/get',
-                                '@t',
-                                'y',
-                              ],
-                            },
-                            '@entity.gridWidth',
-                            '@entity.gridHeight',
-                          ],
+                          'fn',
+                          't',
                           [
                             'and',
                             [
-                              '<=',
+                              '==',
                               [
-                                'grid/manhattan-distance',
-                                [
-                                  'object/get',
-                                  [
-                                    'array/find',
-                                    '@entity.ships',
-                                    [
-                                      'fn',
-                                      'u',
-                                      [
-                                        '==',
-                                        '@u.id',
-                                        '@payload.unitId',
-                                      ],
-                                    ],
-                                  ],
-                                  'position',
-                                ],
+                                'object/get',
+                                '@t',
+                                'passable',
+                              ],
+                              true,
+                            ],
+                            [
+                              'and',
+                              [
+                                'grid/in-bounds',
                                 {
                                   'x': [
                                     'object/get',
@@ -5029,80 +5698,120 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     'y',
                                   ],
                                 },
+                                '@entity.gridWidth',
+                                '@entity.gridHeight',
                               ],
-                              '@entity.movementRange',
-                            ],
-                            [
-                              '==',
                               [
-                                'array/len',
+                                'and',
                                 [
-                                  'array/filter',
-                                  '@entity.ships',
+                                  '<=',
                                   [
-                                    'fn',
-                                    'u',
+                                    'grid/manhattan-distance',
                                     [
-                                      'and',
+                                      'object/get',
                                       [
-                                        '==',
+                                        'array/find',
+                                        '@entity.ships',
                                         [
-                                          'object/get',
+                                          'fn',
+                                          'u',
                                           [
-                                            'object/get',
-                                            '@u',
-                                            'position',
+                                            '==',
+                                            '@u.id',
+                                            '@payload.unitId',
                                           ],
-                                          'x',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@t',
-                                          'x',
                                         ],
                                       ],
+                                      'position',
+                                    ],
+                                    {
+                                      'x': [
+                                        'object/get',
+                                        '@t',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@t',
+                                        'y',
+                                      ],
+                                    },
+                                  ],
+                                  '@entity.movementRange',
+                                ],
+                                [
+                                  '==',
+                                  [
+                                    'array/len',
+                                    [
+                                      'array/filter',
+                                      '@entity.ships',
                                       [
-                                        '==',
+                                        'fn',
+                                        'u',
                                         [
-                                          'object/get',
+                                          'and',
                                           [
-                                            'object/get',
-                                            '@u',
-                                            'position',
+                                            '==',
+                                            [
+                                              'object/get',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'position',
+                                              ],
+                                              'x',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@t',
+                                              'x',
+                                            ],
                                           ],
-                                          'y',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@t',
-                                          'y',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'position',
+                                              ],
+                                              'y',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@t',
+                                              'y',
+                                            ],
+                                          ],
                                         ],
                                       ],
                                     ],
                                   ],
+                                  0,
                                 ],
                               ],
-                              0,
                             ],
                           ],
                         ],
                       ],
-                    ],
-                    [
-                      'fn',
-                      't',
-                      {
-                        'x': [
-                          'object/get',
-                          '@t',
-                          'x',
-                        ],
-                        'y': [
-                          'object/get',
-                          '@t',
-                          'y',
-                        ],
-                      },
+                      [
+                        'fn',
+                        't',
+                        {
+                          'x': [
+                            'object/get',
+                            '@t',
+                            'x',
+                          ],
+                          'y': [
+                            'object/get',
+                            '@t',
+                            'y',
+                          ],
+                        },
+                      ],
                     ],
                   ],
                 ],
@@ -5122,15 +5831,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -5142,15 +5849,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -5165,15 +5870,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -5190,11 +5893,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -5208,6 +5913,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -5223,11 +5929,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -5241,6 +5949,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -5337,49 +6046,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -5401,13 +6290,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -5416,7 +6487,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -5425,13 +6496,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -5442,7 +6531,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -5465,7 +6554,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -5498,38 +6603,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -5543,6 +6631,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -5578,15 +6667,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -5596,15 +6683,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -5614,15 +6699,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -5657,15 +6740,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -5675,25 +6756,60 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
               'event': 'UNIT_CLICK',
               'from': 'playing',
               'guard': [
-                '==',
+                'and',
                 [
-                  'object/get',
+                  '==',
                   [
-                    'array/find',
-                    '@entity.ships',
+                    'object/get',
                     [
-                      'fn',
-                      'u',
+                      'array/find',
+                      '@entity.ships',
                       [
-                        '==',
-                        '@u.id',
-                        '@payload.unitId',
+                        'fn',
+                        'u',
+                        [
+                          '==',
+                          '@u.id',
+                          '@payload.unitId',
+                        ],
                       ],
                     ],
+                    'team',
                   ],
-                  'team',
+                  'player',
                 ],
-                'player',
+                [
+                  'and',
+                  [
+                    '>',
+                    [
+                      'object/get',
+                      [
+                        'array/find',
+                        '@entity.ships',
+                        [
+                          'fn',
+                          'u',
+                          [
+                            '==',
+                            '@u.id',
+                            '@payload.unitId',
+                          ],
+                        ],
+                      ],
+                      'health',
+                    ],
+                    0,
+                  ],
+                  [
+                    'not',
+                    [
+                      'array/includes',
+                      '@entity.actedIds',
+                      '@payload.unitId',
+                    ],
+                  ],
+                ],
               ],
               'to': 'playing',
             },
@@ -5786,6 +6902,39 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 ],
                 [
                   'set',
+                  '@entity.movedIds',
+                  [
+                    'array/append',
+                    '@entity.movedIds',
+                    '@entity.selectedShipId',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.actedIds',
+                  [
+                    'array/append',
+                    '@entity.actedIds',
+                    '@entity.selectedShipId',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.animUnitId',
+                  '@entity.selectedShipId',
+                ],
+                [
+                  'set',
+                  '@entity.animState',
+                  'walk',
+                ],
+                [
+                  'set',
+                  '@entity.animTicksLeft',
+                  6,
+                ],
+                [
+                  'set',
                   '@entity.selectedShipId',
                   '',
                 ],
@@ -5810,15 +6959,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -5830,15 +6977,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -5853,15 +6998,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -5878,11 +7021,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -5896,6 +7041,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -5911,11 +7057,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -5929,6 +7077,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -6025,49 +7174,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -6089,13 +7418,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -6104,7 +7615,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -6113,13 +7624,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -6130,7 +7659,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -6153,7 +7682,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -6186,38 +7731,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -6231,6 +7759,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -6266,15 +7795,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -6284,15 +7811,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -6302,15 +7827,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -6345,15 +7868,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -6372,43 +7893,22 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 [
                   'and',
                   [
-                    'grid/in-bounds',
-                    {
-                      'x': '@payload.x',
-                      'y': '@payload.y',
-                    },
-                    '@entity.gridWidth',
-                    '@entity.gridHeight',
+                    'not',
+                    [
+                      'array/includes',
+                      '@entity.movedIds',
+                      '@entity.selectedShipId',
+                    ],
                   ],
                   [
                     'and',
                     [
-                      '<=',
+                      'not',
                       [
-                        'grid/manhattan-distance',
-                        [
-                          'object/get',
-                          [
-                            'array/find',
-                            '@entity.ships',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                '==',
-                                '@u.id',
-                                '@entity.selectedShipId',
-                              ],
-                            ],
-                          ],
-                          'position',
-                        ],
-                        {
-                          'x': '@payload.x',
-                          'y': '@payload.y',
-                        },
+                        'array/includes',
+                        '@entity.actedIds',
+                        '@entity.selectedShipId',
                       ],
-                      '@entity.movementRange',
                     ],
                     [
                       'and',
@@ -6418,106 +7918,200 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'array/len',
                           [
                             'array/filter',
-                            '@entity.ships',
+                            '@config.tiles',
                             [
                               'fn',
-                              'u',
+                              't',
                               [
                                 'and',
                                 [
                                   '==',
                                   [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
+                                    '@t',
                                     'x',
                                   ],
                                   '@payload.x',
                                 ],
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'y',
-                                  ],
-                                  '@payload.y',
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                        0,
-                      ],
-                      [
-                        'and',
-                        [
-                          '>',
-                          [
-                            'array/len',
-                            [
-                              'array/filter',
-                              '@config.features',
-                              [
-                                'fn',
-                                'f',
                                 [
                                   'and',
                                   [
                                     '==',
                                     [
                                       'object/get',
-                                      '@f',
-                                      'type',
+                                      '@t',
+                                      'y',
                                     ],
-                                    'port',
+                                    '@payload.y',
                                   ],
                                   [
-                                    'and',
+                                    '==',
                                     [
-                                      '==',
-                                      [
-                                        'object/get',
-                                        '@f',
-                                        'x',
-                                      ],
-                                      '@payload.x',
+                                      'object/get',
+                                      '@t',
+                                      'passable',
                                     ],
-                                    [
-                                      '==',
-                                      [
-                                        'object/get',
-                                        '@f',
-                                        'y',
-                                      ],
-                                      '@payload.y',
-                                    ],
+                                    true,
                                   ],
                                 ],
                               ],
                             ],
                           ],
-                          0,
+                        ],
+                        1,
+                      ],
+                      [
+                        'and',
+                        [
+                          'grid/in-bounds',
+                          {
+                            'x': '@payload.x',
+                            'y': '@payload.y',
+                          },
+                          '@entity.gridWidth',
+                          '@entity.gridHeight',
                         ],
                         [
-                          'not',
+                          'and',
                           [
-                            'array/includes',
-                            '@entity.tradedPorts',
+                            '<=',
                             [
-                              'str/concat',
-                              '@payload.x',
+                              'grid/manhattan-distance',
                               [
-                                'str/concat',
-                                ',',
-                                '@payload.y',
+                                'object/get',
+                                [
+                                  'array/find',
+                                  '@entity.ships',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      '==',
+                                      '@u.id',
+                                      '@entity.selectedShipId',
+                                    ],
+                                  ],
+                                ],
+                                'position',
+                              ],
+                              {
+                                'x': '@payload.x',
+                                'y': '@payload.y',
+                              },
+                            ],
+                            '@entity.movementRange',
+                          ],
+                          [
+                            'and',
+                            [
+                              '==',
+                              [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.ships',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'position',
+                                          ],
+                                          'x',
+                                        ],
+                                        '@payload.x',
+                                      ],
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'position',
+                                          ],
+                                          'y',
+                                        ],
+                                        '@payload.y',
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              0,
+                            ],
+                            [
+                              'and',
+                              [
+                                '>',
+                                [
+                                  'array/len',
+                                  [
+                                    'array/filter',
+                                    '@config.features',
+                                    [
+                                      'fn',
+                                      'f',
+                                      [
+                                        'and',
+                                        [
+                                          '==',
+                                          [
+                                            'object/get',
+                                            '@f',
+                                            'type',
+                                          ],
+                                          'port',
+                                        ],
+                                        [
+                                          'and',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@f',
+                                              'x',
+                                            ],
+                                            '@payload.x',
+                                          ],
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@f',
+                                              'y',
+                                            ],
+                                            '@payload.y',
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'not',
+                                [
+                                  'array/includes',
+                                  '@entity.tradedPorts',
+                                  [
+                                    'str/concat',
+                                    '@payload.x',
+                                    [
+                                      'str/concat',
+                                      ',',
+                                      '@payload.y',
+                                    ],
+                                  ],
+                                ],
                               ],
                             ],
                           ],
@@ -6737,8 +8331,27 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 ],
                 [
                   'set',
+                  '@entity.movedIds',
+                  [
+                    'array/append',
+                    '@entity.movedIds',
+                    '@entity.selectedShipId',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.animUnitId',
                   '@entity.selectedShipId',
-                  '',
+                ],
+                [
+                  'set',
+                  '@entity.animState',
+                  'walk',
+                ],
+                [
+                  'set',
+                  '@entity.animTicksLeft',
+                  6,
                 ],
                 [
                   'set',
@@ -6748,7 +8361,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 [
                   'set',
                   '@entity.phase',
-                  'observation',
+                  'action',
                 ],
                 [
                   'render-ui',
@@ -6761,15 +8374,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -6781,15 +8392,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -6804,15 +8413,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -6829,11 +8436,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -6847,6 +8456,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -6862,11 +8472,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -6880,6 +8492,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -6976,49 +8589,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -7040,13 +8833,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -7055,7 +9030,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -7064,13 +9039,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -7081,7 +9074,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -7104,7 +9097,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -7137,38 +9146,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -7182,6 +9174,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -7217,15 +9210,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -7235,15 +9226,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -7253,15 +9242,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -7296,15 +9283,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -7323,87 +9308,160 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 [
                   'and',
                   [
-                    'grid/in-bounds',
-                    {
-                      'x': '@payload.x',
-                      'y': '@payload.y',
-                    },
-                    '@entity.gridWidth',
-                    '@entity.gridHeight',
+                    'not',
+                    [
+                      'array/includes',
+                      '@entity.movedIds',
+                      '@entity.selectedShipId',
+                    ],
                   ],
                   [
                     'and',
                     [
-                      '<=',
+                      'not',
                       [
-                        'grid/manhattan-distance',
-                        [
-                          'object/get',
-                          [
-                            'array/find',
-                            '@entity.ships',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                '==',
-                                '@u.id',
-                                '@entity.selectedShipId',
-                              ],
-                            ],
-                          ],
-                          'position',
-                        ],
-                        {
-                          'x': '@payload.x',
-                          'y': '@payload.y',
-                        },
+                        'array/includes',
+                        '@entity.actedIds',
+                        '@entity.selectedShipId',
                       ],
-                      '@entity.movementRange',
                     ],
                     [
-                      '==',
+                      'and',
                       [
-                        'array/len',
+                        '==',
                         [
-                          'array/filter',
-                          '@entity.ships',
+                          'array/len',
                           [
-                            'fn',
-                            'u',
+                            'array/filter',
+                            '@config.tiles',
                             [
-                              'and',
+                              'fn',
+                              't',
                               [
-                                '==',
+                                'and',
                                 [
-                                  'object/get',
+                                  '==',
                                   [
                                     'object/get',
-                                    '@u',
-                                    'position',
+                                    '@t',
+                                    'x',
                                   ],
-                                  'x',
+                                  '@payload.x',
                                 ],
-                                '@payload.x',
-                              ],
-                              [
-                                '==',
                                 [
-                                  'object/get',
+                                  'and',
                                   [
-                                    'object/get',
-                                    '@u',
-                                    'position',
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                    '@payload.y',
                                   ],
-                                  'y',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@t',
+                                      'passable',
+                                    ],
+                                    true,
+                                  ],
                                 ],
-                                '@payload.y',
                               ],
                             ],
                           ],
                         ],
+                        1,
                       ],
-                      0,
+                      [
+                        'and',
+                        [
+                          'grid/in-bounds',
+                          {
+                            'x': '@payload.x',
+                            'y': '@payload.y',
+                          },
+                          '@entity.gridWidth',
+                          '@entity.gridHeight',
+                        ],
+                        [
+                          'and',
+                          [
+                            '<=',
+                            [
+                              'grid/manhattan-distance',
+                              [
+                                'object/get',
+                                [
+                                  'array/find',
+                                  '@entity.ships',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      '==',
+                                      '@u.id',
+                                      '@entity.selectedShipId',
+                                    ],
+                                  ],
+                                ],
+                                'position',
+                              ],
+                              {
+                                'x': '@payload.x',
+                                'y': '@payload.y',
+                              },
+                            ],
+                            '@entity.movementRange',
+                          ],
+                          [
+                            '==',
+                            [
+                              'array/len',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'position',
+                                        ],
+                                        'x',
+                                      ],
+                                      '@payload.x',
+                                    ],
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'position',
+                                        ],
+                                        'y',
+                                      ],
+                                      '@payload.y',
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                            0,
+                          ],
+                        ],
+                      ],
                     ],
                   ],
                 ],
@@ -7545,6 +9603,49 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 ],
                 [
                   'set',
+                  '@entity.movedIds',
+                  [
+                    'array/append',
+                    '@entity.movedIds',
+                    '@entity.selectedShipId',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.actedIds',
+                  [
+                    'array/append',
+                    '@entity.actedIds',
+                    '@entity.selectedShipId',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.animAttackerId',
+                  '@entity.selectedShipId',
+                ],
+                [
+                  'set',
+                  '@entity.animAtkTicksLeft',
+                  4,
+                ],
+                [
+                  'set',
+                  '@entity.animUnitId',
+                  '@payload.unitId',
+                ],
+                [
+                  'set',
+                  '@entity.animState',
+                  'hit',
+                ],
+                [
+                  'set',
+                  '@entity.animTicksLeft',
+                  4,
+                ],
+                [
+                  'set',
                   '@entity.selectedShipId',
                   '',
                 ],
@@ -7573,15 +9674,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -7593,15 +9692,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -7616,15 +9713,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -7641,11 +9736,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -7659,6 +9756,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -7674,11 +9772,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -7692,6 +9792,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -7788,49 +9889,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -7852,13 +10133,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -7867,7 +10330,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -7876,13 +10339,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -7893,7 +10374,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -7916,7 +10397,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -7949,38 +10446,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -7994,6 +10474,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -8029,15 +10510,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -8047,15 +10526,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -8065,15 +10542,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -8108,15 +10583,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -8135,47 +10608,17 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 [
                   'and',
                   [
-                    '==',
+                    'not',
                     [
-                      'object/get',
-                      [
-                        'array/find',
-                        '@entity.ships',
-                        [
-                          'fn',
-                          'u',
-                          [
-                            '==',
-                            '@u.id',
-                            '@payload.unitId',
-                          ],
-                        ],
-                      ],
-                      'team',
+                      'array/includes',
+                      '@entity.actedIds',
+                      '@entity.selectedShipId',
                     ],
-                    'enemy',
                   ],
                   [
-                    '<=',
+                    'and',
                     [
-                      'grid/manhattan-distance',
-                      [
-                        'object/get',
-                        [
-                          'array/find',
-                          '@entity.ships',
-                          [
-                            'fn',
-                            'u',
-                            [
-                              '==',
-                              '@u.id',
-                              '@entity.selectedShipId',
-                            ],
-                          ],
-                        ],
-                        'position',
-                      ],
+                      '>',
                       [
                         'object/get',
                         [
@@ -8191,10 +10634,75 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                             ],
                           ],
                         ],
-                        'position',
+                        'health',
+                      ],
+                      0,
+                    ],
+                    [
+                      'and',
+                      [
+                        '==',
+                        [
+                          'object/get',
+                          [
+                            'array/find',
+                            '@entity.ships',
+                            [
+                              'fn',
+                              'u',
+                              [
+                                '==',
+                                '@u.id',
+                                '@payload.unitId',
+                              ],
+                            ],
+                          ],
+                          'team',
+                        ],
+                        'enemy',
+                      ],
+                      [
+                        '<=',
+                        [
+                          'grid/manhattan-distance',
+                          [
+                            'object/get',
+                            [
+                              'array/find',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '==',
+                                  '@u.id',
+                                  '@entity.selectedShipId',
+                                ],
+                              ],
+                            ],
+                            'position',
+                          ],
+                          [
+                            'object/get',
+                            [
+                              'array/find',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '==',
+                                  '@u.id',
+                                  '@payload.unitId',
+                                ],
+                              ],
+                            ],
+                            'position',
+                          ],
+                        ],
+                        '@entity.firingRange',
                       ],
                     ],
-                    '@entity.firingRange',
                   ],
                 ],
               ],
@@ -8222,15 +10730,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -8242,15 +10748,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -8265,15 +10769,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -8290,11 +10792,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -8308,6 +10812,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -8323,11 +10828,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -8341,6 +10848,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -8437,49 +10945,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -8501,13 +11189,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -8516,7 +11386,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -8525,13 +11395,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -8542,7 +11430,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -8565,7 +11453,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -8598,38 +11502,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -8643,6 +11530,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -8678,15 +11566,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -8696,15 +11582,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -8714,15 +11598,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -8757,15 +11639,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -8807,15 +11687,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -8827,15 +11705,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -8850,15 +11726,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -8875,11 +11749,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -8893,6 +11769,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -8908,11 +11785,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -8926,6 +11805,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -9022,49 +11902,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -9086,13 +12146,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -9101,7 +12343,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -9110,13 +12352,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -9127,7 +12387,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -9150,7 +12410,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -9183,38 +12459,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -9228,6 +12487,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -9263,15 +12523,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -9281,15 +12539,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -9299,15 +12555,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -9342,15 +12596,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -9403,6 +12655,16 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.movedIds',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.actedIds',
+                  [],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -9413,15 +12675,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -9433,15 +12693,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -9456,15 +12714,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -9481,11 +12737,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -9499,6 +12757,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -9514,11 +12773,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -9532,6 +12793,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -9628,49 +12890,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -9692,13 +13134,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -9707,7 +13331,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -9716,13 +13340,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -9733,7 +13375,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -9756,7 +13398,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -9789,38 +13447,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -9834,6 +13475,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -9869,15 +13511,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -9887,15 +13527,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -9905,15 +13543,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -9948,15 +13584,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -10000,15 +13634,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -10020,15 +13652,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -10043,15 +13673,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -10068,11 +13696,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -10086,6 +13716,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -10101,11 +13732,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -10119,6 +13752,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -10215,49 +13849,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -10279,13 +14093,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -10294,7 +14290,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -10303,13 +14299,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -10320,7 +14334,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -10343,7 +14357,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -10376,38 +14406,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -10421,6 +14434,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -10456,15 +14470,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -10474,15 +14486,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -10492,15 +14502,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -10535,15 +14543,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -10618,15 +14624,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -10638,15 +14642,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -10661,15 +14663,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -10686,11 +14686,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -10704,6 +14706,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -10719,11 +14722,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -10737,6 +14742,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -10833,49 +14839,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -10897,13 +15083,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -10912,7 +15280,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -10921,13 +15289,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -10938,7 +15324,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -10961,7 +15347,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -10994,38 +15396,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -11039,6 +15424,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -11074,15 +15460,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -11092,15 +15476,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -11110,15 +15492,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -11153,15 +15533,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'overlay': {
@@ -11328,6 +15706,41 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.movedIds',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.actedIds',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.animUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.animState',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.animTicksLeft',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.animAttackerId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.animAtkTicksLeft',
+                  0,
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -11338,15 +15751,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'End Turn',
@@ -11358,15 +15769,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconAsset': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-cannon',
                             'role': 'ui',
-                            'sprite': 'cannon.png',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                             'variant': '',
                           },
                           'label': 'Buy Cannons',
@@ -11381,15 +15790,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -11406,11 +15813,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 't',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
                                     'object/get',
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -11424,6 +15833,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -11439,11 +15849,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'f',
                                   {
+                                    'anchor': 'ground',
                                     'asset': [
                                       'object/get',
                                       '@f',
                                       'assetUrl',
                                     ],
+                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -11457,6 +15869,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 1,
                                   },
                                 ],
                               ],
@@ -11553,49 +15966,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 [
                                   'fn',
                                   'u',
-                                  {
-                                    'asset': [
-                                      'if',
+                                  [
+                                    'let',
+                                    [
                                       [
-                                        'object/get',
+                                        'unitAsset',
                                         [
-                                          'object/get',
-                                          '@u',
-                                          'modelUrl',
+                                          'if',
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'modelUrl',
+                                            ],
+                                            'url',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'unitType',
+                                            ],
+                                          ],
                                         ],
-                                        'url',
                                       ],
                                       [
+                                        'unitUrl',
+                                        [
+                                          'object/get',
+                                          '@unitAsset',
+                                          'url',
+                                        ],
+                                      ],
+                                      [
+                                        'unitAnim',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'health',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animAttackerId',
+                                              ],
+                                              [
+                                                '>',
+                                                '@entity.animAtkTicksLeft',
+                                                0,
+                                              ],
+                                            ],
+                                            'attack',
+                                            [
+                                              'if',
+                                              [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                                '@entity.animUnitId',
+                                              ],
+                                              '@entity.animState',
+                                              'idle',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    {
+                                      'anchor': 'ground',
+                                      'asset': [
+                                        'if',
+                                        [
+                                          'and',
+                                          '@unitUrl',
+                                          [
+                                            'str/includes',
+                                            '@unitUrl',
+                                            '.svg',
+                                          ],
+                                        ],
+                                        [
+                                          'object/merge',
+                                          '@unitAsset',
+                                          {
+                                            'url': [
+                                              'str/concat',
+                                              [
+                                                'array/nth',
+                                                [
+                                                  'str/split',
+                                                  '@unitUrl',
+                                                  '.svg',
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'str/concat',
+                                                '.',
+                                                [
+                                                  'str/concat',
+                                                  '@unitAnim',
+                                                  [
+                                                    'str/concat',
+                                                    '-',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'walk',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          '@entity.animCounter',
+                                                          2,
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '==',
+                                                            '@unitAnim',
+                                                            'idle',
+                                                          ],
+                                                          [
+                                                            '%',
+                                                            [
+                                                              'math/floor',
+                                                              [
+                                                                '/',
+                                                                '@entity.animCounter',
+                                                                3,
+                                                              ],
+                                                            ],
+                                                            4,
+                                                          ],
+                                                          0,
+                                                        ],
+                                                      ],
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          },
+                                        ],
+                                        '@unitAsset',
+                                      ],
+                                      'height': 0.5,
+                                      'id': [
                                         'object/get',
                                         '@u',
-                                        'modelUrl',
+                                        'id',
                                       ],
-                                      [
+                                      'opacity': [
+                                        'if',
+                                        [
+                                          '>',
+                                          [
+                                            'array/len',
+                                            [
+                                              'array/filter',
+                                              '@entity.actedIds',
+                                              [
+                                                'fn',
+                                                'aid',
+                                                [
+                                                  '==',
+                                                  '@aid',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'id',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        0.45,
+                                        1,
+                                      ],
+                                      'position': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'unitType',
-                                        ],
+                                        '@u',
+                                        'position',
                                       ],
-                                    ],
-                                    'id': [
-                                      'object/get',
-                                      '@u',
-                                      'id',
-                                    ],
-                                    'position': [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'type': 'draw-sprite',
-                                  },
+                                      'type': 'draw-sprite',
+                                      'width': 0.5,
+                                    },
+                                  ],
                                 ],
                               ],
                               [
@@ -11617,13 +16210,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                [
+                                  'array/flatten',
+                                  [
+                                    'array/map',
+                                    '@entity.ships',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        'array/flatten',
+                                        [
+                                          'array/map',
+                                          [
+                                            [
+                                              'idle',
+                                              4,
+                                            ],
+                                            [
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
+                                              [
+                                                'array/range',
+                                                0,
+                                                [
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
+                                                  [
+                                                    'and',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    [
+                                                      'str/includes',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
+                                                    [
+                                                      'str/concat',
+                                                      '.',
+                                                      [
+                                                        'str/concat',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
+                                                        [
+                                                          'str/concat',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': 'rgba(0,0,0,0.6)',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -11632,7 +16407,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                   'shape': 'rect',
                                   'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -11641,13 +16416,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
                                 {
+                                  'anchor': 'ground',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
@@ -11658,7 +16451,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'type': 'draw-shape',
                                   'width': [
                                     '*',
-                                    0.8,
+                                    0.5,
                                     [
                                       '/',
                                       [
@@ -11681,7 +16474,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           {
                             'items': [
                               'array/map',
-                              '@entity.ships',
+                              [
+                                'array/filter',
+                                '@entity.ships',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '>',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
                               [
                                 'fn',
                                 'u',
@@ -11714,38 +16523,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'fn',
                                   'e',
                                   {
+                                    'anchor': 'center',
                                     'asset': [
-                                      'object/merge',
+                                      'object/get',
                                       [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'effects',
-                                        ],
-                                        [
-                                          'object/get',
-                                          '@e',
-                                          'key',
-                                        ],
+                                        '@config.assetManifest',
+                                        'effects',
                                       ],
-                                      {
-                                        'sprite': [
-                                          'str/concat',
-                                          'regularExplosion0',
-                                          [
-                                            '-',
-                                            9,
-                                            [
-                                              'object/get',
-                                              '@e',
-                                              'ttl',
-                                            ],
-                                          ],
-                                          '.png',
-                                        ],
-                                      },
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'key',
+                                      ],
                                     ],
+                                    'height': 0.8,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -11759,6 +16551,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     },
                                     'type': 'draw-sprite',
+                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -11794,15 +16587,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-gold',
                             'role': 'ui',
-                            'sprite': '6,5',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                             'variant': '',
                           },
                           'label': 'Gold',
@@ -11812,15 +16603,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-turn',
                             'role': 'ui',
-                            'sprite': '1,7',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                             'variant': '',
                           },
                           'label': 'Turn',
@@ -11830,15 +16619,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-ships',
                             'role': 'ui',
-                            'sprite': '0,6',
-                            'style': 'adventure',
+                            'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                             'variant': '',
                           },
                           'label': 'Ships',
@@ -11873,15 +16660,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                     'hudBackgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -11898,6 +16683,93 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'effects': [
               [
+                'set',
+                '@entity.animCounter',
+                [
+                  '+',
+                  '@entity.animCounter',
+                  1,
+                ],
+              ],
+              [
+                'set',
+                '@entity.animTicksLeft',
+                [
+                  'if',
+                  [
+                    '>',
+                    '@entity.animTicksLeft',
+                    0,
+                  ],
+                  [
+                    '-',
+                    '@entity.animTicksLeft',
+                    1,
+                  ],
+                  0,
+                ],
+              ],
+              [
+                'set',
+                '@entity.animAtkTicksLeft',
+                [
+                  'if',
+                  [
+                    '>',
+                    '@entity.animAtkTicksLeft',
+                    0,
+                  ],
+                  [
+                    '-',
+                    '@entity.animAtkTicksLeft',
+                    1,
+                  ],
+                  0,
+                ],
+              ],
+              [
+                'set',
+                '@entity.animState',
+                [
+                  'if',
+                  [
+                    '==',
+                    '@entity.animTicksLeft',
+                    0,
+                  ],
+                  'idle',
+                  '@entity.animState',
+                ],
+              ],
+              [
+                'set',
+                '@entity.animUnitId',
+                [
+                  'if',
+                  [
+                    '==',
+                    '@entity.animTicksLeft',
+                    0,
+                  ],
+                  '',
+                  '@entity.animUnitId',
+                ],
+              ],
+              [
+                'set',
+                '@entity.animAttackerId',
+                [
+                  'if',
+                  [
+                    '==',
+                    '@entity.animAtkTicksLeft',
+                    0,
+                  ],
+                  '',
+                  '@entity.animAttackerId',
+                ],
+              ],
+              [
                 'render-ui',
                 'main',
                 {
@@ -11908,15 +16780,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconAsset': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-turn',
                           'role': 'ui',
-                          'sprite': '1,7',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                           'variant': '',
                         },
                         'label': 'End Turn',
@@ -11928,15 +16798,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconAsset': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-cannon',
                           'role': 'ui',
-                          'sprite': 'cannon.png',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                           'variant': '',
                         },
                         'label': 'Buy Cannons',
@@ -11951,15 +16819,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'backgroundAsset': {
                     'animations': [],
                     'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                     'category': 'ui',
                     'dimension': '2d',
                     'name': 'panel-frame',
                     'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'adventure',
+                    'style': '',
                     'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                     'variant': '',
                   },
                   'children': [
@@ -11976,11 +16842,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                               'fn',
                               't',
                               {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@t',
                                   'terrainSprite',
                                 ],
+                                'height': 1,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -11994,6 +16862,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 1,
                               },
                             ],
                           ],
@@ -12009,11 +16878,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'assetUrl',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -12027,6 +16898,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -12123,49 +16995,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                               [
                                 'fn',
                                 'u',
-                                {
-                                  'asset': [
-                                    'if',
+                                [
+                                  'let',
+                                  [
                                     [
-                                      'object/get',
+                                      'unitAsset',
                                       [
-                                        'object/get',
-                                        '@u',
-                                        'modelUrl',
+                                        'if',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          'url',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'unitType',
+                                          ],
+                                        ],
                                       ],
-                                      'url',
                                     ],
                                     [
+                                      'unitUrl',
+                                      [
+                                        'object/get',
+                                        '@unitAsset',
+                                        'url',
+                                      ],
+                                    ],
+                                    [
+                                      'unitAnim',
+                                      [
+                                        'if',
+                                        [
+                                          '<=',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'health',
+                                          ],
+                                          0,
+                                        ],
+                                        'death',
+                                        [
+                                          'if',
+                                          [
+                                            'and',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'id',
+                                              ],
+                                              '@entity.animAttackerId',
+                                            ],
+                                            [
+                                              '>',
+                                              '@entity.animAtkTicksLeft',
+                                              0,
+                                            ],
+                                          ],
+                                          'attack',
+                                          [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'id',
+                                              ],
+                                              '@entity.animUnitId',
+                                            ],
+                                            '@entity.animState',
+                                            'idle',
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  {
+                                    'anchor': 'ground',
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'and',
+                                        '@unitUrl',
+                                        [
+                                          'str/includes',
+                                          '@unitUrl',
+                                          '.svg',
+                                        ],
+                                      ],
+                                      [
+                                        'object/merge',
+                                        '@unitAsset',
+                                        {
+                                          'url': [
+                                            'str/concat',
+                                            [
+                                              'array/nth',
+                                              [
+                                                'str/split',
+                                                '@unitUrl',
+                                                '.svg',
+                                              ],
+                                              0,
+                                            ],
+                                            [
+                                              'str/concat',
+                                              '.',
+                                              [
+                                                'str/concat',
+                                                '@unitAnim',
+                                                [
+                                                  'str/concat',
+                                                  '-',
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'if',
+                                                      [
+                                                        '==',
+                                                        '@unitAnim',
+                                                        'walk',
+                                                      ],
+                                                      [
+                                                        '%',
+                                                        '@entity.animCounter',
+                                                        2,
+                                                      ],
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'idle',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          [
+                                                            'math/floor',
+                                                            [
+                                                              '/',
+                                                              '@entity.animCounter',
+                                                              3,
+                                                            ],
+                                                          ],
+                                                          4,
+                                                        ],
+                                                        0,
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '.svg',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        },
+                                      ],
+                                      '@unitAsset',
+                                    ],
+                                    'height': 0.5,
+                                    'id': [
                                       'object/get',
                                       '@u',
-                                      'modelUrl',
+                                      'id',
                                     ],
-                                    [
+                                    'opacity': [
+                                      'if',
+                                      [
+                                        '>',
+                                        [
+                                          'array/len',
+                                          [
+                                            'array/filter',
+                                            '@entity.actedIds',
+                                            [
+                                              'fn',
+                                              'aid',
+                                              [
+                                                '==',
+                                                '@aid',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                        0,
+                                      ],
+                                      0.45,
+                                      1,
+                                    ],
+                                    'position': [
                                       'object/get',
-                                      [
-                                        'object/get',
-                                        '@config.assetManifest',
-                                        'units',
-                                      ],
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'unitType',
-                                      ],
+                                      '@u',
+                                      'position',
                                     ],
-                                  ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
+                                ],
                               ],
                             ],
                             [
@@ -12187,13 +17239,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         {
                           'items': [
                             'array/map',
-                            '@entity.ships',
+                            [
+                              'array/filter',
+                              [
+                                'array/flatten',
+                                [
+                                  'array/map',
+                                  '@entity.ships',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'array/flatten',
+                                      [
+                                        'array/map',
+                                        [
+                                          [
+                                            'idle',
+                                            4,
+                                          ],
+                                          [
+                                            'walk',
+                                            2,
+                                          ],
+                                          [
+                                            'attack',
+                                            1,
+                                          ],
+                                          [
+                                            'hit',
+                                            1,
+                                          ],
+                                          [
+                                            'death',
+                                            1,
+                                          ],
+                                        ],
+                                        [
+                                          'fn',
+                                          'st',
+                                          [
+                                            'array/map',
+                                            [
+                                              'array/range',
+                                              0,
+                                              [
+                                                'array/nth',
+                                                '@st',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'i',
+                                              [
+                                                'if',
+                                                [
+                                                  'and',
+                                                  [
+                                                    'object/get',
+                                                    [
+                                                      'object/get',
+                                                      '@u',
+                                                      'modelUrl',
+                                                    ],
+                                                    'url',
+                                                  ],
+                                                  [
+                                                    'str/includes',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                                [
+                                                  'str/concat',
+                                                  [
+                                                    'array/nth',
+                                                    [
+                                                      'str/split',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                    0,
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    '.',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'array/nth',
+                                                        '@st',
+                                                        0,
+                                                      ],
+                                                      [
+                                                        'str/concat',
+                                                        '-',
+                                                        [
+                                                          'str/concat',
+                                                          '@i',
+                                                          '.svg',
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                '',
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'w',
+                                [
+                                  '!=',
+                                  '@w',
+                                  '',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'warmUrl',
+                              {
+                                'asset': {
+                                  'url': '@warmUrl',
+                                },
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
+                                },
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '>',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'health',
+                                  ],
+                                  0,
+                                ],
+                              ],
+                            ],
                             [
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': 'rgba(0,0,0,0.6)',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -12202,7 +17436,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 ],
                                 'shape': 'rect',
                                 'type': 'draw-shape',
-                                'width': 0.8,
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -12211,13 +17445,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         {
                           'items': [
                             'array/map',
-                            '@entity.ships',
+                            [
+                              'array/filter',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '>',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'health',
+                                  ],
+                                  0,
+                                ],
+                              ],
+                            ],
                             [
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': '#22c55e',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -12228,7 +17480,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'type': 'draw-shape',
                                 'width': [
                                   '*',
-                                  0.8,
+                                  0.5,
                                   [
                                     '/',
                                     [
@@ -12251,7 +17503,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         {
                           'items': [
                             'array/map',
-                            '@entity.ships',
+                            [
+                              'array/filter',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '>',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'health',
+                                  ],
+                                  0,
+                                ],
+                              ],
+                            ],
                             [
                               'fn',
                               'u',
@@ -12284,38 +17552,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 'e',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
-                                    'object/merge',
+                                    'object/get',
                                     [
                                       'object/get',
-                                      [
-                                        'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
-                                      ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      '@config.assetManifest',
+                                      'effects',
                                     ],
-                                    {
-                                      'sprite': [
-                                        'str/concat',
-                                        'regularExplosion0',
-                                        [
-                                          '-',
-                                          9,
-                                          [
-                                            'object/get',
-                                            '@e',
-                                            'ttl',
-                                          ],
-                                        ],
-                                        '.png',
-                                      ],
-                                    },
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
                                   ],
+                                  'height': 0.8,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -12329,6 +17580,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.8,
                                 },
                               ],
                             ],
@@ -12364,15 +17616,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconUrl': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-gold',
                           'role': 'ui',
-                          'sprite': '6,5',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                           'variant': '',
                         },
                         'label': 'Gold',
@@ -12382,15 +17632,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconUrl': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-turn',
                           'role': 'ui',
-                          'sprite': '1,7',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                           'variant': '',
                         },
                         'label': 'Turn',
@@ -12400,15 +17648,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconUrl': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-ships',
                           'role': 'ui',
-                          'sprite': '0,6',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                           'variant': '',
                         },
                         'label': 'Ships',
@@ -12443,15 +17689,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'hudBackgroundAsset': {
                     'animations': [],
                     'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                     'category': 'ui',
                     'dimension': '2d',
                     'name': 'panel-frame',
                     'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'adventure',
+                    'style': '',
                     'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                     'variant': '',
                   },
                   'type': 'game-shell',
@@ -13031,15 +18275,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconAsset': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-turn',
                           'role': 'ui',
-                          'sprite': '1,7',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                           'variant': '',
                         },
                         'label': 'End Turn',
@@ -13051,15 +18293,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconAsset': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-cannon',
                           'role': 'ui',
-                          'sprite': 'cannon.png',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-pirate-pack/features/shipsMiscellaneous_sheet.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-cannon.svg',
                           'variant': '',
                         },
                         'label': 'Buy Cannons',
@@ -13074,15 +18314,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'backgroundAsset': {
                     'animations': [],
                     'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                     'category': 'ui',
                     'dimension': '2d',
                     'name': 'panel-frame',
                     'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'adventure',
+                    'style': '',
                     'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                     'variant': '',
                   },
                   'children': [
@@ -13099,11 +18337,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                               'fn',
                               't',
                               {
+                                'anchor': 'center',
                                 'asset': [
                                   'object/get',
                                   '@t',
                                   'terrainSprite',
                                 ],
+                                'height': 1,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -13117,6 +18357,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 1,
                               },
                             ],
                           ],
@@ -13132,11 +18373,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'assetUrl',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -13150,6 +18393,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -13246,49 +18490,229 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                               [
                                 'fn',
                                 'u',
-                                {
-                                  'asset': [
-                                    'if',
+                                [
+                                  'let',
+                                  [
                                     [
-                                      'object/get',
+                                      'unitAsset',
                                       [
-                                        'object/get',
-                                        '@u',
-                                        'modelUrl',
+                                        'if',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          'url',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'unitType',
+                                          ],
+                                        ],
                                       ],
-                                      'url',
                                     ],
                                     [
+                                      'unitUrl',
+                                      [
+                                        'object/get',
+                                        '@unitAsset',
+                                        'url',
+                                      ],
+                                    ],
+                                    [
+                                      'unitAnim',
+                                      [
+                                        'if',
+                                        [
+                                          '<=',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'health',
+                                          ],
+                                          0,
+                                        ],
+                                        'death',
+                                        [
+                                          'if',
+                                          [
+                                            'and',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'id',
+                                              ],
+                                              '@entity.animAttackerId',
+                                            ],
+                                            [
+                                              '>',
+                                              '@entity.animAtkTicksLeft',
+                                              0,
+                                            ],
+                                          ],
+                                          'attack',
+                                          [
+                                            'if',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'id',
+                                              ],
+                                              '@entity.animUnitId',
+                                            ],
+                                            '@entity.animState',
+                                            'idle',
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  {
+                                    'anchor': 'ground',
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'and',
+                                        '@unitUrl',
+                                        [
+                                          'str/includes',
+                                          '@unitUrl',
+                                          '.svg',
+                                        ],
+                                      ],
+                                      [
+                                        'object/merge',
+                                        '@unitAsset',
+                                        {
+                                          'url': [
+                                            'str/concat',
+                                            [
+                                              'array/nth',
+                                              [
+                                                'str/split',
+                                                '@unitUrl',
+                                                '.svg',
+                                              ],
+                                              0,
+                                            ],
+                                            [
+                                              'str/concat',
+                                              '.',
+                                              [
+                                                'str/concat',
+                                                '@unitAnim',
+                                                [
+                                                  'str/concat',
+                                                  '-',
+                                                  [
+                                                    'str/concat',
+                                                    [
+                                                      'if',
+                                                      [
+                                                        '==',
+                                                        '@unitAnim',
+                                                        'walk',
+                                                      ],
+                                                      [
+                                                        '%',
+                                                        '@entity.animCounter',
+                                                        2,
+                                                      ],
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '==',
+                                                          '@unitAnim',
+                                                          'idle',
+                                                        ],
+                                                        [
+                                                          '%',
+                                                          [
+                                                            'math/floor',
+                                                            [
+                                                              '/',
+                                                              '@entity.animCounter',
+                                                              3,
+                                                            ],
+                                                          ],
+                                                          4,
+                                                        ],
+                                                        0,
+                                                      ],
+                                                    ],
+                                                  ],
+                                                  '.svg',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        },
+                                      ],
+                                      '@unitAsset',
+                                    ],
+                                    'height': 0.5,
+                                    'id': [
                                       'object/get',
                                       '@u',
-                                      'modelUrl',
+                                      'id',
                                     ],
-                                    [
+                                    'opacity': [
+                                      'if',
+                                      [
+                                        '>',
+                                        [
+                                          'array/len',
+                                          [
+                                            'array/filter',
+                                            '@entity.actedIds',
+                                            [
+                                              'fn',
+                                              'aid',
+                                              [
+                                                '==',
+                                                '@aid',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'id',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                        0,
+                                      ],
+                                      0.45,
+                                      1,
+                                    ],
+                                    'position': [
                                       'object/get',
-                                      [
-                                        'object/get',
-                                        '@config.assetManifest',
-                                        'units',
-                                      ],
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'unitType',
-                                      ],
+                                      '@u',
+                                      'position',
                                     ],
-                                  ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
+                                ],
                               ],
                             ],
                             [
@@ -13310,13 +18734,195 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         {
                           'items': [
                             'array/map',
-                            '@entity.ships',
+                            [
+                              'array/filter',
+                              [
+                                'array/flatten',
+                                [
+                                  'array/map',
+                                  '@entity.ships',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'array/flatten',
+                                      [
+                                        'array/map',
+                                        [
+                                          [
+                                            'idle',
+                                            4,
+                                          ],
+                                          [
+                                            'walk',
+                                            2,
+                                          ],
+                                          [
+                                            'attack',
+                                            1,
+                                          ],
+                                          [
+                                            'hit',
+                                            1,
+                                          ],
+                                          [
+                                            'death',
+                                            1,
+                                          ],
+                                        ],
+                                        [
+                                          'fn',
+                                          'st',
+                                          [
+                                            'array/map',
+                                            [
+                                              'array/range',
+                                              0,
+                                              [
+                                                'array/nth',
+                                                '@st',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'i',
+                                              [
+                                                'if',
+                                                [
+                                                  'and',
+                                                  [
+                                                    'object/get',
+                                                    [
+                                                      'object/get',
+                                                      '@u',
+                                                      'modelUrl',
+                                                    ],
+                                                    'url',
+                                                  ],
+                                                  [
+                                                    'str/includes',
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'modelUrl',
+                                                      ],
+                                                      'url',
+                                                    ],
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                                [
+                                                  'str/concat',
+                                                  [
+                                                    'array/nth',
+                                                    [
+                                                      'str/split',
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@u',
+                                                          'modelUrl',
+                                                        ],
+                                                        'url',
+                                                      ],
+                                                      '.svg',
+                                                    ],
+                                                    0,
+                                                  ],
+                                                  [
+                                                    'str/concat',
+                                                    '.',
+                                                    [
+                                                      'str/concat',
+                                                      [
+                                                        'array/nth',
+                                                        '@st',
+                                                        0,
+                                                      ],
+                                                      [
+                                                        'str/concat',
+                                                        '-',
+                                                        [
+                                                          'str/concat',
+                                                          '@i',
+                                                          '.svg',
+                                                        ],
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                '',
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'w',
+                                [
+                                  '!=',
+                                  '@w',
+                                  '',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'warmUrl',
+                              {
+                                'asset': {
+                                  'url': '@warmUrl',
+                                },
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
+                                },
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '>',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'health',
+                                  ],
+                                  0,
+                                ],
+                              ],
+                            ],
                             [
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': 'rgba(0,0,0,0.6)',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -13325,7 +18931,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 ],
                                 'shape': 'rect',
                                 'type': 'draw-shape',
-                                'width': 0.8,
+                                'width': 0.5,
                               },
                             ],
                           ],
@@ -13334,13 +18940,31 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         {
                           'items': [
                             'array/map',
-                            '@entity.ships',
+                            [
+                              'array/filter',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '>',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'health',
+                                  ],
+                                  0,
+                                ],
+                              ],
+                            ],
                             [
                               'fn',
                               'u',
                               {
+                                'anchor': 'ground',
                                 'fill': '#22c55e',
                                 'height': 0.12,
+                                'offsetX': -0.25,
                                 'offsetY': -0.6,
                                 'position': [
                                   'object/get',
@@ -13351,7 +18975,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'type': 'draw-shape',
                                 'width': [
                                   '*',
-                                  0.8,
+                                  0.5,
                                   [
                                     '/',
                                     [
@@ -13374,7 +18998,23 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         {
                           'items': [
                             'array/map',
-                            '@entity.ships',
+                            [
+                              'array/filter',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '>',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'health',
+                                  ],
+                                  0,
+                                ],
+                              ],
+                            ],
                             [
                               'fn',
                               'u',
@@ -13407,38 +19047,21 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                 'fn',
                                 'e',
                                 {
+                                  'anchor': 'center',
                                   'asset': [
-                                    'object/merge',
+                                    'object/get',
                                     [
                                       'object/get',
-                                      [
-                                        'object/get',
-                                        '@config.assetManifest',
-                                        'effects',
-                                      ],
-                                      [
-                                        'object/get',
-                                        '@e',
-                                        'key',
-                                      ],
+                                      '@config.assetManifest',
+                                      'effects',
                                     ],
-                                    {
-                                      'sprite': [
-                                        'str/concat',
-                                        'regularExplosion0',
-                                        [
-                                          '-',
-                                          9,
-                                          [
-                                            'object/get',
-                                            '@e',
-                                            'ttl',
-                                          ],
-                                        ],
-                                        '.png',
-                                      ],
-                                    },
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
                                   ],
+                                  'height': 0.8,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -13452,6 +19075,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 0.8,
                                 },
                               ],
                             ],
@@ -13487,15 +19111,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconUrl': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-gold',
                           'role': 'ui',
-                          'sprite': '6,5',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-gold.svg',
                           'variant': '',
                         },
                         'label': 'Gold',
@@ -13505,15 +19127,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconUrl': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-turn',
                           'role': 'ui',
-                          'sprite': '1,7',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-turn.svg',
                           'variant': '',
                         },
                         'label': 'Turn',
@@ -13523,15 +19143,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         'iconUrl': {
                           'animations': [],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/Default_Tilemap_tilemap_packed.tiles.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-ships',
                           'role': 'ui',
-                          'sprite': '0,6',
-                          'style': 'adventure',
+                          'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/kenney-monochrome-pirates/terrain/tilemap_packed.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/icon-ships.svg',
                           'variant': '',
                         },
                         'label': 'Ships',
@@ -13566,15 +19184,13 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                   'hudBackgroundAsset': {
                     'animations': [],
                     'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                     'category': 'ui',
                     'dimension': '2d',
                     'name': 'panel-frame',
                     'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'adventure',
+                    'style': '',
                     'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-pirate-board/svg/isometric/ui/panel-frame.svg',
                     'variant': '',
                   },
                   'type': 'game-shell',

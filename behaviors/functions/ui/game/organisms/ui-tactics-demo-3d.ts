@@ -86,7 +86,7 @@ export interface StdUiTacticsDemo3dTacticsDemo3DOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait TacticsDemo3DOrbital's `uses[]` exports. */
-type _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
+type _StdUiTacticsDemo3dTacticsDemo3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.VolumetricArt' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the TacticsDemo3DOrbital orbital with consumer params. */
 export function stdUiTacticsDemo3dTacticsDemo3DOrbital(params: StdUiTacticsDemo3dTacticsDemo3DOrbitalParams = {}): OrbitalDefinition {

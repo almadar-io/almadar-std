@@ -102,6 +102,21 @@ export function stdCrewBoard2dFxDecayTrait(params: StdCrewBoard2dParams): TraitR
   });
 }
 
+/** Trait descriptor: `CrewBoard2d.traits.AnimClock`. */
+export function stdCrewBoard2dAnimClockTrait(params: StdCrewBoard2dParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.AnimClock`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `CrewBoard2d.traits.CrewIntent`. */
 export function stdCrewBoard2dCrewIntentTrait(params: StdCrewBoard2dParams): TraitReference {
   return makeTraitRef({
@@ -141,6 +156,7 @@ export function stdCrewBoard2d(params: StdCrewBoard2dParams): OrbitalDefinition 
     traits: [
       stdCrewBoard2dCrewAuthorityTrait(params),
       stdCrewBoard2dFxDecayTrait(params),
+      stdCrewBoard2dAnimClockTrait(params),
       stdCrewBoard2dCrewIntentTrait(params),
     ],
     pages: [

@@ -86,7 +86,7 @@ export interface StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait FantasyTownBoard3DOrbital's `uses[]` exports. */
-type _StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
+type _StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.VolumetricArt' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the FantasyTownBoard3DOrbital orbital with consumer params. */
 export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalParams = {}): OrbitalDefinition {

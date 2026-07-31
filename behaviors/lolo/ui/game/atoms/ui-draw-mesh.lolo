@@ -1,0 +1,155 @@
+app ui-draw-mesh "1.0.0"
+"DrawMesh — UI factory (1:1 with the @almadar/ui draw-mesh pattern)."
+orbital DrawMeshOrbital {
+  type DrawMeshPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+  type DrawMeshMaterial = {
+    kind : "standard" | "physical" | "toon" | "basic"
+    color : string
+    metalness : number
+    roughness : number
+    emissive : string
+    emissiveIntensity : number
+    opacity : number
+    transmission : number
+    ior : number
+    flatShading : boolean
+    side : "front" | "back" | "double"
+  }
+  type DrawMeshOutline = {
+    color : string
+    width : number
+  }
+  type DrawMeshAnimation = {
+    durationMs : number!
+    loop : boolean
+    keyframes : [DrawMeshAnimationKeyframesItem]!
+  }
+  type DrawMeshAnimationKeyframesItem = {
+    at : number!
+    offsetX : number
+    offsetY : number
+    offsetZ : number
+    rotateX : number
+    rotateY : number
+    rotateZ : number
+    scale : number
+    opacity : number
+    emissiveIntensity : number
+    color : string
+    emissive : string
+  }
+
+  entity DrawMeshItem [runtime] {
+    id : string!
+  }
+
+  trait DrawMeshRender -> @rebindable DrawMeshItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          shape: @config.shape
+          position: @config.position
+          width: @config.width
+          height: @config.height
+          depth: @config.depth
+          radius: @config.radius
+          radiusTop: @config.radiusTop
+          radiusBottom: @config.radiusBottom
+          tube: @config.tube
+          segments: @config.segments
+          rotation: @config.rotation
+          pivot: @config.pivot
+          material: @config.material
+          outline: @config.outline
+          castShadow: @config.castShadow
+          receiveShadow: @config.receiveShadow
+          animation: @config.animation
+          opacity: @config.opacity
+          type: draw-mesh
+        })
+    }
+
+    config {
+      shape : "box" | "sphere" | "capsule" | "cylinder" | "cone" | "torus" | "plane" | "circle" = box
+        @label "Shape"
+        @description "shape prop"
+        @tier "presentation"
+      position : DrawMeshPosition = { x: 1, y: 1, z: 1 }
+        @label "Position"
+        @description "Logical scene position; `z` is height in cells (projected to world Y)."
+        @tier "presentation"
+      width : number
+        @label "Width"
+        @description "Box/plane X extent in cells (default 1)."
+        @tier "presentation"
+      height : number
+        @label "Height"
+        @description "Box Y (height) extent / capsule-cylinder-cone length in cells (default 1)."
+        @tier "presentation"
+      depth : number
+        @label "Depth"
+        @description "Box/plane Z extent in cells (default `width`)."
+        @tier "presentation"
+      radius : number
+        @label "Radius"
+        @description "Sphere/capsule/cone/torus/circle radius in cells (default 0.4)."
+        @tier "presentation"
+      radiusTop : number
+        @label "Radius Top"
+        @description "Cylinder top radius (default `radius`)."
+        @tier "presentation"
+      radiusBottom : number
+        @label "Radius Bottom"
+        @description "Cylinder bottom radius (default `radius`)."
+        @tier "presentation"
+      tube : number
+        @label "Tube"
+        @description "Torus tube radius in cells (default `radius` / 3)."
+        @tier "presentation"
+      segments : number
+        @label "Segments"
+        @description "Curved-surface tessellation, clamped 3..64 (default 24). 4–8 + `flatShading` = low-poly."
+        @tier "presentation"
+      rotation : [number] = []
+        @label "Rotation"
+        @description "Euler rotation `[x, y, z]` in radians."
+        @tier "presentation"
+      pivot : "bottom" | "center" = bottom
+        @label "Pivot"
+        @description "`bottom` (default) rests the mesh on its position's ground plane; `center` centers it there."
+        @tier "presentation"
+      material : DrawMeshMaterial
+        @label "Material"
+        @description "material prop"
+        @tier "presentation"
+      outline : DrawMeshOutline
+        @label "Outline"
+        @description "outline prop"
+        @tier "presentation"
+      castShadow : boolean
+        @label "Cast Shadow"
+        @description "castShadow prop"
+        @tier "presentation"
+      receiveShadow : boolean
+        @label "Receive Shadow"
+        @description "receiveShadow prop"
+        @tier "presentation"
+      animation : DrawMeshAnimation
+        @label "Animation"
+        @description "Keyframe animation over transform/material tracks; the 3D host runs it per frame."
+        @tier "presentation"
+      opacity : number
+        @label "Opacity"
+        @description "0..1 opacity; multiplies the material and enclosing group opacity."
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-mesh" as DrawMeshPage -> DrawMeshRender
+}

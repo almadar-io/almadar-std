@@ -86,7 +86,7 @@ export interface StdUiPirateBoard3dPirateBoard3DOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait PirateBoard3DOrbital's `uses[]` exports. */
-type _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
+type _StdUiPirateBoard3dPirateBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.VolumetricArt' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the PirateBoard3DOrbital orbital with consumer params. */
 export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3dPirateBoard3DOrbitalParams = {}): OrbitalDefinition {

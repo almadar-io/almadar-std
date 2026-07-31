@@ -68,17 +68,17 @@ export interface StdUiUncontrolledBattleBoardUnitClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiUncontrolledBattleBoardConfig {
-  /** Default: `{"effects":{"explosion":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json","category":"explosion","dimension":"2d","name":"explosion","role":"effect","sprite":"regularExplosion04.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png","variant":""},"slash":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.json","category":"slash","dimension":"2d","name":"slash","role":"effect","sprite":"burst.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.png","variant":""}},"features":{"barrels":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.json","category":"barrels","dimension":"2d","name":"barrels","role":"decoration","sprite":"box.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.png","variant":""},"chest":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.json","category":"chest","dimension":"2d","name":"chest","role":"decoration","sprite":"box_treasure.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.png","variant":""}},"terrains":{"dirt":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"dirt","dimension":"2d","name":"dirt","role":"tile","sprite":"landscapeTiles_073.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"grass":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_075.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"planks":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"planks","dimension":"2d","name":"planks","role":"tile","sprite":"landscapeTiles_059.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"stairs":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stairs","dimension":"2d","name":"stairs","role":"tile","sprite":"landscapeTiles_124.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"stone":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""}},"units":{"mender":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"mender","dimension":"2d","name":"mender","role":"npc","sprite":"blue_body_square.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png","variant":""},"shadow":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"shadow","dimension":"2d","name":"shadow","role":"npc","sprite":"purple_body_rhombus.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png","variant":""}}}` */
+  /** Default: `{"effects":{"explosion":{"animations":["static"],"aspect":"1:1","category":"explosion","dimension":"2d","name":"explosion","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/effects/explosion.svg","variant":""},"slash":{"animations":["static"],"aspect":"1:1","category":"slash","dimension":"2d","name":"slash","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/effects/slash.svg","variant":""}},"features":{"barrels":{"animations":["static"],"aspect":"1:1","category":"barrels","dimension":"2d","name":"barrels","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/features/barrels.svg","variant":""},"chest":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"2d","name":"chest","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/features/chest.svg","variant":""}},"terrains":{"dirt":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg","variant":""},"grass":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg","variant":""},"planks":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg","variant":""},"stairs":{"animations":["static"],"aspect":"1:1","category":"stairs","dimension":"2d","name":"stairs","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stairs.svg","variant":""},"stone":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""}},"ui":{"icon-allies":{"animations":["static"],"aspect":"1:1","category":"icon-allies","dimension":"2d","name":"icon-allies","role":"ui","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-allies.svg","variant":""},"icon-enemies":{"animations":["static"],"aspect":"1:1","category":"icon-enemies","dimension":"2d","name":"icon-enemies","role":"ui","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-enemies.svg","variant":""},"icon-restart":{"animations":["static"],"aspect":"1:1","category":"icon-restart","dimension":"2d","name":"icon-restart","role":"ui","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-restart.svg","variant":""},"icon-round":{"animations":["static"],"aspect":"1:1","category":"icon-round","dimension":"2d","name":"icon-round","role":"ui","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-round.svg","variant":""},"panel-frame":{"animations":["static"],"aspect":"1:1","category":"panel-frame","dimension":"2d","name":"panel-frame","role":"ui","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg","variant":""}},"units":{"mender":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"mender","dimension":"2d","name":"mender","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/units/mender.svg","variant":""},"shadow":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"shadow","dimension":"2d","name":"shadow","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/units/shadow.svg","variant":""}}}` */
   assetManifest?: EntityRow;
   /** Default: `"Watch the units battle to the last one standing."` */
   description?: string;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.json","category":"barrels","dimension":"2d","name":"barrels","role":"decoration","sprite":"box.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.png","variant":""},"id":"f1","type":"barrels","x":0,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.json","category":"chest","dimension":"2d","name":"chest","role":"decoration","sprite":"box_treasure.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.png","variant":""},"id":"f2","type":"chest","x":4,"y":2}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"barrels","dimension":"2d","name":"barrels","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/features/barrels.svg","variant":""},"id":"f1","type":"barrels","x":0,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"2d","name":"chest","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/features/chest.svg","variant":""},"id":"f2","type":"chest","x":4,"y":2}]` */
   features?: EntityRow[];
-  /** Default: `[{"animation":"idle","atk":5,"def":2,"frame":0,"hp":20,"id":"u1","maxHp":20,"modelUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"mender","dimension":"2d","name":"mender","role":"npc","sprite":"blue_body_square.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png","variant":""},"name":"Mender","position":{"x":1,"y":2},"team":"player","unitType":"mender"},{"animation":"idle","atk":4,"def":1,"frame":0,"hp":15,"id":"u2","maxHp":15,"modelUrl":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json","category":"shadow","dimension":"2d","name":"shadow","role":"npc","sprite":"purple_body_rhombus.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png","variant":""},"name":"Shadow Legion","position":{"x":3,"y":2},"team":"enemy","unitType":"shadow"}]` */
+  /** Default: `[{"animation":"idle","atk":5,"def":2,"frame":0,"hp":20,"id":"u1","maxHp":20,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"mender","dimension":"2d","name":"mender","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/units/mender.svg","variant":""},"name":"Mender","position":{"x":1,"y":2},"team":"player","unitType":"mender"},{"animation":"idle","atk":4,"def":1,"frame":0,"hp":15,"id":"u2","maxHp":15,"modelUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"shadow","dimension":"2d","name":"shadow","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/units/shadow.svg","variant":""},"name":"Shadow Legion","position":{"x":3,"y":2},"team":"enemy","unitType":"shadow"}]` */
   initialUnits?: EntityRow[];
   /** Default: `0.6` */
   scale?: number;
-  /** Default: `[{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":0},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"planks","dimension":"2d","name":"planks","role":"tile","sprite":"landscapeTiles_059.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":0},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"planks","dimension":"2d","name":"planks","role":"tile","sprite":"landscapeTiles_059.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":0},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"dirt","dimension":"2d","name":"dirt","role":"tile","sprite":"landscapeTiles_073.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_075.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":1},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"planks","dimension":"2d","name":"planks","role":"tile","sprite":"landscapeTiles_059.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_075.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":1},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"dirt","dimension":"2d","name":"dirt","role":"tile","sprite":"landscapeTiles_073.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":1},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_075.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":2},{"passable":true,"terrain":"stairs","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stairs","dimension":"2d","name":"stairs","role":"tile","sprite":"landscapeTiles_124.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_075.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":2},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":2},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"dirt","dimension":"2d","name":"dirt","role":"tile","sprite":"landscapeTiles_073.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_075.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":3},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"planks","dimension":"2d","name":"planks","role":"tile","sprite":"landscapeTiles_059.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_075.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":3},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"dirt","dimension":"2d","name":"dirt","role":"tile","sprite":"landscapeTiles_073.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":3},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":4},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"planks","dimension":"2d","name":"planks","role":"tile","sprite":"landscapeTiles_059.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":4},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"planks","dimension":"2d","name":"planks","role":"tile","sprite":"landscapeTiles_059.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_081.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":4}]` */
+  /** Default: `[{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""},"x":0,"y":0},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg","variant":""},"x":1,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""},"x":2,"y":0},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg","variant":""},"x":3,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""},"x":4,"y":0},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg","variant":""},"x":0,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg","variant":""},"x":1,"y":1},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg","variant":""},"x":2,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg","variant":""},"x":3,"y":1},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg","variant":""},"x":4,"y":1},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""},"x":0,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg","variant":""},"x":1,"y":2},{"passable":true,"terrain":"stairs","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stairs","dimension":"2d","name":"stairs","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stairs.svg","variant":""},"x":2,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg","variant":""},"x":3,"y":2},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""},"x":4,"y":2},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg","variant":""},"x":0,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg","variant":""},"x":1,"y":3},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg","variant":""},"x":2,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg","variant":""},"x":3,"y":3},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg","variant":""},"x":4,"y":3},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""},"x":0,"y":4},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg","variant":""},"x":1,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""},"x":2,"y":4},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg","variant":""},"x":3,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg","variant":""},"x":4,"y":4}]` */
   tiles?: EntityRow[];
   /** Default: `"Auto Battle"` */
   title?: string;
@@ -392,15 +392,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json',
                   'category': 'explosion',
                   'dimension': '2d',
                   'name': 'explosion',
                   'role': 'effect',
-                  'sprite': 'regularExplosion04.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/effects/explosion.svg',
                   'variant': '',
                 },
                 'slash': {
@@ -408,15 +406,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.json',
                   'category': 'slash',
                   'dimension': '2d',
                   'name': 'slash',
                   'role': 'effect',
-                  'sprite': 'burst.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/effects/slash.svg',
                   'variant': '',
                 },
               },
@@ -426,15 +422,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.json',
                   'category': 'barrels',
                   'dimension': '2d',
                   'name': 'barrels',
                   'role': 'decoration',
-                  'sprite': 'box.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/features/barrels.svg',
                   'variant': '',
                 },
                 'chest': {
@@ -442,15 +436,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.json',
                   'category': 'chest',
                   'dimension': '2d',
                   'name': 'chest',
                   'role': 'decoration',
-                  'sprite': 'box_treasure.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/features/chest.svg',
                   'variant': '',
                 },
               },
@@ -460,15 +452,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'dirt',
                   'dimension': '2d',
                   'name': 'dirt',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_073.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg',
                   'variant': '',
                 },
                 'grass': {
@@ -476,15 +466,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'grass',
                   'dimension': '2d',
                   'name': 'grass',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_075.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg',
                   'variant': '',
                 },
                 'planks': {
@@ -492,15 +480,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'planks',
                   'dimension': '2d',
                   'name': 'planks',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_059.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg',
                   'variant': '',
                 },
                 'stairs': {
@@ -508,15 +494,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stairs',
                   'dimension': '2d',
                   'name': 'stairs',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_124.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stairs.svg',
                   'variant': '',
                 },
                 'stone': {
@@ -524,49 +508,123 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
+                  'variant': '',
+                },
+              },
+              'ui': {
+                'icon-allies': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'icon-allies',
+                  'dimension': '2d',
+                  'name': 'icon-allies',
+                  'role': 'ui',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-allies.svg',
+                  'variant': '',
+                },
+                'icon-enemies': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'icon-enemies',
+                  'dimension': '2d',
+                  'name': 'icon-enemies',
+                  'role': 'ui',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-enemies.svg',
+                  'variant': '',
+                },
+                'icon-restart': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'icon-restart',
+                  'dimension': '2d',
+                  'name': 'icon-restart',
+                  'role': 'ui',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-restart.svg',
+                  'variant': '',
+                },
+                'icon-round': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'icon-round',
+                  'dimension': '2d',
+                  'name': 'icon-round',
+                  'role': 'ui',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-round.svg',
+                  'variant': '',
+                },
+                'panel-frame': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'panel-frame',
+                  'dimension': '2d',
+                  'name': 'panel-frame',
+                  'role': 'ui',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                   'variant': '',
                 },
               },
               'units': {
                 'mender': {
                   'animations': [
-                    'static',
+                    'idle',
+                    'walk',
+                    'attack',
+                    'hit',
+                    'death',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
                   'category': 'mender',
                   'dimension': '2d',
                   'name': 'mender',
                   'role': 'npc',
-                  'sprite': 'blue_body_square.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/units/mender.svg',
                   'variant': '',
                 },
                 'shadow': {
                   'animations': [
-                    'static',
+                    'idle',
+                    'walk',
+                    'attack',
+                    'hit',
+                    'death',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
                   'category': 'shadow',
                   'dimension': '2d',
                   'name': 'shadow',
                   'role': 'npc',
-                  'sprite': 'purple_body_rhombus.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/units/shadow.svg',
                   'variant': '',
                 },
               },
@@ -793,6 +851,79 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 'required': false,
                 'type': 'object',
               },
+              'ui': {
+                'items': {
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'ui',
+                'required': false,
+                'type': 'object',
+              },
               'units': {
                 'items': {
                   'properties': {
@@ -885,15 +1016,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.json',
                   'category': 'barrels',
                   'dimension': '2d',
                   'name': 'barrels',
                   'role': 'decoration',
-                  'sprite': 'box.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/features/barrels.svg',
                   'variant': '',
                 },
                 'id': 'f1',
@@ -907,15 +1036,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.json',
                   'category': 'chest',
                   'dimension': '2d',
                   'name': 'chest',
                   'role': 'decoration',
-                  'sprite': 'box_treasure.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-block-pack/terrain/RPGblocks_spritesheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/features/chest.svg',
                   'variant': '',
                 },
                 'id': 'f2',
@@ -1121,18 +1248,20 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 'maxHp': 20,
                 'modelUrl': {
                   'animations': [
-                    'static',
+                    'idle',
+                    'walk',
+                    'attack',
+                    'hit',
+                    'death',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
                   'category': 'mender',
                   'dimension': '2d',
                   'name': 'mender',
                   'role': 'npc',
-                  'sprite': 'blue_body_square.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/units/mender.svg',
                   'variant': '',
                 },
                 'name': 'Mender',
@@ -1153,18 +1282,20 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 'maxHp': 15,
                 'modelUrl': {
                   'animations': [
-                    'static',
+                    'idle',
+                    'walk',
+                    'attack',
+                    'hit',
+                    'death',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
                   'category': 'shadow',
                   'dimension': '2d',
                   'name': 'shadow',
                   'role': 'npc',
-                  'sprite': 'purple_body_rhombus.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/units/shadow.svg',
                   'variant': '',
                 },
                 'name': 'Shadow Legion',
@@ -1345,15 +1476,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1367,15 +1496,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'planks',
                   'dimension': '2d',
                   'name': 'planks',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_059.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1389,15 +1516,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1411,15 +1536,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'planks',
                   'dimension': '2d',
                   'name': 'planks',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_059.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -1433,15 +1556,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -1455,15 +1576,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'dirt',
                   'dimension': '2d',
                   'name': 'dirt',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_073.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1477,15 +1596,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'grass',
                   'dimension': '2d',
                   'name': 'grass',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_075.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1499,15 +1616,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'planks',
                   'dimension': '2d',
                   'name': 'planks',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_059.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1521,15 +1636,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'grass',
                   'dimension': '2d',
                   'name': 'grass',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_075.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -1543,15 +1656,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'dirt',
                   'dimension': '2d',
                   'name': 'dirt',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_073.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -1565,15 +1676,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1587,15 +1696,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'grass',
                   'dimension': '2d',
                   'name': 'grass',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_075.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1609,15 +1716,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stairs',
                   'dimension': '2d',
                   'name': 'stairs',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_124.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stairs.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1631,15 +1736,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'grass',
                   'dimension': '2d',
                   'name': 'grass',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_075.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -1653,15 +1756,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -1675,15 +1776,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'dirt',
                   'dimension': '2d',
                   'name': 'dirt',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_073.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1697,15 +1796,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'grass',
                   'dimension': '2d',
                   'name': 'grass',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_075.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1719,15 +1816,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'planks',
                   'dimension': '2d',
                   'name': 'planks',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_059.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1741,15 +1836,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'grass',
                   'dimension': '2d',
                   'name': 'grass',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_075.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/grass.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -1763,15 +1856,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'dirt',
                   'dimension': '2d',
                   'name': 'dirt',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_073.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/dirt.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -1785,15 +1876,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
                   'variant': '',
                 },
                 'x': 0,
@@ -1807,15 +1896,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'planks',
                   'dimension': '2d',
                   'name': 'planks',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_059.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg',
                   'variant': '',
                 },
                 'x': 1,
@@ -1829,15 +1916,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
                   'variant': '',
                 },
                 'x': 2,
@@ -1851,15 +1936,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'planks',
                   'dimension': '2d',
                   'name': 'planks',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_059.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/planks.svg',
                   'variant': '',
                 },
                 'x': 3,
@@ -1873,15 +1956,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'static',
                   ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
                   'category': 'stone',
                   'dimension': '2d',
                   'name': 'stone',
                   'role': 'tile',
-                  'sprite': 'landscapeTiles_081.png',
                   'style': '',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/terrain/stone.svg',
                   'variant': '',
                 },
                 'x': 4,
@@ -2289,17 +2370,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'main',
                   {
                     'backgroundAsset': {
-                      'animations': [],
+                      'animations': [
+                        'static',
+                      ],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -2347,11 +2428,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'assetUrl',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2365,6 +2448,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -2445,24 +2529,195 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               [
                                 'fn',
                                 'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                [
+                                  'let',
+                                  [
+                                    [
+                                      'unitAnim',
+                                      [
+                                        'if',
+                                        [
+                                          '<=',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'hp',
+                                          ],
+                                          0,
+                                        ],
+                                        'death',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'animation',
+                                        ],
+                                      ],
+                                    ],
+                                    [
+                                      'unitFrame',
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            'if',
+                                            [
+                                              '<=',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'hp',
+                                              ],
+                                              0,
+                                            ],
+                                            'death',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'animation',
+                                            ],
+                                          ],
+                                          'walk',
+                                        ],
+                                        [
+                                          '%',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'frame',
+                                          ],
+                                          2,
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'if',
+                                              [
+                                                '<=',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'hp',
+                                                ],
+                                                0,
+                                              ],
+                                              'death',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'animation',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                          [
+                                            '%',
+                                            [
+                                              'math/floor',
+                                              [
+                                                '/',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'frame',
+                                                ],
+                                                3,
+                                              ],
+                                            ],
+                                            4,
+                                          ],
+                                          0,
+                                        ],
+                                      ],
+                                    ],
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  {
+                                    'anchor': 'ground',
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'str/includes',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          'url',
+                                        ],
+                                        '.svg',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        {
+                                          'url': [
+                                            'str/concat',
+                                            [
+                                              'array/nth',
+                                              [
+                                                'str/split',
+                                                [
+                                                  'object/get',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'modelUrl',
+                                                  ],
+                                                  'url',
+                                                ],
+                                                '.svg',
+                                              ],
+                                              0,
+                                            ],
+                                            [
+                                              'str/concat',
+                                              '.',
+                                              [
+                                                'str/concat',
+                                                '@unitAnim',
+                                                [
+                                                  'str/concat',
+                                                  '-',
+                                                  [
+                                                    'str/concat',
+                                                    '@unitFrame',
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                    ],
+                                    'height': 0.5,
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -2610,17 +2865,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'stats': [
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-round',
                             'role': 'ui',
-                            'sprite': 'tile_coin.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-round.svg',
                             'variant': '',
                           },
                           'label': 'Round',
@@ -2628,17 +2883,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         },
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-allies',
                             'role': 'ui',
-                            'sprite': 'emote_heart.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-allies.svg',
                             'variant': '',
                           },
                           'label': 'Allies',
@@ -2669,17 +2924,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         },
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-enemies',
                             'role': 'ui',
-                            'sprite': 'emote_anger.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-enemies.svg',
                             'variant': '',
                           },
                           'label': 'Enemies',
@@ -2712,17 +2967,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'type': 'game-hud',
                     },
                     'hudBackgroundAsset': {
-                      'animations': [],
+                      'animations': [
+                        'static',
+                      ],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -2742,17 +2997,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'addons': {
                       'action': 'PLAY_AGAIN',
                       'iconAsset': {
-                        'animations': [],
+                        'animations': [
+                          'static',
+                        ],
                         'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                         'category': 'ui',
                         'dimension': '2d',
                         'name': 'icon-restart',
                         'role': 'ui',
-                        'sprite': 'emote_swirl.png',
                         'style': '',
                         'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-restart.svg',
                         'variant': '',
                       },
                       'label': 'Play Again',
@@ -2760,17 +3015,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'variant': 'primary',
                     },
                     'backgroundAsset': {
-                      'animations': [],
+                      'animations': [
+                        'static',
+                      ],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -2818,11 +3073,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'assetUrl',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2836,6 +3093,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -2916,24 +3174,195 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               [
                                 'fn',
                                 'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                [
+                                  'let',
+                                  [
+                                    [
+                                      'unitAnim',
+                                      [
+                                        'if',
+                                        [
+                                          '<=',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'hp',
+                                          ],
+                                          0,
+                                        ],
+                                        'death',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'animation',
+                                        ],
+                                      ],
+                                    ],
+                                    [
+                                      'unitFrame',
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            'if',
+                                            [
+                                              '<=',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'hp',
+                                              ],
+                                              0,
+                                            ],
+                                            'death',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'animation',
+                                            ],
+                                          ],
+                                          'walk',
+                                        ],
+                                        [
+                                          '%',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'frame',
+                                          ],
+                                          2,
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'if',
+                                              [
+                                                '<=',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'hp',
+                                                ],
+                                                0,
+                                              ],
+                                              'death',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'animation',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                          [
+                                            '%',
+                                            [
+                                              'math/floor',
+                                              [
+                                                '/',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'frame',
+                                                ],
+                                                3,
+                                              ],
+                                            ],
+                                            4,
+                                          ],
+                                          0,
+                                        ],
+                                      ],
+                                    ],
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  {
+                                    'anchor': 'ground',
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'str/includes',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          'url',
+                                        ],
+                                        '.svg',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        {
+                                          'url': [
+                                            'str/concat',
+                                            [
+                                              'array/nth',
+                                              [
+                                                'str/split',
+                                                [
+                                                  'object/get',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'modelUrl',
+                                                  ],
+                                                  'url',
+                                                ],
+                                                '.svg',
+                                              ],
+                                              0,
+                                            ],
+                                            [
+                                              'str/concat',
+                                              '.',
+                                              [
+                                                'str/concat',
+                                                '@unitAnim',
+                                                [
+                                                  'str/concat',
+                                                  '-',
+                                                  [
+                                                    'str/concat',
+                                                    '@unitFrame',
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                    ],
+                                    'height': 0.5,
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -3081,17 +3510,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'stats': [
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-round',
                             'role': 'ui',
-                            'sprite': 'tile_coin.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-round.svg',
                             'variant': '',
                           },
                           'label': 'Round',
@@ -3099,17 +3528,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         },
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-allies',
                             'role': 'ui',
-                            'sprite': 'emote_heart.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-allies.svg',
                             'variant': '',
                           },
                           'label': 'Allies',
@@ -3140,17 +3569,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         },
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-enemies',
                             'role': 'ui',
-                            'sprite': 'emote_anger.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-enemies.svg',
                             'variant': '',
                           },
                           'label': 'Enemies',
@@ -3183,17 +3612,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'type': 'game-hud',
                     },
                     'hudBackgroundAsset': {
-                      'animations': [],
+                      'animations': [
+                        'static',
+                      ],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'overlay': {
@@ -3278,17 +3707,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'main',
                   {
                     'backgroundAsset': {
-                      'animations': [],
+                      'animations': [
+                        'static',
+                      ],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'children': [
@@ -3336,11 +3765,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                 'fn',
                                 'f',
                                 {
+                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'assetUrl',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3354,6 +3785,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3434,24 +3866,195 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               [
                                 'fn',
                                 'u',
-                                {
-                                  'asset': [
-                                    'object/get',
-                                    '@u',
-                                    'modelUrl',
+                                [
+                                  'let',
+                                  [
+                                    [
+                                      'unitAnim',
+                                      [
+                                        'if',
+                                        [
+                                          '<=',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'hp',
+                                          ],
+                                          0,
+                                        ],
+                                        'death',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'animation',
+                                        ],
+                                      ],
+                                    ],
+                                    [
+                                      'unitFrame',
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            'if',
+                                            [
+                                              '<=',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'hp',
+                                              ],
+                                              0,
+                                            ],
+                                            'death',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'animation',
+                                            ],
+                                          ],
+                                          'walk',
+                                        ],
+                                        [
+                                          '%',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'frame',
+                                          ],
+                                          2,
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'if',
+                                              [
+                                                '<=',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'hp',
+                                                ],
+                                                0,
+                                              ],
+                                              'death',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'animation',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                          [
+                                            '%',
+                                            [
+                                              'math/floor',
+                                              [
+                                                '/',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'frame',
+                                                ],
+                                                3,
+                                              ],
+                                            ],
+                                            4,
+                                          ],
+                                          0,
+                                        ],
+                                      ],
+                                    ],
                                   ],
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                },
+                                  {
+                                    'anchor': 'ground',
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'str/includes',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          'url',
+                                        ],
+                                        '.svg',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        {
+                                          'url': [
+                                            'str/concat',
+                                            [
+                                              'array/nth',
+                                              [
+                                                'str/split',
+                                                [
+                                                  'object/get',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'modelUrl',
+                                                  ],
+                                                  'url',
+                                                ],
+                                                '.svg',
+                                              ],
+                                              0,
+                                            ],
+                                            [
+                                              'str/concat',
+                                              '.',
+                                              [
+                                                'str/concat',
+                                                '@unitAnim',
+                                                [
+                                                  'str/concat',
+                                                  '-',
+                                                  [
+                                                    'str/concat',
+                                                    '@unitFrame',
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                    ],
+                                    'height': 0.5,
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
+                                ],
                               ],
                             ],
                             'type': 'draw-sprite-layer',
@@ -3599,17 +4202,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'stats': [
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-round',
                             'role': 'ui',
-                            'sprite': 'tile_coin.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-round.svg',
                             'variant': '',
                           },
                           'label': 'Round',
@@ -3617,17 +4220,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         },
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-allies',
                             'role': 'ui',
-                            'sprite': 'emote_heart.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-allies.svg',
                             'variant': '',
                           },
                           'label': 'Allies',
@@ -3658,17 +4261,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         },
                         {
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-enemies',
                             'role': 'ui',
-                            'sprite': 'emote_anger.png',
                             'style': '',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-enemies.svg',
                             'variant': '',
                           },
                           'label': 'Enemies',
@@ -3701,17 +4304,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'type': 'game-hud',
                     },
                     'hudBackgroundAsset': {
-                      'animations': [],
+                      'animations': [
+                        'static',
+                      ],
                       'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                       'category': 'ui',
                       'dimension': '2d',
                       'name': 'panel-frame',
                       'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
+                      'style': '',
                       'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                       'variant': '',
                     },
                     'type': 'game-shell',
@@ -3728,21 +4331,91 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
           {
             'effects': [
               [
+                'set',
+                '@entity.units',
+                [
+                  'array/map',
+                  '@entity.units',
+                  [
+                    'fn',
+                    'u',
+                    [
+                      'object/merge',
+                      '@u',
+                      {
+                        'frame': [
+                          '+',
+                          [
+                            'object/get',
+                            '@u',
+                            'frame',
+                          ],
+                          1,
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+              ],
+              [
+                'set',
+                '@entity.effects',
+                [
+                  'array/filter',
+                  [
+                    'array/map',
+                    '@entity.effects',
+                    [
+                      'fn',
+                      'e',
+                      [
+                        'object/merge',
+                        '@e',
+                        {
+                          'ttl': [
+                            '-',
+                            [
+                              'object/get',
+                              '@e',
+                              'ttl',
+                            ],
+                            1,
+                          ],
+                        },
+                      ],
+                    ],
+                  ],
+                  [
+                    'fn',
+                    'e',
+                    [
+                      '>',
+                      [
+                        'object/get',
+                        '@e',
+                        'ttl',
+                      ],
+                      0,
+                    ],
+                  ],
+                ],
+              ],
+              [
                 'render-ui',
                 'main',
                 {
                   'backgroundAsset': {
-                    'animations': [],
+                    'animations': [
+                      'static',
+                    ],
                     'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                     'category': 'ui',
                     'dimension': '2d',
                     'name': 'panel-frame',
                     'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'adventure',
+                    'style': '',
                     'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                     'variant': '',
                   },
                   'children': [
@@ -3790,11 +4463,13 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               'fn',
                               'f',
                               {
+                                'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   '@f',
                                   'assetUrl',
                                 ],
+                                'height': 1,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -3808,6 +4483,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 1,
                               },
                             ],
                           ],
@@ -3888,24 +4564,195 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                             [
                               'fn',
                               'u',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
+                              [
+                                'let',
+                                [
+                                  [
+                                    'unitAnim',
+                                    [
+                                      'if',
+                                      [
+                                        '<=',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                      'death',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'animation',
+                                      ],
+                                    ],
+                                  ],
+                                  [
+                                    'unitFrame',
+                                    [
+                                      'if',
+                                      [
+                                        '==',
+                                        [
+                                          'if',
+                                          [
+                                            '<=',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'hp',
+                                            ],
+                                            0,
+                                          ],
+                                          'death',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'animation',
+                                          ],
+                                        ],
+                                        'walk',
+                                      ],
+                                      [
+                                        '%',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'frame',
+                                        ],
+                                        2,
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            'if',
+                                            [
+                                              '<=',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'hp',
+                                              ],
+                                              0,
+                                            ],
+                                            'death',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'animation',
+                                            ],
+                                          ],
+                                          'idle',
+                                        ],
+                                        [
+                                          '%',
+                                          [
+                                            'math/floor',
+                                            [
+                                              '/',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'frame',
+                                              ],
+                                              3,
+                                            ],
+                                          ],
+                                          4,
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
                                 ],
-                                'id': [
-                                  'object/get',
-                                  '@u',
-                                  'id',
-                                ],
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'type': 'draw-sprite',
-                              },
+                                {
+                                  'anchor': 'ground',
+                                  'asset': [
+                                    'if',
+                                    [
+                                      'str/includes',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        'url',
+                                      ],
+                                      '.svg',
+                                    ],
+                                    [
+                                      'object/merge',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                      {
+                                        'url': [
+                                          'str/concat',
+                                          [
+                                            'array/nth',
+                                            [
+                                              'str/split',
+                                              [
+                                                'object/get',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'modelUrl',
+                                                ],
+                                                'url',
+                                              ],
+                                              '.svg',
+                                            ],
+                                            0,
+                                          ],
+                                          [
+                                            'str/concat',
+                                            '.',
+                                            [
+                                              'str/concat',
+                                              '@unitAnim',
+                                              [
+                                                'str/concat',
+                                                '-',
+                                                [
+                                                  'str/concat',
+                                                  '@unitFrame',
+                                                  '.svg',
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      },
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
+                                  ],
+                                  'height': 0.5,
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
+                              ],
                             ],
                           ],
                           'type': 'draw-sprite-layer',
@@ -4053,17 +4900,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'stats': [
                       {
                         'iconUrl': {
-                          'animations': [],
+                          'animations': [
+                            'static',
+                          ],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-round',
                           'role': 'ui',
-                          'sprite': 'tile_coin.png',
                           'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-round.svg',
                           'variant': '',
                         },
                         'label': 'Round',
@@ -4071,17 +4918,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       },
                       {
                         'iconUrl': {
-                          'animations': [],
+                          'animations': [
+                            'static',
+                          ],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-allies',
                           'role': 'ui',
-                          'sprite': 'emote_heart.png',
                           'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-allies.svg',
                           'variant': '',
                         },
                         'label': 'Allies',
@@ -4112,17 +4959,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       },
                       {
                         'iconUrl': {
-                          'animations': [],
+                          'animations': [
+                            'static',
+                          ],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-enemies',
                           'role': 'ui',
-                          'sprite': 'emote_anger.png',
                           'style': '',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-enemies.svg',
                           'variant': '',
                         },
                         'label': 'Enemies',
@@ -4155,17 +5002,17 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'type': 'game-hud',
                   },
                   'hudBackgroundAsset': {
-                    'animations': [],
+                    'animations': [
+                      'static',
+                    ],
                     'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
                     'category': 'ui',
                     'dimension': '2d',
                     'name': 'panel-frame',
                     'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'adventure',
+                    'style': '',
                     'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
                     'variant': '',
                   },
                   'type': 'game-shell',
@@ -4182,6 +5029,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
           },
           {
             'effects': [
+              [
+                'set',
+                '@entity.units',
+                [
+                  'array/map',
+                  '@entity.units',
+                  [
+                    'fn',
+                    'u',
+                    [
+                      'if',
+                      [
+                        '>',
+                        '@u.hp',
+                        0,
+                      ],
+                      [
+                        'object/merge',
+                        '@u',
+                        {
+                          'animation': 'idle',
+                        },
+                      ],
+                      '@u',
+                    ],
+                  ],
+                ],
+              ],
               [
                 'set',
                 '@entity.units',
@@ -4902,6 +5777,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                           'object/merge',
                           '@u',
                           {
+                            'animation': 'walk',
                             'position': {
                               'x': [
                                 'math/clamp',
@@ -4996,39 +5872,345 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
               ],
               [
                 'set',
-                '@entity.effects',
+                '@entity.units',
                 [
-                  'array/append',
-                  '@entity.effects',
-                  {
-                    'key': 'slash',
-                    'ttl': 4,
-                    'x': [
-                      'object/get',
+                  'array/map',
+                  '@entity.units',
+                  [
+                    'fn',
+                    'u',
+                    [
+                      'if',
                       [
-                        'object/get',
+                        'and',
                         [
-                          'array/first',
-                          '@entity.units',
+                          'and',
+                          [
+                            '==',
+                            '@u.team',
+                            'player',
+                          ],
+                          [
+                            '>',
+                            '@u.hp',
+                            0,
+                          ],
                         ],
-                        'position',
+                        [
+                          'and',
+                          [
+                            '==',
+                            [
+                              'array/len',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'e',
+                                  [
+                                    'and',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        '@e.team',
+                                        'enemy',
+                                      ],
+                                      [
+                                        '>',
+                                        '@e.hp',
+                                        0,
+                                      ],
+                                    ],
+                                    [
+                                      '==',
+                                      [
+                                        'grid/manhattan-distance',
+                                        [
+                                          'object/get',
+                                          '@e',
+                                          'position',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'position',
+                                        ],
+                                      ],
+                                      1,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            '>',
+                            [
+                              'array/len',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'e',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      '@e.team',
+                                      'enemy',
+                                    ],
+                                    [
+                                      '>',
+                                      '@e.hp',
+                                      0,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                            0,
+                          ],
+                        ],
                       ],
-                      'x',
-                    ],
-                    'y': [
-                      'object/get',
                       [
-                        'object/get',
+                        'let',
                         [
-                          'array/first',
-                          '@entity.units',
+                          [
+                            'target',
+                            [
+                              'array/first',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'e',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      '@e.team',
+                                      'enemy',
+                                    ],
+                                    [
+                                      '>',
+                                      '@e.hp',
+                                      0,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
                         ],
-                        'position',
+                        [
+                          'object/merge',
+                          '@u',
+                          {
+                            'animation': 'walk',
+                            'position': {
+                              'x': [
+                                'math/clamp',
+                                [
+                                  '+',
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'x',
+                                  ],
+                                  [
+                                    'math/sign',
+                                    [
+                                      '-',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@target',
+                                          'position',
+                                        ],
+                                        'x',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'position',
+                                        ],
+                                        'x',
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                0,
+                                4,
+                              ],
+                              'y': [
+                                'math/clamp',
+                                [
+                                  '+',
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'y',
+                                  ],
+                                  [
+                                    'math/sign',
+                                    [
+                                      '-',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@target',
+                                          'position',
+                                        ],
+                                        'y',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'position',
+                                        ],
+                                        'y',
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                                0,
+                                4,
+                              ],
+                            },
+                          },
+                        ],
                       ],
-                      'y',
+                      '@u',
                     ],
-                  },
+                  ],
                 ],
+              ],
+              [
+                'if',
+                [
+                  '>',
+                  [
+                    'array/len',
+                    [
+                      'array/filter',
+                      '@entity.units',
+                      [
+                        'fn',
+                        'u',
+                        [
+                          'or',
+                          [
+                            '==',
+                            '@u.animation',
+                            'hit',
+                          ],
+                          [
+                            '==',
+                            '@u.animation',
+                            'death',
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.effects',
+                  [
+                    'array/append',
+                    '@entity.effects',
+                    {
+                      'key': 'slash',
+                      'ttl': 4,
+                      'x': [
+                        'object/get',
+                        [
+                          'object/get',
+                          [
+                            'array/first',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  'or',
+                                  [
+                                    '==',
+                                    '@u.animation',
+                                    'hit',
+                                  ],
+                                  [
+                                    '==',
+                                    '@u.animation',
+                                    'death',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          'position',
+                        ],
+                        'x',
+                      ],
+                      'y': [
+                        'object/get',
+                        [
+                          'object/get',
+                          [
+                            'array/first',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  'or',
+                                  [
+                                    '==',
+                                    '@u.animation',
+                                    'hit',
+                                  ],
+                                  [
+                                    '==',
+                                    '@u.animation',
+                                    'death',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          'position',
+                        ],
+                        'y',
+                      ],
+                    },
+                  ],
+                ],
+                null,
               ],
               [
                 'set',
@@ -5111,6 +6293,633 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
               [
                 'if',
                 [
+                  '==',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'backgroundAsset': {
+                      'animations': [
+                        'static',
+                      ],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': '',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
+                      'variant': '',
+                    },
+                    'children': [
+                      {
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'anchor': 'ground',
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
+                                  'height': 1,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 1,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.validMoves',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    '@entity.selectedUnitId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  'let',
+                                  [
+                                    [
+                                      'unitAnim',
+                                      [
+                                        'if',
+                                        [
+                                          '<=',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'hp',
+                                          ],
+                                          0,
+                                        ],
+                                        'death',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'animation',
+                                        ],
+                                      ],
+                                    ],
+                                    [
+                                      'unitFrame',
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            'if',
+                                            [
+                                              '<=',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'hp',
+                                              ],
+                                              0,
+                                            ],
+                                            'death',
+                                            [
+                                              'object/get',
+                                              '@u',
+                                              'animation',
+                                            ],
+                                          ],
+                                          'walk',
+                                        ],
+                                        [
+                                          '%',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'frame',
+                                          ],
+                                          2,
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '==',
+                                            [
+                                              'if',
+                                              [
+                                                '<=',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'hp',
+                                                ],
+                                                0,
+                                              ],
+                                              'death',
+                                              [
+                                                'object/get',
+                                                '@u',
+                                                'animation',
+                                              ],
+                                            ],
+                                            'idle',
+                                          ],
+                                          [
+                                            '%',
+                                            [
+                                              'math/floor',
+                                              [
+                                                '/',
+                                                [
+                                                  'object/get',
+                                                  '@u',
+                                                  'frame',
+                                                ],
+                                                3,
+                                              ],
+                                            ],
+                                            4,
+                                          ],
+                                          0,
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  {
+                                    'anchor': 'ground',
+                                    'asset': [
+                                      'if',
+                                      [
+                                        'str/includes',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'modelUrl',
+                                          ],
+                                          'url',
+                                        ],
+                                        '.svg',
+                                      ],
+                                      [
+                                        'object/merge',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'modelUrl',
+                                        ],
+                                        {
+                                          'url': [
+                                            'str/concat',
+                                            [
+                                              'array/nth',
+                                              [
+                                                'str/split',
+                                                [
+                                                  'object/get',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'modelUrl',
+                                                  ],
+                                                  'url',
+                                                ],
+                                                '.svg',
+                                              ],
+                                              0,
+                                            ],
+                                            [
+                                              'str/concat',
+                                              '.',
+                                              [
+                                                'str/concat',
+                                                '@unitAnim',
+                                                [
+                                                  'str/concat',
+                                                  '-',
+                                                  [
+                                                    'str/concat',
+                                                    '@unitFrame',
+                                                    '.svg',
+                                                  ],
+                                                ],
+                                              ],
+                                            ],
+                                          ],
+                                        },
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'modelUrl',
+                                      ],
+                                    ],
+                                    'height': 0.5,
+                                    'id': [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    'position': [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
+                                ],
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'hp',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHp',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@u',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
+                        'fit': true,
+                        'projection': 'isometric',
+                        'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
+                        'type': 'canvas',
+                        'unitClickEvent': 'UNIT_CLICK',
+                      },
+                    ],
+                    'fontFamily': 'future',
+                    'hud': {
+                      'stats': [
+                        {
+                          'iconUrl': {
+                            'animations': [
+                              'static',
+                            ],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-round',
+                            'role': 'ui',
+                            'style': '',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-round.svg',
+                            'variant': '',
+                          },
+                          'label': 'Round',
+                          'value': '@entity.turn',
+                        },
+                        {
+                          'iconUrl': {
+                            'animations': [
+                              'static',
+                            ],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-allies',
+                            'role': 'ui',
+                            'style': '',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-allies.svg',
+                            'variant': '',
+                          },
+                          'label': 'Allies',
+                          'value': [
+                            'array/len',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  'and',
+                                  [
+                                    '==',
+                                    '@u.team',
+                                    'player',
+                                  ],
+                                  [
+                                    '>',
+                                    '@u.hp',
+                                    0,
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                        },
+                        {
+                          'iconUrl': {
+                            'animations': [
+                              'static',
+                            ],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-enemies',
+                            'role': 'ui',
+                            'style': '',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/icon-enemies.svg',
+                            'variant': '',
+                          },
+                          'label': 'Enemies',
+                          'value': [
+                            'array/len',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  'and',
+                                  [
+                                    '==',
+                                    '@u.team',
+                                    'enemy',
+                                  ],
+                                  [
+                                    '>',
+                                    '@u.hp',
+                                    0,
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                        },
+                      ],
+                      'type': 'game-hud',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [
+                        'static',
+                      ],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': '',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/svg/isometric/ui/panel-frame.svg',
+                      'variant': '',
+                    },
+                    'type': 'game-shell',
+                  },
+                ],
+                null,
+              ],
+              [
+                'if',
+                [
                   '!=',
                   '@entity.result',
                   'none',
@@ -5120,450 +6929,6 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'GAME_END',
                 ],
                 null,
-              ],
-              [
-                'render-ui',
-                'main',
-                {
-                  'backgroundAsset': {
-                    'animations': [],
-                    'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                    'category': 'ui',
-                    'dimension': '2d',
-                    'name': 'panel-frame',
-                    'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'adventure',
-                    'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                    'variant': '',
-                  },
-                  'children': [
-                    {
-                      'camera': {
-                        'zoom': '@config.scale',
-                      },
-                      'children': [
-                        {
-                          'items': [
-                            'array/map',
-                            '@config.tiles',
-                            [
-                              'fn',
-                              't',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@t',
-                                  'terrainSprite',
-                                ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@t',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@t',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-sprite-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@config.features',
-                            [
-                              'fn',
-                              'f',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@f',
-                                  'assetUrl',
-                                ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-sprite-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.validMoves',
-                            [
-                              'fn',
-                              'm',
-                              {
-                                'fill': 'rgba(74,222,128,0.4)',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@m',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@m',
-                                    'y',
-                                  ],
-                                },
-                                'shape': 'cell',
-                                'type': 'draw-shape',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  '@entity.selectedUnitId',
-                                ],
-                              ],
-                            ],
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'radiusX': 0.5,
-                                'radiusY': 0.2,
-                                'shape': 'ellipse',
-                                'stroke': 'rgba(0,200,255,0.8)',
-                                'strokeWidth': 3,
-                                'type': 'draw-shape',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
-                                ],
-                                'id': [
-                                  'object/get',
-                                  '@u',
-                                  'id',
-                                ],
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'type': 'draw-sprite',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-sprite-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'fill': 'rgba(0,0,0,0.6)',
-                                'height': 0.12,
-                                'offsetY': -0.6,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'shape': 'rect',
-                                'type': 'draw-shape',
-                                'width': 0.8,
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'fill': '#22c55e',
-                                'height': 0.12,
-                                'offsetY': -0.6,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'shape': 'rect',
-                                'type': 'draw-shape',
-                                'width': [
-                                  '*',
-                                  0.8,
-                                  [
-                                    '/',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'hp',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'maxHp',
-                                    ],
-                                  ],
-                                ],
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'color': '#ffffff',
-                                'offsetY': -0.85,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'text': [
-                                  'object/get',
-                                  '@u',
-                                  'name',
-                                ],
-                                'type': 'draw-text',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-text-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.effects',
-                            [
-                              'fn',
-                              'f',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'effects',
-                                  ],
-                                  [
-                                    'object/get',
-                                    '@f',
-                                    'key',
-                                  ],
-                                ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-sprite-layer',
-                        },
-                      ],
-                      'fit': true,
-                      'projection': 'isometric',
-                      'showMinimap': true,
-                      'tileClickEvent': 'TILE_CLICK',
-                      'type': 'canvas',
-                      'unitClickEvent': 'UNIT_CLICK',
-                    },
-                  ],
-                  'fontFamily': 'future',
-                  'hud': {
-                    'stats': [
-                      {
-                        'iconUrl': {
-                          'animations': [],
-                          'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
-                          'category': 'ui',
-                          'dimension': '2d',
-                          'name': 'icon-round',
-                          'role': 'ui',
-                          'sprite': 'tile_coin.png',
-                          'style': '',
-                          'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
-                          'variant': '',
-                        },
-                        'label': 'Round',
-                        'value': '@entity.turn',
-                      },
-                      {
-                        'iconUrl': {
-                          'animations': [],
-                          'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
-                          'category': 'ui',
-                          'dimension': '2d',
-                          'name': 'icon-allies',
-                          'role': 'ui',
-                          'sprite': 'emote_heart.png',
-                          'style': '',
-                          'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
-                          'variant': '',
-                        },
-                        'label': 'Allies',
-                        'value': [
-                          'array/len',
-                          [
-                            'array/filter',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  '@u.team',
-                                  'player',
-                                ],
-                                [
-                                  '>',
-                                  '@u.hp',
-                                  0,
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                      },
-                      {
-                        'iconUrl': {
-                          'animations': [],
-                          'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
-                          'category': 'ui',
-                          'dimension': '2d',
-                          'name': 'icon-enemies',
-                          'role': 'ui',
-                          'sprite': 'emote_anger.png',
-                          'style': '',
-                          'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
-                          'variant': '',
-                        },
-                        'label': 'Enemies',
-                        'value': [
-                          'array/len',
-                          [
-                            'array/filter',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  '@u.team',
-                                  'enemy',
-                                ],
-                                [
-                                  '>',
-                                  '@u.hp',
-                                  0,
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                      },
-                    ],
-                    'type': 'game-hud',
-                  },
-                  'hudBackgroundAsset': {
-                    'animations': [],
-                    'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                    'category': 'ui',
-                    'dimension': '2d',
-                    'name': 'panel-frame',
-                    'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'adventure',
-                    'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                    'variant': '',
-                  },
-                  'type': 'game-shell',
-                },
               ],
             ],
             'guard': [

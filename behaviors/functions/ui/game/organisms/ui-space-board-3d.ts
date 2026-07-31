@@ -86,7 +86,7 @@ export interface StdUiSpaceBoard3dSpaceBoard3DOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait SpaceBoard3DOrbital's `uses[]` exports. */
-type _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
+type _StdUiSpaceBoard3dSpaceBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.VolumetricArt' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the SpaceBoard3DOrbital orbital with consumer params. */
 export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSpaceBoard3DOrbitalParams = {}): OrbitalDefinition {

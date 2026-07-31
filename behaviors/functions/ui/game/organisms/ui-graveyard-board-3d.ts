@@ -86,7 +86,7 @@ export interface StdUiGraveyardBoard3dGraveyardBoard3DOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait GraveyardBoard3DOrbital's `uses[]` exports. */
-type _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.PlayerIntent';
+type _StdUiGraveyardBoard3dGraveyardBoard3DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.VolumetricArt' | 'Frame.traits.PlayerIntent';
 
 /** Per-orbital factory: builds the GraveyardBoard3DOrbital orbital with consumer params. */
 export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGraveyardBoard3dGraveyardBoard3DOrbitalParams = {}): OrbitalDefinition {

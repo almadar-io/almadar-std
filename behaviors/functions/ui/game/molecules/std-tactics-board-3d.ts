@@ -117,6 +117,21 @@ export function stdTacticsBoard3dRoundLogicTrait(params: StdTacticsBoard3dParams
   });
 }
 
+/** Trait descriptor: `TacticsBoard3d.traits.VolumetricArt`. */
+export function stdTacticsBoard3dVolumetricArtTrait(params: StdTacticsBoard3dParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.VolumetricArt`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `TacticsBoard3d.traits.PlayerIntent`. */
 export function stdTacticsBoard3dPlayerIntentTrait(params: StdTacticsBoard3dParams): TraitReference {
   return makeTraitRef({
@@ -157,6 +172,7 @@ export function stdTacticsBoard3d(params: StdTacticsBoard3dParams): OrbitalDefin
       stdTacticsBoard3dTacticsAuthorityTrait(params),
       stdTacticsBoard3dFxDecayTrait(params),
       stdTacticsBoard3dRoundLogicTrait(params),
+      stdTacticsBoard3dVolumetricArtTrait(params),
       stdTacticsBoard3dPlayerIntentTrait(params),
     ],
     pages: [

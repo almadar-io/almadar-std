@@ -95,9 +95,13 @@ export interface StdUiCanvasConfig {
   keyMap?: Record<string, TraitConfig>;
   /** Default: `{"item":"Item"}` */
   keyUpMap?: Record<string, TraitConfig>;
+  /** Default: `{}` */
+  lighting?: unknown;
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
   pixelsPerUnit?: number;
+  /** Default: `{}` */
+  post?: unknown;
   /** Default: `"isometric"` */
   projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
   shadows?: boolean;

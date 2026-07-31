@@ -129,6 +129,14 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01KYW79GSCBG6991JKGS1SA26C": {
+        "bakedName": "VolumetricArt",
+        "curName": "VolumetricArt",
+        "id": "trt_01KYW79GSCBG6991JKGS1SA26C",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -643,6 +651,11 @@
             "default": 0.0,
             "name": "turn",
             "type": "number"
+          },
+          {
+            "default": {},
+            "name": "meshAssetArt",
+            "type": "string"
           }
         ],
         "id": "ent_01KXG04VPEKABGCCR0VDS99H4Y",
@@ -669,6 +682,10 @@
             {
               "ref": "RoundLogic",
               "refId": "trt_01KXZ44ZPJ7S0K3RES6VZ4EFFX"
+            },
+            {
+              "ref": "VolumetricArt",
+              "refId": "trt_01KYW79GSCBG6991JKGS1SA26C"
             },
             {
               "ref": "PlayerIntent",
@@ -890,6 +907,13 @@
           "linkedEntityId": "ent_01KXG04VPEKABGCCR0VDS99H4Y",
           "name": "RoundLogic",
           "ref": "Round.traits.RoundFlow"
+        },
+        {
+          "id": "trt_01KYW79GSCBG6991JKGS1SA26C",
+          "linkedEntity": "GameState",
+          "linkedEntityId": "ent_01KXG04VPEKABGCCR0VDS99H4Y",
+          "name": "VolumetricArt",
+          "ref": "MeshArt.traits.MeshAssetArtCollector"
         },
         {
           "category": "interaction",
@@ -1320,12 +1344,33 @@
               "tier": "domain",
               "type": "number"
             },
+            "lighting": {
+              "default": {},
+              "description": "3D scene light rig as data — ambient/directional/hemisphere/points + environment ('room' | 'none') for PBR reflections. Empty → the standard fixed rig.",
+              "label": "Lighting",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "meshUnitScale": {
+              "default": 1.0,
+              "description": "Uniform scale applied to volumetric (meshAssetArt draw-group) units.",
+              "label": "Mesh Unit Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
             "movementRange": {
               "default": 4.0,
               "description": "Max manhattan distance a selected unit may move.",
               "label": "Movement Range",
               "tier": "domain",
               "type": "number"
+            },
+            "post": {
+              "default": {},
+              "description": "3D post-processing stack — bloom and vignette. Empty → no post pass.",
+              "label": "Post Effects",
+              "tier": "presentation",
+              "type": "json"
             },
             "scale": {
               "default": 0.45,
@@ -1649,437 +1694,801 @@
                             "mode": "@config.cameraMode",
                             "zoom": "@config.scale"
                           },
-                          "children": [
-                            {
-                              "items": [
-                                "array/filter",
-                                [
-                                  "array/map",
-                                  "@entity.tiles",
+                          "drawables": [
+                            "array/concat",
+                            [
+                              {
+                                "items": [
+                                  "array/filter",
                                   [
-                                    "fn",
-                                    "t",
-                                    {
-                                      "asset": [
-                                        "if",
+                                    "array/map",
+                                    [
+                                      "array/filter",
+                                      "@entity.tiles",
+                                      [
+                                        "fn",
+                                        "t",
                                         [
-                                          "object/get",
+                                          "not",
+                                          [
+                                            "object/get",
+                                            "@entity.meshAssetArt",
+                                            [
+                                              "object/get",
+                                              "@t",
+                                              "terrain"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "fn",
+                                      "t",
+                                      {
+                                        "asset": [
+                                          "if",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@t",
+                                              "modelUrl"
+                                            ],
+                                            "url"
+                                          ],
                                           [
                                             "object/get",
                                             "@t",
                                             "modelUrl"
                                           ],
-                                          "url"
-                                        ],
-                                        [
-                                          "object/get",
-                                          "@t",
-                                          "modelUrl"
-                                        ],
-                                        [
-                                          "object/get",
                                           [
                                             "object/get",
-                                            "@config.assetManifest",
-                                            "terrains"
-                                          ],
-                                          [
+                                            [
+                                              "object/get",
+                                              "@config.assetManifest",
+                                              "terrains"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@t",
+                                              "terrain"
+                                            ]
+                                          ]
+                                        ],
+                                        "position": {
+                                          "x": [
                                             "object/get",
                                             "@t",
-                                            "terrain"
+                                            "x"
+                                          ],
+                                          "y": [
+                                            "object/get",
+                                            "@t",
+                                            "y"
+                                          ],
+                                          "z": [
+                                            "object/get",
+                                            "@t",
+                                            "z"
                                           ]
-                                        ]
-                                      ],
-                                      "position": {
-                                        "x": [
-                                          "object/get",
-                                          "@t",
-                                          "x"
-                                        ],
-                                        "y": [
-                                          "object/get",
-                                          "@t",
-                                          "y"
-                                        ],
-                                        "z": [
-                                          "object/get",
-                                          "@t",
-                                          "z"
-                                        ]
-                                      },
-                                      "type": "draw-sprite"
-                                    }
-                                  ]
-                                ],
-                                [
-                                  "fn",
-                                  "s",
+                                        },
+                                        "type": "draw-sprite"
+                                      }
+                                    ]
+                                  ],
                                   [
-                                    "object/get",
+                                    "fn",
+                                    "s",
                                     [
                                       "object/get",
-                                      "@s",
-                                      "asset"
-                                    ],
-                                    "url"
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "asset"
+                                      ],
+                                      "url"
+                                    ]
                                   ]
-                                ]
-                              ],
-                              "type": "draw-sprite-layer"
-                            },
-                            {
-                              "items": [
-                                "array/map",
-                                "@config.features",
-                                [
-                                  "fn",
-                                  "f",
-                                  {
-                                    "asset": [
-                                      "object/get",
-                                      "@f",
-                                      "assetUrl"
-                                    ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ],
-                                      "z": [
-                                        "object/get",
-                                        "@f",
-                                        "z"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
-                                ]
-                              ],
-                              "type": "draw-sprite-layer"
-                            },
-                            {
-                              "items": [
-                                "array/map",
-                                "@entity.validMoves",
-                                [
-                                  "fn",
-                                  "m",
-                                  {
-                                    "fill": "rgba(74,222,128,0.4)",
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@m",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@m",
-                                        "z"
-                                      ]
-                                    },
-                                    "shape": "cell",
-                                    "type": "draw-shape"
-                                  }
-                                ]
-                              ],
-                              "type": "draw-shape-layer"
-                            },
-                            {
-                              "items": [
-                                "array/map",
-                                "@entity.attackTargets",
-                                [
-                                  "fn",
-                                  "a",
-                                  {
-                                    "fill": "rgba(239,68,68,0.4)",
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@a",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@a",
-                                        "z"
-                                      ]
-                                    },
-                                    "shape": "cell",
-                                    "type": "draw-shape"
-                                  }
-                                ]
-                              ],
-                              "type": "draw-shape-layer"
-                            },
-                            {
-                              "items": [
+                                ],
+                                "type": "draw-sprite-layer"
+                              }
+                            ],
+                            [
+                              "array/concat",
+                              [
                                 "array/map",
                                 [
                                   "array/filter",
-                                  "@entity.units",
+                                  "@entity.tiles",
                                   [
                                     "fn",
-                                    "u",
+                                    "t",
                                     [
-                                      "==",
+                                      "object/get",
+                                      "@entity.meshAssetArt",
                                       [
                                         "object/get",
-                                        "@u",
-                                        "id"
-                                      ],
-                                      "@entity.selectedUnitId"
+                                        "@t",
+                                        "terrain"
+                                      ]
                                     ]
                                   ]
                                 ],
                                 [
                                   "fn",
-                                  "u",
+                                  "t",
                                   {
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@u",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@u",
-                                        "y"
-                                      ],
-                                      "z": [
-                                        "object/get",
-                                        "@u",
-                                        "z"
-                                      ]
-                                    },
-                                    "radiusX": 0.5,
-                                    "radiusY": 0.2,
-                                    "shape": "ellipse",
-                                    "stroke": "rgba(0,200,255,0.8)",
-                                    "strokeWidth": 3.0,
-                                    "type": "draw-shape"
-                                  }
-                                ]
-                              ],
-                              "type": "draw-shape-layer"
-                            },
-                            {
-                              "items": [
-                                "array/map",
-                                "@entity.units",
-                                [
-                                  "fn",
-                                  "u",
-                                  {
-                                    "anchor": "ground",
-                                    "asset": [
+                                    "items": [
                                       "object/get",
-                                      "@u",
-                                      "modelUrl"
-                                    ],
-                                    "height": 0.8,
-                                    "id": [
-                                      "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@u",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@u",
-                                        "y"
-                                      ],
-                                      "z": [
-                                        "object/get",
-                                        "@u",
-                                        "z"
-                                      ]
-                                    },
-                                    "type": "draw-sprite",
-                                    "width": 0.8
-                                  }
-                                ]
-                              ],
-                              "type": "draw-sprite-layer"
-                            },
-                            {
-                              "items": [
-                                "array/map",
-                                "@entity.units",
-                                [
-                                  "fn",
-                                  "u",
-                                  {
-                                    "fill": "rgba(0,0,0,0.6)",
-                                    "height": 0.12,
-                                    "offsetY": -0.6,
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@u",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@u",
-                                        "y"
-                                      ],
-                                      "z": [
-                                        "object/get",
-                                        "@u",
-                                        "z"
-                                      ]
-                                    },
-                                    "shape": "rect",
-                                    "type": "draw-shape",
-                                    "width": 0.8
-                                  }
-                                ]
-                              ],
-                              "type": "draw-shape-layer"
-                            },
-                            {
-                              "items": [
-                                "array/map",
-                                "@entity.units",
-                                [
-                                  "fn",
-                                  "u",
-                                  {
-                                    "fill": "#22c55e",
-                                    "height": 0.12,
-                                    "offsetY": -0.6,
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@u",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@u",
-                                        "y"
-                                      ],
-                                      "z": [
-                                        "object/get",
-                                        "@u",
-                                        "z"
-                                      ]
-                                    },
-                                    "shape": "rect",
-                                    "type": "draw-shape",
-                                    "width": [
-                                      "*",
-                                      0.8,
                                       [
-                                        "/",
+                                        "object/get",
+                                        "@entity.meshAssetArt",
                                         [
                                           "object/get",
-                                          "@u",
-                                          "health"
+                                          "@t",
+                                          "terrain"
+                                        ]
+                                      ],
+                                      "idle"
+                                    ],
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@t",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@t",
+                                        "y"
+                                      ],
+                                      "z": [
+                                        "object/get",
+                                        "@t",
+                                        "z"
+                                      ]
+                                    },
+                                    "type": "draw-group"
+                                  }
+                                ]
+                              ],
+                              [
+                                "array/concat",
+                                [
+                                  {
+                                    "items": [
+                                      "array/map",
+                                      [
+                                        "array/filter",
+                                        "@config.features",
+                                        [
+                                          "fn",
+                                          "f",
+                                          [
+                                            "not",
+                                            [
+                                              "object/get",
+                                              "@entity.meshAssetArt",
+                                              [
+                                                "object/get",
+                                                "@f",
+                                                "type"
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "fn",
+                                        "f",
+                                        {
+                                          "asset": [
+                                            "object/get",
+                                            "@f",
+                                            "assetUrl"
+                                          ],
+                                          "position": {
+                                            "x": [
+                                              "object/get",
+                                              "@f",
+                                              "x"
+                                            ],
+                                            "y": [
+                                              "object/get",
+                                              "@f",
+                                              "y"
+                                            ],
+                                            "z": [
+                                              "object/get",
+                                              "@f",
+                                              "z"
+                                            ]
+                                          },
+                                          "type": "draw-sprite"
+                                        }
+                                      ]
+                                    ],
+                                    "type": "draw-sprite-layer"
+                                  }
+                                ],
+                                [
+                                  "array/concat",
+                                  [
+                                    "array/map",
+                                    [
+                                      "array/filter",
+                                      "@config.features",
+                                      [
+                                        "fn",
+                                        "f",
+                                        [
+                                          "object/get",
+                                          "@entity.meshAssetArt",
+                                          [
+                                            "object/get",
+                                            "@f",
+                                            "type"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "fn",
+                                      "f",
+                                      {
+                                        "items": [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@entity.meshAssetArt",
+                                            [
+                                              "object/get",
+                                              "@f",
+                                              "type"
+                                            ]
+                                          ],
+                                          "idle"
+                                        ],
+                                        "position": {
+                                          "x": [
+                                            "object/get",
+                                            "@f",
+                                            "x"
+                                          ],
+                                          "y": [
+                                            "object/get",
+                                            "@f",
+                                            "y"
+                                          ],
+                                          "z": [
+                                            "object/get",
+                                            "@f",
+                                            "z"
+                                          ]
+                                        },
+                                        "type": "draw-group"
+                                      }
+                                    ]
+                                  ],
+                                  [
+                                    "array/concat",
+                                    [
+                                      {
+                                        "items": [
+                                          "array/map",
+                                          "@entity.validMoves",
+                                          [
+                                            "fn",
+                                            "m",
+                                            {
+                                              "fill": "rgba(74,222,128,0.4)",
+                                              "position": {
+                                                "x": [
+                                                  "object/get",
+                                                  "@m",
+                                                  "x"
+                                                ],
+                                                "y": [
+                                                  "object/get",
+                                                  "@m",
+                                                  "z"
+                                                ]
+                                              },
+                                              "shape": "cell",
+                                              "type": "draw-shape"
+                                            }
+                                          ]
+                                        ],
+                                        "type": "draw-shape-layer"
+                                      },
+                                      {
+                                        "items": [
+                                          "array/map",
+                                          "@entity.attackTargets",
+                                          [
+                                            "fn",
+                                            "a",
+                                            {
+                                              "fill": "rgba(239,68,68,0.4)",
+                                              "position": {
+                                                "x": [
+                                                  "object/get",
+                                                  "@a",
+                                                  "x"
+                                                ],
+                                                "y": [
+                                                  "object/get",
+                                                  "@a",
+                                                  "z"
+                                                ]
+                                              },
+                                              "shape": "cell",
+                                              "type": "draw-shape"
+                                            }
+                                          ]
+                                        ],
+                                        "type": "draw-shape-layer"
+                                      },
+                                      {
+                                        "items": [
+                                          "array/map",
+                                          [
+                                            "array/filter",
+                                            "@entity.units",
+                                            [
+                                              "fn",
+                                              "u",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "id"
+                                                ],
+                                                "@entity.selectedUnitId"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "u",
+                                            {
+                                              "position": {
+                                                "x": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "x"
+                                                ],
+                                                "y": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "y"
+                                                ],
+                                                "z": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "z"
+                                                ]
+                                              },
+                                              "radiusX": 0.5,
+                                              "radiusY": 0.2,
+                                              "shape": "ellipse",
+                                              "stroke": "rgba(0,200,255,0.8)",
+                                              "strokeWidth": 3.0,
+                                              "type": "draw-shape"
+                                            }
+                                          ]
+                                        ],
+                                        "type": "draw-shape-layer"
+                                      }
+                                    ],
+                                    [
+                                      "array/concat",
+                                      [
+                                        "array/map",
+                                        [
+                                          "array/filter",
+                                          "@entity.units",
+                                          [
+                                            "fn",
+                                            "u",
+                                            [
+                                              "object/get",
+                                              "@entity.meshAssetArt",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "unitType"
+                                              ]
+                                            ]
+                                          ]
                                         ],
                                         [
-                                          "object/get",
-                                          "@u",
-                                          "maxHealth"
+                                          "fn",
+                                          "u",
+                                          [
+                                            "let",
+                                            [
+                                              [
+                                                "unitStates",
+                                                [
+                                                  "object/get",
+                                                  "@entity.meshAssetArt",
+                                                  [
+                                                    "object/get",
+                                                    "@u",
+                                                    "unitType"
+                                                  ]
+                                                ]
+                                              ],
+                                              [
+                                                "unitAnim",
+                                                [
+                                                  "if",
+                                                  [
+                                                    "<=",
+                                                    [
+                                                      "object/get",
+                                                      "@u",
+                                                      "health"
+                                                    ],
+                                                    0.0
+                                                  ],
+                                                  "death",
+                                                  "idle"
+                                                ]
+                                              ]
+                                            ],
+                                            {
+                                              "id": [
+                                                "object/get",
+                                                "@u",
+                                                "id"
+                                              ],
+                                              "items": [
+                                                "if",
+                                                [
+                                                  "object/get",
+                                                  "@unitStates",
+                                                  "@unitAnim"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@unitStates",
+                                                  "@unitAnim"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@unitStates",
+                                                  "idle"
+                                                ]
+                                              ],
+                                              "position": {
+                                                "x": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "x"
+                                                ],
+                                                "y": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "y"
+                                                ],
+                                                "z": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "z"
+                                                ]
+                                              },
+                                              "scale": "@config.meshUnitScale",
+                                              "type": "draw-group"
+                                            }
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "array/concat",
+                                        [
+                                          {
+                                            "items": [
+                                              "array/map",
+                                              [
+                                                "array/filter",
+                                                "@entity.units",
+                                                [
+                                                  "fn",
+                                                  "u",
+                                                  [
+                                                    "not",
+                                                    [
+                                                      "object/get",
+                                                      "@entity.meshAssetArt",
+                                                      [
+                                                        "object/get",
+                                                        "@u",
+                                                        "unitType"
+                                                      ]
+                                                    ]
+                                                  ]
+                                                ]
+                                              ],
+                                              [
+                                                "fn",
+                                                "u",
+                                                {
+                                                  "anchor": "ground",
+                                                  "asset": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "modelUrl"
+                                                  ],
+                                                  "height": 0.8,
+                                                  "id": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "id"
+                                                  ],
+                                                  "position": {
+                                                    "x": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "x"
+                                                    ],
+                                                    "y": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "y"
+                                                    ],
+                                                    "z": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "z"
+                                                    ]
+                                                  },
+                                                  "type": "draw-sprite",
+                                                  "width": 0.8
+                                                }
+                                              ]
+                                            ],
+                                            "type": "draw-sprite-layer"
+                                          },
+                                          {
+                                            "items": [
+                                              "array/map",
+                                              "@entity.units",
+                                              [
+                                                "fn",
+                                                "u",
+                                                {
+                                                  "fill": "rgba(0,0,0,0.6)",
+                                                  "height": 0.12,
+                                                  "offsetY": -0.6,
+                                                  "position": {
+                                                    "x": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "x"
+                                                    ],
+                                                    "y": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "y"
+                                                    ],
+                                                    "z": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "z"
+                                                    ]
+                                                  },
+                                                  "shape": "rect",
+                                                  "type": "draw-shape",
+                                                  "width": 0.8
+                                                }
+                                              ]
+                                            ],
+                                            "type": "draw-shape-layer"
+                                          },
+                                          {
+                                            "items": [
+                                              "array/map",
+                                              "@entity.units",
+                                              [
+                                                "fn",
+                                                "u",
+                                                {
+                                                  "fill": "#22c55e",
+                                                  "height": 0.12,
+                                                  "offsetY": -0.6,
+                                                  "position": {
+                                                    "x": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "x"
+                                                    ],
+                                                    "y": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "y"
+                                                    ],
+                                                    "z": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "z"
+                                                    ]
+                                                  },
+                                                  "shape": "rect",
+                                                  "type": "draw-shape",
+                                                  "width": [
+                                                    "*",
+                                                    0.8,
+                                                    [
+                                                      "/",
+                                                      [
+                                                        "object/get",
+                                                        "@u",
+                                                        "health"
+                                                      ],
+                                                      [
+                                                        "object/get",
+                                                        "@u",
+                                                        "maxHealth"
+                                                      ]
+                                                    ]
+                                                  ]
+                                                }
+                                              ]
+                                            ],
+                                            "type": "draw-shape-layer"
+                                          },
+                                          {
+                                            "items": [
+                                              "array/map",
+                                              "@entity.units",
+                                              [
+                                                "fn",
+                                                "u",
+                                                {
+                                                  "color": "#ffffff",
+                                                  "offsetY": -0.85,
+                                                  "position": {
+                                                    "x": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "x"
+                                                    ],
+                                                    "y": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "y"
+                                                    ],
+                                                    "z": [
+                                                      "object/get",
+                                                      "@u",
+                                                      "z"
+                                                    ]
+                                                  },
+                                                  "text": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "name"
+                                                  ],
+                                                  "type": "draw-text"
+                                                }
+                                              ]
+                                            ],
+                                            "type": "draw-text-layer"
+                                          }
+                                        ],
+                                        [
+                                          "array/concat",
+                                          [
+                                            "array/map",
+                                            [
+                                              "array/filter",
+                                              "@entity.fx",
+                                              [
+                                                "fn",
+                                                "f",
+                                                [
+                                                  "object/get",
+                                                  "@entity.meshAssetArt",
+                                                  [
+                                                    "object/get",
+                                                    "@f",
+                                                    "type"
+                                                  ]
+                                                ]
+                                              ]
+                                            ],
+                                            [
+                                              "fn",
+                                              "f",
+                                              {
+                                                "items": [
+                                                  "object/get",
+                                                  [
+                                                    "object/get",
+                                                    "@entity.meshAssetArt",
+                                                    [
+                                                      "object/get",
+                                                      "@f",
+                                                      "type"
+                                                    ]
+                                                  ],
+                                                  "idle"
+                                                ],
+                                                "position": {
+                                                  "x": [
+                                                    "object/get",
+                                                    "@f",
+                                                    "x"
+                                                  ],
+                                                  "y": [
+                                                    "object/get",
+                                                    "@f",
+                                                    "y"
+                                                  ],
+                                                  "z": [
+                                                    "object/get",
+                                                    "@f",
+                                                    "z"
+                                                  ]
+                                                },
+                                                "type": "draw-group"
+                                              }
+                                            ]
+                                          ],
+                                          [
+                                            {
+                                              "items": [
+                                                "array/map",
+                                                "@entity.fx",
+                                                [
+                                                  "fn",
+                                                  "f",
+                                                  {
+                                                    "color": "#ffe066",
+                                                    "position": {
+                                                      "x": [
+                                                        "object/get",
+                                                        "@f",
+                                                        "x"
+                                                      ],
+                                                      "y": [
+                                                        "object/get",
+                                                        "@f",
+                                                        "y"
+                                                      ],
+                                                      "z": [
+                                                        "object/get",
+                                                        "@f",
+                                                        "z"
+                                                      ]
+                                                    },
+                                                    "text": [
+                                                      "object/get",
+                                                      "@f",
+                                                      "message"
+                                                    ],
+                                                    "type": "draw-text"
+                                                  }
+                                                ]
+                                              ],
+                                              "type": "draw-text-layer"
+                                            }
+                                          ]
                                         ]
                                       ]
                                     ]
-                                  }
+                                  ]
                                 ]
-                              ],
-                              "type": "draw-shape-layer"
-                            },
-                            {
-                              "items": [
-                                "array/map",
-                                "@entity.units",
-                                [
-                                  "fn",
-                                  "u",
-                                  {
-                                    "color": "#ffffff",
-                                    "offsetY": -0.85,
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@u",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@u",
-                                        "y"
-                                      ],
-                                      "z": [
-                                        "object/get",
-                                        "@u",
-                                        "z"
-                                      ]
-                                    },
-                                    "text": [
-                                      "object/get",
-                                      "@u",
-                                      "name"
-                                    ],
-                                    "type": "draw-text"
-                                  }
-                                ]
-                              ],
-                              "type": "draw-text-layer"
-                            },
-                            {
-                              "items": [
-                                "array/map",
-                                "@entity.fx",
-                                [
-                                  "fn",
-                                  "f",
-                                  {
-                                    "color": "#ffe066",
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ],
-                                      "z": [
-                                        "object/get",
-                                        "@f",
-                                        "z"
-                                      ]
-                                    },
-                                    "text": [
-                                      "object/get",
-                                      "@f",
-                                      "message"
-                                    ],
-                                    "type": "draw-text"
-                                  }
-                                ]
-                              ],
-                              "type": "draw-text-layer"
-                            }
+                              ]
+                            ]
                           ],
+                          "lighting": "@config.lighting",
                           "mode": "3d",
+                          "post": "@config.post",
                           "tileClickEvent": "TILE_CLICK",
                           "type": "canvas",
                           "unitClickEvent": "UNIT_CLICK",
@@ -2687,437 +3096,801 @@
                           "mode": "@config.cameraMode",
                           "zoom": "@config.scale"
                         },
-                        "children": [
-                          {
-                            "items": [
-                              "array/filter",
-                              [
-                                "array/map",
-                                "@entity.tiles",
+                        "drawables": [
+                          "array/concat",
+                          [
+                            {
+                              "items": [
+                                "array/filter",
                                 [
-                                  "fn",
-                                  "t",
-                                  {
-                                    "asset": [
-                                      "if",
+                                  "array/map",
+                                  [
+                                    "array/filter",
+                                    "@entity.tiles",
+                                    [
+                                      "fn",
+                                      "t",
                                       [
-                                        "object/get",
+                                        "not",
+                                        [
+                                          "object/get",
+                                          "@entity.meshAssetArt",
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "terrain"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "fn",
+                                    "t",
+                                    {
+                                      "asset": [
+                                        "if",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "modelUrl"
+                                          ],
+                                          "url"
+                                        ],
                                         [
                                           "object/get",
                                           "@t",
                                           "modelUrl"
                                         ],
-                                        "url"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@t",
-                                        "modelUrl"
-                                      ],
-                                      [
-                                        "object/get",
                                         [
                                           "object/get",
-                                          "@config.assetManifest",
-                                          "terrains"
-                                        ],
-                                        [
+                                          [
+                                            "object/get",
+                                            "@config.assetManifest",
+                                            "terrains"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "terrain"
+                                          ]
+                                        ]
+                                      ],
+                                      "position": {
+                                        "x": [
                                           "object/get",
                                           "@t",
-                                          "terrain"
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@t",
+                                          "y"
+                                        ],
+                                        "z": [
+                                          "object/get",
+                                          "@t",
+                                          "z"
                                         ]
-                                      ]
-                                    ],
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@t",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@t",
-                                        "y"
-                                      ],
-                                      "z": [
-                                        "object/get",
-                                        "@t",
-                                        "z"
-                                      ]
-                                    },
-                                    "type": "draw-sprite"
-                                  }
-                                ]
-                              ],
-                              [
-                                "fn",
-                                "s",
+                                      },
+                                      "type": "draw-sprite"
+                                    }
+                                  ]
+                                ],
                                 [
-                                  "object/get",
+                                  "fn",
+                                  "s",
                                   [
                                     "object/get",
-                                    "@s",
-                                    "asset"
-                                  ],
-                                  "url"
+                                    [
+                                      "object/get",
+                                      "@s",
+                                      "asset"
+                                    ],
+                                    "url"
+                                  ]
                                 ]
-                              ]
-                            ],
-                            "type": "draw-sprite-layer"
-                          },
-                          {
-                            "items": [
-                              "array/map",
-                              "@config.features",
-                              [
-                                "fn",
-                                "f",
-                                {
-                                  "asset": [
-                                    "object/get",
-                                    "@f",
-                                    "assetUrl"
-                                  ],
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@f",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@f",
-                                      "y"
-                                    ],
-                                    "z": [
-                                      "object/get",
-                                      "@f",
-                                      "z"
-                                    ]
-                                  },
-                                  "type": "draw-sprite"
-                                }
-                              ]
-                            ],
-                            "type": "draw-sprite-layer"
-                          },
-                          {
-                            "items": [
-                              "array/map",
-                              "@entity.validMoves",
-                              [
-                                "fn",
-                                "m",
-                                {
-                                  "fill": "rgba(74,222,128,0.4)",
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@m",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@m",
-                                      "z"
-                                    ]
-                                  },
-                                  "shape": "cell",
-                                  "type": "draw-shape"
-                                }
-                              ]
-                            ],
-                            "type": "draw-shape-layer"
-                          },
-                          {
-                            "items": [
-                              "array/map",
-                              "@entity.attackTargets",
-                              [
-                                "fn",
-                                "a",
-                                {
-                                  "fill": "rgba(239,68,68,0.4)",
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@a",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@a",
-                                      "z"
-                                    ]
-                                  },
-                                  "shape": "cell",
-                                  "type": "draw-shape"
-                                }
-                              ]
-                            ],
-                            "type": "draw-shape-layer"
-                          },
-                          {
-                            "items": [
+                              ],
+                              "type": "draw-sprite-layer"
+                            }
+                          ],
+                          [
+                            "array/concat",
+                            [
                               "array/map",
                               [
                                 "array/filter",
-                                "@entity.units",
+                                "@entity.tiles",
                                 [
                                   "fn",
-                                  "u",
+                                  "t",
                                   [
-                                    "==",
+                                    "object/get",
+                                    "@entity.meshAssetArt",
                                     [
                                       "object/get",
-                                      "@u",
-                                      "id"
-                                    ],
-                                    "@entity.selectedUnitId"
+                                      "@t",
+                                      "terrain"
+                                    ]
                                   ]
                                 ]
                               ],
                               [
                                 "fn",
-                                "u",
+                                "t",
                                 {
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@u",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@u",
-                                      "y"
-                                    ],
-                                    "z": [
-                                      "object/get",
-                                      "@u",
-                                      "z"
-                                    ]
-                                  },
-                                  "radiusX": 0.5,
-                                  "radiusY": 0.2,
-                                  "shape": "ellipse",
-                                  "stroke": "rgba(0,200,255,0.8)",
-                                  "strokeWidth": 3.0,
-                                  "type": "draw-shape"
-                                }
-                              ]
-                            ],
-                            "type": "draw-shape-layer"
-                          },
-                          {
-                            "items": [
-                              "array/map",
-                              "@entity.units",
-                              [
-                                "fn",
-                                "u",
-                                {
-                                  "anchor": "ground",
-                                  "asset": [
+                                  "items": [
                                     "object/get",
-                                    "@u",
-                                    "modelUrl"
-                                  ],
-                                  "height": 0.8,
-                                  "id": [
-                                    "object/get",
-                                    "@u",
-                                    "id"
-                                  ],
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@u",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@u",
-                                      "y"
-                                    ],
-                                    "z": [
-                                      "object/get",
-                                      "@u",
-                                      "z"
-                                    ]
-                                  },
-                                  "type": "draw-sprite",
-                                  "width": 0.8
-                                }
-                              ]
-                            ],
-                            "type": "draw-sprite-layer"
-                          },
-                          {
-                            "items": [
-                              "array/map",
-                              "@entity.units",
-                              [
-                                "fn",
-                                "u",
-                                {
-                                  "fill": "rgba(0,0,0,0.6)",
-                                  "height": 0.12,
-                                  "offsetY": -0.6,
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@u",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@u",
-                                      "y"
-                                    ],
-                                    "z": [
-                                      "object/get",
-                                      "@u",
-                                      "z"
-                                    ]
-                                  },
-                                  "shape": "rect",
-                                  "type": "draw-shape",
-                                  "width": 0.8
-                                }
-                              ]
-                            ],
-                            "type": "draw-shape-layer"
-                          },
-                          {
-                            "items": [
-                              "array/map",
-                              "@entity.units",
-                              [
-                                "fn",
-                                "u",
-                                {
-                                  "fill": "#22c55e",
-                                  "height": 0.12,
-                                  "offsetY": -0.6,
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@u",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@u",
-                                      "y"
-                                    ],
-                                    "z": [
-                                      "object/get",
-                                      "@u",
-                                      "z"
-                                    ]
-                                  },
-                                  "shape": "rect",
-                                  "type": "draw-shape",
-                                  "width": [
-                                    "*",
-                                    0.8,
                                     [
-                                      "/",
+                                      "object/get",
+                                      "@entity.meshAssetArt",
                                       [
                                         "object/get",
-                                        "@u",
-                                        "health"
+                                        "@t",
+                                        "terrain"
+                                      ]
+                                    ],
+                                    "idle"
+                                  ],
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ],
+                                    "z": [
+                                      "object/get",
+                                      "@t",
+                                      "z"
+                                    ]
+                                  },
+                                  "type": "draw-group"
+                                }
+                              ]
+                            ],
+                            [
+                              "array/concat",
+                              [
+                                {
+                                  "items": [
+                                    "array/map",
+                                    [
+                                      "array/filter",
+                                      "@config.features",
+                                      [
+                                        "fn",
+                                        "f",
+                                        [
+                                          "not",
+                                          [
+                                            "object/get",
+                                            "@entity.meshAssetArt",
+                                            [
+                                              "object/get",
+                                              "@f",
+                                              "type"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "fn",
+                                      "f",
+                                      {
+                                        "asset": [
+                                          "object/get",
+                                          "@f",
+                                          "assetUrl"
+                                        ],
+                                        "position": {
+                                          "x": [
+                                            "object/get",
+                                            "@f",
+                                            "x"
+                                          ],
+                                          "y": [
+                                            "object/get",
+                                            "@f",
+                                            "y"
+                                          ],
+                                          "z": [
+                                            "object/get",
+                                            "@f",
+                                            "z"
+                                          ]
+                                        },
+                                        "type": "draw-sprite"
+                                      }
+                                    ]
+                                  ],
+                                  "type": "draw-sprite-layer"
+                                }
+                              ],
+                              [
+                                "array/concat",
+                                [
+                                  "array/map",
+                                  [
+                                    "array/filter",
+                                    "@config.features",
+                                    [
+                                      "fn",
+                                      "f",
+                                      [
+                                        "object/get",
+                                        "@entity.meshAssetArt",
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "type"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "fn",
+                                    "f",
+                                    {
+                                      "items": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@entity.meshAssetArt",
+                                          [
+                                            "object/get",
+                                            "@f",
+                                            "type"
+                                          ]
+                                        ],
+                                        "idle"
+                                      ],
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ],
+                                        "z": [
+                                          "object/get",
+                                          "@f",
+                                          "z"
+                                        ]
+                                      },
+                                      "type": "draw-group"
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "array/concat",
+                                  [
+                                    {
+                                      "items": [
+                                        "array/map",
+                                        "@entity.validMoves",
+                                        [
+                                          "fn",
+                                          "m",
+                                          {
+                                            "fill": "rgba(74,222,128,0.4)",
+                                            "position": {
+                                              "x": [
+                                                "object/get",
+                                                "@m",
+                                                "x"
+                                              ],
+                                              "y": [
+                                                "object/get",
+                                                "@m",
+                                                "z"
+                                              ]
+                                            },
+                                            "shape": "cell",
+                                            "type": "draw-shape"
+                                          }
+                                        ]
+                                      ],
+                                      "type": "draw-shape-layer"
+                                    },
+                                    {
+                                      "items": [
+                                        "array/map",
+                                        "@entity.attackTargets",
+                                        [
+                                          "fn",
+                                          "a",
+                                          {
+                                            "fill": "rgba(239,68,68,0.4)",
+                                            "position": {
+                                              "x": [
+                                                "object/get",
+                                                "@a",
+                                                "x"
+                                              ],
+                                              "y": [
+                                                "object/get",
+                                                "@a",
+                                                "z"
+                                              ]
+                                            },
+                                            "shape": "cell",
+                                            "type": "draw-shape"
+                                          }
+                                        ]
+                                      ],
+                                      "type": "draw-shape-layer"
+                                    },
+                                    {
+                                      "items": [
+                                        "array/map",
+                                        [
+                                          "array/filter",
+                                          "@entity.units",
+                                          [
+                                            "fn",
+                                            "u",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "id"
+                                              ],
+                                              "@entity.selectedUnitId"
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "fn",
+                                          "u",
+                                          {
+                                            "position": {
+                                              "x": [
+                                                "object/get",
+                                                "@u",
+                                                "x"
+                                              ],
+                                              "y": [
+                                                "object/get",
+                                                "@u",
+                                                "y"
+                                              ],
+                                              "z": [
+                                                "object/get",
+                                                "@u",
+                                                "z"
+                                              ]
+                                            },
+                                            "radiusX": 0.5,
+                                            "radiusY": 0.2,
+                                            "shape": "ellipse",
+                                            "stroke": "rgba(0,200,255,0.8)",
+                                            "strokeWidth": 3.0,
+                                            "type": "draw-shape"
+                                          }
+                                        ]
+                                      ],
+                                      "type": "draw-shape-layer"
+                                    }
+                                  ],
+                                  [
+                                    "array/concat",
+                                    [
+                                      "array/map",
+                                      [
+                                        "array/filter",
+                                        "@entity.units",
+                                        [
+                                          "fn",
+                                          "u",
+                                          [
+                                            "object/get",
+                                            "@entity.meshAssetArt",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "unitType"
+                                            ]
+                                          ]
+                                        ]
                                       ],
                                       [
-                                        "object/get",
-                                        "@u",
-                                        "maxHealth"
+                                        "fn",
+                                        "u",
+                                        [
+                                          "let",
+                                          [
+                                            [
+                                              "unitStates",
+                                              [
+                                                "object/get",
+                                                "@entity.meshAssetArt",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "unitType"
+                                                ]
+                                              ]
+                                            ],
+                                            [
+                                              "unitAnim",
+                                              [
+                                                "if",
+                                                [
+                                                  "<=",
+                                                  [
+                                                    "object/get",
+                                                    "@u",
+                                                    "health"
+                                                  ],
+                                                  0.0
+                                                ],
+                                                "death",
+                                                "idle"
+                                              ]
+                                            ]
+                                          ],
+                                          {
+                                            "id": [
+                                              "object/get",
+                                              "@u",
+                                              "id"
+                                            ],
+                                            "items": [
+                                              "if",
+                                              [
+                                                "object/get",
+                                                "@unitStates",
+                                                "@unitAnim"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@unitStates",
+                                                "@unitAnim"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@unitStates",
+                                                "idle"
+                                              ]
+                                            ],
+                                            "position": {
+                                              "x": [
+                                                "object/get",
+                                                "@u",
+                                                "x"
+                                              ],
+                                              "y": [
+                                                "object/get",
+                                                "@u",
+                                                "y"
+                                              ],
+                                              "z": [
+                                                "object/get",
+                                                "@u",
+                                                "z"
+                                              ]
+                                            },
+                                            "scale": "@config.meshUnitScale",
+                                            "type": "draw-group"
+                                          }
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "array/concat",
+                                      [
+                                        {
+                                          "items": [
+                                            "array/map",
+                                            [
+                                              "array/filter",
+                                              "@entity.units",
+                                              [
+                                                "fn",
+                                                "u",
+                                                [
+                                                  "not",
+                                                  [
+                                                    "object/get",
+                                                    "@entity.meshAssetArt",
+                                                    [
+                                                      "object/get",
+                                                      "@u",
+                                                      "unitType"
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ],
+                                            [
+                                              "fn",
+                                              "u",
+                                              {
+                                                "anchor": "ground",
+                                                "asset": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "modelUrl"
+                                                ],
+                                                "height": 0.8,
+                                                "id": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "id"
+                                                ],
+                                                "position": {
+                                                  "x": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "x"
+                                                  ],
+                                                  "y": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "y"
+                                                  ],
+                                                  "z": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "z"
+                                                  ]
+                                                },
+                                                "type": "draw-sprite",
+                                                "width": 0.8
+                                              }
+                                            ]
+                                          ],
+                                          "type": "draw-sprite-layer"
+                                        },
+                                        {
+                                          "items": [
+                                            "array/map",
+                                            "@entity.units",
+                                            [
+                                              "fn",
+                                              "u",
+                                              {
+                                                "fill": "rgba(0,0,0,0.6)",
+                                                "height": 0.12,
+                                                "offsetY": -0.6,
+                                                "position": {
+                                                  "x": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "x"
+                                                  ],
+                                                  "y": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "y"
+                                                  ],
+                                                  "z": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "z"
+                                                  ]
+                                                },
+                                                "shape": "rect",
+                                                "type": "draw-shape",
+                                                "width": 0.8
+                                              }
+                                            ]
+                                          ],
+                                          "type": "draw-shape-layer"
+                                        },
+                                        {
+                                          "items": [
+                                            "array/map",
+                                            "@entity.units",
+                                            [
+                                              "fn",
+                                              "u",
+                                              {
+                                                "fill": "#22c55e",
+                                                "height": 0.12,
+                                                "offsetY": -0.6,
+                                                "position": {
+                                                  "x": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "x"
+                                                  ],
+                                                  "y": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "y"
+                                                  ],
+                                                  "z": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "z"
+                                                  ]
+                                                },
+                                                "shape": "rect",
+                                                "type": "draw-shape",
+                                                "width": [
+                                                  "*",
+                                                  0.8,
+                                                  [
+                                                    "/",
+                                                    [
+                                                      "object/get",
+                                                      "@u",
+                                                      "health"
+                                                    ],
+                                                    [
+                                                      "object/get",
+                                                      "@u",
+                                                      "maxHealth"
+                                                    ]
+                                                  ]
+                                                ]
+                                              }
+                                            ]
+                                          ],
+                                          "type": "draw-shape-layer"
+                                        },
+                                        {
+                                          "items": [
+                                            "array/map",
+                                            "@entity.units",
+                                            [
+                                              "fn",
+                                              "u",
+                                              {
+                                                "color": "#ffffff",
+                                                "offsetY": -0.85,
+                                                "position": {
+                                                  "x": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "x"
+                                                  ],
+                                                  "y": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "y"
+                                                  ],
+                                                  "z": [
+                                                    "object/get",
+                                                    "@u",
+                                                    "z"
+                                                  ]
+                                                },
+                                                "text": [
+                                                  "object/get",
+                                                  "@u",
+                                                  "name"
+                                                ],
+                                                "type": "draw-text"
+                                              }
+                                            ]
+                                          ],
+                                          "type": "draw-text-layer"
+                                        }
+                                      ],
+                                      [
+                                        "array/concat",
+                                        [
+                                          "array/map",
+                                          [
+                                            "array/filter",
+                                            "@entity.fx",
+                                            [
+                                              "fn",
+                                              "f",
+                                              [
+                                                "object/get",
+                                                "@entity.meshAssetArt",
+                                                [
+                                                  "object/get",
+                                                  "@f",
+                                                  "type"
+                                                ]
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "f",
+                                            {
+                                              "items": [
+                                                "object/get",
+                                                [
+                                                  "object/get",
+                                                  "@entity.meshAssetArt",
+                                                  [
+                                                    "object/get",
+                                                    "@f",
+                                                    "type"
+                                                  ]
+                                                ],
+                                                "idle"
+                                              ],
+                                              "position": {
+                                                "x": [
+                                                  "object/get",
+                                                  "@f",
+                                                  "x"
+                                                ],
+                                                "y": [
+                                                  "object/get",
+                                                  "@f",
+                                                  "y"
+                                                ],
+                                                "z": [
+                                                  "object/get",
+                                                  "@f",
+                                                  "z"
+                                                ]
+                                              },
+                                              "type": "draw-group"
+                                            }
+                                          ]
+                                        ],
+                                        [
+                                          {
+                                            "items": [
+                                              "array/map",
+                                              "@entity.fx",
+                                              [
+                                                "fn",
+                                                "f",
+                                                {
+                                                  "color": "#ffe066",
+                                                  "position": {
+                                                    "x": [
+                                                      "object/get",
+                                                      "@f",
+                                                      "x"
+                                                    ],
+                                                    "y": [
+                                                      "object/get",
+                                                      "@f",
+                                                      "y"
+                                                    ],
+                                                    "z": [
+                                                      "object/get",
+                                                      "@f",
+                                                      "z"
+                                                    ]
+                                                  },
+                                                  "text": [
+                                                    "object/get",
+                                                    "@f",
+                                                    "message"
+                                                  ],
+                                                  "type": "draw-text"
+                                                }
+                                              ]
+                                            ],
+                                            "type": "draw-text-layer"
+                                          }
+                                        ]
                                       ]
                                     ]
                                   ]
-                                }
+                                ]
                               ]
-                            ],
-                            "type": "draw-shape-layer"
-                          },
-                          {
-                            "items": [
-                              "array/map",
-                              "@entity.units",
-                              [
-                                "fn",
-                                "u",
-                                {
-                                  "color": "#ffffff",
-                                  "offsetY": -0.85,
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@u",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@u",
-                                      "y"
-                                    ],
-                                    "z": [
-                                      "object/get",
-                                      "@u",
-                                      "z"
-                                    ]
-                                  },
-                                  "text": [
-                                    "object/get",
-                                    "@u",
-                                    "name"
-                                  ],
-                                  "type": "draw-text"
-                                }
-                              ]
-                            ],
-                            "type": "draw-text-layer"
-                          },
-                          {
-                            "items": [
-                              "array/map",
-                              "@entity.fx",
-                              [
-                                "fn",
-                                "f",
-                                {
-                                  "color": "#ffe066",
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@f",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@f",
-                                      "y"
-                                    ],
-                                    "z": [
-                                      "object/get",
-                                      "@f",
-                                      "z"
-                                    ]
-                                  },
-                                  "text": [
-                                    "object/get",
-                                    "@f",
-                                    "message"
-                                  ],
-                                  "type": "draw-text"
-                                }
-                              ]
-                            ],
-                            "type": "draw-text-layer"
-                          }
+                            ]
+                          ]
                         ],
+                        "lighting": "@config.lighting",
                         "mode": "3d",
+                        "post": "@config.post",
                         "tileClickEvent": "TILE_CLICK",
                         "type": "canvas",
                         "unitClickEvent": "UNIT_CLICK",
@@ -3163,6 +3936,10 @@
         {
           "as": "Round",
           "from": "std/behaviors/std-round-flow"
+        },
+        {
+          "as": "MeshArt",
+          "from": "std/behaviors/std-mesh-asset-art"
         }
       ]
     }

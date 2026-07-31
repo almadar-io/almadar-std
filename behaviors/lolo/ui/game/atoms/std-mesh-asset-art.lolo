@@ -1,0 +1,44 @@
+app std-mesh-asset-art "1.0.0"
+"MeshAssetArtCollector — SOLE writer of @entity.meshAssetArt: collects volumetric asset catalogs published on the bus (MESH_ASSET_PUBLISH { kind, states }) into one kind → (state → draw-group items of draw-mesh descriptors) map that 3D board frames select per-row per anim state. INIT seeds from config and emits MESH_ASSET_SYNC so already-mounted catalogs republish regardless of mount order; the SYNC self-hop re-applies the seed after sibling canvas stashes exist (Almadar_Runtime_Gaps.md R-INIT-SEED-REPAINT-RACE). The 3D twin of SvgAssetArtCollector. Renders nothing — render authority stays with the frame."
+orbital StdMeshAssetArtOrbital {
+  entity StdMeshAssetArt [runtime, shared] {
+    id : string!
+    meshAssetArt : json = {}
+  }
+
+  trait MeshAssetArtCollector -> @rebindable StdMeshAssetArt [lifecycle] {
+    initial: collecting
+
+    state collecting {
+      INIT -> collecting
+        (set @entity.meshAssetArt @config.seedArt)
+        (emit MESH_ASSET_SYNC { })
+
+      MESH_ASSET_SYNC -> collecting
+        (set @entity.meshAssetArt (object/merge @config.seedArt @entity.meshAssetArt))
+
+      MESH_ASSET_PUBLISH -> collecting
+        (set @entity.meshAssetArt (object/merge @entity.meshAssetArt (object/fromEntries [[?kind, ?states]])))
+    }
+
+    emits {
+      MESH_ASSET_SYNC -> external { }
+        @description "Asks mounted mesh asset catalogs to (re)publish their states; also the collector's own seed re-apply hop"
+        @tier "domain"
+    }
+
+    listens {
+      MESH_ASSET_SYNC { }
+      MESH_ASSET_PUBLISH { kind : string, states : json }
+    }
+
+    config {
+      seedArt : json = {}
+        @label "Seed Art"
+        @description "Initial kind → (state → draw-group items of draw-mesh descriptors) catalog merged under bus-published entries (published entries win). Lets a 3D board ship volumetric art with zero asset imports."
+        @tier "presentation"
+    }
+  }
+
+  page "/std-mesh-asset-art" as StdMeshAssetArtPage -> MeshAssetArtCollector
+}
