@@ -88,7 +88,7 @@ export interface StdUiTacticsDemo2dTacticsDemo2DOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait TacticsDemo2DOrbital's `uses[]` exports. */
-type _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
+type _StdUiTacticsDemo2dTacticsDemo2DOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.VectorArt' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the TacticsDemo2DOrbital orbital with consumer params. */
 export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2dTacticsDemo2DOrbitalParams = {}): OrbitalDefinition {

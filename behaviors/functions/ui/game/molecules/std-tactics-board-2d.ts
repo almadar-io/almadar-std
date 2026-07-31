@@ -147,6 +147,21 @@ export function stdTacticsBoard2dAnimClockTrait(params: StdTacticsBoard2dParams)
   });
 }
 
+/** Trait descriptor: `TacticsBoard2d.traits.VectorArt`. */
+export function stdTacticsBoard2dVectorArtTrait(params: StdTacticsBoard2dParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.VectorArt`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `TacticsBoard2d.traits.PlayerIntent`. */
 export function stdTacticsBoard2dPlayerIntentTrait(params: StdTacticsBoard2dParams): TraitReference {
   return makeTraitRef({
@@ -189,6 +204,7 @@ export function stdTacticsBoard2d(params: StdTacticsBoard2dParams): OrbitalDefin
       stdTacticsBoard2dRoundLogicTrait(params),
       stdTacticsBoard2dScoreKeeperTrait(params),
       stdTacticsBoard2dAnimClockTrait(params),
+      stdTacticsBoard2dVectorArtTrait(params),
       stdTacticsBoard2dPlayerIntentTrait(params),
     ],
     pages: [

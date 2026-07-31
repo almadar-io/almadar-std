@@ -24,116 +24,8 @@ import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/app
 const BEHAVIOR_PATH = 'std/behaviors/ui-platformer-board';
 const ALIAS = 'UiPlatformerBoard';
 
-/**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdUiPlatformerBoardEventKey = 'GAME_END' | 'INIT' | 'JUMP' | 'LEFT' | 'PLAY_AGAIN' | 'RIGHT' | 'STOP' | 'TILE_CLICK' | 'UNIT_CLICK';
-
-/**
- * Payload shape for the `TILE_CLICK` event.
- */
-export interface StdUiPlatformerBoardTileClickPayload {
-  x: number;
-  y: number;
-}
-
-/**
- * Payload shape for the `UNIT_CLICK` event.
- */
-export interface StdUiPlatformerBoardUnitClickPayload {
-  unitId: string;
-}
-
-/**
- * Payload shape for the `GAME_END` event.
- */
-export interface StdUiPlatformerBoardGameEndPayload {
-  result: string;
-}
-
-/**
- * Payload shape for the `LEFT` event.
- */
-export interface StdUiPlatformerBoardLeftPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `RIGHT` event.
- */
-export interface StdUiPlatformerBoardRightPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `JUMP` event.
- */
-export interface StdUiPlatformerBoardJumpPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `STOP` event.
- */
-export interface StdUiPlatformerBoardStopPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `PLAY_AGAIN` event.
- */
-export interface StdUiPlatformerBoardPlayAgainPayload {
-  id?: string;
-}
-
-/**
- * Typed call-site config block for this trait — every
- * field maps to a `config { ... }` entry in the source
- * .lolo. The agent fills these to specialise the trait
- * without modifying its state-machine topology.
- */
-export interface StdUiPlatformerBoardConfig {
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
-  assetBaseUrl?: string;
-  /** Default: `{"animations":["static"],"aspect":"16:9","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-pack-redux/terrain/spritesheet_ground.json","category":"ground","dimension":"2d","name":"ground","role":"decoration","sprite":"dirt.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-pack-redux/terrain/spritesheet_ground.png","variant":""}` */
-  backgroundImage?: EntityRow;
-  /** Default: `"#5c94fc"` */
-  bgColor?: string;
-  /** Default: `400` */
-  canvasHeight?: number;
-  /** Default: `800` */
-  canvasWidth?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
-  followCamera?: boolean;
-  /** Default: `720` */
-  goalX?: number;
-  /** Default: `0.6` */
-  gravity?: number;
-  /** Default: `12` */
-  jumpStrength?: number;
-  /** Default: `20` */
-  maxFallSpeed?: number;
-  /** Default: `4` */
-  moveSpeed?: number;
-  /** Default: `[{"height":32,"type":"ground","width":800,"x":0,"y":368},{"height":16,"type":"platform","width":160,"x":150,"y":280},{"height":16,"type":"platform","width":160,"x":420,"y":220},{"height":16,"type":"hazard","width":80,"x":580,"y":300},{"height":28,"type":"goal","width":64,"x":700,"y":340}]` */
-  platforms?: EntityRow[];
-  /** Default: `{"animations":["idle","walk","jump","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.json","category":"player","dimension":"2d","name":"player","role":"player","sprite":"adventurer_idle.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.png","variant":""}` */
-  playerSprite?: EntityRow;
-  /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"goal","dimension":"2d","name":"goal","role":"tile","sprite":"tileBlue_01.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"ground":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"ground","dimension":"2d","name":"ground","role":"tile","sprite":"tileGreen_01.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"hazard","dimension":"2d","name":"hazard","role":"tile","sprite":"tileYellow_01.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"platform":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"platform","dimension":"2d","name":"platform","role":"tile","sprite":"tileBrown_01.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""}}` */
-  tileSprites?: Record<string, TraitConfig>;
-  /** Default: `400` */
-  worldHeight?: number;
-  /** Default: `800` */
-  worldWidth?: number;
-}
-
 type _StdUiPlatformerBoardEntityName = 'PlatformerBoardItem';
-type _StdUiPlatformerBoardListenTraitName = 'PlatformerBoardRender';
+type _StdUiPlatformerBoardListenTraitName = 'VectorArt' | 'PlatformerBoardRender';
 
 /**
  * Tunable params for the PlatformerBoardOrbital orbital.
@@ -169,19 +61,24 @@ export interface StdUiPlatformerBoardPlatformerBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PlatformerBoardRender',
+    'VectorArt' | 'PlatformerBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait PlatformerBoardOrbital's `uses[]` exports. */
-type _StdUiPlatformerBoardPlatformerBoardOrbitalUsesRef = never;
+type _StdUiPlatformerBoardPlatformerBoardOrbitalUsesRef = 'SvgArt.traits.SvgAssetArtCollector';
 
 /** Per-orbital factory: builds the PlatformerBoardOrbital orbital with consumer params. */
 export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatformerBoardPlatformerBoardOrbitalParams = {}): OrbitalDefinition {
   const built = makeOrbitalWithUses({
     name: 'PlatformerBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'SvgArt',
+        'from': 'std/behaviors/std-svg-asset-art',
+      },
+    ],
     entity: {
       name: 'PlatformerBoardItem',
       persistence: 'runtime',
@@ -395,6 +292,11 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'name': 'validMoves',
             'type': 'array',
           },
+          {
+            'default': {},
+            'name': 'svgAssetArt',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -403,6 +305,11 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
       })(),
     } as Entity,
     traits: [
+      makeTraitRef({
+        'linkedEntity': 'PlatformerBoardItem',
+        'name': 'VectorArt',
+        'ref': ('SvgArt.traits.SvgAssetArtCollector' satisfies _StdUiPlatformerBoardPlatformerBoardOrbitalUsesRef),
+      }),
       {
         'category': 'interaction',
         'config': {
@@ -1015,7 +922,9 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'worldHeight',
             'worldWidth',
           ],
-          'requires': [],
+          'requires': [
+            'svgAssetArt',
+          ],
         },
         'entityRebindable': true,
         'linkedEntity': 'PlatformerBoardItem',
@@ -1251,7 +1160,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           },
                           'zoom': 1,
                         },
-                        'children': [
+                        'drawables': [
                           {
                             'items': [
                               'array/map',
@@ -1297,58 +1206,114 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             ],
                             'type': 'draw-sprite-layer',
                           },
-                          {
-                            'asset': [
-                              'object/merge',
-                              '@config.playerSprite',
+                          [
+                            'let',
+                            [
+                              [
+                                'heroStates',
+                                [
+                                  'object/get',
+                                  '@entity.svgAssetArt',
+                                  'player',
+                                ],
+                              ],
+                            ],
+                            [
+                              'if',
+                              '@heroStates',
                               {
-                                'sprite': [
+                                'id': 'player',
+                                'items': [
                                   'if',
                                   [
-                                    '==',
+                                    'object/get',
+                                    '@heroStates',
                                     '@entity.player.animation',
-                                    'walk',
                                   ],
                                   [
-                                    'if',
-                                    [
-                                      '==',
-                                      [
-                                        '%',
-                                        '@entity.player.frame',
-                                        2,
-                                      ],
-                                      0,
-                                    ],
-                                    'adventurer_walk1.png',
-                                    'adventurer_walk2.png',
+                                    'object/get',
+                                    '@heroStates',
+                                    '@entity.player.animation',
                                   ],
                                   [
-                                    'if',
-                                    [
-                                      '==',
-                                      '@entity.player.animation',
-                                      'jump',
-                                    ],
-                                    'adventurer_jump.png',
-                                    'adventurer_idle.png',
+                                    'object/get',
+                                    '@heroStates',
+                                    'idle',
                                   ],
                                 ],
+                                'position': {
+                                  'x': [
+                                    '+',
+                                    '@entity.player.x',
+                                    [
+                                      '/',
+                                      [
+                                        '-',
+                                        '@entity.player.width',
+                                        '@entity.player.height',
+                                      ],
+                                      2,
+                                    ],
+                                  ],
+                                  'y': '@entity.player.y',
+                                },
+                                'scale': '@entity.player.height',
+                                'type': 'draw-group',
+                              },
+                              {
+                                'asset': [
+                                  'object/merge',
+                                  '@config.playerSprite',
+                                  {
+                                    'sprite': [
+                                      'if',
+                                      [
+                                        '==',
+                                        '@entity.player.animation',
+                                        'walk',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            '%',
+                                            '@entity.player.frame',
+                                            2,
+                                          ],
+                                          0,
+                                        ],
+                                        'adventurer_walk1.png',
+                                        'adventurer_walk2.png',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          '@entity.player.animation',
+                                          'jump',
+                                        ],
+                                        'adventurer_jump.png',
+                                        'adventurer_idle.png',
+                                      ],
+                                    ],
+                                  },
+                                ],
+                                'flipX': [
+                                  'not',
+                                  '@entity.player.facingRight',
+                                ],
+                                'frame': '@entity.player.frame',
+                                'height': '@entity.player.height',
+                                'position': {
+                                  'x': '@entity.player.x',
+                                  'y': '@entity.player.y',
+                                },
+                                'type': 'draw-sprite',
+                                'width': '@entity.player.width',
                               },
                             ],
-                            'flipX': [
-                              'not',
-                              '@entity.player.facingRight',
-                            ],
-                            'frame': '@entity.player.frame',
-                            'height': '@entity.player.height',
-                            'position': {
-                              'x': '@entity.player.x',
-                              'y': '@entity.player.y',
-                            },
-                            'type': 'draw-sprite',
-                            'width': '@entity.player.width',
-                          },
+                          ],
                         ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
@@ -1784,7 +1749,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           },
                           'zoom': 1,
                         },
-                        'children': [
+                        'drawables': [
                           {
                             'items': [
                               'array/map',
@@ -1830,58 +1795,114 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             ],
                             'type': 'draw-sprite-layer',
                           },
-                          {
-                            'asset': [
-                              'object/merge',
-                              '@config.playerSprite',
+                          [
+                            'let',
+                            [
+                              [
+                                'heroStates',
+                                [
+                                  'object/get',
+                                  '@entity.svgAssetArt',
+                                  'player',
+                                ],
+                              ],
+                            ],
+                            [
+                              'if',
+                              '@heroStates',
                               {
-                                'sprite': [
+                                'id': 'player',
+                                'items': [
                                   'if',
                                   [
-                                    '==',
+                                    'object/get',
+                                    '@heroStates',
                                     '@entity.player.animation',
-                                    'walk',
                                   ],
                                   [
-                                    'if',
-                                    [
-                                      '==',
-                                      [
-                                        '%',
-                                        '@entity.player.frame',
-                                        2,
-                                      ],
-                                      0,
-                                    ],
-                                    'adventurer_walk1.png',
-                                    'adventurer_walk2.png',
+                                    'object/get',
+                                    '@heroStates',
+                                    '@entity.player.animation',
                                   ],
                                   [
-                                    'if',
-                                    [
-                                      '==',
-                                      '@entity.player.animation',
-                                      'jump',
-                                    ],
-                                    'adventurer_jump.png',
-                                    'adventurer_idle.png',
+                                    'object/get',
+                                    '@heroStates',
+                                    'idle',
                                   ],
                                 ],
+                                'position': {
+                                  'x': [
+                                    '+',
+                                    '@entity.player.x',
+                                    [
+                                      '/',
+                                      [
+                                        '-',
+                                        '@entity.player.width',
+                                        '@entity.player.height',
+                                      ],
+                                      2,
+                                    ],
+                                  ],
+                                  'y': '@entity.player.y',
+                                },
+                                'scale': '@entity.player.height',
+                                'type': 'draw-group',
+                              },
+                              {
+                                'asset': [
+                                  'object/merge',
+                                  '@config.playerSprite',
+                                  {
+                                    'sprite': [
+                                      'if',
+                                      [
+                                        '==',
+                                        '@entity.player.animation',
+                                        'walk',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            '%',
+                                            '@entity.player.frame',
+                                            2,
+                                          ],
+                                          0,
+                                        ],
+                                        'adventurer_walk1.png',
+                                        'adventurer_walk2.png',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          '@entity.player.animation',
+                                          'jump',
+                                        ],
+                                        'adventurer_jump.png',
+                                        'adventurer_idle.png',
+                                      ],
+                                    ],
+                                  },
+                                ],
+                                'flipX': [
+                                  'not',
+                                  '@entity.player.facingRight',
+                                ],
+                                'frame': '@entity.player.frame',
+                                'height': '@entity.player.height',
+                                'position': {
+                                  'x': '@entity.player.x',
+                                  'y': '@entity.player.y',
+                                },
+                                'type': 'draw-sprite',
+                                'width': '@entity.player.width',
                               },
                             ],
-                            'flipX': [
-                              'not',
-                              '@entity.player.facingRight',
-                            ],
-                            'frame': '@entity.player.frame',
-                            'height': '@entity.player.height',
-                            'position': {
-                              'x': '@entity.player.x',
-                              'y': '@entity.player.y',
-                            },
-                            'type': 'draw-sprite',
-                            'width': '@entity.player.width',
-                          },
+                          ],
                         ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
@@ -2149,7 +2170,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           },
                           'zoom': 1,
                         },
-                        'children': [
+                        'drawables': [
                           {
                             'items': [
                               'array/map',
@@ -2195,58 +2216,114 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             ],
                             'type': 'draw-sprite-layer',
                           },
-                          {
-                            'asset': [
-                              'object/merge',
-                              '@config.playerSprite',
+                          [
+                            'let',
+                            [
+                              [
+                                'heroStates',
+                                [
+                                  'object/get',
+                                  '@entity.svgAssetArt',
+                                  'player',
+                                ],
+                              ],
+                            ],
+                            [
+                              'if',
+                              '@heroStates',
                               {
-                                'sprite': [
+                                'id': 'player',
+                                'items': [
                                   'if',
                                   [
-                                    '==',
+                                    'object/get',
+                                    '@heroStates',
                                     '@entity.player.animation',
-                                    'walk',
                                   ],
                                   [
-                                    'if',
-                                    [
-                                      '==',
-                                      [
-                                        '%',
-                                        '@entity.player.frame',
-                                        2,
-                                      ],
-                                      0,
-                                    ],
-                                    'adventurer_walk1.png',
-                                    'adventurer_walk2.png',
+                                    'object/get',
+                                    '@heroStates',
+                                    '@entity.player.animation',
                                   ],
                                   [
-                                    'if',
-                                    [
-                                      '==',
-                                      '@entity.player.animation',
-                                      'jump',
-                                    ],
-                                    'adventurer_jump.png',
-                                    'adventurer_idle.png',
+                                    'object/get',
+                                    '@heroStates',
+                                    'idle',
                                   ],
                                 ],
+                                'position': {
+                                  'x': [
+                                    '+',
+                                    '@entity.player.x',
+                                    [
+                                      '/',
+                                      [
+                                        '-',
+                                        '@entity.player.width',
+                                        '@entity.player.height',
+                                      ],
+                                      2,
+                                    ],
+                                  ],
+                                  'y': '@entity.player.y',
+                                },
+                                'scale': '@entity.player.height',
+                                'type': 'draw-group',
+                              },
+                              {
+                                'asset': [
+                                  'object/merge',
+                                  '@config.playerSprite',
+                                  {
+                                    'sprite': [
+                                      'if',
+                                      [
+                                        '==',
+                                        '@entity.player.animation',
+                                        'walk',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          [
+                                            '%',
+                                            '@entity.player.frame',
+                                            2,
+                                          ],
+                                          0,
+                                        ],
+                                        'adventurer_walk1.png',
+                                        'adventurer_walk2.png',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '==',
+                                          '@entity.player.animation',
+                                          'jump',
+                                        ],
+                                        'adventurer_jump.png',
+                                        'adventurer_idle.png',
+                                      ],
+                                    ],
+                                  },
+                                ],
+                                'flipX': [
+                                  'not',
+                                  '@entity.player.facingRight',
+                                ],
+                                'frame': '@entity.player.frame',
+                                'height': '@entity.player.height',
+                                'position': {
+                                  'x': '@entity.player.x',
+                                  'y': '@entity.player.y',
+                                },
+                                'type': 'draw-sprite',
+                                'width': '@entity.player.width',
                               },
                             ],
-                            'flipX': [
-                              'not',
-                              '@entity.player.facingRight',
-                            ],
-                            'frame': '@entity.player.frame',
-                            'height': '@entity.player.height',
-                            'position': {
-                              'x': '@entity.player.x',
-                              'y': '@entity.player.y',
-                            },
-                            'type': 'draw-sprite',
-                            'width': '@entity.player.width',
-                          },
+                          ],
                         ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
@@ -3018,7 +3095,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         },
                         'zoom': 1,
                       },
-                      'children': [
+                      'drawables': [
                         {
                           'items': [
                             'array/map',
@@ -3064,58 +3141,114 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           ],
                           'type': 'draw-sprite-layer',
                         },
-                        {
-                          'asset': [
-                            'object/merge',
-                            '@config.playerSprite',
+                        [
+                          'let',
+                          [
+                            [
+                              'heroStates',
+                              [
+                                'object/get',
+                                '@entity.svgAssetArt',
+                                'player',
+                              ],
+                            ],
+                          ],
+                          [
+                            'if',
+                            '@heroStates',
                             {
-                              'sprite': [
+                              'id': 'player',
+                              'items': [
                                 'if',
                                 [
-                                  '==',
+                                  'object/get',
+                                  '@heroStates',
                                   '@entity.player.animation',
-                                  'walk',
                                 ],
                                 [
-                                  'if',
-                                  [
-                                    '==',
-                                    [
-                                      '%',
-                                      '@entity.player.frame',
-                                      2,
-                                    ],
-                                    0,
-                                  ],
-                                  'adventurer_walk1.png',
-                                  'adventurer_walk2.png',
+                                  'object/get',
+                                  '@heroStates',
+                                  '@entity.player.animation',
                                 ],
                                 [
-                                  'if',
-                                  [
-                                    '==',
-                                    '@entity.player.animation',
-                                    'jump',
-                                  ],
-                                  'adventurer_jump.png',
-                                  'adventurer_idle.png',
+                                  'object/get',
+                                  '@heroStates',
+                                  'idle',
                                 ],
                               ],
+                              'position': {
+                                'x': [
+                                  '+',
+                                  '@entity.player.x',
+                                  [
+                                    '/',
+                                    [
+                                      '-',
+                                      '@entity.player.width',
+                                      '@entity.player.height',
+                                    ],
+                                    2,
+                                  ],
+                                ],
+                                'y': '@entity.player.y',
+                              },
+                              'scale': '@entity.player.height',
+                              'type': 'draw-group',
+                            },
+                            {
+                              'asset': [
+                                'object/merge',
+                                '@config.playerSprite',
+                                {
+                                  'sprite': [
+                                    'if',
+                                    [
+                                      '==',
+                                      '@entity.player.animation',
+                                      'walk',
+                                    ],
+                                    [
+                                      'if',
+                                      [
+                                        '==',
+                                        [
+                                          '%',
+                                          '@entity.player.frame',
+                                          2,
+                                        ],
+                                        0,
+                                      ],
+                                      'adventurer_walk1.png',
+                                      'adventurer_walk2.png',
+                                    ],
+                                    [
+                                      'if',
+                                      [
+                                        '==',
+                                        '@entity.player.animation',
+                                        'jump',
+                                      ],
+                                      'adventurer_jump.png',
+                                      'adventurer_idle.png',
+                                    ],
+                                  ],
+                                },
+                              ],
+                              'flipX': [
+                                'not',
+                                '@entity.player.facingRight',
+                              ],
+                              'frame': '@entity.player.frame',
+                              'height': '@entity.player.height',
+                              'position': {
+                                'x': '@entity.player.x',
+                                'y': '@entity.player.y',
+                              },
+                              'type': 'draw-sprite',
+                              'width': '@entity.player.width',
                             },
                           ],
-                          'flipX': [
-                            'not',
-                            '@entity.player.facingRight',
-                          ],
-                          'frame': '@entity.player.frame',
-                          'height': '@entity.player.height',
-                          'position': {
-                            'x': '@entity.player.x',
-                            'y': '@entity.player.y',
-                          },
-                          'type': 'draw-sprite',
-                          'width': '@entity.player.width',
-                        },
+                        ],
                       ],
                       'keyMap': {
                         'ArrowLeft': 'LEFT',
@@ -3363,6 +3496,9 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
           {
             'ref': 'PlatformerBoardRender',
           },
+          {
+            'ref': 'VectorArt',
+          },
         ],
       } satisfies Page,
     ],
@@ -3415,6 +3551,7 @@ export const StdUiPlatformerBoardPlatformerBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'VectorArt',
   ] as const,
   inlineTraitNames: [
     'PlatformerBoardRender',

@@ -114,6 +114,14 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01KYV4MJ22MNH89D0DEN4H0A1Y": {
+        "bakedName": "VectorArt",
+        "curName": "VectorArt",
+        "id": "trt_01KYV4MJ22MNH89D0DEN4H0A1Y",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -330,11 +338,17 @@
             },
             "name": "validMoves",
             "type": "array"
+          },
+          {
+            "default": {},
+            "name": "svgAssetArt",
+            "type": "string"
           }
         ],
         "id": "ent_01KXG04YQ0KP36BRWQB2PDCD7X",
         "name": "PlatformerBoardItem",
-        "persistence": "runtime"
+        "persistence": "runtime",
+        "shared": true
       },
       "id": "orb_01KXG04YQ0FX1XP68JNSE92K0F",
       "name": "PlatformerBoardOrbital",
@@ -347,11 +361,22 @@
             {
               "ref": "PlatformerBoardRender",
               "refId": "trt_01KXG04YQ06CME4FH98W79V29D"
+            },
+            {
+              "ref": "VectorArt",
+              "refId": "trt_01KYV4MJ22MNH89D0DEN4H0A1Y"
             }
           ]
         }
       ],
       "traits": [
+        {
+          "id": "trt_01KYV4MJ22MNH89D0DEN4H0A1Y",
+          "linkedEntity": "PlatformerBoardItem",
+          "linkedEntityId": "ent_01KXG04YQ0KP36BRWQB2PDCD7X",
+          "name": "VectorArt",
+          "ref": "SvgArt.traits.SvgAssetArtCollector"
+        },
         {
           "category": "interaction",
           "config": {
@@ -972,7 +997,9 @@
               "worldHeight",
               "worldWidth"
             ],
-            "requires": []
+            "requires": [
+              "svgAssetArt"
+            ]
           },
           "entityRebindable": true,
           "entityRefIds": {
@@ -1222,7 +1249,7 @@
                             },
                             "zoom": 1.0
                           },
-                          "children": [
+                          "drawables": [
                             {
                               "items": [
                                 "array/map",
@@ -1268,58 +1295,114 @@
                               ],
                               "type": "draw-sprite-layer"
                             },
-                            {
-                              "asset": [
-                                "object/merge",
-                                "@config.playerSprite",
+                            [
+                              "let",
+                              [
+                                [
+                                  "heroStates",
+                                  [
+                                    "object/get",
+                                    "@entity.svgAssetArt",
+                                    "player"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "if",
+                                "@heroStates",
                                 {
-                                  "sprite": [
+                                  "id": "player",
+                                  "items": [
                                     "if",
                                     [
-                                      "==",
-                                      "@entity.player.animation",
-                                      "walk"
+                                      "object/get",
+                                      "@heroStates",
+                                      "@entity.player.animation"
                                     ],
                                     [
-                                      "if",
-                                      [
-                                        "==",
-                                        [
-                                          "%",
-                                          "@entity.player.frame",
-                                          2.0
-                                        ],
-                                        0.0
-                                      ],
-                                      "adventurer_walk1.png",
-                                      "adventurer_walk2.png"
+                                      "object/get",
+                                      "@heroStates",
+                                      "@entity.player.animation"
                                     ],
                                     [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.player.animation",
-                                        "jump"
-                                      ],
-                                      "adventurer_jump.png",
-                                      "adventurer_idle.png"
+                                      "object/get",
+                                      "@heroStates",
+                                      "idle"
                                     ]
-                                  ]
+                                  ],
+                                  "position": {
+                                    "x": [
+                                      "+",
+                                      "@entity.player.x",
+                                      [
+                                        "/",
+                                        [
+                                          "-",
+                                          "@entity.player.width",
+                                          "@entity.player.height"
+                                        ],
+                                        2.0
+                                      ]
+                                    ],
+                                    "y": "@entity.player.y"
+                                  },
+                                  "scale": "@entity.player.height",
+                                  "type": "draw-group"
+                                },
+                                {
+                                  "asset": [
+                                    "object/merge",
+                                    "@config.playerSprite",
+                                    {
+                                      "sprite": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.player.animation",
+                                          "walk"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            [
+                                              "%",
+                                              "@entity.player.frame",
+                                              2.0
+                                            ],
+                                            0.0
+                                          ],
+                                          "adventurer_walk1.png",
+                                          "adventurer_walk2.png"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.player.animation",
+                                            "jump"
+                                          ],
+                                          "adventurer_jump.png",
+                                          "adventurer_idle.png"
+                                        ]
+                                      ]
+                                    }
+                                  ],
+                                  "flipX": [
+                                    "not",
+                                    "@entity.player.facingRight"
+                                  ],
+                                  "frame": "@entity.player.frame",
+                                  "height": "@entity.player.height",
+                                  "position": {
+                                    "x": "@entity.player.x",
+                                    "y": "@entity.player.y"
+                                  },
+                                  "type": "draw-sprite",
+                                  "width": "@entity.player.width"
                                 }
-                              ],
-                              "flipX": [
-                                "not",
-                                "@entity.player.facingRight"
-                              ],
-                              "frame": "@entity.player.frame",
-                              "height": "@entity.player.height",
-                              "position": {
-                                "x": "@entity.player.x",
-                                "y": "@entity.player.y"
-                              },
-                              "type": "draw-sprite",
-                              "width": "@entity.player.width"
-                            }
+                              ]
+                            ]
                           ],
                           "keyMap": {
                             "ArrowLeft": "LEFT",
@@ -1764,7 +1847,7 @@
                             },
                             "zoom": 1.0
                           },
-                          "children": [
+                          "drawables": [
                             {
                               "items": [
                                 "array/map",
@@ -1810,58 +1893,114 @@
                               ],
                               "type": "draw-sprite-layer"
                             },
-                            {
-                              "asset": [
-                                "object/merge",
-                                "@config.playerSprite",
+                            [
+                              "let",
+                              [
+                                [
+                                  "heroStates",
+                                  [
+                                    "object/get",
+                                    "@entity.svgAssetArt",
+                                    "player"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "if",
+                                "@heroStates",
                                 {
-                                  "sprite": [
+                                  "id": "player",
+                                  "items": [
                                     "if",
                                     [
-                                      "==",
-                                      "@entity.player.animation",
-                                      "walk"
+                                      "object/get",
+                                      "@heroStates",
+                                      "@entity.player.animation"
                                     ],
                                     [
-                                      "if",
-                                      [
-                                        "==",
-                                        [
-                                          "%",
-                                          "@entity.player.frame",
-                                          2.0
-                                        ],
-                                        0.0
-                                      ],
-                                      "adventurer_walk1.png",
-                                      "adventurer_walk2.png"
+                                      "object/get",
+                                      "@heroStates",
+                                      "@entity.player.animation"
                                     ],
                                     [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.player.animation",
-                                        "jump"
-                                      ],
-                                      "adventurer_jump.png",
-                                      "adventurer_idle.png"
+                                      "object/get",
+                                      "@heroStates",
+                                      "idle"
                                     ]
-                                  ]
+                                  ],
+                                  "position": {
+                                    "x": [
+                                      "+",
+                                      "@entity.player.x",
+                                      [
+                                        "/",
+                                        [
+                                          "-",
+                                          "@entity.player.width",
+                                          "@entity.player.height"
+                                        ],
+                                        2.0
+                                      ]
+                                    ],
+                                    "y": "@entity.player.y"
+                                  },
+                                  "scale": "@entity.player.height",
+                                  "type": "draw-group"
+                                },
+                                {
+                                  "asset": [
+                                    "object/merge",
+                                    "@config.playerSprite",
+                                    {
+                                      "sprite": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.player.animation",
+                                          "walk"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            [
+                                              "%",
+                                              "@entity.player.frame",
+                                              2.0
+                                            ],
+                                            0.0
+                                          ],
+                                          "adventurer_walk1.png",
+                                          "adventurer_walk2.png"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.player.animation",
+                                            "jump"
+                                          ],
+                                          "adventurer_jump.png",
+                                          "adventurer_idle.png"
+                                        ]
+                                      ]
+                                    }
+                                  ],
+                                  "flipX": [
+                                    "not",
+                                    "@entity.player.facingRight"
+                                  ],
+                                  "frame": "@entity.player.frame",
+                                  "height": "@entity.player.height",
+                                  "position": {
+                                    "x": "@entity.player.x",
+                                    "y": "@entity.player.y"
+                                  },
+                                  "type": "draw-sprite",
+                                  "width": "@entity.player.width"
                                 }
-                              ],
-                              "flipX": [
-                                "not",
-                                "@entity.player.facingRight"
-                              ],
-                              "frame": "@entity.player.frame",
-                              "height": "@entity.player.height",
-                              "position": {
-                                "x": "@entity.player.x",
-                                "y": "@entity.player.y"
-                              },
-                              "type": "draw-sprite",
-                              "width": "@entity.player.width"
-                            }
+                              ]
+                            ]
                           ],
                           "keyMap": {
                             "ArrowLeft": "LEFT",
@@ -2130,7 +2269,7 @@
                             },
                             "zoom": 1.0
                           },
-                          "children": [
+                          "drawables": [
                             {
                               "items": [
                                 "array/map",
@@ -2176,58 +2315,114 @@
                               ],
                               "type": "draw-sprite-layer"
                             },
-                            {
-                              "asset": [
-                                "object/merge",
-                                "@config.playerSprite",
+                            [
+                              "let",
+                              [
+                                [
+                                  "heroStates",
+                                  [
+                                    "object/get",
+                                    "@entity.svgAssetArt",
+                                    "player"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "if",
+                                "@heroStates",
                                 {
-                                  "sprite": [
+                                  "id": "player",
+                                  "items": [
                                     "if",
                                     [
-                                      "==",
-                                      "@entity.player.animation",
-                                      "walk"
+                                      "object/get",
+                                      "@heroStates",
+                                      "@entity.player.animation"
                                     ],
                                     [
-                                      "if",
-                                      [
-                                        "==",
-                                        [
-                                          "%",
-                                          "@entity.player.frame",
-                                          2.0
-                                        ],
-                                        0.0
-                                      ],
-                                      "adventurer_walk1.png",
-                                      "adventurer_walk2.png"
+                                      "object/get",
+                                      "@heroStates",
+                                      "@entity.player.animation"
                                     ],
                                     [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.player.animation",
-                                        "jump"
-                                      ],
-                                      "adventurer_jump.png",
-                                      "adventurer_idle.png"
+                                      "object/get",
+                                      "@heroStates",
+                                      "idle"
                                     ]
-                                  ]
+                                  ],
+                                  "position": {
+                                    "x": [
+                                      "+",
+                                      "@entity.player.x",
+                                      [
+                                        "/",
+                                        [
+                                          "-",
+                                          "@entity.player.width",
+                                          "@entity.player.height"
+                                        ],
+                                        2.0
+                                      ]
+                                    ],
+                                    "y": "@entity.player.y"
+                                  },
+                                  "scale": "@entity.player.height",
+                                  "type": "draw-group"
+                                },
+                                {
+                                  "asset": [
+                                    "object/merge",
+                                    "@config.playerSprite",
+                                    {
+                                      "sprite": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.player.animation",
+                                          "walk"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            [
+                                              "%",
+                                              "@entity.player.frame",
+                                              2.0
+                                            ],
+                                            0.0
+                                          ],
+                                          "adventurer_walk1.png",
+                                          "adventurer_walk2.png"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.player.animation",
+                                            "jump"
+                                          ],
+                                          "adventurer_jump.png",
+                                          "adventurer_idle.png"
+                                        ]
+                                      ]
+                                    }
+                                  ],
+                                  "flipX": [
+                                    "not",
+                                    "@entity.player.facingRight"
+                                  ],
+                                  "frame": "@entity.player.frame",
+                                  "height": "@entity.player.height",
+                                  "position": {
+                                    "x": "@entity.player.x",
+                                    "y": "@entity.player.y"
+                                  },
+                                  "type": "draw-sprite",
+                                  "width": "@entity.player.width"
                                 }
-                              ],
-                              "flipX": [
-                                "not",
-                                "@entity.player.facingRight"
-                              ],
-                              "frame": "@entity.player.frame",
-                              "height": "@entity.player.height",
-                              "position": {
-                                "x": "@entity.player.x",
-                                "y": "@entity.player.y"
-                              },
-                              "type": "draw-sprite",
-                              "width": "@entity.player.width"
-                            }
+                              ]
+                            ]
                           ],
                           "keyMap": {
                             "ArrowLeft": "LEFT",
@@ -3000,7 +3195,7 @@
                           },
                           "zoom": 1.0
                         },
-                        "children": [
+                        "drawables": [
                           {
                             "items": [
                               "array/map",
@@ -3046,58 +3241,114 @@
                             ],
                             "type": "draw-sprite-layer"
                           },
-                          {
-                            "asset": [
-                              "object/merge",
-                              "@config.playerSprite",
+                          [
+                            "let",
+                            [
+                              [
+                                "heroStates",
+                                [
+                                  "object/get",
+                                  "@entity.svgAssetArt",
+                                  "player"
+                                ]
+                              ]
+                            ],
+                            [
+                              "if",
+                              "@heroStates",
                               {
-                                "sprite": [
+                                "id": "player",
+                                "items": [
                                   "if",
                                   [
-                                    "==",
-                                    "@entity.player.animation",
-                                    "walk"
+                                    "object/get",
+                                    "@heroStates",
+                                    "@entity.player.animation"
                                   ],
                                   [
-                                    "if",
-                                    [
-                                      "==",
-                                      [
-                                        "%",
-                                        "@entity.player.frame",
-                                        2.0
-                                      ],
-                                      0.0
-                                    ],
-                                    "adventurer_walk1.png",
-                                    "adventurer_walk2.png"
+                                    "object/get",
+                                    "@heroStates",
+                                    "@entity.player.animation"
                                   ],
                                   [
-                                    "if",
-                                    [
-                                      "==",
-                                      "@entity.player.animation",
-                                      "jump"
-                                    ],
-                                    "adventurer_jump.png",
-                                    "adventurer_idle.png"
+                                    "object/get",
+                                    "@heroStates",
+                                    "idle"
                                   ]
-                                ]
+                                ],
+                                "position": {
+                                  "x": [
+                                    "+",
+                                    "@entity.player.x",
+                                    [
+                                      "/",
+                                      [
+                                        "-",
+                                        "@entity.player.width",
+                                        "@entity.player.height"
+                                      ],
+                                      2.0
+                                    ]
+                                  ],
+                                  "y": "@entity.player.y"
+                                },
+                                "scale": "@entity.player.height",
+                                "type": "draw-group"
+                              },
+                              {
+                                "asset": [
+                                  "object/merge",
+                                  "@config.playerSprite",
+                                  {
+                                    "sprite": [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.player.animation",
+                                        "walk"
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          [
+                                            "%",
+                                            "@entity.player.frame",
+                                            2.0
+                                          ],
+                                          0.0
+                                        ],
+                                        "adventurer_walk1.png",
+                                        "adventurer_walk2.png"
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.player.animation",
+                                          "jump"
+                                        ],
+                                        "adventurer_jump.png",
+                                        "adventurer_idle.png"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "flipX": [
+                                  "not",
+                                  "@entity.player.facingRight"
+                                ],
+                                "frame": "@entity.player.frame",
+                                "height": "@entity.player.height",
+                                "position": {
+                                  "x": "@entity.player.x",
+                                  "y": "@entity.player.y"
+                                },
+                                "type": "draw-sprite",
+                                "width": "@entity.player.width"
                               }
-                            ],
-                            "flipX": [
-                              "not",
-                              "@entity.player.facingRight"
-                            ],
-                            "frame": "@entity.player.frame",
-                            "height": "@entity.player.height",
-                            "position": {
-                              "x": "@entity.player.x",
-                              "y": "@entity.player.y"
-                            },
-                            "type": "draw-sprite",
-                            "width": "@entity.player.width"
-                          }
+                            ]
+                          ]
                         ],
                         "keyMap": {
                           "ArrowLeft": "LEFT",
@@ -3335,6 +3586,12 @@
               "name": "animTick"
             }
           ]
+        }
+      ],
+      "uses": [
+        {
+          "as": "SvgArt",
+          "from": "std/behaviors/std-svg-asset-art"
         }
       ]
     }

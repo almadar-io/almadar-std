@@ -39,6 +39,7 @@ export type StdUiDrawGroupEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawGroupConfig {
+  clip?: string;
   /** Default: `[]` */
   items?: EntityRow[];
   opacity?: number;

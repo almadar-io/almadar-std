@@ -88,7 +88,7 @@ export interface StdUiTanksBoardTanksBoardOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait TanksBoardOrbital's `uses[]` exports. */
-type _StdUiTanksBoardTanksBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
+type _StdUiTanksBoardTanksBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.VectorArt' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the TanksBoardOrbital orbital with consumer params. */
 export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoardOrbitalParams = {}): OrbitalDefinition {

@@ -1,6 +1,108 @@
 app ui-space-station-board "1.0.0"
-"SpaceStationBoard — sci-fi isometric crew board: crew units select/move across a station grid (no combat); composes the std multi-unit crew frame with UI Pack - Sci-fi assets."
+"SpaceStationBoard — sci-fi isometric crew board: crew units select/move across a station grid (no combat); composes the std multi-unit crew frame with a hand-authored isometric svg asset theme."
 ;; @capabilities "isometric crew unit selection, station grid movement, multi-unit crew management, non-combat sci-fi sim"
+
+;; ============================================================================
+;; PERSONA + USER STORIES
+;;
+;; Read these before changing anything here, and walk them end to end after.
+;; One persona: the PLAYER, directing a three-person station crew on a 7x7
+;; isometric deck. Status verified 2026-07-31 through the almadar-tools
+;; play_transition probes (guard truth, real evaluator) on the std-crew-board-2d
+;; frame this organism composes; canvas-drawable claims verified at the
+;; descriptor level. No claim below is untested hearsay.
+;;
+;; THE GENRE (what a station-crew-sim player expects): a calm, non-combat
+;; sandbox. You run a small crew aboard a space station — there are no
+;; enemies, no turns, no win/lose clock. The pleasure is directing people:
+;; pick a crew member, see where they can walk (the deck is the constraint —
+;; walls ring the station, console blocks are furniture you path around),
+;; send them there, and watch the station live. A round looks like: click a
+;; crew member -> green reachable floor cells light up (range 2, manhattan)
+;; -> click a lit cell -> the crew member WALKS there (walk frames play)
+;; -> the board settles back to idle, ready for the next order. Walls and
+;; consoles are impassable; crew cannot stack on one cell. The HUD is station
+;; chrome: Crew count, Oxygen, current Status. (Oxygen is display-only — the
+;; organism never depletes it; that sim layer does not exist yet.)
+;; ============================================================================
+;;
+;; PLAYER — "I direct my crew around the station deck."
+;;
+;;   1. I open the board and see the whole station deck framed on screen —
+;;      a walled 7x7 isometric grid, floor inside, four console blocks, my
+;;      three crew standing on the deck, and the HUD showing Crew/Oxygen/
+;;      Status with a Cancel button and the minimap on.
+;;        WORKS. Boot paints 49 full-cell isometric terrain cubes (wall ring
+;;        impassable, floor interior, console blocks at (1,2),(5,2),(1,4),
+;;        (5,4)), 3 crew units (Commander (2,3), Engineer (4,3), Technician
+;;        (3,5)), 4 console features ground-anchored ON their cells, HUD
+;;        reads Crew 3 / Oxygen 100 / Status idle.
+;;   2. Every crew member is a visible sprite with a name label and a health
+;;      bar I can read at a glance — and it breathes.
+;;        WORKS. Each unit paints units/crew.svg url-rewritten to the
+;;        .idle-<0..3> frames (4-frame breathing squash/stretch anchored at
+;;        the feet, cycled by the AnimClock tick at ~300ms/frame), anchor
+;;        "ground", with the black backing + green health fraction above and
+;;        the name label. A hidden warm-up layer preloads every frame so
+;;        state swaps never pop.
+;;   3. I click a crew member and the cells they can reach light up green.
+;;        WORKS. Clicking u1 sets phase "movement" and lights exactly the
+;;        manhattan-2 diamond of PASSABLE floor cells minus occupied cells —
+;;        walls and consoles never light up (guard + highlight filter both
+;;        check passable). Clicking a unit already selected deselects it
+;;        instead (toggle arm).
+;;   4. I click a lit cell and the crew member walks there.
+;;        WORKS. TILE_CLICK on an in-range, passable, unoccupied cell emits
+;;        MOVE; the hero-nav authority re-checks bounds/budget and writes
+;;        the position, the intent layer arms the walk animation (6 ticks of
+;;        .walk-<0..1> frames), then selection/validMoves clear and phase
+;;        returns to "idle". Verified by probe: (2,3) -> (3,3).
+;;   5. I click a wall, a console, an occupied cell, or a cell beyond reach
+;;      and nothing happens — the order is rejected, not silently eaten.
+;;        WORKS. The TILE_CLICK arm's guard requires in-bounds AND
+;;        manhattan <= movementRange AND unoccupied AND the target tile
+;;        passable — all four probed: wall (0,0), console (1,2), occupied
+;;        (4,3), out-of-range (6,6) all fail the guard. (Before the
+;;        wave-3 fix the passable clause was missing in both the guard and
+;;        the highlight filter — crew could walk onto walls/consoles.)
+;;   6. I change my mind mid-order and back out cleanly.
+;;        WORKS. CANCEL (button) clears selection, green cells, and phase;
+;;        re-clicking the selected unit does the same via the toggle arm.
+;;   7. I direct the whole crew, one order at a time — every member moves
+;;      independently.
+;;        WORKS. No per-turn activation locks (this is a sandbox, not a
+;;        tactics game): after u1 walks, u2 selects and walks on the next
+;;        order; moveBudget is effectively unlimited. Crew cannot be ordered
+;;        onto each other's cells (occupied guard).
+;;   8. The HUD reads like station chrome: crew count, oxygen, live status.
+;;        WORKS. HUD shows Crew 3 and Oxygen 100 as numbers and the phase
+;;        badge flips idle -> movement on selection and back on resolve.
+;;        TRUTH: Oxygen and Crew are display-only (config seeds them at
+;;        INIT; no atom writes them after) — documented on the molecule
+;;        config, not a bug.
+;;
+;; ASSET INVENTORY (hand-authored svg, almadar-kflow-assets.web.app
+;; /shared/ui-space-station-board/svg/isometric/, generated by
+;; tools/asset-workflow svg-generator from the sibling .md descriptions)
+;;
+;;   Terrain   terrain/{wall,floor,console}.svg — full-cell isometric cubes
+;;             (top + left + right faces) that tessellate exactly with the
+;;             projector's cellPath; drawn at width/height 1, anchor center.
+;;   Units     units/crew.svg + animation frames .{idle-0..3, walk-0..1,
+;;             attack-0, hit-0, death-0}.svg (the full actor contract, though
+;;             this non-combat board only ever plays idle/walk); the frame
+;;             swaps url-rewrites name.svg -> name.<anim>-<i>.svg.
+;;             crew: u1 Commander (2,3)  u2 Engineer (4,3)  u3 Technician (3,5)
+;;   Features  features/console.svg at (1,2),(5,2),(1,4),(5,4) — drawn from
+;;             config.features anchored "ground" at 1x1 so they sit ON their
+;;             cells (the draw-sprite default anchor is "top-left", which
+;;             floated them off the board corner before the anchor was
+;;             explicit in the frame molecule).
+;;   UI chrome ui/panel-frame.svg = game-shell background + HUD panel;
+;;             ui/{icon-crew,icon-oxygen,icon-cancel}.svg = HUD stat/button
+;;             icons.
+;; ============================================================================
+
 orbital SpaceStationBoardOrbital {
   uses Frame from "std/behaviors/std-crew-board-2d"
 

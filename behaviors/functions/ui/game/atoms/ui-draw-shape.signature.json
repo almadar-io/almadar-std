@@ -54,6 +54,11 @@
                       "required": true,
                       "type": "number"
                     },
+                    "blur": {
+                      "name": "blur",
+                      "required": false,
+                      "type": "number"
+                    },
                     "fill": {
                       "name": "fill",
                       "required": false,
@@ -116,6 +121,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "strokeDashOffset": {
+                      "name": "strokeDashOffset",
+                      "required": false,
+                      "type": "number"
+                    },
                     "strokeWidth": {
                       "name": "strokeWidth",
                       "required": false,
@@ -138,6 +148,44 @@
             }
           },
           {
+            "key": "blendMode",
+            "type": "string",
+            "default": "source-over",
+            "label": "Blend Mode",
+            "description": "Composite/blend mode for this shape's draws (`lighter`, `multiply`, `screen`, …).",
+            "tier": "presentation",
+            "enumValues": [
+              "source-over",
+              "lighter",
+              "multiply",
+              "screen",
+              "overlay",
+              "darken",
+              "lighten",
+              "color-dodge",
+              "color-burn",
+              "hard-light",
+              "soft-light",
+              "difference",
+              "exclusion",
+              "hue",
+              "saturation",
+              "color",
+              "luminosity",
+              "source-atop",
+              "destination-over",
+              "destination-out",
+              "xor"
+            ]
+          },
+          {
+            "key": "blur",
+            "type": "number",
+            "label": "Blur",
+            "description": "Gaussian blur in painter-px. Expensive — forces an intermediate raster; use sparingly.",
+            "tier": "presentation"
+          },
+          {
             "key": "d",
             "type": "string",
             "label": "D",
@@ -152,12 +200,55 @@
             "tier": "presentation"
           },
           {
+            "key": "fillPattern",
+            "type": "DrawShapeFillPattern",
+            "label": "Fill Pattern",
+            "description": "Repeating texture painted over the fill (grain / tiling image).",
+            "tier": "presentation",
+            "properties": {
+              "alpha": {
+                "name": "alpha",
+                "required": false,
+                "type": "number"
+              },
+              "color": {
+                "name": "color",
+                "required": false,
+                "type": "string"
+              },
+              "kind": {
+                "name": "kind",
+                "required": true,
+                "type": "string",
+                "values": [
+                  "noise",
+                  "image"
+                ]
+              },
+              "scale": {
+                "name": "scale",
+                "required": false,
+                "type": "number"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
             "key": "gradient",
             "type": "DrawShapeGradient",
             "label": "Gradient",
             "description": "Gradient fill in world units; overrides `fill` when present.",
             "tier": "presentation",
             "properties": {
+              "angle": {
+                "name": "angle",
+                "required": false,
+                "type": "number"
+              },
               "center": {
                 "name": "center",
                 "required": false,
@@ -174,7 +265,8 @@
                 "type": "string",
                 "values": [
                   "linear",
-                  "radial"
+                  "radial",
+                  "conic"
                 ]
               },
               "radius": {
@@ -208,7 +300,7 @@
             "key": "offsetX",
             "type": "number",
             "label": "Offset X",
-            "description": "Fine nudge from the anchor point in world units.",
+            "description": "Fine nudge in world units — applies to every shape kind except `cell` (rect/ellipse from their anchor point; poly/path from the projected top-left).",
             "tier": "presentation"
           },
           {
@@ -334,6 +426,76 @@
             "label": "Stroke",
             "description": "stroke prop",
             "tier": "presentation"
+          },
+          {
+            "key": "strokeDash",
+            "type": "[number]",
+            "default": [],
+            "label": "Stroke Dash",
+            "description": "Dash pattern in painter-px (constant under group scale, like `strokeWidth`).",
+            "tier": "presentation",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "strokeDashOffset",
+            "type": "number",
+            "label": "Stroke Dash Offset",
+            "description": "Dash phase offset in painter-px; animatable (marching ants).",
+            "tier": "presentation"
+          },
+          {
+            "key": "strokeGradient",
+            "type": "DrawShapeStrokeGradient",
+            "label": "Stroke Gradient",
+            "description": "Gradient stroke in world units; overrides `stroke` when present.",
+            "tier": "presentation",
+            "properties": {
+              "angle": {
+                "name": "angle",
+                "required": false,
+                "type": "number"
+              },
+              "center": {
+                "name": "center",
+                "required": false,
+                "type": "string"
+              },
+              "from": {
+                "name": "from",
+                "required": false,
+                "type": "string"
+              },
+              "kind": {
+                "name": "kind",
+                "required": true,
+                "type": "string",
+                "values": [
+                  "linear",
+                  "radial",
+                  "conic"
+                ]
+              },
+              "radius": {
+                "name": "radius",
+                "required": false,
+                "type": "number"
+              },
+              "stops": {
+                "name": "stops",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "to": {
+                "name": "to",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "strokeWidth",

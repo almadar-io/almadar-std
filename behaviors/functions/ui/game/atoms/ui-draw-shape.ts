@@ -42,8 +42,12 @@ export interface StdUiDrawShapeConfig {
   /** Default: `{}` */
   anchor?: unknown;
   animation?: EntityRow;
+  /** Default: `"source-over"` */
+  blendMode?: 'source-over' | 'lighter' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity' | 'source-atop' | 'destination-over' | 'destination-out' | 'xor';
+  blur?: number;
   d?: string;
   fill?: string;
+  fillPattern?: EntityRow;
   gradient?: EntityRow;
   height?: number;
   offsetX?: number;
@@ -62,6 +66,10 @@ export interface StdUiDrawShapeConfig {
   /** Default: `"cell"` */
   shape?: 'cell' | 'rect' | 'ellipse' | 'poly' | 'path';
   stroke?: string;
+  /** Default: `[]` */
+  strokeDash?: number[];
+  strokeDashOffset?: number;
+  strokeGradient?: EntityRow;
   strokeWidth?: number;
   width?: number;
 }

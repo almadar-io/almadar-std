@@ -88,7 +88,7 @@ export interface StdUiBattleBoardBattleBoardOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait BattleBoardOrbital's `uses[]` exports. */
-type _StdUiBattleBoardBattleBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper' | 'Xp.traits.XpProgression';
+type _StdUiBattleBoardBattleBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.VectorArt' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper' | 'Xp.traits.XpProgression';
 
 /** Per-orbital factory: builds the BattleBoardOrbital orbital with consumer params. */
 export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattleBoardOrbitalParams = {}): OrbitalDefinition {

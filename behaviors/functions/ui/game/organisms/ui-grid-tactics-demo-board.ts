@@ -88,7 +88,7 @@ export interface StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait GridTacticsDemoOrbital's `uses[]` exports. */
-type _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
+type _StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.VectorArt' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the GridTacticsDemoOrbital orbital with consumer params. */
 export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams = {}): OrbitalDefinition {

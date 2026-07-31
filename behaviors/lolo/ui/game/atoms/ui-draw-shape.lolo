@@ -7,11 +7,28 @@ orbital DrawShapeOrbital {
     z : number
   }
   type DrawShapeGradient = {
-    kind : "linear" | "radial"!
+    kind : "linear" | "radial" | "conic"!
     from : json
     to : json
     center : json
     radius : number
+    angle : number
+    stops : [json]!
+  }
+  type DrawShapeFillPattern = {
+    kind : "noise" | "image"!
+    url : string
+    scale : number
+    alpha : number
+    color : string
+  }
+  type DrawShapeStrokeGradient = {
+    kind : "linear" | "radial" | "conic"!
+    from : json
+    to : json
+    center : json
+    radius : number
+    angle : number
     stops : [json]!
   }
   type DrawShapeShadow = {
@@ -34,6 +51,8 @@ orbital DrawShapeOrbital {
     width : number
     height : number
     strokeWidth : number
+    strokeDashOffset : number
+    blur : number
     fill : string
     stroke : string
     shadow : DrawShapeAnimationKeyframesItemShadow
@@ -66,8 +85,14 @@ orbital DrawShapeOrbital {
           d: @config.d
           fill: @config.fill
           gradient: @config.gradient
+          fillPattern: @config.fillPattern
           stroke: @config.stroke
           strokeWidth: @config.strokeWidth
+          strokeGradient: @config.strokeGradient
+          strokeDash: @config.strokeDash
+          strokeDashOffset: @config.strokeDashOffset
+          blendMode: @config.blendMode
+          blur: @config.blur
           rotate: @config.rotate
           pivot: @config.pivot
           shadow: @config.shadow
@@ -130,6 +155,10 @@ orbital DrawShapeOrbital {
         @label "Gradient"
         @description "Gradient fill in world units; overrides `fill` when present."
         @tier "presentation"
+      fillPattern : DrawShapeFillPattern
+        @label "Fill Pattern"
+        @description "Repeating texture painted over the fill (grain / tiling image)."
+        @tier "presentation"
       stroke : string
         @label "Stroke"
         @description "stroke prop"
@@ -137,6 +166,26 @@ orbital DrawShapeOrbital {
       strokeWidth : number
         @label "Stroke Width"
         @description "strokeWidth prop"
+        @tier "presentation"
+      strokeGradient : DrawShapeStrokeGradient
+        @label "Stroke Gradient"
+        @description "Gradient stroke in world units; overrides `stroke` when present."
+        @tier "presentation"
+      strokeDash : [number] = []
+        @label "Stroke Dash"
+        @description "Dash pattern in painter-px (constant under group scale, like `strokeWidth`)."
+        @tier "presentation"
+      strokeDashOffset : number
+        @label "Stroke Dash Offset"
+        @description "Dash phase offset in painter-px; animatable (marching ants)."
+        @tier "presentation"
+      blendMode : "source-over" | "lighter" | "multiply" | "screen" | "overlay" | "darken" | "lighten" | "color-dodge" | "color-burn" | "hard-light" | "soft-light" | "difference" | "exclusion" | "hue" | "saturation" | "color" | "luminosity" | "source-atop" | "destination-over" | "destination-out" | "xor" = "source-over"
+        @label "Blend Mode"
+        @description "Composite/blend mode for this shape's draws (`lighter`, `multiply`, `screen`, …)."
+        @tier "presentation"
+      blur : number
+        @label "Blur"
+        @description "Gaussian blur in painter-px. Expensive — forces an intermediate raster; use sparingly."
         @tier "presentation"
       rotate : number
         @label "Rotate"

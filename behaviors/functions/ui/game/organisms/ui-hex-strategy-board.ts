@@ -88,7 +88,7 @@ export interface StdUiHexStrategyBoardHexStrategyBoardOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait HexStrategyBoardOrbital's `uses[]` exports. */
-type _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
+type _StdUiHexStrategyBoardHexStrategyBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.VectorArt' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the HexStrategyBoardOrbital orbital with consumer params. */
 export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStrategyBoardHexStrategyBoardOrbitalParams = {}): OrbitalDefinition {

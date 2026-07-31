@@ -269,16 +269,6 @@ import {
   isStdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalParams,
 } from './ui/game/organisms/ui-brick-sandbox-board-3d.js';
 import {
-  stdUiBuilderBoardBuilderBoardOrbital,
-  StdUiBuilderBoardBuilderBoardOrbitalManifest,
-  isStdUiBuilderBoardBuilderBoardOrbitalParams,
-} from './ui/game/organisms/ui-builder-board.js';
-import {
-  stdUiCardBattlerBoardCardBattlerBoardOrbital,
-  StdUiCardBattlerBoardCardBattlerBoardOrbitalManifest,
-  isStdUiCardBattlerBoardCardBattlerBoardOrbitalParams,
-} from './ui/game/organisms/ui-card-battler-board.js';
-import {
   stdUiCaseStudyOrganismCaseStudyOrganismOrbital,
   StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
   isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams,
@@ -304,11 +294,6 @@ import {
   isStdUiCityBuilderBoardCityBuilderBoardOrbitalParams,
 } from './ui/game/organisms/ui-city-builder-board.js';
 import {
-  stdUiClassifierBoardClassifierBoardOrbital,
-  StdUiClassifierBoardClassifierBoardOrbitalManifest,
-  isStdUiClassifierBoardClassifierBoardOrbitalParams,
-} from './ui/game/organisms/ui-classifier-board.js';
-import {
   stdUiCodeRunnerPanelCodeRunnerPanelOrbital,
   StdUiCodeRunnerPanelCodeRunnerPanelOrbitalManifest,
   isStdUiCodeRunnerPanelCodeRunnerPanelOrbitalParams,
@@ -318,11 +303,6 @@ import {
   StdUiDashboardGridDashboardGridOrbitalManifest,
   isStdUiDashboardGridDashboardGridOrbitalParams,
 } from './ui/core/organisms/ui-dashboard-grid.js';
-import {
-  stdUiDebuggerBoardDebuggerBoardOrbital,
-  StdUiDebuggerBoardDebuggerBoardOrbitalManifest,
-  isStdUiDebuggerBoardDebuggerBoardOrbitalParams,
-} from './ui/game/organisms/ui-debugger-board.js';
 import {
   stdUiDetailPanelDetailPanelOrbital,
   StdUiDetailPanelDetailPanelOrbitalManifest,
@@ -348,11 +328,6 @@ import {
   StdUiEntityTableEntityTableOrbitalManifest,
   isStdUiEntityTableEntityTableOrbitalParams,
 } from './ui/core/organisms/ui-entity-table.js';
-import {
-  stdUiEventHandlerBoardEventHandlerBoardOrbital,
-  StdUiEventHandlerBoardEventHandlerBoardOrbitalManifest,
-  isStdUiEventHandlerBoardEventHandlerBoardOrbitalParams,
-} from './ui/game/organisms/ui-event-handler-board.js';
 import {
   stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital,
   StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalManifest,
@@ -459,11 +434,6 @@ import {
   isStdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalParams,
 } from './ui/game/organisms/ui-nature-survival-board-3d.js';
 import {
-  stdUiNegotiatorBoardNegotiatorBoardOrbital,
-  StdUiNegotiatorBoardNegotiatorBoardOrbitalManifest,
-  isStdUiNegotiatorBoardNegotiatorBoardOrbitalParams,
-} from './ui/game/organisms/ui-negotiator-board.js';
-import {
   stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital,
   StdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalManifest,
   isStdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalParams,
@@ -524,20 +494,10 @@ import {
   isStdUiSegmentRendererSegmentRendererOrbitalParams,
 } from './ui/core/organisms/ui-segment-renderer.js';
 import {
-  stdUiSequencerBoardSequencerBoardOrbital,
-  StdUiSequencerBoardSequencerBoardOrbitalManifest,
-  isStdUiSequencerBoardSequencerBoardOrbitalParams,
-} from './ui/game/organisms/ui-sequencer-board.js';
-import {
   stdUiShowcaseOrganismShowcaseOrganismOrbital,
   StdUiShowcaseOrganismShowcaseOrganismOrbitalManifest,
   isStdUiShowcaseOrganismShowcaseOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-showcase-organism.js';
-import {
-  stdUiSimulatorBoardSimulatorBoardOrbital,
-  StdUiSimulatorBoardSimulatorBoardOrbitalManifest,
-  isStdUiSimulatorBoardSimulatorBoardOrbitalParams,
-} from './ui/game/organisms/ui-simulator-board.js';
 import {
   stdUiSkateparkBoard3dSkateparkBoard3DOrbital,
   StdUiSkateparkBoard3dSkateparkBoard3DOrbitalManifest,
@@ -578,11 +538,6 @@ import {
   StdUiStatCardStatCardOrbitalManifest,
   isStdUiStatCardStatCardOrbitalParams,
 } from './ui/core/organisms/ui-stat-card.js';
-import {
-  stdUiStateArchitectBoardStateArchitectBoardOrbital,
-  StdUiStateArchitectBoardStateArchitectBoardOrbitalManifest,
-  isStdUiStateArchitectBoardStateArchitectBoardOrbitalParams,
-} from './ui/game/organisms/ui-state-architect-board.js';
 import {
   stdUiStateMachineViewStateMachineViewOrbital,
   StdUiStateMachineViewStateMachineViewOrbitalManifest,
@@ -1314,24 +1269,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalManifest,
   }],
-  ['ui-builder-board::BuilderBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBuilderBoardBuilderBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-builder-board::BuilderBoardOrbital');
-      }
-      return stdUiBuilderBoardBuilderBoardOrbital(p);
-    },
-    manifest: StdUiBuilderBoardBuilderBoardOrbitalManifest,
-  }],
-  ['ui-card-battler-board::CardBattlerBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiCardBattlerBoardCardBattlerBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-card-battler-board::CardBattlerBoardOrbital');
-      }
-      return stdUiCardBattlerBoardCardBattlerBoardOrbital(p);
-    },
-    manifest: StdUiCardBattlerBoardCardBattlerBoardOrbitalManifest,
-  }],
   ['ui-case-study-organism::CaseStudyOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams(p)) {
@@ -1377,15 +1314,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiCityBuilderBoardCityBuilderBoardOrbitalManifest,
   }],
-  ['ui-classifier-board::ClassifierBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiClassifierBoardClassifierBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-classifier-board::ClassifierBoardOrbital');
-      }
-      return stdUiClassifierBoardClassifierBoardOrbital(p);
-    },
-    manifest: StdUiClassifierBoardClassifierBoardOrbitalManifest,
-  }],
   ['ui-code-runner-panel::CodeRunnerPanelOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiCodeRunnerPanelCodeRunnerPanelOrbitalParams(p)) {
@@ -1403,15 +1331,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiDashboardGridDashboardGridOrbital(p);
     },
     manifest: StdUiDashboardGridDashboardGridOrbitalManifest,
-  }],
-  ['ui-debugger-board::DebuggerBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiDebuggerBoardDebuggerBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-debugger-board::DebuggerBoardOrbital');
-      }
-      return stdUiDebuggerBoardDebuggerBoardOrbital(p);
-    },
-    manifest: StdUiDebuggerBoardDebuggerBoardOrbitalManifest,
   }],
   ['ui-detail-panel::DetailPanelOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1457,15 +1376,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiEntityTableEntityTableOrbital(p);
     },
     manifest: StdUiEntityTableEntityTableOrbitalManifest,
-  }],
-  ['ui-event-handler-board::EventHandlerBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiEventHandlerBoardEventHandlerBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-event-handler-board::EventHandlerBoardOrbital');
-      }
-      return stdUiEventHandlerBoardEventHandlerBoardOrbital(p);
-    },
-    manifest: StdUiEventHandlerBoardEventHandlerBoardOrbitalManifest,
   }],
   ['ui-fantasy-town-board-3d::FantasyTownBoard3DOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1656,15 +1566,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalManifest,
   }],
-  ['ui-negotiator-board::NegotiatorBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiNegotiatorBoardNegotiatorBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-negotiator-board::NegotiatorBoardOrbital');
-      }
-      return stdUiNegotiatorBoardNegotiatorBoardOrbital(p);
-    },
-    manifest: StdUiNegotiatorBoardNegotiatorBoardOrbitalManifest,
-  }],
   ['ui-physics-sandbox-board::PhysicsSandboxBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalParams(p)) {
@@ -1773,15 +1674,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiSegmentRendererSegmentRendererOrbitalManifest,
   }],
-  ['ui-sequencer-board::SequencerBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSequencerBoardSequencerBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-sequencer-board::SequencerBoardOrbital');
-      }
-      return stdUiSequencerBoardSequencerBoardOrbital(p);
-    },
-    manifest: StdUiSequencerBoardSequencerBoardOrbitalManifest,
-  }],
   ['ui-showcase-organism::ShowcaseOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiShowcaseOrganismShowcaseOrganismOrbitalParams(p)) {
@@ -1790,15 +1682,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiShowcaseOrganismShowcaseOrganismOrbital(p);
     },
     manifest: StdUiShowcaseOrganismShowcaseOrganismOrbitalManifest,
-  }],
-  ['ui-simulator-board::SimulatorBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSimulatorBoardSimulatorBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-simulator-board::SimulatorBoardOrbital');
-      }
-      return stdUiSimulatorBoardSimulatorBoardOrbital(p);
-    },
-    manifest: StdUiSimulatorBoardSimulatorBoardOrbitalManifest,
   }],
   ['ui-skatepark-board-3d::SkateparkBoard3DOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1871,15 +1754,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiStatCardStatCardOrbital(p);
     },
     manifest: StdUiStatCardStatCardOrbitalManifest,
-  }],
-  ['ui-state-architect-board::StateArchitectBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiStateArchitectBoardStateArchitectBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-state-architect-board::StateArchitectBoardOrbital');
-      }
-      return stdUiStateArchitectBoardStateArchitectBoardOrbital(p);
-    },
-    manifest: StdUiStateArchitectBoardStateArchitectBoardOrbitalManifest,
   }],
   ['ui-state-machine-view::StateMachineViewOrbital', {
     factory: (p: object): OrbitalDefinition => {

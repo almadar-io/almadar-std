@@ -88,7 +88,7 @@ export interface StdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait TopdownRtsBoardOrbital's `uses[]` exports. */
-type _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
+type _StdUiTopdownRtsBoardTopdownRtsBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.VectorArt' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the TopdownRtsBoardOrbital orbital with consumer params. */
 export function stdUiTopdownRtsBoardTopdownRtsBoardOrbital(params: StdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams = {}): OrbitalDefinition {

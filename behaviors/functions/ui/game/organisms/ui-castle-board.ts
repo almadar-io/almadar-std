@@ -88,7 +88,7 @@ export interface StdUiCastleBoardCastleBoardOrbitalParams {
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait CastleBoardOrbital's `uses[]` exports. */
-type _StdUiCastleBoardCastleBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
+type _StdUiCastleBoardCastleBoardOrbitalUsesRef = 'Frame.traits.TacticsAuthority' | 'Frame.traits.FxDecay' | 'Frame.traits.RoundLogic' | 'Frame.traits.ScoreKeeper' | 'Frame.traits.AnimClock' | 'Frame.traits.VectorArt' | 'Frame.traits.PlayerIntent' | 'Score.traits.ScoreKeeper';
 
 /** Per-orbital factory: builds the CastleBoardOrbital orbital with consumer params. */
 export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastleBoardOrbitalParams = {}): OrbitalDefinition {
