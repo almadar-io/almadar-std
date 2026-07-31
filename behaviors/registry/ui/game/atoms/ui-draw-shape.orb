@@ -87,6 +87,111 @@
               "tier": "presentation",
               "type": "json"
             },
+            "animation": {
+              "description": "Keyframe animation over this shape's props; the host runs a paint clock while present.",
+              "label": "Animation",
+              "properties": {
+                "durationMs": {
+                  "name": "durationMs",
+                  "required": true,
+                  "type": "number"
+                },
+                "keyframes": {
+                  "items": {
+                    "properties": {
+                      "at": {
+                        "name": "at",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "fill": {
+                        "name": "fill",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "height": {
+                        "name": "height",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "offsetX": {
+                        "name": "offsetX",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "offsetY": {
+                        "name": "offsetY",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "opacity": {
+                        "name": "opacity",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "radiusX": {
+                        "name": "radiusX",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "radiusY": {
+                        "name": "radiusY",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "rotate": {
+                        "name": "rotate",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "shadow": {
+                        "name": "shadow",
+                        "properties": {
+                          "blur": {
+                            "name": "blur",
+                            "required": true,
+                            "type": "number"
+                          },
+                          "color": {
+                            "name": "color",
+                            "required": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": false,
+                        "type": "object"
+                      },
+                      "stroke": {
+                        "name": "stroke",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "name": "strokeWidth",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "width": {
+                        "name": "width",
+                        "required": false,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "keyframes",
+                  "required": true,
+                  "type": "array"
+                },
+                "loop": {
+                  "name": "loop",
+                  "required": false,
+                  "type": "boolean"
+                }
+              },
+              "tier": "presentation",
+              "type": "DrawShapeAnimation"
+            },
             "d": {
               "description": "SVG path data in world units relative to the cell's projected top-left — same coordinate convention as `points`.",
               "label": "D",
@@ -99,6 +204,51 @@
               "tier": "presentation",
               "type": "string"
             },
+            "gradient": {
+              "description": "Gradient fill in world units; overrides `fill` when present.",
+              "label": "Gradient",
+              "properties": {
+                "center": {
+                  "name": "center",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": false,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "linear",
+                    "radial"
+                  ]
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "stops": {
+                  "items": {
+                    "type": "object"
+                  },
+                  "name": "stops",
+                  "required": true,
+                  "type": "array"
+                },
+                "to": {
+                  "name": "to",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DrawShapeGradient"
+            },
             "height": {
               "description": "Rect height in world units (fractions of `projector.tileWidth`).",
               "label": "Height",
@@ -106,7 +256,7 @@
               "type": "number"
             },
             "offsetX": {
-              "description": "Fine nudge from the anchor point in world units.",
+              "description": "Fine nudge in world units — applies to every shape kind except `cell` (rect/ellipse from their anchor point; poly/path from the projected top-left).",
               "label": "Offset X",
               "tier": "presentation",
               "type": "number"
@@ -122,6 +272,13 @@
               "label": "Opacity",
               "tier": "presentation",
               "type": "number"
+            },
+            "pivot": {
+              "default": {},
+              "description": "Rotation pivot in world units relative to the cell's projected top-left; default `{x:0.5, y:0.5}` (cell center).",
+              "label": "Pivot",
+              "tier": "presentation",
+              "type": "json"
             },
             "points": {
               "default": [],
@@ -172,6 +329,30 @@
               "label": "Radius Y",
               "tier": "presentation",
               "type": "number"
+            },
+            "rotate": {
+              "description": "Rotation in radians (painter units, same as `draw-group`), about `pivot`.",
+              "label": "Rotate",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "shadow": {
+              "description": "Soft glow / drop-shadow behind the shape; `blur` in world units.",
+              "label": "Shadow",
+              "properties": {
+                "blur": {
+                  "name": "blur",
+                  "required": true,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DrawShapeShadow"
             },
             "shape": {
               "default": "cell",
@@ -241,16 +422,21 @@
                     "main",
                     {
                       "anchor": "@config.anchor",
+                      "animation": "@config.animation",
                       "d": "@config.d",
                       "fill": "@config.fill",
+                      "gradient": "@config.gradient",
                       "height": "@config.height",
                       "offsetX": "@config.offsetX",
                       "offsetY": "@config.offsetY",
                       "opacity": "@config.opacity",
+                      "pivot": "@config.pivot",
                       "points": "@config.points",
                       "position": "@config.position",
                       "radiusX": "@config.radiusX",
                       "radiusY": "@config.radiusY",
+                      "rotate": "@config.rotate",
+                      "shadow": "@config.shadow",
                       "shape": "@config.shape",
                       "stroke": "@config.stroke",
                       "strokeWidth": "@config.strokeWidth",

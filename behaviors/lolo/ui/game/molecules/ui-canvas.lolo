@@ -13,7 +13,6 @@ orbital CanvasOrbital {
         (render-ui main {
           mode: @config.mode
           drawables: @config.drawables
-          children: @config.children
           camera: @config.camera
           projection: @config.projection
           className: @config.className
@@ -39,6 +38,7 @@ orbital CanvasOrbital {
           featureClickEvent: @config.featureClickEvent
           keyMap: @config.keyMap
           keyUpMap: @config.keyUpMap
+          children: @config.children
           type: canvas
         })
     }
@@ -82,10 +82,6 @@ orbital CanvasOrbital {
       drawables : [json] = []
         @label "Drawables"
         @description "Neutral drawable descriptors — the `draw-*` children. Routed to the host's painter."
-        @tier "presentation"
-      children : node
-        @label "Children (drawable composition)"
-        @description "Declarative JSX drawable children — semantic atom invocations (`<SvgPrimitive/>`, `<SvgShading/>`, …) composed in paint order. The canvas is a draw-host: these children are routed to the painter as drawable descriptors, not DOM-wrapped. Use this to author a high-fidelity asset as a readable, nested JSX tree an LLM can rasterize."
         @tier "presentation"
       camera : json = {}
         @label "Camera"
@@ -186,6 +182,10 @@ orbital CanvasOrbital {
       keyUpMap : Map string string = { item: "Item" }
         @label "Key Up Map"
         @description "keyUpMap prop"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Declarative JSX drawable children (`<DrawShape .../>` composed in paint order). Forwarded to the 2D host, which collects them via drawable registry context."
         @tier "presentation"
     }
   }

@@ -81,6 +81,7 @@ export interface StdUiCanvasConfig {
   backgroundImage?: unknown;
   /** Default: `{}` */
   camera?: unknown;
+  children?: unknown;
   className?: string;
   /** Default: `[]` */
   drawables?: EntityRow[];

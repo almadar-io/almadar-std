@@ -1,617 +1,450 @@
 app ui-castle-board "1.0.0"
-"CastleBoard — build-and-defend: game-shell + canvas-2d with LOLO-driven sprite animation and combat effects."
-;; @capabilities "castle building, defense gameplay, sprite-animated combat effects"
-orbital CastleBoardOrbital {
+"Castle build-and-defend siege: thin organism composing the std-tactics-board-2d frame + std-score, plus three organism-level traits (CastleClock / CastleEconomy / CastleWaves) that turn the turn-based frame into a real-time siege — a 2s clock auto-advances turns, workers harvest gold at the mines, gold raises watchtowers on the mine plots, and raider waves stream out of a boxed war portal down the north corridor. Win by destroying the portal and every raider; lose when the whole garrison, keep included, is wiped."
+;; @capabilities "castle building, defense gameplay, wave siege, sprite-animated combat"
 
-  type CastleBoardTilesItem = {
+;; ============================================================================
+;; PERSONA + USER STORIES
+;;
+;; Read these before changing anything here, and walk them end to end after.
+;; One persona: SERA, castellan of Emberhold, holding a walled 9x9 isometric
+;; keep against a war portal in the north wall: workers mine gold, gold
+;; raises watchtowers, raider waves stream down the corridor.
+;; Statuses: scripted playthrough done (68/70 checks); verdicts inline below.
+;;
+;; THE GENRE (what a castle build-and-defend player expects): FORTIFY, then
+;; SURVIVE. Play is continuous — a 2-second clock advances the round on its
+;; own: your spent defenders refresh and the raiders act whether or not you
+;; touched anything. The economy is the engine: workers standing at the gold
+;; mines harvest every cycle, you stockpile, and you spend 25 gold to raise a
+;; watchtower on a mine plot — towers are both fortification and garrison
+;; (they strike like any defender). Pressure escalates: while the war portal
+;; stands, a raider wave musters at the corridor mouth every ~12 seconds,
+;; each one tougher than the last, and they walk straight at your garrison
+;; and batter whatever they reach for 1 per cycle. The portal is FULLY boxed
+;; by the curtain wall (all 5 in-bounds neighbor cells impassable, diagonals
+;; included — the enemy AI steps diagonally), so it holds position as a spawn
+;; fortress and can only be shelled from the corridor mouth at range 2. You
+;; win by destroying the portal (which stops the waves) and mopping up every
+;; raider; you lose when your whole garrison — guardians, workers, towers,
+;; AND the keep — is wiped. A fight looks like: select a guardian -> green
+;; reach cells -> move -> the guardian STAYS selected and auto-arms (red
+;; cells = enemies in range 2) -> strike for 3 -> the guardian is SPENT
+;; until the next clock tick. The hardcoded "End Turn" button stays as a
+;; manual round-hurry; the clock makes it optional.
+;; ============================================================================
+;;
+;; SERA — "I fortify Emberhold, hold the corridor, and smash the war portal
+;; before its waves smash my keep."
+;;
+;;   1. I open the board and see the whole stronghold framed on screen — the
+;;      stone curtain ring, the grass courtyard, the plank corridor running
+;;      from the north gate past the keep to the south gate, my four
+;;      guardians and two workers garrisoned inside, the gold mines flanking
+;;      the corridor, the war portal boxed into the north wall, and the HUD
+;;      showing Result/Phase/Turn/Score/Gold/Wave.
+;;        STATUS: WORKS — 8 units placed, 81 tiles (55 stone/20 grass/6 planks),
+;;        HUD shows Result/Phase/Turn/Score/Gold/Wave, CDN sprite descriptors,
+;;        5 ground-anchored features (run7 s1, 7/7 checks).
+;;   2. Every unit on the board is a visible sprite with a name label and a
+;;      health bar I can read at a glance, idling in place — guardian,
+;;      worker, keep, watchtower, raider and portal art all visually
+;;      distinct.
+;;        STATUS: WORKS — idle frames cycle, health bars full, guardian /
+;;        worker / keep / portal sprite stems visually distinct. Caveat:
+;;        spawned raider/watchtower render via manifest fallback with an
+;;        EMPTY name label (substrate gap: the SPAWN effect sets no name).
+;;   3. Play is continuous: the Turn counter advances about every 2 seconds
+;;      WITHOUT me clicking End Turn, and a unit I spent last cycle is fresh
+;;      again on the next. The End Turn button still works as a manual hurry.
+;;        STATUS: WORKS — Turn 2->6 in ~4.6s with zero input, END_TURN +
+;;        AI_TURN on the bus, a spent sheller strikes again the next cycle.
+;;   4. My workers harvest: while a living worker stands on or next to a
+;;      gold mine (manhattan <= 1), Gold rises every clock cycle; with no
+;;      worker at either mine it does not.
+;;        STATUS: WORKS — gold 24->28 with workers parked at the mines;
+;;        frozen at 54->54 with workers off-mine; resumed 56->60 on return.
+;;   5. With 25+ gold I hit "Tower (25g)" and a watchtower rises on the
+;;      first free mine plot (west mine first, then east); my gold drops by
+;;      25. Under 25 gold — or with both plots occupied — the button is a
+;;      dead click (guard).
+;;        STATUS: WORKS — west tower on (2,2): gold 25->8 + SPAWN +
+;;        watchtower.svg rendered; dead click under 25 gold; east tower on
+;;        (6,2); both plots occupied -> dead click, gold kept (run2 s5).
+;;   6. Raider waves: about every 12 seconds, WHILE THE PORTAL STANDS, a
+;;      raider musters at the corridor mouth (4,2) with scaling health
+;;      (6 + wave number) and engages my line on the next clock ticks. If
+;;      the muster cell is occupied the wave waits for it to clear. Killing
+;;      the portal stops the reinforcements — then I only have to mop up.
+;;        STATUS: WORKS — waves on 12s ticks, hp 6/7/8/9 scaling; a raider
+;;        parked on the muster cell blocked the 48s tick (no raider4, wave
+;;        stayed 3), un-parking resumed spawns; after portal death + free
+;;        muster, a 13s window produced zero raider SPAWN.
+;;   7. Combat: I select a guardian (green reach), move (walk animation, one
+;;      move per cycle), it auto-arms (red = enemies within range 2), and I
+;;      strike for 3 — the guardian is then spent until the next tick. A
+;;      raider that reaches my line batters the adjacent defender for 1 per
+;;      cycle.
+;;        STATUS: WORKS — green set exactly (3,3)(4,3)(3,4) with wall (3,1)
+;;        unlit, phase=selection; walk animation; move to (4,2) auto-arms
+;;        red [(4,0)]; strike 1.00->0.50 frac (3 dmg); BURST "-3"; hit.svg;
+;;        attacker dimmed 0.45; spent re-click dead; a pinned raider batters
+;;        for -1/cycle (g1 to 6/10, fx-ai on the bus).
+;;   8. The war portal is FULLY boxed by the curtain wall: the AI can never
+;;      step it (all 5 in-bounds neighbor cells impassable, diagonals
+;;      included — the AI steps diagonally), so it holds position as a spawn
+;;      fortress — and my defenders destroy it by shelling over the wall
+;;      from the corridor mouth at range 2.
+;;        STATUS: WORKS — portal never left (4,0) in any run; shelled from
+;;        (4,2) at range 2 (-0.10 frac per strike x9) and destroyed.
+;;   9. The keep is my last bastion: raiders that break the garrison walk to
+;;      it and batter it. When my whole garrison — guardians, workers,
+;;      towers, AND the keep — is dead, Result flips to defeat and the board
+;;      freezes.
+;;        STATUS: BROKEN — two idle runs (302s and 603s) never reached
+;;        defeat (result=none, keep >=22/24, garrison barely dented):
+;;        substrate gap in std-grid-tactics AI — the greedy diagonal step
+;;        has no occupied-cell fallback, so raiders freeze at diagonal
+;;        range and the wipe stalls permanently (compounded by the
+;;        catalog's dual-runtime state divergence).
+;;  10. When the portal and every raider are dead, I win — Result flips to
+;;      victory and the board freezes (the portal's death stops the waves,
+;;      so the mop-up is finite). Kills tick Score +10.
+;;        STATUS: WORKS — result=victory (turn 53, gold 202, wave 4),
+;;        GAME_END on the bus, post-game click dead (frozen board). Score
+;;        +10/kill but read 50 for 4 kills: one kill double-counted via
+;;        doubled UNITS_CHANGED on the shared bus (substrate dual-runtime
+;;        duplication, not an organism bug).
+;;
+;; MULTIPLAYER NOTE: GameState is [runtime, shared], so every connected
+;; client watches the same siege on the same frame; intents serialize
+;; through the server authority. There is no per-seat ownership — any
+;; client can drive any player unit.
+;;
+;; ASSET INVENTORY (hand-authored svg, almadar-kflow-assets.web.app
+;; /shared/ui-castle-board/svg/isometric/, generated by tools/asset-workflow
+;; svg-generator from the sibling .md descriptions)
+;;
+;;   Terrain   terrain/stone.svg curtain-wall cubes (impassable);
+;;             terrain/grass.svg courtyard; terrain/planks.svg corridor +
+;;             south gate.
+;;   Units     units/{guardian,worker,keep,watchtower,portal,raider}.svg +
+;;             animation frames .{idle-0..3, walk-0..1, attack-0, hit-0,
+;;             death-0}.svg; the frame molecule url-rewrites name.svg ->
+;;             name.<anim>-<i>.svg. Spawned towers/raiders (SPAWN carries no
+;;             modelUrl) render via the assetManifest.units[unitType]
+;;             fallback with an empty name label (known atom gap).
+;;             player: g1 Aldric guardian 10hp (3,2) corridor mouth
+;;                     g2 Berta guardian 10hp (5,2) corridor mouth
+;;                     g3 Cedric guardian 10hp (2,4) keep flank
+;;                     g4 Dagna guardian 10hp (6,4) keep flank
+;;                     w1 Pick worker 6hp (2,3) at the west mine
+;;                     w2 Shovel worker 6hp (6,3) at the east mine
+;;                     keep Emberhold keep 24hp (4,4)
+;;             enemy:  portal War Portal 30hp (4,0), fully walled
+;;   Features  features/gold_mine.svg at (2,2) and (6,2) — the harvest
+;;             anchors and tower plots; features/wall.svg x3 at (3,1),(4,1),
+;;             (5,1) boxing the portal (all matching tiles passable: false).
+;;   Effects   effects/hit.svg (BURST "hit" fx), effects/explosion.svg
+;;             (manifest-only).
+;;   UI chrome ui/panel-frame.svg = game-shell background + HUD panel.
+;; ============================================================================
+
+orbital CastleBoardOrbital {
+  uses Frame from "std/behaviors/std-tactics-board-2d"
+  uses Score from "std/behaviors/std-score"
+
+  type Asset = {
+    url : asset
+    atlas : asset
+    sprite : string
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
     id : string
     x : number!
     y : number!
     z : number
     terrain : string
-    type : string
-    terrainSprite : Asset
     passable : boolean
-    movementCost : number
-    tileType : string
-    elevation : number
-    modelUrl : Asset
+    terrainSprite : Asset
   }
-  type Asset = {
-      url : asset
-      atlas : asset
-      sprite : string
-      role : string
-      category : string
-      animations : [string]
-      style : string
-      variant : string
-      dimension : string
-      aspect : string
-      name : string
-      thumbnailUrl : string
-    }
-  type CastleBoardUnitsItem = {
+  type Fx = {
     id : string!
-    position : CastleBoardUnitsItemPosition
-    x : number
-    y : number
-    z : number
-    sprite : Asset
-    modelUrl : Asset
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [CastleBoardUnitsItemTraitsItem]
-    previousPosition : CastleBoardUnitsItemPreviousPosition
-    elevation : number
-    animation : string
-    frame : number
-  }
-  type CastleBoardEffectItem = {
-    key : string!
+    type : string!
     x : number!
-    y : number!
+    z : number
+    y : number
+    message : string
     ttl : number!
   }
-  type CastleBoardUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type CastleBoardUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type CastleBoardUnitsItemPreviousPosition = {
-    x : number!
-    y : number!
-  }
-  type CastleBoardFeaturesItem = {
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
     id : string
     x : number!
     y : number!
     z : number
-    type : string!
-    sprite : Asset
+    type : string
     assetUrl : Asset
     color : string
     elevation : number
   }
-  type CastleBoardBuildingsItem = {
-    id : string!
-    type : string!
-    x : number!
-    y : number!
-    cost : number!
-    incomePerTick : number
-  }
-  type CastleBoardAssetManifest = {
+  type AssetManifest = {
     terrains : Map string Asset
     units : Map string Asset
     features : Map string Asset
     effects : Map string Asset
   }
-  type CastleBoardUNITCLICKUnit = {
-    id : string!
-    position : CastleBoardUNITCLICKUnitPosition
-    x : number
-    y : number
-    z : number
-    sprite : Asset
-    modelUrl : Asset
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [CastleBoardUNITCLICKUnitTraitsItem]
-    previousPosition : CastleBoardUNITCLICKUnitPreviousPosition
-    elevation : number
-  }
-  type CastleBoardUNITCLICKUnitPosition = {
-    x : number!
-    y : number!
-  }
-  type CastleBoardUNITCLICKUnitTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type CastleBoardUNITCLICKUnitPreviousPosition = {
-    x : number!
-    y : number!
-  }
 
-  entity CastleBoardItem [runtime] {
+  entity GameState [runtime, shared] {
     id : string!
-    tiles : [CastleBoardTilesItem]
-    units : [CastleBoardUnitsItem]
-    features : [CastleBoardFeaturesItem]
-    buildings : [CastleBoardBuildingsItem]
+    units : [Unit] = [ { id: "g1", position: { x: 3, y: 2 }, x: 3, y: 2, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "guardian", name: "Aldric", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "g2", position: { x: 5, y: 2 }, x: 5, y: 2, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "guardian", name: "Berta", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "g3", position: { x: 2, y: 4 }, x: 2, y: 4, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "guardian", name: "Cedric", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "g4", position: { x: 6, y: 4 }, x: 6, y: 4, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "guardian", name: "Dagna", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "w1", position: { x: 2, y: 3 }, x: 2, y: 3, z: 0, team: "player", health: 6, maxHealth: 6, unitType: "worker", name: "Pick", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "w2", position: { x: 6, y: 3 }, x: 6, y: 3, z: 0, team: "player", health: 6, maxHealth: 6, unitType: "worker", name: "Shovel", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "keep", position: { x: 4, y: 4 }, x: 4, y: 4, z: 0, team: "player", health: 24, maxHealth: 24, unitType: "keep", name: "Emberhold", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/keep.svg", role: "npc", category: "keep", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "keep", thumbnailUrl: "" } }, { id: "portal", position: { x: 4, y: 0 }, x: 4, y: 0, z: 0, team: "enemy", health: 30, maxHealth: 30, unitType: "portal", name: "War Portal", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/portal.svg", role: "npc", category: "portal", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" } } ]
+    fx : [Fx] = []
+    tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, terrain: "stone", passable: false }, { id: "t-1-0", x: 1, y: 0, terrain: "stone", passable: false }, { id: "t-2-0", x: 2, y: 0, terrain: "stone", passable: false }, { id: "t-3-0", x: 3, y: 0, terrain: "stone", passable: false }, { id: "t-4-0", x: 4, y: 0, terrain: "stone", passable: false }, { id: "t-5-0", x: 5, y: 0, terrain: "stone", passable: false }, { id: "t-6-0", x: 6, y: 0, terrain: "stone", passable: false }, { id: "t-7-0", x: 7, y: 0, terrain: "stone", passable: false }, { id: "t-8-0", x: 8, y: 0, terrain: "stone", passable: false }, { id: "t-0-1", x: 0, y: 1, terrain: "stone", passable: false }, { id: "t-1-1", x: 1, y: 1, terrain: "stone", passable: false }, { id: "t-2-1", x: 2, y: 1, terrain: "stone", passable: false }, { id: "t-3-1", x: 3, y: 1, terrain: "stone", passable: false }, { id: "t-4-1", x: 4, y: 1, terrain: "stone", passable: false }, { id: "t-5-1", x: 5, y: 1, terrain: "stone", passable: false }, { id: "t-6-1", x: 6, y: 1, terrain: "stone", passable: false }, { id: "t-7-1", x: 7, y: 1, terrain: "stone", passable: false }, { id: "t-8-1", x: 8, y: 1, terrain: "stone", passable: false }, { id: "t-0-2", x: 0, y: 2, terrain: "stone", passable: false }, { id: "t-1-2", x: 1, y: 2, terrain: "stone", passable: false }, { id: "t-2-2", x: 2, y: 2, terrain: "grass", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "grass", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "planks", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "grass", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "grass", passable: true }, { id: "t-7-2", x: 7, y: 2, terrain: "stone", passable: false }, { id: "t-8-2", x: 8, y: 2, terrain: "stone", passable: false }, { id: "t-0-3", x: 0, y: 3, terrain: "stone", passable: false }, { id: "t-1-3", x: 1, y: 3, terrain: "stone", passable: false }, { id: "t-2-3", x: 2, y: 3, terrain: "grass", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "grass", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "planks", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "grass", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "grass", passable: true }, { id: "t-7-3", x: 7, y: 3, terrain: "stone", passable: false }, { id: "t-8-3", x: 8, y: 3, terrain: "stone", passable: false }, { id: "t-0-4", x: 0, y: 4, terrain: "stone", passable: false }, { id: "t-1-4", x: 1, y: 4, terrain: "stone", passable: false }, { id: "t-2-4", x: 2, y: 4, terrain: "grass", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "grass", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "planks", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "grass", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "grass", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "stone", passable: false }, { id: "t-8-4", x: 8, y: 4, terrain: "stone", passable: false }, { id: "t-0-5", x: 0, y: 5, terrain: "stone", passable: false }, { id: "t-1-5", x: 1, y: 5, terrain: "stone", passable: false }, { id: "t-2-5", x: 2, y: 5, terrain: "grass", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "grass", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "planks", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "grass", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "grass", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "stone", passable: false }, { id: "t-8-5", x: 8, y: 5, terrain: "stone", passable: false }, { id: "t-0-6", x: 0, y: 6, terrain: "stone", passable: false }, { id: "t-1-6", x: 1, y: 6, terrain: "stone", passable: false }, { id: "t-2-6", x: 2, y: 6, terrain: "grass", passable: true }, { id: "t-3-6", x: 3, y: 6, terrain: "grass", passable: true }, { id: "t-4-6", x: 4, y: 6, terrain: "planks", passable: true }, { id: "t-5-6", x: 5, y: 6, terrain: "grass", passable: true }, { id: "t-6-6", x: 6, y: 6, terrain: "grass", passable: true }, { id: "t-7-6", x: 7, y: 6, terrain: "stone", passable: false }, { id: "t-8-6", x: 8, y: 6, terrain: "stone", passable: false }, { id: "t-0-7", x: 0, y: 7, terrain: "stone", passable: false }, { id: "t-1-7", x: 1, y: 7, terrain: "stone", passable: false }, { id: "t-2-7", x: 2, y: 7, terrain: "stone", passable: false }, { id: "t-3-7", x: 3, y: 7, terrain: "stone", passable: false }, { id: "t-4-7", x: 4, y: 7, terrain: "planks", passable: true }, { id: "t-5-7", x: 5, y: 7, terrain: "stone", passable: false }, { id: "t-6-7", x: 6, y: 7, terrain: "stone", passable: false }, { id: "t-7-7", x: 7, y: 7, terrain: "stone", passable: false }, { id: "t-8-7", x: 8, y: 7, terrain: "stone", passable: false }, { id: "t-0-8", x: 0, y: 8, terrain: "stone", passable: false }, { id: "t-1-8", x: 1, y: 8, terrain: "stone", passable: false }, { id: "t-2-8", x: 2, y: 8, terrain: "stone", passable: false }, { id: "t-3-8", x: 3, y: 8, terrain: "stone", passable: false }, { id: "t-4-8", x: 4, y: 8, terrain: "stone", passable: false }, { id: "t-5-8", x: 5, y: 8, terrain: "stone", passable: false }, { id: "t-6-8", x: 6, y: 8, terrain: "stone", passable: false }, { id: "t-7-8", x: 7, y: 8, terrain: "stone", passable: false }, { id: "t-8-8", x: 8, y: 8, terrain: "stone", passable: false } ]
+    result : string = "none"
     selectedUnitId : string = ""
-    validMoves : [CastleBoardUnitsItemPosition] = []
-    gold : number = 100
-    health : number = 20
-    maxHealth : number = 20
-    wave : number = 0
-    tickCount : number = 0
-    lastWaveDamage : number = 0
-    result : "none" | "victory" | "defeat" = none
-    effects : [CastleBoardEffectItem] = []
+    validMoves : [ValidMove] = []
+    attackTargets : [ValidMove] = []
+    movedIds : [string] = []
+    actedIds : [string] = []
+    uiPhase : string = "observation"
+    turn : number = 0
+    score : number = 0
+    scoreBaseline : number = 0
+    gold : number = 0
+    ecoSpawnCount : number = 0
+    waveCount : number = 0
+    clockTicks : number = 0
   }
 
-  trait CastleBoardRender -> @rebindable CastleBoardItem [interaction, instance] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (set @entity.tiles @config.tiles)
-        (set @entity.units @config.units)
-        (set @entity.features @config.features)
-        (set @entity.buildings [])
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.gold 100)
-        (set @entity.health 20)
-        (set @entity.maxHealth 20)
-        (set @entity.wave 0)
-        (set @entity.tickCount 0)
-        (set @entity.lastWaveDamage 0)
-        (set @entity.result "none")
-        (set @entity.effects [])
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      UNIT_CLICK -> idle when (== @entity.selectedUnitId ?unitId)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      UNIT_CLICK -> idle when (and (!= @entity.selectedUnitId "") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (let ((ap (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))))
-        (emit ATTACK { damage: 3, attackerId: @entity.selectedUnitId, targetId: ?unitId })
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      UNIT_CLICK -> idle when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
-        (set @entity.selectedUnitId ?unitId)
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      TILE_CLICK -> idle when (and (> (array/len (array/filter @entity.features (fn ft (and (== @ft.x ?x) (== @ft.y ?y))))) 0) (>= @entity.gold 25))
-        (set @entity.gold (- @entity.gold 25))
-        (set @entity.buildings (array/append @entity.buildings { id: (object/get (array/first (array/filter @entity.features (fn ft (and (== @ft.x ?x) (== @ft.y ?y))))) id), type: (object/get (array/first (array/filter @entity.features (fn ft (and (== @ft.x ?x) (== @ft.y ?y))))) type), x: ?x, y: ?y, cost: 25, incomePerTick: 5 }))
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      TILE_CLICK -> idle
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      ATTACK -> idle when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
-        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
-        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      WAVE_DEFEATED -> victory when (and (>= @entity.wave 3) (> @entity.health 0))
-        (set @entity.result "victory")
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          overlay: { type: game-menu, title: "VICTORY", subtitle: "The castle held — every wave was repelled.", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      CASTLE_HIT -> defeat when (<= @entity.health 0)
-        (set @entity.result "defeat")
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          overlay: { type: game-menu, title: "DEFEAT", subtitle: "The castle has fallen to the raiders.", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      CASTLE_HIT -> idle when (> @entity.health 0)
-        (set @entity.effects (array/append @entity.effects { key: "slash", x: 4, y: 4, ttl: 4 }))
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
+  trait Authority = Frame.traits.TacticsAuthority -> GameState {
+    config {
+      running: true
+      gridWidth: 9
+      gridHeight: 9
+      attackDamage: 3
+      units: [ { id: "g1", position: { x: 3, y: 2 }, x: 3, y: 2, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "guardian", name: "Aldric", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "g2", position: { x: 5, y: 2 }, x: 5, y: 2, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "guardian", name: "Berta", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "g3", position: { x: 2, y: 4 }, x: 2, y: 4, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "guardian", name: "Cedric", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "g4", position: { x: 6, y: 4 }, x: 6, y: 4, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "guardian", name: "Dagna", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "w1", position: { x: 2, y: 3 }, x: 2, y: 3, z: 0, team: "player", health: 6, maxHealth: 6, unitType: "worker", name: "Pick", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "w2", position: { x: 6, y: 3 }, x: 6, y: 3, z: 0, team: "player", health: 6, maxHealth: 6, unitType: "worker", name: "Shovel", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "keep", position: { x: 4, y: 4 }, x: 4, y: 4, z: 0, team: "player", health: 24, maxHealth: 24, unitType: "keep", name: "Emberhold", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/keep.svg", role: "npc", category: "keep", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "keep", thumbnailUrl: "" } }, { id: "portal", position: { x: 4, y: 0 }, x: 4, y: 0, z: 0, team: "enemy", health: 30, maxHealth: 30, unitType: "portal", name: "War Portal", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/portal.svg", role: "npc", category: "portal", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" } } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, terrain: "stone", passable: false }, { id: "t-1-0", x: 1, y: 0, terrain: "stone", passable: false }, { id: "t-2-0", x: 2, y: 0, terrain: "stone", passable: false }, { id: "t-3-0", x: 3, y: 0, terrain: "stone", passable: false }, { id: "t-4-0", x: 4, y: 0, terrain: "stone", passable: false }, { id: "t-5-0", x: 5, y: 0, terrain: "stone", passable: false }, { id: "t-6-0", x: 6, y: 0, terrain: "stone", passable: false }, { id: "t-7-0", x: 7, y: 0, terrain: "stone", passable: false }, { id: "t-8-0", x: 8, y: 0, terrain: "stone", passable: false }, { id: "t-0-1", x: 0, y: 1, terrain: "stone", passable: false }, { id: "t-1-1", x: 1, y: 1, terrain: "stone", passable: false }, { id: "t-2-1", x: 2, y: 1, terrain: "stone", passable: false }, { id: "t-3-1", x: 3, y: 1, terrain: "stone", passable: false }, { id: "t-4-1", x: 4, y: 1, terrain: "stone", passable: false }, { id: "t-5-1", x: 5, y: 1, terrain: "stone", passable: false }, { id: "t-6-1", x: 6, y: 1, terrain: "stone", passable: false }, { id: "t-7-1", x: 7, y: 1, terrain: "stone", passable: false }, { id: "t-8-1", x: 8, y: 1, terrain: "stone", passable: false }, { id: "t-0-2", x: 0, y: 2, terrain: "stone", passable: false }, { id: "t-1-2", x: 1, y: 2, terrain: "stone", passable: false }, { id: "t-2-2", x: 2, y: 2, terrain: "grass", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "grass", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "planks", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "grass", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "grass", passable: true }, { id: "t-7-2", x: 7, y: 2, terrain: "stone", passable: false }, { id: "t-8-2", x: 8, y: 2, terrain: "stone", passable: false }, { id: "t-0-3", x: 0, y: 3, terrain: "stone", passable: false }, { id: "t-1-3", x: 1, y: 3, terrain: "stone", passable: false }, { id: "t-2-3", x: 2, y: 3, terrain: "grass", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "grass", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "planks", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "grass", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "grass", passable: true }, { id: "t-7-3", x: 7, y: 3, terrain: "stone", passable: false }, { id: "t-8-3", x: 8, y: 3, terrain: "stone", passable: false }, { id: "t-0-4", x: 0, y: 4, terrain: "stone", passable: false }, { id: "t-1-4", x: 1, y: 4, terrain: "stone", passable: false }, { id: "t-2-4", x: 2, y: 4, terrain: "grass", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "grass", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "planks", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "grass", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "grass", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "stone", passable: false }, { id: "t-8-4", x: 8, y: 4, terrain: "stone", passable: false }, { id: "t-0-5", x: 0, y: 5, terrain: "stone", passable: false }, { id: "t-1-5", x: 1, y: 5, terrain: "stone", passable: false }, { id: "t-2-5", x: 2, y: 5, terrain: "grass", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "grass", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "planks", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "grass", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "grass", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "stone", passable: false }, { id: "t-8-5", x: 8, y: 5, terrain: "stone", passable: false }, { id: "t-0-6", x: 0, y: 6, terrain: "stone", passable: false }, { id: "t-1-6", x: 1, y: 6, terrain: "stone", passable: false }, { id: "t-2-6", x: 2, y: 6, terrain: "grass", passable: true }, { id: "t-3-6", x: 3, y: 6, terrain: "grass", passable: true }, { id: "t-4-6", x: 4, y: 6, terrain: "planks", passable: true }, { id: "t-5-6", x: 5, y: 6, terrain: "grass", passable: true }, { id: "t-6-6", x: 6, y: 6, terrain: "grass", passable: true }, { id: "t-7-6", x: 7, y: 6, terrain: "stone", passable: false }, { id: "t-8-6", x: 8, y: 6, terrain: "stone", passable: false }, { id: "t-0-7", x: 0, y: 7, terrain: "stone", passable: false }, { id: "t-1-7", x: 1, y: 7, terrain: "stone", passable: false }, { id: "t-2-7", x: 2, y: 7, terrain: "stone", passable: false }, { id: "t-3-7", x: 3, y: 7, terrain: "stone", passable: false }, { id: "t-4-7", x: 4, y: 7, terrain: "planks", passable: true }, { id: "t-5-7", x: 5, y: 7, terrain: "stone", passable: false }, { id: "t-6-7", x: 6, y: 7, terrain: "stone", passable: false }, { id: "t-7-7", x: 7, y: 7, terrain: "stone", passable: false }, { id: "t-8-7", x: 8, y: 7, terrain: "stone", passable: false }, { id: "t-0-8", x: 0, y: 8, terrain: "stone", passable: false }, { id: "t-1-8", x: 1, y: 8, terrain: "stone", passable: false }, { id: "t-2-8", x: 2, y: 8, terrain: "stone", passable: false }, { id: "t-3-8", x: 3, y: 8, terrain: "stone", passable: false }, { id: "t-4-8", x: 4, y: 8, terrain: "stone", passable: false }, { id: "t-5-8", x: 5, y: 8, terrain: "stone", passable: false }, { id: "t-6-8", x: 6, y: 8, terrain: "stone", passable: false }, { id: "t-7-8", x: 7, y: 8, terrain: "stone", passable: false }, { id: "t-8-8", x: 8, y: 8, terrain: "stone", passable: false } ]
     }
+  }
 
-    state victory {
-      PLAY_AGAIN -> idle
-        (set @entity.tiles @config.tiles)
-        (set @entity.units @config.units)
-        (set @entity.features @config.features)
-        (set @entity.buildings [])
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.gold 100)
-        (set @entity.health 20)
-        (set @entity.maxHealth 20)
-        (set @entity.wave 0)
-        (set @entity.tickCount 0)
-        (set @entity.lastWaveDamage 0)
-        (set @entity.result "none")
-        (set @entity.effects [])
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-    }
+  trait FxDecay = Frame.traits.FxDecay -> GameState {
+    config { running: true }
+  }
 
-    state defeat {
-      PLAY_AGAIN -> idle
-        (set @entity.tiles @config.tiles)
-        (set @entity.units @config.units)
-        (set @entity.features @config.features)
-        (set @entity.buildings [])
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.gold 100)
-        (set @entity.health 20)
-        (set @entity.maxHealth 20)
-        (set @entity.wave 0)
-        (set @entity.tickCount 0)
-        (set @entity.lastWaveDamage 0)
-        (set @entity.result "none")
-        (set @entity.effects [])
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
+  trait RoundLogic = Frame.traits.RoundLogic -> GameState {
+    config { running: true }
+  }
+
+  trait ScoreKeeper = Score.traits.ScoreKeeper -> GameState {
+    config { running: true, pointsPerKill: 10, startScore: 0, initialEnemies: 1 }
+  }
+
+  trait AnimClock = Frame.traits.AnimClock -> GameState {
+    config { frames: [] }
+  }
+
+  trait CastleClock -> @rebindable GameState [lifecycle] {
+    initial: running
+
+    state running {
+      INIT -> running
+        (set @entity.clockTicks 0)
     }
 
     ticks {
-      renderTick every 100ms
-        when (== @entity.result "none")
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      incomeTick every 4s
-        when (and (> @entity.health 0) (== @entity.result "none"))
-        (set @entity.gold (+ @entity.gold (+ 10 (* (array/len @entity.buildings) 5))))
-        (set @entity.tickCount (+ @entity.tickCount 1))
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-
-      waveTick every 8s
-        when (and (== @entity.result "none") (and (> @entity.health 0) (< @entity.wave 3)))
-        (set @entity.wave (+ @entity.wave 1))
-        (set @entity.lastWaveDamage (math/max 0 (- (* @entity.wave 4) (array/len @entity.buildings))))
-        (set @entity.health (math/max 0 (- @entity.health @entity.lastWaveDamage)))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "enemy") (object/merge @u { animation: "attack" }) (if (== @u.team "player") (object/merge @u { animation: (if (<= @entity.health 0) "hit" "idle") }) @u)))))
-        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "enemy")))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "enemy")))) position) y), ttl: 4 }))
-        (if (<= @entity.health 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: 4, y: 4, ttl: 5 })) null)
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
-          children: [ { type: canvas, camera: { zoom: @config.scale }, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
-    { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
-    { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
-    { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
-    { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-    { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u previousPosition), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), opacity: 0.25 })) (fn s (object/get @s position))) }
-    { type: draw-sprite-layer, items: (array/map @entity.units (fn u { type: draw-sprite, position: (object/get @u position), asset: (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get @u sprite)), frame: (object/get @u frame), id: (object/get @u id) })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-    { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-    { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-    { type: draw-sprite-layer, items: (array/map @entity.effects (fn e { type: draw-sprite, position: { x: (object/get @e x), y: (object/get @e y) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @e key)) })) }
-  ] } ]
-        })
-        (emit CASTLE_HIT { damage: @entity.lastWaveDamage })
-        (if (> @entity.health 0) (emit WAVE_DEFEATED { wave: @entity.wave }) null)
+      turnTick every 2000ms when (== @entity.result "none")
+        (set @entity.clockTicks (+ @entity.clockTicks 1))
+        (emit END_TURN { id: "clock" })
     }
 
     emits {
-      ATTACK -> external {
-        attacker : object
-        target : object
-        damage : number
-        attackerId : string!
-        targetId : string!
-      }
-        @description "-- Callbacks --"
-        @tier "domain"
-      UNIT_CLICK -> external {
-        unit : CastleBoardUNITCLICKUnit
-        unitId : string!
-      }
-        @description "Called when a unit is clicked"
-        @tier "domain"
-      TILE_CLICK -> external {
-        x : number
-        y : number
-      }
-        @description "Called when any tile is clicked"
-        @tier "domain"
-      WAVE_DEFEATED -> external {
-        wave : number!
-      }
-        @description "Emitted when the player defeats the current wave"
-        @tier "domain"
-      CASTLE_HIT -> external {
-        damage : number!
-      }
-        @description "Emitted when the castle takes damage from an enemy"
-        @tier "domain"
-      PLAY_AGAIN -> external {
+      END_TURN -> external {
         id : string
       }
-        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @description "Real-time round advance; the frame's PlayerIntent treats it exactly like the End Turn button (turn bump, activation reset, AI_TURN)"
+        @tier "domain"
+    }
+  }
+
+  trait CastleEconomy -> @rebindable GameState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.gold @config.startGold)
+        (set @entity.ecoSpawnCount 0)
+
+      BUILD_TOWER -> active when (and @config.running (and (== @entity.result "none") (and (>= @entity.gold @config.towerCost) (or (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.plot1X) (== (object/get (object/get @u position) y) @config.plot1Y)))))) 0) (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.plot2X) (== (object/get (object/get @u position) y) @config.plot2Y)))))) 0)))))
+        (set @entity.gold (- @entity.gold @config.towerCost))
+        (emit SPAWN { id: (str/concat "castle-t-" @entity.ecoSpawnCount), x: (if (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.plot1X) (== (object/get (object/get @u position) y) @config.plot1Y)))))) 0) @config.plot1X @config.plot2X), y: (if (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.plot1X) (== (object/get (object/get @u position) y) @config.plot1Y)))))) 0) @config.plot1Y @config.plot2Y), team: "player", health: @config.towerHealth, maxHealth: @config.towerHealth, unitType: "watchtower" })
+        (set @entity.ecoSpawnCount (+ @entity.ecoSpawnCount 1))
+    }
+
+    ticks {
+      harvestTick every 2000ms when (and @config.running (== @entity.result "none"))
+        (set @entity.gold (+ @entity.gold (* (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (and (> @u.health 0) (and (== @u.unitType "worker") (or (<= (grid/manhattan-distance (object/get @u position) { x: @config.mine1X, y: @config.mine1Y }) 1) (<= (grid/manhattan-distance (object/get @u position) { x: @config.mine2X, y: @config.mine2Y }) 1)))))))) @config.goldPerWorkerTick)))
+    }
+
+    emits {
+      SPAWN -> external {
+        id : string!
+        x : number!
+        y : number!
+        team : string!
+        health : number!
+        maxHealth : number!
+        unitType : string!
+      }
+        @description "Raised-watchtower intent applied by the grid-tactics authority (the sole units writer)"
+        @tier "domain"
+    }
+
+    listens {
+      BUILD_TOWER { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, workers harvest and BUILD_TOWER raises watchtowers; toggle to freeze the economy."
+        @tier "domain"
+      startGold : number = 25
+        @label "Start Gold"
+        @description "Gold stockpile set on INIT — exactly one watchtower."
+        @tier "domain"
+      goldPerWorkerTick : number = 2
+        @label "Gold Per Worker Tick"
+        @description "Gold each living worker at a gold mine harvests every 2s cycle."
+        @tier "domain"
+      towerCost : number = 25
+        @label "Tower Cost"
+        @description "Gold spent per raised watchtower; BUILD_TOWER only fires when affordable and a plot is free."
+        @tier "domain"
+      towerHealth : number = 12
+        @label "Tower Health"
+        @description "Health/maxHealth of raised watchtowers."
+        @tier "domain"
+      mine1X : number = 2
+        @label "West Mine X"
+        @description "Grid column of the west gold-mine harvest anchor."
+        @tier "domain"
+      mine1Y : number = 2
+        @label "West Mine Y"
+        @description "Grid row of the west gold-mine harvest anchor."
+        @tier "domain"
+      mine2X : number = 6
+        @label "East Mine X"
+        @description "Grid column of the east gold-mine harvest anchor."
+        @tier "domain"
+      mine2Y : number = 2
+        @label "East Mine Y"
+        @description "Grid row of the east gold-mine harvest anchor."
+        @tier "domain"
+      plot1X : number = 2
+        @label "West Plot X"
+        @description "Grid column of the west tower plot (the west mine cell)."
+        @tier "domain"
+      plot1Y : number = 2
+        @label "West Plot Y"
+        @description "Grid row of the west tower plot (the west mine cell)."
+        @tier "domain"
+      plot2X : number = 6
+        @label "East Plot X"
+        @description "Grid column of the east tower plot (the east mine cell)."
+        @tier "domain"
+      plot2Y : number = 2
+        @label "East Plot Y"
+        @description "Grid row of the east tower plot (the east mine cell)."
+        @tier "domain"
+    }
+  }
+
+  trait CastleWaves -> @rebindable GameState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.waveCount 0)
+    }
+
+    ticks {
+      waveTick every 12000ms when (and @config.running (and (== @entity.result "none") (and (> (array/len (array/filter @entity.units (fn u (and (== @u.unitType "portal") (> @u.health 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.waveSpawnX) (== (object/get (object/get @u position) y) @config.waveSpawnY)))))) 0))))
+        (emit SPAWN { id: (str/concat "castle-w-" @entity.waveCount), x: @config.waveSpawnX, y: @config.waveSpawnY, team: "enemy", health: (+ @config.waveBaseHealth @entity.waveCount), maxHealth: (+ @config.waveBaseHealth @entity.waveCount), unitType: "raider" })
+        (set @entity.waveCount (+ @entity.waveCount 1))
+    }
+
+    emits {
+      SPAWN -> external {
+        id : string!
+        x : number!
+        y : number!
+        team : string!
+        health : number!
+        maxHealth : number!
+        unitType : string!
+      }
+        @description "Raider-wave intent applied by the grid-tactics authority (the sole units writer)"
         @tier "domain"
     }
 
     config {
-      tiles : [CastleBoardTilesItem] = [{ x: 0, y: 0, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 0, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 0, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 3, y: 0, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 4, y: 0, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 5, y: 0, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 6, y: 0, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 7, y: 0, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 0, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 0, y: 1, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 1, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 1, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 3, y: 1, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 4, y: 1, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 5, y: 1, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 6, y: 1, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 7, y: 1, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 1, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 0, y: 2, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 2, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 2, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 3, y: 2, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 4, y: 2, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 5, y: 2, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 6, y: 2, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 7, y: 2, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 2, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 0, y: 3, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 3, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 3, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 3, y: 3, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 4, y: 3, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 5, y: 3, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 6, y: 3, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 7, y: 3, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 3, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 0, y: 4, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 4, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 4, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 3, y: 4, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 4, y: 4, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 5, y: 4, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 6, y: 4, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 7, y: 4, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 4, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 0, y: 5, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 5, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 5, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 3, y: 5, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 4, y: 5, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 5, y: 5, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 6, y: 5, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 7, y: 5, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 5, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 0, y: 6, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 6, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 6, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 3, y: 6, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 4, y: 6, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 5, y: 6, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 6, y: 6, terrain: "grass", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, passable: true }, { x: 7, y: 6, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 6, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 0, y: 7, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 7, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 7, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 3, y: 7, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 4, y: 7, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 5, y: 7, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 6, y: 7, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 7, y: 7, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 7, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 0, y: 8, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 1, y: 8, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 2, y: 8, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 3, y: 8, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 4, y: 8, terrain: "planks", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" }, passable: true }, { x: 5, y: 8, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 6, y: 8, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 7, y: 8, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }, { x: 8, y: 8, terrain: "stone", terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, passable: false }]
-        @label "Tiles"
-        @description "Initial tile map seeded into entity on INIT."
-        @tier "presentation"
-      units : [CastleBoardUnitsItem] = [{ id: "g1", position: { x: 1, y: 1 }, unitType: "guardian", name: "Guardian", team: "player", faction: "player", health: 10, maxHealth: 10, sprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_circle.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "g2", position: { x: 7, y: 1 }, unitType: "guardian", name: "Guardian", team: "player", faction: "player", health: 10, maxHealth: 10, sprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_circle.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "g3", position: { x: 1, y: 7 }, unitType: "guardian", name: "Guardian", team: "player", faction: "player", health: 10, maxHealth: 10, sprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_circle.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "g4", position: { x: 7, y: 7 }, unitType: "guardian", name: "Guardian", team: "player", faction: "player", health: 10, maxHealth: 10, sprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_circle.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "w1", position: { x: 3, y: 3 }, unitType: "worker", name: "Worker", team: "player", faction: "player", health: 5, maxHealth: 5, sprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "green_body_circle.png", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "w2", position: { x: 5, y: 5 }, unitType: "worker", name: "Worker", team: "player", faction: "player", health: 5, maxHealth: 5, sprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "green_body_circle.png", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "e1", position: { x: 4, y: 0 }, unitType: "raider", name: "Raider", team: "enemy", faction: "enemy", health: 8, maxHealth: 8, sprite: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "red_body_circle.png", role: "npc", category: "raider", animations: ["idle","walk","attack","hit","death"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" }, animation: "idle", frame: 0 }]
-        @label "Units"
-        @description "Initial garrison and enemy units seeded into entity on INIT."
-        @tier "presentation"
-      features : [CastleBoardFeaturesItem] = [{ id: "mine1", x: 2, y: 2, type: "gold_mine", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.json", sprite: "abstractTile_23.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.json", sprite: "abstractTile_23.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", variant: "", dimension: "3d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }, { id: "mine2", x: 6, y: 2, type: "gold_mine", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.json", sprite: "abstractTile_23.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.json", sprite: "abstractTile_23.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", variant: "", dimension: "3d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }, { id: "portal1", x: 4, y: 0, type: "portal", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.json", sprite: "abstractTile_08.png", role: "decoration", category: "portal", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" }, assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.json", sprite: "abstractTile_08.png", role: "decoration", category: "portal", animations: ["static"], style: "", variant: "", dimension: "3d", aspect: "1:1", name: "portal", thumbnailUrl: "" } }]
-        @label "Features"
-        @description "Initial feature / building slots seeded into entity on INIT."
-        @tier "presentation"
-      assetManifest : CastleBoardAssetManifest = { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_067.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_101.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, planks: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json", sprite: "landscapeTiles_083.png", role: "tile", category: "planks", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" } }, units: { worker: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "green_body_circle.png", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, guardian: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "blue_body_circle.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, raider: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "red_body_circle.png", role: "npc", category: "raider", animations: ["idle","walk","attack","hit","death"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } }, features: { gold_mine: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.json", sprite: "abstractTile_23.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, portal: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/kenney-isometric-blocks/terrain/abstractTiles_sheet.json", sprite: "abstractTile_08.png", role: "decoration", category: "portal", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" } }, effects: { slash: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-splat-pack/effects/kenney-splat-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-splat-pack/effects/kenney-splat-pack.generated.json", sprite: "splat00.png", role: "effect", category: "slash", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "8:1", name: "slash", thumbnailUrl: "" }, explosion: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json", sprite: "regularExplosion04.png", role: "effect", category: "explosion", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "8:1", name: "explosion", thumbnailUrl: "" } } }
-        @label "Asset Manifest"
-        @description "Direct asset manifest — takes priority over entity-derived manifest."
-        @tier "presentation"
-      scale : number = 0.45
-        @label "Scale"
-        @description "Canvas render scale"
-        @tier "presentation"
-      className : string = ""
-        @label "Class Name"
-        @description "className prop"
-        @tier "presentation"
+      running : boolean = true
+        @label "Running"
+        @description "When true, raider waves muster every 12s while the portal stands; toggle to freeze the waves."
+        @tier "domain"
+      waveSpawnX : number = 4
+        @label "Wave Spawn X"
+        @description "Grid column of the corridor-mouth muster cell where raiders stream in."
+        @tier "domain"
+      waveSpawnY : number = 2
+        @label "Wave Spawn Y"
+        @description "Grid row of the corridor-mouth muster cell where raiders stream in."
+        @tier "domain"
+      waveBaseHealth : number = 6
+        @label "Wave Base Health"
+        @description "Health of the first raider wave; each later wave adds +1."
+        @tier "domain"
     }
   }
 
-page "/castle-board" as CastleBoardPage -> CastleBoardRender
+  trait Player = Frame.traits.PlayerIntent -> GameState {
+    config {
+      gridWidth: 9
+      gridHeight: 9
+      movementRange: 2
+      attackRange: 2
+      projection: "isometric"
+      showMinimap: true
+      scale: 0.45
+      backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      extraStats: [ { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.waveCount } ]
+      extraAddonEvent: "BUILD_TOWER"
+      extraAddons: [ { type: "button", action: BUILD_TOWER, label: "Tower (25g)", variant: "secondary" } ]
+      features: [ { id: "mine1", x: 2, y: 2, type: "gold_mine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/features/gold_mine.svg", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }, { id: "mine2", x: 6, y: 2, type: "gold_mine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/features/gold_mine.svg", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }, { id: "wall1", x: 3, y: 1, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall2", x: 4, y: 1, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "wall3", x: 5, y: 1, type: "wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } } ]
+      assetManifest: { terrains: { stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/terrain/stone.svg", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/terrain/grass.svg", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, planks: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/terrain/planks.svg", role: "tile", category: "planks", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "planks", thumbnailUrl: "" } }, units: { guardian: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, worker: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/worker.svg", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, keep: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/keep.svg", role: "npc", category: "keep", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "keep", thumbnailUrl: "" }, watchtower: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/watchtower.svg", role: "npc", category: "watchtower", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "watchtower", thumbnailUrl: "" }, portal: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/portal.svg", role: "npc", category: "portal", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" }, raider: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/raider.svg", role: "npc", category: "raider", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } }, features: { gold_mine: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/features/gold_mine.svg", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, wall: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/features/wall.svg", role: "decoration", category: "wall", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, effects: { hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/effects/hit.svg", role: "effect", category: "hit", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "hit", thumbnailUrl: "" }, explosion: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/effects/explosion.svg", role: "effect", category: "explosion", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "explosion", thumbnailUrl: "" } } }
+    }
+  }
+
+  page "/castle-board" as CastleBoardPage -> Authority, FxDecay, RoundLogic, ScoreKeeper, Player, AnimClock, CastleClock, CastleEconomy, CastleWaves
 }

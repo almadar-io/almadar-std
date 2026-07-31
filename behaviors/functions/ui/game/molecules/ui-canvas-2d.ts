@@ -74,6 +74,7 @@ export interface StdUiCanvas2dConfig {
   /** Default: `"pan-zoom"` */
   camera?: 'pan-zoom' | 'follow' | 'fixed';
   cameraPos?: EntityRow;
+  children?: unknown;
   className?: string;
   /** Default: `[]` */
   drawables?: EntityRow[];

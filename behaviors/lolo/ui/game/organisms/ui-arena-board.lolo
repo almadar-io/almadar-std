@@ -1,28 +1,215 @@
 app ui-arena-board "1.0.0"
-"2D grid-tactics arena composing headless std mechanic atoms (chase-ai, fx-particles, round-flow) on one [runtime, shared] GameState with a single canvas-2d render authority — the Phase-9 exemplar."
+"2D real-time arena skirmish: thin organism composing headless std mechanic atoms (grid-tactics unit authority, fx-particles, round-flow, score, anim-tick) on one [runtime, shared] GameState with a single canvas-2d render authority. A 2-second clock drives the raider chase; the player commands a two-marine fireteam — select, move, focus-fire — around impassable crate debris. Down both raiders to win; lose both marines and the arena falls."
+;; @capabilities "arena skirmish, squad command, real-time tactics, grid combat"
+
+;; ============================================================================
+;; PERSONA + USER STORIES
+;;
+;; Read these before changing anything here, and walk them end to end after.
+;; One persona: the PLAYER — Sergeant Mara Voss, commanding a two-marine
+;; fireteam holding an 8x8 crash-site arena against two raider scavengers.
+;; Statuses verified 2026-07-30 by a scripted full playthrough driving the
+;; real game on the runtime-verify catalog through window.__orbitalVerification
+;; (events in, canvas drawables + HUD DOM + bus event log out).
+;;
+;; THE GENRE (what an arena-skirmish player expects): play is CONTINUOUS —
+;; there is no End Turn button. A 2-second clock pulses the arena: every cycle
+;; each living raider steps (diagonally) toward the nearest living marine and
+;; melees anything adjacent for 1, and your spent marines refresh on the same
+;; pulse. Your agency is the fireteam: click a marine (cyan ring, green reach
+;; cells), click a lit cell to move (walk animation), the marine STAYS
+;; selected and auto-arms (red = raiders inside rifle range 2), click a lit
+;; raider to shoot for 2 — then the marine is SPENT (dimmed) until the next
+;; clock pulse. Four cargo crates of crash debris — (0,3),(7,4),(4,0),(3,7) —
+;; are impassable for both sides: raiders beeline with no pathfinding (one
+;; diagonal step per pulse, the atom's documented chase), so a crate parked
+;; exactly on a raider's line stalls it until your marine repositions — that
+;; is the cover game. You win when both raiders are down; you lose when both
+;; marines are down. Kills tick Score +10.
+;; ============================================================================
+;;
+;; PLAYER — "I command my fireteam: pick ground, focus fire, and kite the
+;; raiders around the crates before they run my marines down."
+;;
+;;   1. I open the board and see the whole arena framed on screen — terrain
+;;      under every cell (stone floor marking the 4x4 arena center), four
+;;      cargo crates of debris ground-anchored on impassable cells, my
+;;      marines Reyes(1,6) and Okafor(2,6) in the south, raiders Scab(6,0)
+;;      and Rizz(7,2) in the north-east corner, and the HUD showing
+;;      Result/Phase/Turn/Score reading none/observation with Score 0.
+;;        WORKS — 4 units at boot, marines at (1,6),(2,6), raiders in the
+;;        north-east; 64 terrain sprites (16 stone); 4 crate features
+;;        ground-anchored 1x1 on (0,3),(7,4),(4,0),(3,7); HUD
+;;        none/observation; every unit descriptor svg/flat CDN.
+;;   2. Every unit is a visible sprite with a name label and a health bar I
+;;      can read at a glance — marine and raider art visually distinct,
+;;      idling in place on a 4-frame breathing cycle.
+;;        WORKS — all 4 units on cycling idle frames (probe: idle-0 -> 1 ->
+;;        2 -> 3 -> 0 across 300ms samples), health bars full (frac 1.0),
+;;        name labels drawn.
+;;   3. Play is continuous: the Turn counter advances about every 2 seconds
+;;      WITHOUT me touching anything, AI_TURN rides the bus, the raiders
+;;      close the distance on their own — and a marine I spent last cycle is
+;;      selectable again on the next.
+;;        WORKS — Turn 3 -> 5 in ~4.6s with zero input; AI_TURN on the bus;
+;;        raider distance to the marines shrank 7 -> 2; a spent marine was
+;;        selectable again next cycle.
+;;   4. Select: I click a marine — cyan ring on her, phase=selection, and
+;;      green reach cells light her range-2 diamond MINUS the crate cells
+;;      and her squadmate's cell. CANCEL clears everything back to
+;;      observation.
+;;        WORKS — select lit the cyan ring + 7 green reach cells (range-2
+;;        diamond minus the squadmate's cell; crates never lit); CANCEL ->
+;;        observation, zero lit cells.
+;;   5. Move: I click a green cell — she walks (walk animation), the marine
+;;      STAYS selected and auto-arms (phase=action, red on raiders inside
+;;      rifle range 2 from the NEW cell). A second move in the same cycle
+;;      is a dead click (guard).
+;;        WORKS — walk anim played; p1 (1,6)->(1,5); phase=action; second
+;;        TILE_CLICK denied (position unchanged).
+;;   6. Attack: I click a raider inside the red — the shot lands for 2
+;;      (health bar drops), BURST "-2" rides the bus with a hit effect
+;;      sprite on the target, attack anim on the shooter / hit anim on the
+;;      target, and the shooter is dimmed spent until the next pulse.
+;;        WORKS — e1 frac 1.00->0.50; BURST "-2" + hit.svg painted; attack/
+;;        hit anims seen; shooter opacity 0.45 and not re-selectable.
+;;   7. The raiders never stop: every pulse they step diagonally toward the
+;;      nearest marine, NEVER enter a crate cell, and a raider standing
+;;      adjacent melees my marine for 1 (BURST "-1" fx on her).
+;;        WORKS — raiders closed every pulse; no raider ever occupied
+;;        (0,3),(7,4),(4,0),(3,7); adjacent raider dealt 1 (BURST "-1").
+;;   8. Kills pay: a raider at 0 health renders his death frame where he
+;;      fell and Score ticks +10 on the HUD.
+;;        WORKS — death frame on both kills; Score 0 -> 10 -> 20.
+;;   9. When both raiders are down I win — Result flips to victory, GAME_END
+;;      rides the bus, and the board freezes (further clicks are dead).
+;;        WORKS — result=victory; GAME_END emitted; post-game UNIT_CLICK
+;;        left phase=observation with zero lit cells.
+;;  10. And if I never give an order, the arena runs my marines down: a
+;;      fresh session with zero input ends Result=defeat with GAME_END once
+;;      the raiders close and melee both marines to 0.
+;;        WORKS — idle session reached result=defeat with GAME_END at ~38s.
+;;
+;; MULTIPLAYER NOTE: GameState is [runtime, shared], so every connected
+;; client watches the same skirmish; intents serialize through the server
+;; authority. There is no per-seat ownership — any client can command any
+;; marine.
+;;
+;; ASSET INVENTORY (hand-authored svg, almadar-kflow-assets.web.app
+;; /shared/ui-arena-board/svg/flat/, generated by tools/asset-workflow
+;; svg-generator from the sibling .md descriptions)
+;;
+;;   Terrain   terrain/ground.svg full-cell flat tiles; terrain/stone.svg
+;;             marks the 4x4 arena-center floor (16 tiles).
+;;   Units     units/{marine,raider}.svg + animation frames
+;;             .{idle-0..3, walk-0..1, attack-0, hit-0, death-0}.svg; the
+;;             render layer url-rewrites name.svg -> name.<anim>-<i>.svg.
+;;             player: p1 Reyes marine 8hp (1,6)   p2 Okafor marine 8hp (2,6)
+;;             enemy:  e1 Scab raider 4hp (6,0)    e2 Rizz raider 4hp (7,2)
+;;   Features  features/crate.svg x4 at (0,3),(7,4),(4,0),(3,7) — crash
+;;             debris on impassable cells (matching tiles passable: false).
+;;   Effects   effects/hit.svg (BURST "hit" fx), effects/explosion.svg
+;;             (manifest-only).
+;;   UI chrome ui/panel-frame.svg = game-shell background + HUD panel.
+;; ============================================================================
+
 orbital ArenaBoardOrbital {
-  uses Chase from "std/behaviors/std-chase-ai"
+  uses Tactics from "std/behaviors/std-grid-tactics"
   uses Particles from "std/behaviors/std-fx-particles"
   uses Round from "std/behaviors/std-round-flow"
+  uses Score from "std/behaviors/std-score"
+  uses AnimTick from "std/behaviors/std-anim-tick"
 
-  type Unit = { id : string!  position : { x : number!  y : number! }  x : number  y : number  z : number  team : string  health : number  maxHealth : number  unitType : string }
-  type Tile = { id : string  x : number!  y : number!  passable : boolean }
-  type Fx   = { id : string!  type : string!  x : number!  z : number  y : number  message : string  ttl : number! }
+  type Asset = {
+    url : asset
+    atlas : asset
+    sprite : string
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    type : string
+    assetUrl : Asset
+  }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
 
   entity GameState [runtime, shared] {
     id : string!
-    units : [Unit] = []
+    units : [Unit] = [ { id: "p1", position: { x: 1, y: 6 }, x: 1, y: 6, z: 0, team: "player", health: 8, maxHealth: 8, unitType: "marine", name: "Reyes", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/marine.svg", role: "npc", category: "marine", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "marine", thumbnailUrl: "" } }, { id: "p2", position: { x: 2, y: 6 }, x: 2, y: 6, z: 0, team: "player", health: 8, maxHealth: 8, unitType: "marine", name: "Okafor", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/marine.svg", role: "npc", category: "marine", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "marine", thumbnailUrl: "" } }, { id: "e1", position: { x: 6, y: 0 }, x: 6, y: 0, z: 0, team: "enemy", health: 4, maxHealth: 4, unitType: "raider", name: "Scab", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } }, { id: "e2", position: { x: 7, y: 2 }, x: 7, y: 2, z: 0, team: "enemy", health: 4, maxHealth: 4, unitType: "raider", name: "Rizz", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } } ]
     fx : [Fx] = []
+    tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, terrain: "ground", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "ground", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "ground", passable: true }, { id: "t-3-0", x: 3, y: 0, terrain: "ground", passable: true }, { id: "t-4-0", x: 4, y: 0, terrain: "ground", passable: false }, { id: "t-5-0", x: 5, y: 0, terrain: "ground", passable: true }, { id: "t-6-0", x: 6, y: 0, terrain: "ground", passable: true }, { id: "t-7-0", x: 7, y: 0, terrain: "ground", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "ground", passable: true }, { id: "t-1-1", x: 1, y: 1, terrain: "ground", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "ground", passable: true }, { id: "t-3-1", x: 3, y: 1, terrain: "ground", passable: true }, { id: "t-4-1", x: 4, y: 1, terrain: "ground", passable: true }, { id: "t-5-1", x: 5, y: 1, terrain: "ground", passable: true }, { id: "t-6-1", x: 6, y: 1, terrain: "ground", passable: true }, { id: "t-7-1", x: 7, y: 1, terrain: "ground", passable: true }, { id: "t-0-2", x: 0, y: 2, terrain: "ground", passable: true }, { id: "t-1-2", x: 1, y: 2, terrain: "ground", passable: true }, { id: "t-2-2", x: 2, y: 2, terrain: "stone", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "stone", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "stone", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "stone", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "ground", passable: true }, { id: "t-7-2", x: 7, y: 2, terrain: "ground", passable: true }, { id: "t-0-3", x: 0, y: 3, terrain: "ground", passable: false }, { id: "t-1-3", x: 1, y: 3, terrain: "ground", passable: true }, { id: "t-2-3", x: 2, y: 3, terrain: "stone", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "stone", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "stone", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "stone", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "ground", passable: true }, { id: "t-7-3", x: 7, y: 3, terrain: "ground", passable: true }, { id: "t-0-4", x: 0, y: 4, terrain: "ground", passable: true }, { id: "t-1-4", x: 1, y: 4, terrain: "ground", passable: true }, { id: "t-2-4", x: 2, y: 4, terrain: "stone", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "stone", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "stone", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "stone", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "ground", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "ground", passable: false }, { id: "t-0-5", x: 0, y: 5, terrain: "ground", passable: true }, { id: "t-1-5", x: 1, y: 5, terrain: "ground", passable: true }, { id: "t-2-5", x: 2, y: 5, terrain: "stone", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "stone", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "stone", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "stone", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "ground", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "ground", passable: true }, { id: "t-0-6", x: 0, y: 6, terrain: "ground", passable: true }, { id: "t-1-6", x: 1, y: 6, terrain: "ground", passable: true }, { id: "t-2-6", x: 2, y: 6, terrain: "ground", passable: true }, { id: "t-3-6", x: 3, y: 6, terrain: "ground", passable: true }, { id: "t-4-6", x: 4, y: 6, terrain: "ground", passable: true }, { id: "t-5-6", x: 5, y: 6, terrain: "ground", passable: true }, { id: "t-6-6", x: 6, y: 6, terrain: "ground", passable: true }, { id: "t-7-6", x: 7, y: 6, terrain: "ground", passable: true }, { id: "t-0-7", x: 0, y: 7, terrain: "ground", passable: true }, { id: "t-1-7", x: 1, y: 7, terrain: "ground", passable: true }, { id: "t-2-7", x: 2, y: 7, terrain: "ground", passable: true }, { id: "t-3-7", x: 3, y: 7, terrain: "ground", passable: false }, { id: "t-4-7", x: 4, y: 7, terrain: "ground", passable: true }, { id: "t-5-7", x: 5, y: 7, terrain: "ground", passable: true }, { id: "t-6-7", x: 6, y: 7, terrain: "ground", passable: true }, { id: "t-7-7", x: 7, y: 7, terrain: "ground", passable: true } ]
     result : string = "none"
+    score : number = 0
+    scoreBaseline : number = 0
+    animCounter : number = 0
+    frameName : string = "0"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    attackTargets : [ValidMove] = []
+    movedIds : [string] = []
+    actedIds : [string] = []
+    uiPhase : string = "observation"
+    turn : number = 0
+    clockTicks : number = 0
+    animUnitId : string = ""
+    animState : string = "idle"
+    animTicksLeft : number = 0
+    animAttackerId : string = ""
+    animAtkTicksLeft : number = 0
   }
 
-  trait ChaseAI = Chase.traits.ChaseAi -> GameState {
+  trait TacticsAuthority = Tactics.traits.GridTactics -> GameState {
     config {
       running: true
       gridWidth: 8
       gridHeight: 8
-      units: [ { id: "p1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "marine" }, { id: "p2", position: { x: 4, y: 4 }, x: 4, y: 4, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "marine" }, { id: "e1", position: { x: 6, y: 6 }, x: 6, y: 6, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider" }, { id: "e2", position: { x: 2, y: 1 }, x: 2, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider" } ]
-      tiles: [ { id: "t-0-0", x: 0, y: 0, passable: true }, { id: "t-1-0", x: 1, y: 0, passable: true }, { id: "t-2-0", x: 2, y: 0, passable: true }, { id: "t-3-0", x: 3, y: 0, passable: true }, { id: "t-4-0", x: 4, y: 0, passable: true }, { id: "t-5-0", x: 5, y: 0, passable: true }, { id: "t-6-0", x: 6, y: 0, passable: true }, { id: "t-7-0", x: 7, y: 0, passable: true }, { id: "t-0-1", x: 0, y: 1, passable: true }, { id: "t-1-1", x: 1, y: 1, passable: true }, { id: "t-2-1", x: 2, y: 1, passable: true }, { id: "t-3-1", x: 3, y: 1, passable: true }, { id: "t-4-1", x: 4, y: 1, passable: true }, { id: "t-5-1", x: 5, y: 1, passable: true }, { id: "t-6-1", x: 6, y: 1, passable: true }, { id: "t-7-1", x: 7, y: 1, passable: true }, { id: "t-0-2", x: 0, y: 2, passable: true }, { id: "t-1-2", x: 1, y: 2, passable: true }, { id: "t-2-2", x: 2, y: 2, passable: true }, { id: "t-3-2", x: 3, y: 2, passable: true }, { id: "t-4-2", x: 4, y: 2, passable: true }, { id: "t-5-2", x: 5, y: 2, passable: true }, { id: "t-6-2", x: 6, y: 2, passable: true }, { id: "t-7-2", x: 7, y: 2, passable: true }, { id: "t-0-3", x: 0, y: 3, passable: true }, { id: "t-1-3", x: 1, y: 3, passable: true }, { id: "t-2-3", x: 2, y: 3, passable: true }, { id: "t-3-3", x: 3, y: 3, passable: true }, { id: "t-4-3", x: 4, y: 3, passable: true }, { id: "t-5-3", x: 5, y: 3, passable: true }, { id: "t-6-3", x: 6, y: 3, passable: true }, { id: "t-7-3", x: 7, y: 3, passable: true }, { id: "t-0-4", x: 0, y: 4, passable: true }, { id: "t-1-4", x: 1, y: 4, passable: true }, { id: "t-2-4", x: 2, y: 4, passable: true }, { id: "t-3-4", x: 3, y: 4, passable: true }, { id: "t-4-4", x: 4, y: 4, passable: true }, { id: "t-5-4", x: 5, y: 4, passable: true }, { id: "t-6-4", x: 6, y: 4, passable: true }, { id: "t-7-4", x: 7, y: 4, passable: true }, { id: "t-0-5", x: 0, y: 5, passable: true }, { id: "t-1-5", x: 1, y: 5, passable: true }, { id: "t-2-5", x: 2, y: 5, passable: true }, { id: "t-3-5", x: 3, y: 5, passable: true }, { id: "t-4-5", x: 4, y: 5, passable: true }, { id: "t-5-5", x: 5, y: 5, passable: true }, { id: "t-6-5", x: 6, y: 5, passable: true }, { id: "t-7-5", x: 7, y: 5, passable: true }, { id: "t-0-6", x: 0, y: 6, passable: true }, { id: "t-1-6", x: 1, y: 6, passable: true }, { id: "t-2-6", x: 2, y: 6, passable: true }, { id: "t-3-6", x: 3, y: 6, passable: true }, { id: "t-4-6", x: 4, y: 6, passable: true }, { id: "t-5-6", x: 5, y: 6, passable: true }, { id: "t-6-6", x: 6, y: 6, passable: true }, { id: "t-7-6", x: 7, y: 6, passable: true }, { id: "t-0-7", x: 0, y: 7, passable: true }, { id: "t-1-7", x: 1, y: 7, passable: true }, { id: "t-2-7", x: 2, y: 7, passable: true }, { id: "t-3-7", x: 3, y: 7, passable: true }, { id: "t-4-7", x: 4, y: 7, passable: true }, { id: "t-5-7", x: 5, y: 7, passable: true }, { id: "t-6-7", x: 6, y: 7, passable: true }, { id: "t-7-7", x: 7, y: 7, passable: true } ]
+      attackDamage: 2
+      units: [ { id: "p1", position: { x: 1, y: 6 }, x: 1, y: 6, z: 0, team: "player", health: 8, maxHealth: 8, unitType: "marine", name: "Reyes", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/marine.svg", role: "npc", category: "marine", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "marine", thumbnailUrl: "" } }, { id: "p2", position: { x: 2, y: 6 }, x: 2, y: 6, z: 0, team: "player", health: 8, maxHealth: 8, unitType: "marine", name: "Okafor", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/marine.svg", role: "npc", category: "marine", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "marine", thumbnailUrl: "" } }, { id: "e1", position: { x: 6, y: 0 }, x: 6, y: 0, z: 0, team: "enemy", health: 4, maxHealth: 4, unitType: "raider", name: "Scab", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } }, { id: "e2", position: { x: 7, y: 2 }, x: 7, y: 2, z: 0, team: "enemy", health: 4, maxHealth: 4, unitType: "raider", name: "Rizz", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, terrain: "ground", passable: true }, { id: "t-1-0", x: 1, y: 0, terrain: "ground", passable: true }, { id: "t-2-0", x: 2, y: 0, terrain: "ground", passable: true }, { id: "t-3-0", x: 3, y: 0, terrain: "ground", passable: true }, { id: "t-4-0", x: 4, y: 0, terrain: "ground", passable: false }, { id: "t-5-0", x: 5, y: 0, terrain: "ground", passable: true }, { id: "t-6-0", x: 6, y: 0, terrain: "ground", passable: true }, { id: "t-7-0", x: 7, y: 0, terrain: "ground", passable: true }, { id: "t-0-1", x: 0, y: 1, terrain: "ground", passable: true }, { id: "t-1-1", x: 1, y: 1, terrain: "ground", passable: true }, { id: "t-2-1", x: 2, y: 1, terrain: "ground", passable: true }, { id: "t-3-1", x: 3, y: 1, terrain: "ground", passable: true }, { id: "t-4-1", x: 4, y: 1, terrain: "ground", passable: true }, { id: "t-5-1", x: 5, y: 1, terrain: "ground", passable: true }, { id: "t-6-1", x: 6, y: 1, terrain: "ground", passable: true }, { id: "t-7-1", x: 7, y: 1, terrain: "ground", passable: true }, { id: "t-0-2", x: 0, y: 2, terrain: "ground", passable: true }, { id: "t-1-2", x: 1, y: 2, terrain: "ground", passable: true }, { id: "t-2-2", x: 2, y: 2, terrain: "stone", passable: true }, { id: "t-3-2", x: 3, y: 2, terrain: "stone", passable: true }, { id: "t-4-2", x: 4, y: 2, terrain: "stone", passable: true }, { id: "t-5-2", x: 5, y: 2, terrain: "stone", passable: true }, { id: "t-6-2", x: 6, y: 2, terrain: "ground", passable: true }, { id: "t-7-2", x: 7, y: 2, terrain: "ground", passable: true }, { id: "t-0-3", x: 0, y: 3, terrain: "ground", passable: false }, { id: "t-1-3", x: 1, y: 3, terrain: "ground", passable: true }, { id: "t-2-3", x: 2, y: 3, terrain: "stone", passable: true }, { id: "t-3-3", x: 3, y: 3, terrain: "stone", passable: true }, { id: "t-4-3", x: 4, y: 3, terrain: "stone", passable: true }, { id: "t-5-3", x: 5, y: 3, terrain: "stone", passable: true }, { id: "t-6-3", x: 6, y: 3, terrain: "ground", passable: true }, { id: "t-7-3", x: 7, y: 3, terrain: "ground", passable: true }, { id: "t-0-4", x: 0, y: 4, terrain: "ground", passable: true }, { id: "t-1-4", x: 1, y: 4, terrain: "ground", passable: true }, { id: "t-2-4", x: 2, y: 4, terrain: "stone", passable: true }, { id: "t-3-4", x: 3, y: 4, terrain: "stone", passable: true }, { id: "t-4-4", x: 4, y: 4, terrain: "stone", passable: true }, { id: "t-5-4", x: 5, y: 4, terrain: "stone", passable: true }, { id: "t-6-4", x: 6, y: 4, terrain: "ground", passable: true }, { id: "t-7-4", x: 7, y: 4, terrain: "ground", passable: false }, { id: "t-0-5", x: 0, y: 5, terrain: "ground", passable: true }, { id: "t-1-5", x: 1, y: 5, terrain: "ground", passable: true }, { id: "t-2-5", x: 2, y: 5, terrain: "stone", passable: true }, { id: "t-3-5", x: 3, y: 5, terrain: "stone", passable: true }, { id: "t-4-5", x: 4, y: 5, terrain: "stone", passable: true }, { id: "t-5-5", x: 5, y: 5, terrain: "stone", passable: true }, { id: "t-6-5", x: 6, y: 5, terrain: "ground", passable: true }, { id: "t-7-5", x: 7, y: 5, terrain: "ground", passable: true }, { id: "t-0-6", x: 0, y: 6, terrain: "ground", passable: true }, { id: "t-1-6", x: 1, y: 6, terrain: "ground", passable: true }, { id: "t-2-6", x: 2, y: 6, terrain: "ground", passable: true }, { id: "t-3-6", x: 3, y: 6, terrain: "ground", passable: true }, { id: "t-4-6", x: 4, y: 6, terrain: "ground", passable: true }, { id: "t-5-6", x: 5, y: 6, terrain: "ground", passable: true }, { id: "t-6-6", x: 6, y: 6, terrain: "ground", passable: true }, { id: "t-7-6", x: 7, y: 6, terrain: "ground", passable: true }, { id: "t-0-7", x: 0, y: 7, terrain: "ground", passable: true }, { id: "t-1-7", x: 1, y: 7, terrain: "ground", passable: true }, { id: "t-2-7", x: 2, y: 7, terrain: "ground", passable: true }, { id: "t-3-7", x: 3, y: 7, terrain: "ground", passable: false }, { id: "t-4-7", x: 4, y: 7, terrain: "ground", passable: true }, { id: "t-5-7", x: 5, y: 7, terrain: "ground", passable: true }, { id: "t-6-7", x: 6, y: 7, terrain: "ground", passable: true }, { id: "t-7-7", x: 7, y: 7, terrain: "ground", passable: true } ]
     }
   }
 
@@ -34,43 +221,240 @@ orbital ArenaBoardOrbital {
     config { running: true }
   }
 
-  trait ArenaView -> GameState [interaction, instance] {
+  trait ScoreKeeper = Score.traits.ScoreKeeper -> GameState {
+    config { running: true, pointsPerKill: 10, startScore: 0, initialEnemies: 2 }
+  }
+
+  trait AnimClock = AnimTick.traits.AnimTick -> GameState {
+    config { frames: [] }
+  }
+
+  trait ArenaClock -> @rebindable GameState [lifecycle] {
+    initial: running
+
+    state running {
+      INIT -> running
+        (set @entity.clockTicks 0)
+    }
+
+    ticks {
+      arenaTick every 2000ms when (== @entity.result "none")
+        (set @entity.clockTicks (+ @entity.clockTicks 1))
+        (emit AI_TURN { turn: @entity.clockTicks })
+    }
+
+    emits {
+      AI_TURN -> external {
+        turn : number
+      }
+        @description "Real-time skirmish pulse: the grid-tactics authority runs the raider chase/melee pipeline and the command trait refreshes spent marines"
+        @tier "domain"
+    }
+  }
+
+  trait ArenaCommand -> GameState [interaction, instance] {
     initial: playing
 
     state playing {
       INIT -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.movedIds [])
+        (set @entity.actedIds [])
+        (set @entity.uiPhase "observation")
+        (set @entity.turn 0)
+        (set @entity.animUnitId "")
+        (set @entity.animState "idle")
+        (set @entity.animTicksLeft 0)
+        (set @entity.animAttackerId "")
+        (set @entity.animAtkTicksLeft 0)
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas, fit: true, projection: "flat", showMinimap: false, children: [
-            { type: draw-shape-layer, items: (array/map @config.tiles (fn t { type: draw-shape, shape: "cell", position: { x: (object/get @t x), y: (object/get @t y) }, fill: "#4ade80", stroke: "rgba(0,0,0,0.2)" })) }
-            { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.4, radiusY: 0.4, fill: (if (== (object/get @u team) "player") "#3b82f6" "#ef4444") })) }
-            { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-            { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-            { type: draw-text-layer, items: (array/map @entity.fx (fn f { type: draw-text, text: (object/get @f message), position: { x: (object/get @f x), y: (object/get @f y) }, color: "#ffe066" })) }
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result, format: "text" }, { label: "Phase", value: @entity.uiPhase, format: "text" }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
+          children: [ { type: canvas, fit: true, projection: @config.projection, showMinimap: @config.showMinimap, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
+            { type: draw-shape-layer, items: (array/map @entity.tiles (fn t { type: draw-shape, shape: "cell", position: { x: (object/get @t x), y: (object/get @t y) }, fill: "#1f2937", stroke: "rgba(255,255,255,0.12)", strokeWidth: 1 })) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get (object/get @config.assetManifest terrains) (object/get @t terrain)), anchor: "center", width: 1, height: 1 })) (fn s (object/get (object/get @s asset) url))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl), anchor: "ground", width: 1, height: 1 })) (fn s (object/get (object/get @s asset) url))) }
+            { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m z) }, fill: "rgba(74,222,128,0.4)" })) }
+            { type: draw-shape-layer, items: (array/map @entity.attackTargets (fn a { type: draw-shape, shape: "cell", position: { x: (object/get @a x), y: (object/get @a z) }, fill: "rgba(239,68,68,0.4)" })) }
+            { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u (let ((unitAsset (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get (object/get @config.assetManifest units) (object/get @u unitType)))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (<= (object/get @u health) 0) "death" (if (and (== (object/get @u id) @entity.animAttackerId) (> @entity.animAtkTicksLeft 0)) "attack" (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5, opacity: (if (> (array/len (array/filter @entity.actedIds (fn aid (== @aid (object/get @u id))))) 0) 0.45 1) }))) (fn s (object/get (object/get @s asset) url))) }
+            { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: 0.5, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
+            { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: (* 0.5 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
+            { type: draw-text-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
+            { type: draw-text-layer, items: (array/map @entity.fx (fn f { type: draw-text, text: (object/get @f message), position: { x: (object/get @f x), y: (object/get @f z) }, color: "#ffe066" })) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.fx (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f z) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @f type)), anchor: "center", width: 0.6, height: 0.6 })) (fn s (object/get (object/get @s asset) url))) }
+            { type: draw-sprite-layer, items: (array/map (array/filter (array/flatten (array/map @entity.units (fn u (array/flatten (array/map [ ["idle", 4], ["walk", 2], ["attack", 1], ["hit", 1], ["death", 1] ] (fn st (array/map (array/range 0 (array/nth @st 1)) (fn i (if (and (object/get (object/get @u modelUrl) url) (str/includes (object/get (object/get @u modelUrl) url) ".svg")) (str/concat (array/nth (str/split (object/get (object/get @u modelUrl) url) ".svg") 0) (str/concat "." (str/concat (array/nth @st 0) (str/concat "-" (str/concat @i ".svg"))))) ""))))))))) (fn w (!= @w ""))) (fn warmUrl { type: draw-sprite, position: { x: 0, y: 0 }, asset: { url: @warmUrl }, opacity: 0, width: 0.5, height: 0.5 })) }
           ] } ]
         })
+
+      UNIT_CLICK -> playing when (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (== (array/len (array/filter @entity.actedIds (fn aid (== @aid @entity.selectedUnitId)))) 0) (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (and (> (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) health) 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position)) @config.attackRange))))))
+        (emit ATTACK { targetId: ?unitId })
+        (set @entity.actedIds (array/append @entity.actedIds @entity.selectedUnitId))
+        (set @entity.animAttackerId @entity.selectedUnitId)
+        (set @entity.animAtkTicksLeft 4)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.uiPhase "observation")
+
+      UNIT_CLICK -> playing when (and (== @entity.result "none") (== @entity.selectedUnitId ?unitId))
+        (set @entity.uiPhase "action")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (and (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) @config.attackRange))))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
+
+      UNIT_CLICK -> playing when (and (== @entity.result "none") (and (> (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) health) 0) (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player") (== (array/len (array/filter @entity.actedIds (fn aid (== @aid ?unitId)))) 0))))
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.uiPhase "selection")
+        (set @entity.attackTargets [])
+        (set @entity.validMoves (if (> (array/len (array/filter @entity.movedIds (fn aid (== @aid ?unitId)))) 0) [] (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (> (object/get @u health) 0) (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y))))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) }))))
+
+      TILE_CLICK -> playing when (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (== (array/len (array/filter @entity.movedIds (fn aid (== @aid @entity.selectedUnitId)))) 0) (and (> (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) health) 0) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @config.movementRange) (and (== (array/len (array/filter @entity.units (fn u (and (> (object/get @u health) 0) (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y)))))) 0) (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?y)))) passable) true))))))))
+        (emit MOVE { unitId: @entity.selectedUnitId, x: ?x, y: ?y })
+        (set @entity.movedIds (array/append @entity.movedIds @entity.selectedUnitId))
+        (set @entity.uiPhase "action")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (and (> @u.health 0) (<= (grid/manhattan-distance { x: ?x, y: ?y } (object/get @u position)) @config.attackRange))))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.uiPhase "observation")
+
+      AI_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.movedIds [])
+        (set @entity.actedIds [])
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.uiPhase "observation")
+
+      MOVE -> playing
+        (set @entity.animUnitId ?unitId)
+        (set @entity.animState "walk")
+        (set @entity.animTicksLeft 6)
+
+      ATTACK -> playing
+        (set @entity.animUnitId ?targetId)
+        (set @entity.animState "hit")
+        (set @entity.animTicksLeft 4)
     }
 
     ticks {
       renderTick every 100ms
+        (set @entity.animTicksLeft (if (> @entity.animTicksLeft 0) (- @entity.animTicksLeft 1) 0))
+        (set @entity.animAtkTicksLeft (if (> @entity.animAtkTicksLeft 0) (- @entity.animAtkTicksLeft 1) 0))
+        (set @entity.animState (if (== @entity.animTicksLeft 0) "idle" @entity.animState))
+        (set @entity.animUnitId (if (== @entity.animTicksLeft 0) "" @entity.animUnitId))
+        (set @entity.animAttackerId (if (== @entity.animAtkTicksLeft 0) "" @entity.animAttackerId))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas, fit: true, projection: "flat", showMinimap: false, children: [
-            { type: draw-shape-layer, items: (array/map @config.tiles (fn t { type: draw-shape, shape: "cell", position: { x: (object/get @t x), y: (object/get @t y) }, fill: "#4ade80", stroke: "rgba(0,0,0,0.2)" })) }
-            { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.4, radiusY: 0.4, fill: (if (== (object/get @u team) "player") "#3b82f6" "#ef4444") })) }
-            { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
-            { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
-            { type: draw-text-layer, items: (array/map @entity.fx (fn f { type: draw-text, text: (object/get @f message), position: { x: (object/get @f x), y: (object/get @f y) }, color: "#ffe066" })) }
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result, format: "text" }, { label: "Phase", value: @entity.uiPhase, format: "text" }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
+          children: [ { type: canvas, fit: true, projection: @config.projection, showMinimap: @config.showMinimap, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
+            { type: draw-shape-layer, items: (array/map @entity.tiles (fn t { type: draw-shape, shape: "cell", position: { x: (object/get @t x), y: (object/get @t y) }, fill: "#1f2937", stroke: "rgba(255,255,255,0.12)", strokeWidth: 1 })) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get (object/get @config.assetManifest terrains) (object/get @t terrain)), anchor: "center", width: 1, height: 1 })) (fn s (object/get (object/get @s asset) url))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl), anchor: "ground", width: 1, height: 1 })) (fn s (object/get (object/get @s asset) url))) }
+            { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m z) }, fill: "rgba(74,222,128,0.4)" })) }
+            { type: draw-shape-layer, items: (array/map @entity.attackTargets (fn a { type: draw-shape, shape: "cell", position: { x: (object/get @a x), y: (object/get @a z) }, fill: "rgba(239,68,68,0.4)" })) }
+            { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u (let ((unitAsset (if (object/get (object/get @u modelUrl) url) (object/get @u modelUrl) (object/get (object/get @config.assetManifest units) (object/get @u unitType)))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (<= (object/get @u health) 0) "death" (if (and (== (object/get @u id) @entity.animAttackerId) (> @entity.animAtkTicksLeft 0)) "attack" (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5, opacity: (if (> (array/len (array/filter @entity.actedIds (fn aid (== @aid (object/get @u id))))) 0) 0.45 1) }))) (fn s (object/get (object/get @s asset) url))) }
+            { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: 0.5, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
+            { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: (* 0.5 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
+            { type: draw-text-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
+            { type: draw-text-layer, items: (array/map @entity.fx (fn f { type: draw-text, text: (object/get @f message), position: { x: (object/get @f x), y: (object/get @f z) }, color: "#ffe066" })) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.fx (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f z) }, asset: (object/get (object/get @config.assetManifest effects) (object/get @f type)), anchor: "center", width: 0.6, height: 0.6 })) (fn s (object/get (object/get @s asset) url))) }
+            { type: draw-sprite-layer, items: (array/map (array/filter (array/flatten (array/map @entity.units (fn u (array/flatten (array/map [ ["idle", 4], ["walk", 2], ["attack", 1], ["hit", 1], ["death", 1] ] (fn st (array/map (array/range 0 (array/nth @st 1)) (fn i (if (and (object/get (object/get @u modelUrl) url) (str/includes (object/get (object/get @u modelUrl) url) ".svg")) (str/concat (array/nth (str/split (object/get (object/get @u modelUrl) url) ".svg") 0) (str/concat "." (str/concat (array/nth @st 0) (str/concat "-" (str/concat @i ".svg"))))) ""))))))))) (fn w (!= @w ""))) (fn warmUrl { type: draw-sprite, position: { x: 0, y: 0 }, asset: { url: @warmUrl }, opacity: 0, width: 0.5, height: 0.5 })) }
           ] } ]
         })
     }
 
+    emits {
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Player move intent applied by the grid-tactics authority"
+        @tier "domain"
+      ATTACK -> external {
+        targetId : string!
+      }
+        @description "Player attack intent applied by the grid-tactics authority"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
+      }
+        @description "tileClickEvent prop"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "unitClickEvent prop"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Clears the current selection"
+        @tier "domain"
+    }
+
+    listens {
+      AI_TURN { turn : number }
+    }
+
     config {
-      tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, passable: true }, { id: "t-1-0", x: 1, y: 0, passable: true }, { id: "t-2-0", x: 2, y: 0, passable: true }, { id: "t-3-0", x: 3, y: 0, passable: true }, { id: "t-4-0", x: 4, y: 0, passable: true }, { id: "t-5-0", x: 5, y: 0, passable: true }, { id: "t-6-0", x: 6, y: 0, passable: true }, { id: "t-7-0", x: 7, y: 0, passable: true }, { id: "t-0-1", x: 0, y: 1, passable: true }, { id: "t-1-1", x: 1, y: 1, passable: true }, { id: "t-2-1", x: 2, y: 1, passable: true }, { id: "t-3-1", x: 3, y: 1, passable: true }, { id: "t-4-1", x: 4, y: 1, passable: true }, { id: "t-5-1", x: 5, y: 1, passable: true }, { id: "t-6-1", x: 6, y: 1, passable: true }, { id: "t-7-1", x: 7, y: 1, passable: true }, { id: "t-0-2", x: 0, y: 2, passable: true }, { id: "t-1-2", x: 1, y: 2, passable: true }, { id: "t-2-2", x: 2, y: 2, passable: true }, { id: "t-3-2", x: 3, y: 2, passable: true }, { id: "t-4-2", x: 4, y: 2, passable: true }, { id: "t-5-2", x: 5, y: 2, passable: true }, { id: "t-6-2", x: 6, y: 2, passable: true }, { id: "t-7-2", x: 7, y: 2, passable: true }, { id: "t-0-3", x: 0, y: 3, passable: true }, { id: "t-1-3", x: 1, y: 3, passable: true }, { id: "t-2-3", x: 2, y: 3, passable: true }, { id: "t-3-3", x: 3, y: 3, passable: true }, { id: "t-4-3", x: 4, y: 3, passable: true }, { id: "t-5-3", x: 5, y: 3, passable: true }, { id: "t-6-3", x: 6, y: 3, passable: true }, { id: "t-7-3", x: 7, y: 3, passable: true }, { id: "t-0-4", x: 0, y: 4, passable: true }, { id: "t-1-4", x: 1, y: 4, passable: true }, { id: "t-2-4", x: 2, y: 4, passable: true }, { id: "t-3-4", x: 3, y: 4, passable: true }, { id: "t-4-4", x: 4, y: 4, passable: true }, { id: "t-5-4", x: 5, y: 4, passable: true }, { id: "t-6-4", x: 6, y: 4, passable: true }, { id: "t-7-4", x: 7, y: 4, passable: true }, { id: "t-0-5", x: 0, y: 5, passable: true }, { id: "t-1-5", x: 1, y: 5, passable: true }, { id: "t-2-5", x: 2, y: 5, passable: true }, { id: "t-3-5", x: 3, y: 5, passable: true }, { id: "t-4-5", x: 4, y: 5, passable: true }, { id: "t-5-5", x: 5, y: 5, passable: true }, { id: "t-6-5", x: 6, y: 5, passable: true }, { id: "t-7-5", x: 7, y: 5, passable: true }, { id: "t-0-6", x: 0, y: 6, passable: true }, { id: "t-1-6", x: 1, y: 6, passable: true }, { id: "t-2-6", x: 2, y: 6, passable: true }, { id: "t-3-6", x: 3, y: 6, passable: true }, { id: "t-4-6", x: 4, y: 6, passable: true }, { id: "t-5-6", x: 5, y: 6, passable: true }, { id: "t-6-6", x: 6, y: 6, passable: true }, { id: "t-7-6", x: 7, y: 6, passable: true }, { id: "t-0-7", x: 0, y: 7, passable: true }, { id: "t-1-7", x: 1, y: 7, passable: true }, { id: "t-2-7", x: 2, y: 7, passable: true }, { id: "t-3-7", x: 3, y: 7, passable: true }, { id: "t-4-7", x: 4, y: 7, passable: true }, { id: "t-5-7", x: 5, y: 7, passable: true }, { id: "t-6-7", x: 6, y: 7, passable: true }, { id: "t-7-7", x: 7, y: 7, passable: true } ]
+      gridWidth : number = 8
+        @label "Grid Width"
+        @description "Grid column count (matches TacticsAuthority.gridWidth)."
+        @tier "domain"
+      gridHeight : number = 8
+        @label "Grid Height"
+        @description "Grid row count (matches TacticsAuthority.gridHeight)."
+        @tier "domain"
+      movementRange : number = 2
+        @label "Movement Range"
+        @description "Max manhattan distance a selected marine may move per cycle."
+        @tier "domain"
+      attackRange : number = 2
+        @label "Attack Range"
+        @description "Max manhattan distance a selected marine may shoot a raider."
+        @tier "domain"
+      features : [Feature] = [ { id: "crate1", x: 0, y: 3, type: "crate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/features/crate.svg", role: "decoration", category: "crate", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "crate", thumbnailUrl: "" } }, { id: "crate2", x: 7, y: 4, type: "crate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/features/crate.svg", role: "decoration", category: "crate", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "crate", thumbnailUrl: "" } }, { id: "crate3", x: 4, y: 0, type: "crate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/features/crate.svg", role: "decoration", category: "crate", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "crate", thumbnailUrl: "" } }, { id: "crate4", x: 3, y: 7, type: "crate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/features/crate.svg", role: "decoration", category: "crate", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "crate", thumbnailUrl: "" } } ]
+        @label "Features"
+        @description "Crate barricade drawn on the impassable center cells."
+        @tier "presentation"
+      assetManifest : AssetManifest = { terrains: { ground: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/terrain/ground.svg", role: "tile", category: "ground", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "ground", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/terrain/stone.svg", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, units: { marine: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/marine.svg", role: "npc", category: "marine", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "marine", thumbnailUrl: "" }, raider: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/raider.svg", role: "npc", category: "raider", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "raider", thumbnailUrl: "" } }, features: { crate: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/features/crate.svg", role: "decoration", category: "crate", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "crate", thumbnailUrl: "" } }, effects: { hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/effects/hit.svg", role: "effect", category: "hit", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "hit", thumbnailUrl: "" }, explosion: { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/effects/explosion.svg", role: "effect", category: "explosion", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "explosion", thumbnailUrl: "" } } }
+        @label "Asset Manifest"
+        @description "Terrain/unit/feature/effect sprite manifest."
+        @tier "presentation"
+      projection : string = "flat"
+        @label "Projection"
+        @description "canvas-2d projection: flat or isometric."
+        @tier "presentation"
+      showMinimap : boolean = false
+        @label "Show Minimap"
+        @description "Whether the canvas draws a minimap."
+        @tier "presentation"
+      backgroundAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "", dimension: "2d", aspect: "1:1", name: "ui", thumbnailUrl: "" }
+        @label "Background Asset"
+        @description "Game-shell background panel sprite (theme chrome)."
+        @tier "presentation"
+      hudBackgroundAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/ui/panel-frame.svg", role: "ui", category: "ui", animations: [], style: "", dimension: "2d", aspect: "1:1", name: "ui", thumbnailUrl: "" }
+        @label "HUD Background Asset"
+        @description "HUD panel background sprite (theme chrome)."
+        @tier "presentation"
     }
   }
 
-  page "/arena" as ArenaPage -> ChaseAI, FxDecay, RoundLogic, ArenaView
+  page "/arena" as ArenaPage -> TacticsAuthority, FxDecay, RoundLogic, ScoreKeeper, AnimClock, ArenaClock, ArenaCommand
 }

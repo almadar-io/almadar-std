@@ -15,14 +15,55 @@ orbital DrawShapeLayerOrbital {
     points : [json]
     d : string
     fill : string
+    gradient : DrawShapeLayerItemsItemGradient
     stroke : string
     strokeWidth : number
+    rotate : number
+    pivot : json
+    shadow : DrawShapeLayerItemsItemShadow
+    animation : DrawShapeLayerItemsItemAnimation
     opacity : number
   }
   type DrawShapeLayerItemsItemPosition = {
     x : number!
     y : number!
     z : number
+  }
+  type DrawShapeLayerItemsItemGradient = {
+    kind : "linear" | "radial"!
+    from : json
+    to : json
+    center : json
+    radius : number
+    stops : [json]!
+  }
+  type DrawShapeLayerItemsItemShadow = {
+    color : string!
+    blur : number!
+  }
+  type DrawShapeLayerItemsItemAnimation = {
+    durationMs : number!
+    loop : boolean
+    keyframes : [DrawShapeLayerItemsItemAnimationKeyframesItem]!
+  }
+  type DrawShapeLayerItemsItemAnimationKeyframesItem = {
+    at : number!
+    offsetX : number
+    offsetY : number
+    rotate : number
+    opacity : number
+    radiusX : number
+    radiusY : number
+    width : number
+    height : number
+    strokeWidth : number
+    fill : string
+    stroke : string
+    shadow : DrawShapeLayerItemsItemAnimationKeyframesItemShadow
+  }
+  type DrawShapeLayerItemsItemAnimationKeyframesItemShadow = {
+    color : string!
+    blur : number!
   }
 
   entity DrawShapeLayerItem [runtime] {
@@ -41,7 +82,7 @@ orbital DrawShapeLayerOrbital {
     }
 
     config {
-      items : [DrawShapeLayerItemsItem] = [{ type: "Type", shape: cell, position: { x: 1, y: 1, z: 1 }, width: 1, height: 1, radiusX: 1, radiusY: 1, offsetX: 1, offsetY: 1, points: [], d: "D", fill: "Fill", stroke: "Stroke", strokeWidth: 1, opacity: 1 }, { type: "Type 2", shape: rect, position: { x: 2, y: 2, z: 2 }, width: 2, height: 2, radiusX: 2, radiusY: 2, offsetX: 2, offsetY: 2, points: [], d: "D 2", fill: "Fill 2", stroke: "Stroke 2", strokeWidth: 2, opacity: 2 }]
+      items : [DrawShapeLayerItemsItem] = [{ type: "Type", shape: cell, position: { x: 1, y: 1, z: 1 }, width: 1, height: 1, radiusX: 1, radiusY: 1, offsetX: 1, offsetY: 1, points: [], d: "D", fill: "Fill", gradient: { kind: linear, radius: 1, stops: [] }, stroke: "Stroke", strokeWidth: 1, rotate: 1, shadow: { color: "Color", blur: 1 }, animation: { durationMs: 1, loop: false, keyframes: [{ at: 1, offsetX: 1, offsetY: 1, rotate: 1, opacity: 1, radiusX: 1, radiusY: 1, width: 1, height: 1, strokeWidth: 1, fill: "Fill", stroke: "Stroke", shadow: { color: "Color", blur: 1 } }, { at: 2, offsetX: 2, offsetY: 2, rotate: 2, opacity: 2, radiusX: 2, radiusY: 2, width: 2, height: 2, strokeWidth: 2, fill: "Fill 2", stroke: "Stroke 2", shadow: { color: "Color 2", blur: 2 } }] }, opacity: 1 }, { type: "Type 2", shape: rect, position: { x: 2, y: 2, z: 2 }, width: 2, height: 2, radiusX: 2, radiusY: 2, offsetX: 2, offsetY: 2, points: [], d: "D 2", fill: "Fill 2", gradient: { kind: radial, radius: 2, stops: [] }, stroke: "Stroke 2", strokeWidth: 2, rotate: 2, shadow: { color: "Color 2", blur: 2 }, animation: { durationMs: 2, loop: true, keyframes: [{ at: 1, offsetX: 1, offsetY: 1, rotate: 1, opacity: 1, radiusX: 1, radiusY: 1, width: 1, height: 1, strokeWidth: 1, fill: "Fill", stroke: "Stroke", shadow: { color: "Color", blur: 1 } }, { at: 2, offsetX: 2, offsetY: 2, rotate: 2, opacity: 2, radiusX: 2, radiusY: 2, width: 2, height: 2, strokeWidth: 2, fill: "Fill 2", stroke: "Stroke 2", shadow: { color: "Color 2", blur: 2 } }] }, opacity: 2 }]
         @label "Items"
         @description "items prop"
         @tier "presentation"

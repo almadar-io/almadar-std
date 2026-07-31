@@ -6,6 +6,42 @@ orbital DrawShapeOrbital {
     y : number!
     z : number
   }
+  type DrawShapeGradient = {
+    kind : "linear" | "radial"!
+    from : json
+    to : json
+    center : json
+    radius : number
+    stops : [json]!
+  }
+  type DrawShapeShadow = {
+    color : string!
+    blur : number!
+  }
+  type DrawShapeAnimation = {
+    durationMs : number!
+    loop : boolean
+    keyframes : [DrawShapeAnimationKeyframesItem]!
+  }
+  type DrawShapeAnimationKeyframesItem = {
+    at : number!
+    offsetX : number
+    offsetY : number
+    rotate : number
+    opacity : number
+    radiusX : number
+    radiusY : number
+    width : number
+    height : number
+    strokeWidth : number
+    fill : string
+    stroke : string
+    shadow : DrawShapeAnimationKeyframesItemShadow
+  }
+  type DrawShapeAnimationKeyframesItemShadow = {
+    color : string!
+    blur : number!
+  }
 
   entity DrawShapeItem [runtime] {
     id : string!
@@ -29,8 +65,13 @@ orbital DrawShapeOrbital {
           points: @config.points
           d: @config.d
           fill: @config.fill
+          gradient: @config.gradient
           stroke: @config.stroke
           strokeWidth: @config.strokeWidth
+          rotate: @config.rotate
+          pivot: @config.pivot
+          shadow: @config.shadow
+          animation: @config.animation
           opacity: @config.opacity
           type: draw-shape
         })
@@ -67,7 +108,7 @@ orbital DrawShapeOrbital {
         @tier "presentation"
       offsetX : number
         @label "Offset X"
-        @description "Fine nudge from the anchor point in world units."
+        @description "Fine nudge in world units — applies to every shape kind except `cell` (rect/ellipse from their anchor point; poly/path from the projected top-left)."
         @tier "presentation"
       offsetY : number
         @label "Offset Y"
@@ -85,6 +126,10 @@ orbital DrawShapeOrbital {
         @label "Fill"
         @description "fill prop"
         @tier "presentation"
+      gradient : DrawShapeGradient
+        @label "Gradient"
+        @description "Gradient fill in world units; overrides `fill` when present."
+        @tier "presentation"
       stroke : string
         @label "Stroke"
         @description "stroke prop"
@@ -92,6 +137,22 @@ orbital DrawShapeOrbital {
       strokeWidth : number
         @label "Stroke Width"
         @description "strokeWidth prop"
+        @tier "presentation"
+      rotate : number
+        @label "Rotate"
+        @description "Rotation in radians (painter units, same as `draw-group`), about `pivot`."
+        @tier "presentation"
+      pivot : json = {}
+        @label "Pivot"
+        @description "Rotation pivot in world units relative to the cell's projected top-left; default `{x:0.5, y:0.5}` (cell center)."
+        @tier "presentation"
+      shadow : DrawShapeShadow
+        @label "Shadow"
+        @description "Soft glow / drop-shadow behind the shape; `blur` in world units."
+        @tier "presentation"
+      animation : DrawShapeAnimation
+        @label "Animation"
+        @description "Keyframe animation over this shape's props; the host runs a paint clock while present."
         @tier "presentation"
       opacity : number
         @label "Opacity"

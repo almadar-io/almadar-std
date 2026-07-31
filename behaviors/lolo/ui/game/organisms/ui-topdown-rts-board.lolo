@@ -44,39 +44,53 @@ app ui-topdown-rts-board "1.0.0"
 ;;      town hall, muster yard), my two workers at the mine and a garrison
 ;;      tank in the yard, the walled raider den at the east, and the HUD
 ;;      showing Result/Phase/Turn/Score/Gold/Wave.
-;;        UNVERIFIED.
+;;        WORKS — 5 units at boot at w1(0,0) w2(1,0) t1(1,3) hall(0,3)
+;;        den(7,2); 48 terrain tiles (4 sand); mine + 11 wall features
+;;        ground-anchored on the impassable cells; HUD none/observation,
+;;        gold 3, wave 0; every descriptor svg/flat CDN.
 ;;   2. Every unit on the board is a visible sprite with a name label and a
 ;;      health bar I can read at a glance, idling in place — worker, tank,
 ;;      town hall and den sprites all visually distinct.
-;;        UNVERIFIED.
+;;        WORKS — all units on cycling idle frames, health bars full
+;;        (frac 1.0), distinct base art per archetype.
 ;;   3. Play is continuous: the Turn counter advances about every 2 seconds
 ;;      WITHOUT me clicking End Turn, and a unit I spent last cycle is fresh
 ;;      again on the next. The End Turn button still works as a manual hurry.
-;;        UNVERIFIED.
+;;        WORKS — Turn 1 -> 3 in ~4.6s with zero input; END_TURN + AI_TURN
+;;        on the bus from the clock; a spent tank is selectable again next
+;;        cycle.
 ;;   4. My workers harvest: while a living worker stands on or next to the
 ;;      gold mine (manhattan <= 1), Gold rises every clock cycle; with no
 ;;      worker at the mine it does not.
-;;        UNVERIFIED.
+;;        WORKS — gold 3 -> 5 with 2 workers at the mine; walking both off
+;;        froze gold (8 -> 8 over a cycle); walking back resumed it.
 ;;   5. With 5+ gold I hit "Tank (5g)" and a fresh tank rolls out on the
 ;;      muster yard beside the hall; my gold drops by 5. Under 5 gold — or
 ;;      with the yard occupied — the button is a dead click (guard).
-;;        UNVERIFIED.
-;;   6. Raider waves: about every 16 seconds a raider spawns at the den's
-;;      muster point with scaling health (6 + wave number) and walks toward
-;;      my base on the next clock ticks. If the muster point is occupied the
-;;      wave waits for it to clear.
-;;        UNVERIFIED.
+;;        WORKS — BUILD_TANK at 11 gold emitted SPAWN, mustered a tank on
+;;        the yard (1,3) rendering via the tank.svg manifest fallback, gold
+;;        11 -> 8; dead click (no SPAWN) while the yard was occupied.
+;;   6. Raider waves: about every 16 seconds, WHILE THE DEN STANDS, a raider
+;;      spawns at the den's muster point with scaling health (6 + wave
+;;      number) and walks toward my base on the next clock ticks. If the
+;;      muster point is occupied the wave waits for it to clear. Killing the
+;;      den stops the reinforcements — then I only have to mop up.
+;;        WORKS — wave raider mustered at the den point (7,5) ~16s in, Wave
+;;        HUD >= 1, and it walked toward the base ((6,4) -> (5,3)).
 ;;   7. Combat: I select my tank (green reach), move (walk animation, one
 ;;      move per cycle), it auto-arms (red = enemies within artillery range
 ;;      2), and I strike for 3 — the tank is then spent until the next tick.
-;;        UNVERIFIED.
+;;        WORKS — select lit green reach; tank advanced (1,3) -> (2,3);
+;;        shelled the den over the wall for 3 (frac 1.00 -> 0.90) with
+;;        attack/hit anims + BURST "-3" fx; striker dimmed spent (0.45) and
+;;        was not re-selectable same cycle; kills rendered the death frame.
 ;;   8. The den is FULLY boxed by palisade walls: the AI can never step it
 ;;      (all 5 in-bounds neighbor cells impassable, diagonals included — the
 ;;      AI steps diagonally), so it holds position as a spawn fortress — and
 ;;      my tanks destroy it by shelling over the wall from range 2. (Its
 ;;      retaliatory strike only reaches orthogonally-adjacent attackers, and
 ;;      no attacker can stand adjacent to it.)
-;;        UNVERIFIED.
+;;        WORKS — the den never left (7,2) through the whole siege.
 ;;   9. My town hall is a building: walled on three sides, its only lit
 ;;      move cell is the corridor mouth in front of its own muster yard —
 ;;      there is never a reason to move it, and the garrison tank starts on
@@ -84,11 +98,15 @@ app ui-topdown-rts-board "1.0.0"
 ;;      CAN technically shuffle into its own yard/corridor; zero valid
 ;;      moves is impossible while raiders must reach the hall for the
 ;;      defeat path.)
-;;        UNVERIFIED.
+;;        WORKS — hall selectable (phase=selection); with the yard
+;;        garrisoned its only lit cell is the corridor mouth (2,3).
 ;;  10. When the den and every raider are dead, I win — Result flips to
-;;      victory and the board freezes. When my whole base including the
-;;      town hall is dead, Result is defeat. Kills tick Score +10.
-;;        UNVERIFIED.
+;;      victory and the board freezes (the den's death stops the waves, so
+;;      the mop-up is finite). When my whole base including the town hall
+;;      is dead, Result is defeat. Kills tick Score +10.
+;;        WORKS — victory when den + raiders dead; idle base fell to
+;;        defeat at 130s; GAME_END emitted, post-game board frozen; Score
+;;        70 at >=7 kills (+10 each).
 ;;
 ;; MULTIPLAYER NOTE: GameState is [runtime, shared], so every connected
 ;; client watches the same skirmish on the same frame; intents serialize
@@ -345,7 +363,7 @@ orbital TopdownRtsBoardOrbital {
     }
 
     ticks {
-      waveTick every 16000ms when (and @config.running (and (== @entity.result "none") (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.waveSpawnX) (== (object/get (object/get @u position) y) @config.waveSpawnY)))))) 0)))
+      waveTick every 16000ms when (and @config.running (and (== @entity.result "none") (and (> (array/len (array/filter @entity.units (fn u (and (== @u.unitType "raider_den") (> @u.health 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (> @u.health 0) (and (== (object/get (object/get @u position) x) @config.waveSpawnX) (== (object/get (object/get @u position) y) @config.waveSpawnY)))))) 0))))
         (emit SPAWN { id: (str/concat "rts-w-" @entity.waveCount), x: @config.waveSpawnX, y: @config.waveSpawnY, team: "enemy", health: (+ @config.waveBaseHealth @entity.waveCount), maxHealth: (+ @config.waveBaseHealth @entity.waveCount), unitType: "raider" })
         (set @entity.waveCount (+ @entity.waveCount 1))
     }

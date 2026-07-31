@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-07-30T11:19:30.224Z",
+  "$generated": "2026-07-31T03:05:57.669Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
   "totalBehaviors": 517,
@@ -6702,7 +6702,6 @@
         "ui-graph-canvas",
         "ui-graph-view",
         "ui-grid",
-        "ui-grid-tactics-demo-board",
         "ui-header",
         "ui-hstack",
         "ui-icon",
@@ -14588,7 +14587,6 @@
         "ui-graph-canvas",
         "ui-graph-view",
         "ui-grid",
-        "ui-grid-tactics-demo-board",
         "ui-header",
         "ui-hstack",
         "ui-icon",
@@ -18647,7 +18645,6 @@
         "ui-graph-canvas",
         "ui-graph-view",
         "ui-grid",
-        "ui-grid-tactics-demo-board",
         "ui-header",
         "ui-hex-strategy-board-3d",
         "ui-holiday-board-3d",
@@ -88228,12 +88225,12 @@
       "topic": "ui/game",
       "family": "ui/game",
       "layer": "UI Patterns",
-      "description": "2D grid-tactics arena composing headless std mechanic atoms (chase-ai, fx-particles, round-flow) on one [runtime, shared] GameState with a single canvas-2d render authority — the Phase-9 exemplar.",
+      "description": "2D real-time arena skirmish: thin organism composing headless std mechanic atoms (grid-tactics unit authority, fx-particles, round-flow, score, anim-tick) on one [runtime, shared] GameState with a single canvas-2d render authority. A 2-second clock drives the raider chase; the player commands a two-marine fireteam — select, move, focus-fire — around impassable crate debris. Down both raiders to win; lose both marines and the arena falls.",
       "defaultOrbitalName": "ArenaBoardOrbital",
-      "statePattern": "playing",
+      "statePattern": "running",
       "complexity": {
         "states": 1,
-        "events": 1,
+        "events": 2,
         "transitions": 1
       },
       "defaultEntity": {
@@ -88248,7 +88245,136 @@
           {
             "name": "units",
             "type": "array",
-            "default": []
+            "default": [
+              {
+                "health": 8,
+                "id": "p1",
+                "maxHealth": 8,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "marine",
+                  "dimension": "2d",
+                  "name": "marine",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/marine.svg"
+                },
+                "name": "Reyes",
+                "position": {
+                  "x": 1,
+                  "y": 6
+                },
+                "team": "player",
+                "unitType": "marine",
+                "x": 1,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "health": 8,
+                "id": "p2",
+                "maxHealth": 8,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "marine",
+                  "dimension": "2d",
+                  "name": "marine",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/marine.svg"
+                },
+                "name": "Okafor",
+                "position": {
+                  "x": 2,
+                  "y": 6
+                },
+                "team": "player",
+                "unitType": "marine",
+                "x": 2,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "health": 4,
+                "id": "e1",
+                "maxHealth": 4,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "raider",
+                  "dimension": "2d",
+                  "name": "raider",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/raider.svg"
+                },
+                "name": "Scab",
+                "position": {
+                  "x": 6,
+                  "y": 0
+                },
+                "team": "enemy",
+                "unitType": "raider",
+                "x": 6,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "health": 4,
+                "id": "e2",
+                "maxHealth": 4,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "raider",
+                  "dimension": "2d",
+                  "name": "raider",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arena-board/svg/flat/units/raider.svg"
+                },
+                "name": "Rizz",
+                "position": {
+                  "x": 7,
+                  "y": 2
+                },
+                "team": "enemy",
+                "unitType": "raider",
+                "x": 7,
+                "y": 2,
+                "z": 0
+              }
+            ]
           },
           {
             "name": "fx",
@@ -88256,9 +88382,548 @@
             "default": []
           },
           {
+            "name": "tiles",
+            "type": "array",
+            "default": [
+              {
+                "id": "t-0-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t-1-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t-2-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t-3-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t-4-0",
+                "passable": false,
+                "terrain": "ground",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t-5-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t-6-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 0
+              },
+              {
+                "id": "t-7-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 0
+              },
+              {
+                "id": "t-0-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t-1-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t-2-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t-3-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t-4-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t-5-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t-6-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 1
+              },
+              {
+                "id": "t-7-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 1
+              },
+              {
+                "id": "t-0-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t-1-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t-2-2",
+                "passable": true,
+                "terrain": "stone",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t-3-2",
+                "passable": true,
+                "terrain": "stone",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t-4-2",
+                "passable": true,
+                "terrain": "stone",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t-5-2",
+                "passable": true,
+                "terrain": "stone",
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t-6-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 2
+              },
+              {
+                "id": "t-7-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 2
+              },
+              {
+                "id": "t-0-3",
+                "passable": false,
+                "terrain": "ground",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t-1-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t-2-3",
+                "passable": true,
+                "terrain": "stone",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t-3-3",
+                "passable": true,
+                "terrain": "stone",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t-4-3",
+                "passable": true,
+                "terrain": "stone",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t-5-3",
+                "passable": true,
+                "terrain": "stone",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t-6-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 3
+              },
+              {
+                "id": "t-7-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 3
+              },
+              {
+                "id": "t-0-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t-1-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t-2-4",
+                "passable": true,
+                "terrain": "stone",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t-3-4",
+                "passable": true,
+                "terrain": "stone",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t-4-4",
+                "passable": true,
+                "terrain": "stone",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t-5-4",
+                "passable": true,
+                "terrain": "stone",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t-6-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 4
+              },
+              {
+                "id": "t-7-4",
+                "passable": false,
+                "terrain": "ground",
+                "x": 7,
+                "y": 4
+              },
+              {
+                "id": "t-0-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t-1-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t-2-5",
+                "passable": true,
+                "terrain": "stone",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t-3-5",
+                "passable": true,
+                "terrain": "stone",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t-4-5",
+                "passable": true,
+                "terrain": "stone",
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t-5-5",
+                "passable": true,
+                "terrain": "stone",
+                "x": 5,
+                "y": 5
+              },
+              {
+                "id": "t-6-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 5
+              },
+              {
+                "id": "t-7-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 5
+              },
+              {
+                "id": "t-0-6",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 6
+              },
+              {
+                "id": "t-1-6",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 6
+              },
+              {
+                "id": "t-2-6",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 6
+              },
+              {
+                "id": "t-3-6",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 6
+              },
+              {
+                "id": "t-4-6",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 6
+              },
+              {
+                "id": "t-5-6",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 6
+              },
+              {
+                "id": "t-6-6",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 6
+              },
+              {
+                "id": "t-7-6",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 6
+              },
+              {
+                "id": "t-0-7",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 7
+              },
+              {
+                "id": "t-1-7",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 7
+              },
+              {
+                "id": "t-2-7",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 7
+              },
+              {
+                "id": "t-3-7",
+                "passable": false,
+                "terrain": "ground",
+                "x": 3,
+                "y": 7
+              },
+              {
+                "id": "t-4-7",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 7
+              },
+              {
+                "id": "t-5-7",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 7
+              },
+              {
+                "id": "t-6-7",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 7
+              },
+              {
+                "id": "t-7-7",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 7
+              }
+            ]
+          },
+          {
             "name": "result",
             "type": "string",
             "default": "none"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "scoreBaseline",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "animCounter",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "frameName",
+            "type": "string",
+            "default": "0"
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "attackTargets",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "movedIds",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "actedIds",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "uiPhase",
+            "type": "string",
+            "default": "observation"
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "clockTicks",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "animUnitId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "animState",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "animTicksLeft",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "animAttackerId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "animAtkTicksLeft",
+            "type": "number",
+            "default": 0
           }
         ]
       },
@@ -88402,10 +89067,13 @@
         "ui-winter-ski-board",
         "ui-world-map-board"
       ],
-      "connectableEvents": [],
+      "connectableEvents": [
+        "AI_TURN"
+      ],
       "eventPayloads": {},
       "exposure": "palette",
-      "provenance": "generated"
+      "provenance": "generated",
+      "capabilities": "arena skirmish, squad command, real-time tactics, grid combat"
     },
     "ui-battle-board": {
       "name": "ui-battle-board",
@@ -91661,16 +92329,16 @@
       "topic": "ui/game",
       "family": "ui/game",
       "layer": "UI Patterns",
-      "description": "CastleBoard — build-and-defend: game-shell + canvas-2d with LOLO-driven sprite animation and combat effects.",
+      "description": "Castle build-and-defend siege: thin organism composing the std-tactics-board-2d frame + std-score, plus three organism-level traits (CastleClock / CastleEconomy / CastleWaves) that turn the turn-based frame into a real-time siege — a 2s clock auto-advances turns, workers harvest gold at the mines, gold raises watchtowers on the mine plots, and raider waves stream out of a boxed war portal down the north corridor. Win by destroying the portal and every raider; lose when the whole garrison, keep included, is wiped.",
       "defaultOrbitalName": "CastleBoardOrbital",
-      "statePattern": "defeat, idle, victory",
+      "statePattern": "running",
       "complexity": {
-        "states": 3,
-        "events": 7,
-        "transitions": 12
+        "states": 1,
+        "events": 2,
+        "transitions": 1
       },
       "defaultEntity": {
-        "name": "CastleBoardItem",
+        "name": "GameState",
         "persistence": "runtime",
         "fields": [
           {
@@ -91679,20 +92347,849 @@
             "required": true
           },
           {
-            "name": "tiles",
-            "type": "array"
-          },
-          {
             "name": "units",
-            "type": "array"
+            "type": "array",
+            "default": [
+              {
+                "health": 10,
+                "id": "g1",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "guardian",
+                  "dimension": "2d",
+                  "name": "guardian",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg"
+                },
+                "name": "Aldric",
+                "position": {
+                  "x": 3,
+                  "y": 2
+                },
+                "team": "player",
+                "unitType": "guardian",
+                "x": 3,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "health": 10,
+                "id": "g2",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "guardian",
+                  "dimension": "2d",
+                  "name": "guardian",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg"
+                },
+                "name": "Berta",
+                "position": {
+                  "x": 5,
+                  "y": 2
+                },
+                "team": "player",
+                "unitType": "guardian",
+                "x": 5,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "health": 10,
+                "id": "g3",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "guardian",
+                  "dimension": "2d",
+                  "name": "guardian",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg"
+                },
+                "name": "Cedric",
+                "position": {
+                  "x": 2,
+                  "y": 4
+                },
+                "team": "player",
+                "unitType": "guardian",
+                "x": 2,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "health": 10,
+                "id": "g4",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "guardian",
+                  "dimension": "2d",
+                  "name": "guardian",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/guardian.svg"
+                },
+                "name": "Dagna",
+                "position": {
+                  "x": 6,
+                  "y": 4
+                },
+                "team": "player",
+                "unitType": "guardian",
+                "x": 6,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "health": 6,
+                "id": "w1",
+                "maxHealth": 6,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "worker",
+                  "dimension": "2d",
+                  "name": "worker",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/worker.svg"
+                },
+                "name": "Pick",
+                "position": {
+                  "x": 2,
+                  "y": 3
+                },
+                "team": "player",
+                "unitType": "worker",
+                "x": 2,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "health": 6,
+                "id": "w2",
+                "maxHealth": 6,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "worker",
+                  "dimension": "2d",
+                  "name": "worker",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/worker.svg"
+                },
+                "name": "Shovel",
+                "position": {
+                  "x": 6,
+                  "y": 3
+                },
+                "team": "player",
+                "unitType": "worker",
+                "x": 6,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "health": 24,
+                "id": "keep",
+                "maxHealth": 24,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "keep",
+                  "dimension": "2d",
+                  "name": "keep",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/keep.svg"
+                },
+                "name": "Emberhold",
+                "position": {
+                  "x": 4,
+                  "y": 4
+                },
+                "team": "player",
+                "unitType": "keep",
+                "x": 4,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "health": 30,
+                "id": "portal",
+                "maxHealth": 30,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "portal",
+                  "dimension": "2d",
+                  "name": "portal",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/svg/isometric/units/portal.svg"
+                },
+                "name": "War Portal",
+                "position": {
+                  "x": 4,
+                  "y": 0
+                },
+                "team": "enemy",
+                "unitType": "portal",
+                "x": 4,
+                "y": 0,
+                "z": 0
+              }
+            ]
           },
           {
-            "name": "features",
-            "type": "array"
+            "name": "fx",
+            "type": "array",
+            "default": []
           },
           {
-            "name": "buildings",
-            "type": "array"
+            "name": "tiles",
+            "type": "array",
+            "default": [
+              {
+                "id": "t-0-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t-1-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t-2-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t-3-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t-4-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t-5-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t-6-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 6,
+                "y": 0
+              },
+              {
+                "id": "t-7-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 0
+              },
+              {
+                "id": "t-8-0",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 0
+              },
+              {
+                "id": "t-0-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t-1-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t-2-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t-3-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t-4-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t-5-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t-6-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 6,
+                "y": 1
+              },
+              {
+                "id": "t-7-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 1
+              },
+              {
+                "id": "t-8-1",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 1
+              },
+              {
+                "id": "t-0-2",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t-1-2",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t-2-2",
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t-3-2",
+                "passable": true,
+                "terrain": "grass",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t-4-2",
+                "passable": true,
+                "terrain": "planks",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t-5-2",
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t-6-2",
+                "passable": true,
+                "terrain": "grass",
+                "x": 6,
+                "y": 2
+              },
+              {
+                "id": "t-7-2",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 2
+              },
+              {
+                "id": "t-8-2",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 2
+              },
+              {
+                "id": "t-0-3",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t-1-3",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t-2-3",
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t-3-3",
+                "passable": true,
+                "terrain": "grass",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t-4-3",
+                "passable": true,
+                "terrain": "planks",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t-5-3",
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t-6-3",
+                "passable": true,
+                "terrain": "grass",
+                "x": 6,
+                "y": 3
+              },
+              {
+                "id": "t-7-3",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 3
+              },
+              {
+                "id": "t-8-3",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 3
+              },
+              {
+                "id": "t-0-4",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t-1-4",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t-2-4",
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t-3-4",
+                "passable": true,
+                "terrain": "grass",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t-4-4",
+                "passable": true,
+                "terrain": "planks",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t-5-4",
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t-6-4",
+                "passable": true,
+                "terrain": "grass",
+                "x": 6,
+                "y": 4
+              },
+              {
+                "id": "t-7-4",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 4
+              },
+              {
+                "id": "t-8-4",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 4
+              },
+              {
+                "id": "t-0-5",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t-1-5",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t-2-5",
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t-3-5",
+                "passable": true,
+                "terrain": "grass",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t-4-5",
+                "passable": true,
+                "terrain": "planks",
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t-5-5",
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 5
+              },
+              {
+                "id": "t-6-5",
+                "passable": true,
+                "terrain": "grass",
+                "x": 6,
+                "y": 5
+              },
+              {
+                "id": "t-7-5",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 5
+              },
+              {
+                "id": "t-8-5",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 5
+              },
+              {
+                "id": "t-0-6",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 6
+              },
+              {
+                "id": "t-1-6",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 6
+              },
+              {
+                "id": "t-2-6",
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 6
+              },
+              {
+                "id": "t-3-6",
+                "passable": true,
+                "terrain": "grass",
+                "x": 3,
+                "y": 6
+              },
+              {
+                "id": "t-4-6",
+                "passable": true,
+                "terrain": "planks",
+                "x": 4,
+                "y": 6
+              },
+              {
+                "id": "t-5-6",
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 6
+              },
+              {
+                "id": "t-6-6",
+                "passable": true,
+                "terrain": "grass",
+                "x": 6,
+                "y": 6
+              },
+              {
+                "id": "t-7-6",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 6
+              },
+              {
+                "id": "t-8-6",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 6
+              },
+              {
+                "id": "t-0-7",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 7
+              },
+              {
+                "id": "t-1-7",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 7
+              },
+              {
+                "id": "t-2-7",
+                "passable": false,
+                "terrain": "stone",
+                "x": 2,
+                "y": 7
+              },
+              {
+                "id": "t-3-7",
+                "passable": false,
+                "terrain": "stone",
+                "x": 3,
+                "y": 7
+              },
+              {
+                "id": "t-4-7",
+                "passable": true,
+                "terrain": "planks",
+                "x": 4,
+                "y": 7
+              },
+              {
+                "id": "t-5-7",
+                "passable": false,
+                "terrain": "stone",
+                "x": 5,
+                "y": 7
+              },
+              {
+                "id": "t-6-7",
+                "passable": false,
+                "terrain": "stone",
+                "x": 6,
+                "y": 7
+              },
+              {
+                "id": "t-7-7",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 7
+              },
+              {
+                "id": "t-8-7",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 7
+              },
+              {
+                "id": "t-0-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 8
+              },
+              {
+                "id": "t-1-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 8
+              },
+              {
+                "id": "t-2-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 2,
+                "y": 8
+              },
+              {
+                "id": "t-3-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 3,
+                "y": 8
+              },
+              {
+                "id": "t-4-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 4,
+                "y": 8
+              },
+              {
+                "id": "t-5-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 5,
+                "y": 8
+              },
+              {
+                "id": "t-6-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 6,
+                "y": 8
+              },
+              {
+                "id": "t-7-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 7,
+                "y": 8
+              },
+              {
+                "id": "t-8-8",
+                "passable": false,
+                "terrain": "stone",
+                "x": 8,
+                "y": 8
+              }
+            ]
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "default": "none"
           },
           {
             "name": "selectedUnitId",
@@ -91705,51 +93202,66 @@
             "default": []
           },
           {
-            "name": "gold",
-            "type": "number",
-            "default": 100
-          },
-          {
-            "name": "health",
-            "type": "number",
-            "default": 20
-          },
-          {
-            "name": "maxHealth",
-            "type": "number",
-            "default": 20
-          },
-          {
-            "name": "wave",
-            "type": "number",
-            "default": 0
-          },
-          {
-            "name": "tickCount",
-            "type": "number",
-            "default": 0
-          },
-          {
-            "name": "lastWaveDamage",
-            "type": "number",
-            "default": 0
-          },
-          {
-            "name": "result",
-            "type": "string",
-            "default": "none"
-          },
-          {
-            "name": "effects",
+            "name": "attackTargets",
             "type": "array",
             "default": []
+          },
+          {
+            "name": "movedIds",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "actedIds",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "uiPhase",
+            "type": "string",
+            "default": "observation"
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "scoreBaseline",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "gold",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "ecoSpawnCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "waveCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "clockTicks",
+            "type": "number",
+            "default": 0
           }
         ]
       },
       "defaultLabels": {
-        "title": "CastleBoardItems",
-        "entitySingular": "CastleBoardItem",
-        "entityPlural": "CastleBoardItems"
+        "title": "GameStates",
+        "entitySingular": "GameState",
+        "entityPlural": "GameStates"
       },
       "defaultIcons": [],
       "composableWith": [
@@ -91759,28 +93271,21 @@
         "std-arcade-board-3d",
         "std-arcade-flow",
         "std-arcade-play",
-        "std-breakout",
         "std-chase-ai",
         "std-crew-board-2d",
         "std-dungeon-board-2d",
         "std-dungeon-combat",
-        "std-evade",
-        "std-flappy",
-        "std-frogger",
         "std-fx-particles",
         "std-gather",
-        "std-gem-rush",
         "std-gold",
         "std-grid-tactics",
         "std-hero-nav",
-        "std-iram",
         "std-market-board-3d",
         "std-market-flow",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
         "std-patience",
-        "std-pong",
         "std-production",
         "std-round-flow",
         "std-score",
@@ -91799,8 +93304,6 @@
         "std-service-stripe",
         "std-service-twilio",
         "std-service-youtube",
-        "std-simple-rpg",
-        "std-snake",
         "std-survival-board-3d",
         "std-survival-flow",
         "std-tactics-board-2d",
@@ -91900,17 +93403,12 @@
         "ui-world-map-board"
       ],
       "connectableEvents": [
-        "UNIT_CLICK",
-        "TILE_CLICK",
-        "ATTACK",
-        "WAVE_DEFEATED",
-        "CASTLE_HIT",
-        "PLAY_AGAIN"
+        "END_TURN"
       ],
       "eventPayloads": {},
       "exposure": "both",
       "provenance": "authored",
-      "capabilities": "castle building, defense gameplay, sprite-animated combat effects"
+      "capabilities": "castle building, defense gameplay, wave siege, sprite-animated combat"
     },
     "ui-city-board-3d": {
       "name": "ui-city-board-3d",
@@ -92180,7 +93678,7 @@
       "topic": "ui/game",
       "family": "ui/game",
       "layer": "UI Patterns",
-      "description": "CityBuilderBoard — isometric city builder: place buildings on a grid, grow population, earn resources. game-shell + canvas-2d with live input wiring (PLACE_BUILDING/SELECT_BUILD_TYPE + selectedUnitId/validMoves) and a build-palette control in the HUD.",
+      "description": "CityBuilderBoard — isometric SimCity-lite: zone buildings on a 12x12 riverside grid with gold + wood, grow population to 12 to win. game-shell + canvas-2d with live input wiring (PLACE_BUILDING/SELECT_BUILD_TYPE), a build-palette in the HUD, per-type economy, and wandering citizens.",
       "defaultOrbitalName": "CityBuilderBoardOrbital",
       "statePattern": "building, gameover",
       "complexity": {
@@ -92239,11 +93737,6 @@
             "name": "effects",
             "type": "array",
             "default": []
-          },
-          {
-            "name": "selectedUnitId",
-            "type": "string",
-            "default": ""
           },
           {
             "name": "validMoves",
@@ -93782,13 +95275,13 @@
       "topic": "ui/game",
       "family": "ui/game",
       "layer": "UI Patterns",
-      "description": "Phase-9 candidate: player-controlled grid-tactics board where std-grid-tactics is the SOLE units writer. The player trait emits MOVE/ATTACK/AI_TURN intents (never mutates units); fx-particles + round-flow listen. Proves Option 3 resolves the two-writer conflict — no shipped board migrated.",
+      "description": "Player-controlled 6x6 turn-based grid-tactics skirmish: thin organism composing the std-tactics-board-2d frame + std-score — a two-marine fireteam vs two raiders. std-grid-tactics (inside the frame) is the SOLE units writer; the frame's PlayerIntent emits MOVE/ATTACK/AI_TURN intents only (never mutates units); fx-particles + round-flow + score listen. Select, move once, strike once, end turn; the enemy AI marches diagonally and mauls adjacents. Win by killing both raiders; lose when both marines fall.",
       "defaultOrbitalName": "GridTacticsDemoOrbital",
-      "statePattern": "playing",
+      "statePattern": "active",
       "complexity": {
         "states": 1,
         "events": 8,
-        "transitions": 7
+        "transitions": 6
       },
       "defaultEntity": {
         "name": "GameState",
@@ -93802,7 +95295,136 @@
           {
             "name": "units",
             "type": "array",
-            "default": []
+            "default": [
+              {
+                "health": 3,
+                "id": "m1",
+                "maxHealth": 3,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "marine",
+                  "dimension": "2d",
+                  "name": "marine",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-grid-tactics-demo-board/svg/flat/units/marine.svg"
+                },
+                "name": "Rook",
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "marine",
+                "x": 1,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 3,
+                "id": "m2",
+                "maxHealth": 3,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "marine",
+                  "dimension": "2d",
+                  "name": "marine",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-grid-tactics-demo-board/svg/flat/units/marine.svg"
+                },
+                "name": "Vesper",
+                "position": {
+                  "x": 1,
+                  "y": 4
+                },
+                "team": "player",
+                "unitType": "marine",
+                "x": 1,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "health": 2,
+                "id": "e1",
+                "maxHealth": 2,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "raider",
+                  "dimension": "2d",
+                  "name": "raider",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-grid-tactics-demo-board/svg/flat/units/raider.svg"
+                },
+                "name": "Gnash",
+                "position": {
+                  "x": 4,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "raider",
+                "x": 4,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 2,
+                "id": "e2",
+                "maxHealth": 2,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "raider",
+                  "dimension": "2d",
+                  "name": "raider",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-grid-tactics-demo-board/svg/flat/units/raider.svg"
+                },
+                "name": "Slash",
+                "position": {
+                  "x": 4,
+                  "y": 4
+                },
+                "team": "enemy",
+                "unitType": "raider",
+                "x": 4,
+                "y": 4,
+                "z": 0
+              }
+            ]
           },
           {
             "name": "fx",
@@ -93812,17 +95434,265 @@
           {
             "name": "tiles",
             "type": "array",
-            "default": []
+            "default": [
+              {
+                "id": "t-0-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t-1-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t-2-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t-3-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t-4-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t-5-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t-0-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t-1-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t-2-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t-3-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t-4-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t-5-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t-0-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t-1-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t-2-2",
+                "passable": false,
+                "terrain": "ground",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t-3-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t-4-2",
+                "passable": true,
+                "terrain": "sand",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t-5-2",
+                "passable": true,
+                "terrain": "sand",
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t-0-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t-1-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t-2-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t-3-3",
+                "passable": false,
+                "terrain": "ground",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t-4-3",
+                "passable": true,
+                "terrain": "sand",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t-5-3",
+                "passable": true,
+                "terrain": "sand",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t-0-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t-1-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t-2-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t-3-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t-4-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t-5-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t-0-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t-1-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t-2-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t-3-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t-4-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t-5-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 5
+              }
+            ]
           },
           {
             "name": "result",
             "type": "string",
             "default": "none"
-          },
-          {
-            "name": "turn",
-            "type": "number",
-            "default": 0
           },
           {
             "name": "selectedUnitId",
@@ -93835,9 +95705,74 @@
             "default": []
           },
           {
+            "name": "attackTargets",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "movedIds",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "actedIds",
+            "type": "array",
+            "default": []
+          },
+          {
             "name": "uiPhase",
             "type": "string",
             "default": "observation"
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "scoreBaseline",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "animCounter",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "frameName",
+            "type": "string",
+            "default": "0"
+          },
+          {
+            "name": "animUnitId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "animState",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "animTicksLeft",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "animAttackerId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "animAtkTicksLeft",
+            "type": "number",
+            "default": 0
           }
         ]
       },
@@ -93854,18 +95789,17 @@
         "std-arcade-board-3d",
         "std-arcade-flow",
         "std-arcade-play",
-        "std-cart",
+        "std-brick-breaker",
         "std-chase-ai",
-        "std-confirmation",
         "std-crew-board-2d",
         "std-dungeon-board-2d",
         "std-dungeon-combat",
-        "std-event",
         "std-frogger",
         "std-fx-particles",
         "std-gather",
         "std-gem-rush",
         "std-gold",
+        "std-gravity-flap",
         "std-grid-tactics",
         "std-hero-nav",
         "std-iram",
@@ -93875,9 +95809,9 @@
         "std-objective-flow",
         "std-objective-reach",
         "std-patience",
+        "std-pong-rally",
         "std-production",
         "std-round-flow",
-        "std-saved-search",
         "std-score",
         "std-service-calendar-ical",
         "std-service-custom-bearer",
@@ -93895,16 +95829,12 @@
         "std-service-twilio",
         "std-service-youtube",
         "std-simple-rpg",
+        "std-snake-loop",
         "std-survival-board-3d",
         "std-survival-flow",
         "std-tactics-board-2d",
         "std-tactics-board-3d",
-        "std-trade-order",
         "std-trait-wars",
-        "std-waitlist",
-        "std-wizard",
-        "std-wizard-branching",
-        "std-work-order",
         "std-worldmap-board-2d",
         "std-xp",
         "ui-action-palette",
@@ -93999,17 +95929,18 @@
         "ui-world-map-board"
       ],
       "connectableEvents": [
-        "UNIT_CLICK",
-        "TILE_CLICK",
-        "CANCEL",
-        "END_TURN",
         "MOVE",
         "ATTACK",
-        "AI_TURN"
+        "SPAWN",
+        "HEAL",
+        "AI_TURN",
+        "BURST",
+        "UNITS_CHANGED"
       ],
       "eventPayloads": {},
       "exposure": "palette",
-      "provenance": "generated"
+      "provenance": "generated",
+      "capabilities": "grid tactics, turn-based strategy, squad skirmish, melee combat"
     },
     "ui-hex-strategy-board-3d": {
       "name": "ui-hex-strategy-board-3d",
@@ -103507,13 +105438,13 @@
       "topic": "ui/game",
       "family": "ui/game",
       "layer": "UI Patterns",
-      "description": "Medieval RTS skirmish: thin organism composing the std-tactics-board-2d frame + std-production (the gold mine banks production each turn; the Produce button rolls a fresh tank out at the mine) + std-score, with a hand-authored flat svg theme supplied via config.",
+      "description": "Real-time RTS base skirmish: thin organism composing the std-tactics-board-2d frame + std-score, plus three organism-level traits (RtsClock / RtsEconomy / RtsWaves) that turn the turn-based frame into a real-time RTS — a 2s clock auto-advances turns, workers harvest gold at the mine, gold musters tanks at the town hall, and raider waves stream out of a fortified den. Win by destroying the den; lose when your whole base (town hall included) is wiped.",
       "defaultOrbitalName": "TopdownRtsBoardOrbital",
-      "statePattern": "active",
+      "statePattern": "running",
       "complexity": {
         "states": 1,
-        "events": 8,
-        "transitions": 6
+        "events": 2,
+        "transitions": 1
       },
       "defaultEntity": {
         "name": "GameState",
@@ -103528,6 +105459,70 @@
             "name": "units",
             "type": "array",
             "default": [
+              {
+                "health": 5,
+                "id": "w1",
+                "maxHealth": 5,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "worker",
+                  "dimension": "2d",
+                  "name": "worker",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/worker.svg"
+                },
+                "name": "Pick",
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "team": "player",
+                "unitType": "worker",
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "health": 5,
+                "id": "w2",
+                "maxHealth": 5,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "worker",
+                  "dimension": "2d",
+                  "name": "worker",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/worker.svg"
+                },
+                "name": "Shovel",
+                "position": {
+                  "x": 1,
+                  "y": 0
+                },
+                "team": "player",
+                "unitType": "worker",
+                "x": 1,
+                "y": 0,
+                "z": 0
+              },
               {
                 "health": 10,
                 "id": "t1",
@@ -103552,18 +105547,18 @@
                 "name": "Alpha",
                 "position": {
                   "x": 1,
-                  "y": 1
+                  "y": 3
                 },
                 "team": "player",
                 "unitType": "tank",
                 "x": 1,
-                "y": 1,
+                "y": 3,
                 "z": 0
               },
               {
-                "health": 10,
-                "id": "t2",
-                "maxHealth": 10,
+                "health": 30,
+                "id": "hall",
+                "maxHealth": 30,
                 "modelUrl": {
                   "animations": [
                     "idle",
@@ -103573,29 +105568,29 @@
                     "death"
                   ],
                   "aspect": "1:1",
-                  "category": "raider",
+                  "category": "town_hall",
                   "dimension": "2d",
-                  "name": "raider",
+                  "name": "town_hall",
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider.svg"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/town_hall.svg"
                 },
-                "name": "Bravo",
+                "name": "Bastion",
                 "position": {
-                  "x": 6,
-                  "y": 0
+                  "x": 0,
+                  "y": 3
                 },
-                "team": "enemy",
-                "unitType": "raider",
-                "x": 6,
-                "y": 0,
+                "team": "player",
+                "unitType": "town_hall",
+                "x": 0,
+                "y": 3,
                 "z": 0
               },
               {
-                "health": 8,
-                "id": "t3",
-                "maxHealth": 10,
+                "health": 30,
+                "id": "den",
+                "maxHealth": 30,
                 "modelUrl": {
                   "animations": [
                     "idle",
@@ -103605,23 +105600,23 @@
                     "death"
                   ],
                   "aspect": "1:1",
-                  "category": "raider",
+                  "category": "raider_den",
                   "dimension": "2d",
-                  "name": "raider",
+                  "name": "raider_den",
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider.svg"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/svg/flat/units/raider_den.svg"
                 },
-                "name": "Charlie",
+                "name": "Den",
                 "position": {
-                  "x": 6,
-                  "y": 4
+                  "x": 7,
+                  "y": 2
                 },
                 "team": "enemy",
-                "unitType": "raider",
-                "x": 6,
-                "y": 4,
+                "unitType": "raider_den",
+                "x": 7,
+                "y": 2,
                 "z": 0
               }
             ]
@@ -103693,7 +105688,7 @@
               },
               {
                 "id": "t-0-1",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 0,
                 "y": 1
@@ -103707,7 +105702,7 @@
               },
               {
                 "id": "t-2-1",
-                "passable": false,
+                "passable": true,
                 "terrain": "ground",
                 "x": 2,
                 "y": 1
@@ -103735,28 +105730,28 @@
               },
               {
                 "id": "t-6-1",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 6,
                 "y": 1
               },
               {
                 "id": "t-7-1",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 7,
                 "y": 1
               },
               {
                 "id": "t-0-2",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 0,
                 "y": 2
               },
               {
                 "id": "t-1-2",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 1,
                 "y": 2
@@ -103770,7 +105765,7 @@
               },
               {
                 "id": "t-3-2",
-                "passable": false,
+                "passable": true,
                 "terrain": "ground",
                 "x": 3,
                 "y": 2
@@ -103791,7 +105786,7 @@
               },
               {
                 "id": "t-6-2",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 6,
                 "y": 2
@@ -103833,7 +105828,7 @@
               },
               {
                 "id": "t-4-3",
-                "passable": false,
+                "passable": true,
                 "terrain": "ground",
                 "x": 4,
                 "y": 3
@@ -103847,28 +105842,28 @@
               },
               {
                 "id": "t-6-3",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 6,
                 "y": 3
               },
               {
                 "id": "t-7-3",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 7,
                 "y": 3
               },
               {
                 "id": "t-0-4",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 0,
                 "y": 4
               },
               {
                 "id": "t-1-4",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 1,
                 "y": 4
@@ -103883,28 +105878,28 @@
               {
                 "id": "t-3-4",
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "ground",
                 "x": 3,
                 "y": 4
               },
               {
                 "id": "t-4-4",
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "ground",
                 "x": 4,
                 "y": 4
               },
               {
                 "id": "t-5-4",
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "sand",
                 "x": 5,
                 "y": 4
               },
               {
                 "id": "t-6-4",
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "sand",
                 "x": 6,
                 "y": 4
               },
@@ -103917,7 +105912,7 @@
               },
               {
                 "id": "t-0-5",
-                "passable": true,
+                "passable": false,
                 "terrain": "ground",
                 "x": 0,
                 "y": 5
@@ -103939,28 +105934,28 @@
               {
                 "id": "t-3-5",
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "ground",
                 "x": 3,
                 "y": 5
               },
               {
                 "id": "t-4-5",
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "ground",
                 "x": 4,
                 "y": 5
               },
               {
                 "id": "t-5-5",
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "sand",
                 "x": 5,
                 "y": 5
               },
               {
                 "id": "t-6-5",
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "sand",
                 "x": 6,
                 "y": 5
               },
@@ -104024,12 +106019,22 @@
             "default": 0
           },
           {
-            "name": "productionPoints",
+            "name": "gold",
             "type": "number",
             "default": 0
           },
           {
-            "name": "spawnCount",
+            "name": "ecoSpawnCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "waveCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "clockTicks",
             "type": "number",
             "default": 0
           }
@@ -104048,27 +106053,21 @@
         "std-arcade-board-3d",
         "std-arcade-flow",
         "std-arcade-play",
-        "std-brick-breaker",
         "std-chase-ai",
         "std-crew-board-2d",
         "std-dungeon-board-2d",
         "std-dungeon-combat",
-        "std-frogger",
         "std-fx-particles",
         "std-gather",
-        "std-gem-rush",
         "std-gold",
-        "std-gravity-flap",
         "std-grid-tactics",
         "std-hero-nav",
-        "std-iram",
         "std-market-board-3d",
         "std-market-flow",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
         "std-patience",
-        "std-pong-rally",
         "std-production",
         "std-round-flow",
         "std-score",
@@ -104087,8 +106086,6 @@
         "std-service-stripe",
         "std-service-twilio",
         "std-service-youtube",
-        "std-simple-rpg",
-        "std-snake-loop",
         "std-survival-board-3d",
         "std-survival-flow",
         "std-tactics-board-2d",
@@ -104188,18 +106185,12 @@
         "ui-world-map-board"
       ],
       "connectableEvents": [
-        "MOVE",
-        "ATTACK",
-        "SPAWN",
-        "HEAL",
-        "AI_TURN",
-        "BURST",
-        "UNITS_CHANGED"
+        "END_TURN"
       ],
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
-      "capabilities": "turn-based combat, RTS gameplay, strategy gameplay"
+      "capabilities": "real-time strategy, RTS economy, wave defense, base assault"
     },
     "ui-tower-defense-board-3d": {
       "name": "ui-tower-defense-board-3d",
