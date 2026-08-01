@@ -73,6 +73,15 @@
         "parent": "trt_01KXG04GFTSZFEJ10QC507W0JB",
         "renames": []
       },
+      "evt_01KYYZJQR3XQR76QV9GXC1B3PM": {
+        "bakedName": "CANCEL",
+        "curName": "CANCEL",
+        "id": "evt_01KYYZJQR3XQR76QV9GXC1B3PM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04GFTSZFEJ10QC507W0JB",
+        "renames": []
+      },
       "orb_01KXG04GFTA56CPWMDNKA75G2N": {
         "bakedName": "FormEntryOrbital",
         "curName": "FormEntryOrbital",
@@ -480,6 +489,14 @@
                 "name": "Initialize"
               },
               {
+                "description": "Indicates the form's entries have been discarded and it should be reset.",
+                "id": "evt_01KYYZJQR3XQR76QV9GXC1B3PM",
+                "key": "CANCEL",
+                "name": "Cancel",
+                "synonyms": "cancel, discard, clear, start over",
+                "tier": "domain"
+              },
+              {
                 "description": "Indicates the form has been submitted for processing.",
                 "id": "evt_01KXG04GFWG7G1J9Q147XVHWS7",
                 "key": "SUBMIT",
@@ -658,7 +675,7 @@
                           "type": "divider"
                         },
                         {
-                          "cancelEvent": "INIT",
+                          "cancelEvent": "CANCEL",
                           "fields": "@config.fields",
                           "mode": "create",
                           "submitEvent": "SUBMIT",
@@ -673,6 +690,62 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04GFTD4RXGQH2QKYZVPBA",
+                "from": "editing",
+                "to": "editing"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "FormEntry",
+                    {
+                      "emit": {
+                        "failure": "FormEntryLoadFailed",
+                        "success": "FormEntryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "@config.icon",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h2"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cancelEvent": "CANCEL",
+                          "fields": "@config.fields",
+                          "mode": "create",
+                          "submitEvent": "SUBMIT",
+                          "type": "form-section"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "CANCEL",
+                "eventId": "evt_01KYYZJQR3XQR76QV9GXC1B3PM",
                 "from": "editing",
                 "to": "editing"
               },
@@ -777,7 +850,7 @@
                           "type": "divider"
                         },
                         {
-                          "cancelEvent": "INIT",
+                          "cancelEvent": "CANCEL",
                           "fields": "@config.fields",
                           "mode": "create",
                           "submitEvent": "SUBMIT",

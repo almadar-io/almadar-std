@@ -48,7 +48,33 @@ orbital FormEntryOrbital {
             gap: sm
             type: stack
           }, { type: divider }, {
-            cancelEvent: INIT
+            cancelEvent: CANCEL
+            fields: @config.fields
+            mode: create
+            submitEvent: SUBMIT
+            type: form-section
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      CANCEL -> editing
+        (fetch FormEntry {
+          emit: { failure: FormEntryLoadFailed, success: FormEntryLoaded }
+        })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: @config.icon, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            cancelEvent: CANCEL
             fields: @config.fields
             mode: create
             submitEvent: SUBMIT
@@ -105,7 +131,7 @@ orbital FormEntryOrbital {
             gap: sm
             type: stack
           }, { type: divider }, {
-            cancelEvent: INIT
+            cancelEvent: CANCEL
             fields: @config.fields
             mode: create
             submitEvent: SUBMIT
@@ -142,6 +168,10 @@ orbital FormEntryOrbital {
       }
         @description "Indicates the form has been submitted for processing."
         @synonyms "submit, send, post"
+        @tier "domain"
+      CANCEL
+        @description "Indicates the form's entries have been discarded and it should be reset."
+        @synonyms "cancel, discard, clear, start over"
         @tier "domain"
       FormEntryLoadFailed {
         message : string

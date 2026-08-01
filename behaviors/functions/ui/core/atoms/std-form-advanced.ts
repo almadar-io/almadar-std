@@ -30,7 +30,7 @@ const ALIAS = 'FormAdvanced';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdFormAdvancedEventKey = 'FormEntryLoadFailed' | 'FormEntryLoaded' | 'FormEntrySaveFailed' | 'FormEntrySaved' | 'INIT' | 'RESET' | 'SUBMIT';
+export type StdFormAdvancedEventKey = 'CANCEL' | 'FormEntryLoadFailed' | 'FormEntryLoaded' | 'FormEntrySaveFailed' | 'FormEntrySaved' | 'INIT' | 'RESET' | 'SUBMIT';
 
 /**
  * Payload shape for the `FormEntryLoaded` event.
