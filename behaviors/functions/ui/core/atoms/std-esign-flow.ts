@@ -30,7 +30,7 @@ const ALIAS = 'EsignFlow';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdEsignFlowEventKey = 'CREATE' | 'INIT' | 'REQUEST_DELETE' | 'RESEND_REQUEST' | 'SignatureSessionLoadFailed' | 'SignatureSessionLoaded';
+export type StdEsignFlowEventKey = 'CREATE' | 'INIT' | 'REQUEST_DELETE' | 'RESEND_REQUEST' | 'RETRY' | 'SignatureSessionLoadFailed' | 'SignatureSessionLoaded';
 
 /**
  * Closed set of event keys this trait listens for —

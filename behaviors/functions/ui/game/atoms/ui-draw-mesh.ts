@@ -42,6 +42,8 @@ export interface StdUiDrawMeshConfig {
   animation?: EntityRow;
   castShadow?: boolean;
   depth?: number;
+  /** Default: `[]` */
+  faces?: unknown;
   height?: number;
   material?: EntityRow;
   opacity?: number;
@@ -58,8 +60,11 @@ export interface StdUiDrawMeshConfig {
   rotation?: number[];
   segments?: number;
   /** Default: `"box"` */
-  shape?: 'box' | 'sphere' | 'capsule' | 'cylinder' | 'cone' | 'torus' | 'plane' | 'circle';
+  shape?: 'box' | 'sphere' | 'capsule' | 'cylinder' | 'cone' | 'torus' | 'plane' | 'circle' | 'polyhedron';
+  skin?: EntityRow;
   tube?: number;
+  /** Default: `[]` */
+  vertices?: unknown;
   width?: number;
 }
 

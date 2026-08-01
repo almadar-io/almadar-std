@@ -180,6 +180,19 @@
               "tier": "presentation",
               "type": "number"
             },
+            "faces": {
+              "default": [],
+              "description": "`polyhedron` only: triangle index triples into `vertices`, wound counter-clockwise seen from OUTSIDE in the scene frame.",
+              "items": {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "label": "Faces",
+              "tier": "presentation",
+              "type": "[[number]]"
+            },
             "height": {
               "description": "Box Y (height) extent / capsule-cylinder-cone length in cells (default 1).",
               "label": "Height",
@@ -286,7 +299,7 @@
             },
             "pivot": {
               "default": "bottom",
-              "description": "`bottom` (default) rests the mesh on its position's ground plane; `center` centers it there.",
+              "description": "`bottom` (default) rests the mesh on its position's ground plane; `center` centers it there. For `polyhedron`, `bottom` lifts by −min(z) and `center` applies no offset — the vertices are authoritative.",
               "label": "Pivot",
               "tier": "presentation",
               "type": "string",
@@ -377,14 +390,77 @@
                 "cone",
                 "torus",
                 "plane",
-                "circle"
+                "circle",
+                "polyhedron"
               ]
+            },
+            "skin": {
+              "description": "`polyhedron` only: smooth-skinning weights binding the vertices to named bone groups. Vertices must then be authored in BIND POSE model space; the bones' animated transforms deform them.",
+              "label": "Skin",
+              "properties": {
+                "bones": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "bones",
+                  "required": true,
+                  "type": "array"
+                },
+                "indices": {
+                  "items": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "type": "array"
+                  },
+                  "name": "indices",
+                  "required": true,
+                  "type": "array"
+                },
+                "inverseBindMatrices": {
+                  "items": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "type": "array"
+                  },
+                  "name": "inverseBindMatrices",
+                  "required": true,
+                  "type": "array"
+                },
+                "weights": {
+                  "items": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "type": "array"
+                  },
+                  "name": "weights",
+                  "required": true,
+                  "type": "array"
+                }
+              },
+              "tier": "presentation",
+              "type": "DrawMeshSkin"
             },
             "tube": {
               "description": "Torus tube radius in cells (default `radius` / 3).",
               "label": "Tube",
               "tier": "presentation",
               "type": "number"
+            },
+            "vertices": {
+              "default": [],
+              "description": "`polyhedron` only: raw vertices as scene-frame `[x, y, z]` triples in cells, `z` = up.",
+              "items": {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "label": "Vertices",
+              "tier": "presentation",
+              "type": "[[number]]"
             },
             "width": {
               "description": "Box/plane X extent in cells (default 1).",
@@ -430,6 +506,7 @@
                       "animation": "@config.animation",
                       "castShadow": "@config.castShadow",
                       "depth": "@config.depth",
+                      "faces": "@config.faces",
                       "height": "@config.height",
                       "material": "@config.material",
                       "opacity": "@config.opacity",
@@ -443,8 +520,10 @@
                       "rotation": "@config.rotation",
                       "segments": "@config.segments",
                       "shape": "@config.shape",
+                      "skin": "@config.skin",
                       "tube": "@config.tube",
                       "type": "draw-mesh",
+                      "vertices": "@config.vertices",
                       "width": "@config.width"
                     }
                   ]

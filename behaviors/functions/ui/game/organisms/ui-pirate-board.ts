@@ -4199,75 +4199,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -4277,15 +4268,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -4297,31 +4281,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -4330,34 +4333,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -5148,75 +5170,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -5226,15 +5239,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -5246,31 +5252,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -5279,34 +5304,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -6289,75 +6333,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -6367,15 +6402,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -6387,31 +6415,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -6420,34 +6467,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -7417,75 +7483,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -7495,15 +7552,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -7515,31 +7565,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -7548,34 +7617,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -8832,75 +8920,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -8910,15 +8989,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -8930,31 +9002,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -8963,34 +9054,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -10132,75 +10242,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -10210,15 +10311,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -10230,31 +10324,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -10263,34 +10376,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -11188,75 +11320,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -11266,15 +11389,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -11286,31 +11402,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -11319,34 +11454,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -12145,75 +12299,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -12223,15 +12368,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -12243,31 +12381,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -12276,34 +12433,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -13133,75 +13309,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -13211,15 +13378,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -13231,31 +13391,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -13264,34 +13443,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -14092,75 +14290,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -14170,15 +14359,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -14190,31 +14372,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -14223,34 +14424,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -15082,75 +15302,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -15160,15 +15371,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -15180,31 +15384,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -15213,34 +15436,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -16209,75 +16451,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                           },
                           {
                             'items': [
-                              'array/map',
+                              'array/append',
                               [
-                                'array/filter',
+                                'array/map',
                                 [
-                                  'array/flatten',
+                                  'array/filter',
                                   [
-                                    'array/map',
-                                    '@entity.ships',
+                                    'array/flatten',
                                     [
-                                      'fn',
-                                      'u',
+                                      'array/map',
+                                      '@entity.ships',
                                       [
-                                        'array/flatten',
+                                        'fn',
+                                        'u',
                                         [
-                                          'array/map',
+                                          'array/flatten',
                                           [
+                                            'array/map',
                                             [
-                                              'idle',
-                                              4,
-                                            ],
-                                            [
-                                              'walk',
-                                              2,
-                                            ],
-                                            [
-                                              'attack',
-                                              1,
-                                            ],
-                                            [
-                                              'hit',
-                                              1,
-                                            ],
-                                            [
-                                              'death',
-                                              1,
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'st',
-                                            [
-                                              'array/map',
                                               [
-                                                'array/range',
-                                                0,
-                                                [
-                                                  'array/nth',
-                                                  '@st',
-                                                  1,
-                                                ],
+                                                'idle',
+                                                4,
                                               ],
                                               [
-                                                'fn',
-                                                'i',
+                                                'walk',
+                                                2,
+                                              ],
+                                              [
+                                                'attack',
+                                                1,
+                                              ],
+                                              [
+                                                'hit',
+                                                1,
+                                              ],
+                                              [
+                                                'death',
+                                                1,
+                                              ],
+                                            ],
+                                            [
+                                              'fn',
+                                              'st',
+                                              [
+                                                'array/map',
                                                 [
-                                                  'if',
+                                                  'array/range',
+                                                  0,
                                                   [
-                                                    'and',
+                                                    'array/nth',
+                                                    '@st',
+                                                    1,
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'i',
+                                                  [
+                                                    'if',
                                                     [
-                                                      'object/get',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'modelUrl',
-                                                      ],
-                                                      'url',
-                                                    ],
-                                                    [
-                                                      'str/includes',
+                                                      'and',
                                                       [
                                                         'object/get',
                                                         [
@@ -16287,15 +16520,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         'url',
                                                       ],
-                                                      '.svg',
-                                                    ],
-                                                  ],
-                                                  [
-                                                    'str/concat',
-                                                    [
-                                                      'array/nth',
                                                       [
-                                                        'str/split',
+                                                        'str/includes',
                                                         [
                                                           'object/get',
                                                           [
@@ -16307,31 +16533,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                         ],
                                                         '.svg',
                                                       ],
-                                                      0,
                                                     ],
                                                     [
                                                       'str/concat',
-                                                      '.',
+                                                      [
+                                                        'array/nth',
+                                                        [
+                                                          'str/split',
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@u',
+                                                              'modelUrl',
+                                                            ],
+                                                            'url',
+                                                          ],
+                                                          '.svg',
+                                                        ],
+                                                        0,
+                                                      ],
                                                       [
                                                         'str/concat',
-                                                        [
-                                                          'array/nth',
-                                                          '@st',
-                                                          0,
-                                                        ],
+                                                        '.',
                                                         [
                                                           'str/concat',
-                                                          '-',
+                                                          [
+                                                            'array/nth',
+                                                            '@st',
+                                                            0,
+                                                          ],
                                                           [
                                                             'str/concat',
-                                                            '@i',
-                                                            '.svg',
+                                                            '-',
+                                                            [
+                                                              'str/concat',
+                                                              '@i',
+                                                              '.svg',
+                                                            ],
                                                           ],
                                                         ],
                                                       ],
                                                     ],
+                                                    '',
                                                   ],
-                                                  '',
                                                 ],
                                               ],
                                             ],
@@ -16340,34 +16585,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                       ],
                                     ],
                                   ],
+                                  [
+                                    'fn',
+                                    'w',
+                                    [
+                                      '!=',
+                                      '@w',
+                                      '',
+                                    ],
+                                  ],
                                 ],
                                 [
                                   'fn',
-                                  'w',
-                                  [
-                                    '!=',
-                                    '@w',
-                                    '',
-                                  ],
+                                  'warmUrl',
+                                  {
+                                    'asset': {
+                                      'url': '@warmUrl',
+                                    },
+                                    'height': 0.5,
+                                    'opacity': 0,
+                                    'position': {
+                                      'x': 0,
+                                      'y': 0,
+                                    },
+                                    'type': 'draw-sprite',
+                                    'width': 0.5,
+                                  },
                                 ],
                               ],
-                              [
-                                'fn',
-                                'warmUrl',
-                                {
-                                  'asset': {
-                                    'url': '@warmUrl',
-                                  },
-                                  'height': 0.5,
-                                  'opacity': 0,
-                                  'position': {
-                                    'x': 0,
-                                    'y': 0,
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  'explosion',
+                                ],
+                                'height': 0.5,
+                                'opacity': 0,
+                                'position': {
+                                  'x': 0,
+                                  'y': 0,
                                 },
-                              ],
+                                'type': 'draw-sprite',
+                                'width': 0.5,
+                              },
                             ],
                             'type': 'draw-sprite-layer',
                           },
@@ -17238,75 +17502,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         },
                         {
                           'items': [
-                            'array/map',
+                            'array/append',
                             [
-                              'array/filter',
+                              'array/map',
                               [
-                                'array/flatten',
+                                'array/filter',
                                 [
-                                  'array/map',
-                                  '@entity.ships',
+                                  'array/flatten',
                                   [
-                                    'fn',
-                                    'u',
+                                    'array/map',
+                                    '@entity.ships',
                                     [
-                                      'array/flatten',
+                                      'fn',
+                                      'u',
                                       [
-                                        'array/map',
+                                        'array/flatten',
                                         [
+                                          'array/map',
                                           [
-                                            'idle',
-                                            4,
-                                          ],
-                                          [
-                                            'walk',
-                                            2,
-                                          ],
-                                          [
-                                            'attack',
-                                            1,
-                                          ],
-                                          [
-                                            'hit',
-                                            1,
-                                          ],
-                                          [
-                                            'death',
-                                            1,
-                                          ],
-                                        ],
-                                        [
-                                          'fn',
-                                          'st',
-                                          [
-                                            'array/map',
                                             [
-                                              'array/range',
-                                              0,
-                                              [
-                                                'array/nth',
-                                                '@st',
-                                                1,
-                                              ],
+                                              'idle',
+                                              4,
                                             ],
                                             [
-                                              'fn',
-                                              'i',
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
                                               [
-                                                'if',
+                                                'array/range',
+                                                0,
                                                 [
-                                                  'and',
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
                                                   [
-                                                    'object/get',
-                                                    [
-                                                      'object/get',
-                                                      '@u',
-                                                      'modelUrl',
-                                                    ],
-                                                    'url',
-                                                  ],
-                                                  [
-                                                    'str/includes',
+                                                    'and',
                                                     [
                                                       'object/get',
                                                       [
@@ -17316,15 +17571,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                       ],
                                                       'url',
                                                     ],
-                                                    '.svg',
-                                                  ],
-                                                ],
-                                                [
-                                                  'str/concat',
-                                                  [
-                                                    'array/nth',
                                                     [
-                                                      'str/split',
+                                                      'str/includes',
                                                       [
                                                         'object/get',
                                                         [
@@ -17336,31 +17584,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                       ],
                                                       '.svg',
                                                     ],
-                                                    0,
                                                   ],
                                                   [
                                                     'str/concat',
-                                                    '.',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
                                                     [
                                                       'str/concat',
-                                                      [
-                                                        'array/nth',
-                                                        '@st',
-                                                        0,
-                                                      ],
+                                                      '.',
                                                       [
                                                         'str/concat',
-                                                        '-',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
                                                         [
                                                           'str/concat',
-                                                          '@i',
-                                                          '.svg',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
                                                         ],
                                                       ],
                                                     ],
                                                   ],
+                                                  '',
                                                 ],
-                                                '',
                                               ],
                                             ],
                                           ],
@@ -17369,34 +17636,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   ],
                                 ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
                               ],
                               [
                                 'fn',
-                                'w',
-                                [
-                                  '!=',
-                                  '@w',
-                                  '',
-                                ],
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
                               ],
                             ],
-                            [
-                              'fn',
-                              'warmUrl',
-                              {
-                                'asset': {
-                                  'url': '@warmUrl',
-                                },
-                                'height': 0.5,
-                                'opacity': 0,
-                                'position': {
-                                  'x': 0,
-                                  'y': 0,
-                                },
-                                'type': 'draw-sprite',
-                                'width': 0.5,
+                            {
+                              'asset': [
+                                'object/get',
+                                [
+                                  'object/get',
+                                  '@config.assetManifest',
+                                  'effects',
+                                ],
+                                'explosion',
+                              ],
+                              'height': 0.5,
+                              'opacity': 0,
+                              'position': {
+                                'x': 0,
+                                'y': 0,
                               },
-                            ],
+                              'type': 'draw-sprite',
+                              'width': 0.5,
+                            },
                           ],
                           'type': 'draw-sprite-layer',
                         },
@@ -17879,76 +18165,151 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                 'set',
                 '@entity.effects',
                 [
-                  'array/append',
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      [
+                        'array/filter',
+                        '@entity.ships',
+                        [
+                          'fn',
+                          'e',
+                          [
+                            'and',
+                            [
+                              'and',
+                              [
+                                '==',
+                                '@e.team',
+                                'enemy',
+                              ],
+                              [
+                                '>',
+                                '@e.health',
+                                0,
+                              ],
+                            ],
+                            [
+                              '<=',
+                              [
+                                'grid/manhattan-distance',
+                                [
+                                  'object/get',
+                                  '@e',
+                                  'position',
+                                ],
+                                [
+                                  'object/get',
+                                  [
+                                    'array/first',
+                                    [
+                                      'array/filter',
+                                      '@entity.ships',
+                                      [
+                                        'fn',
+                                        'u',
+                                        [
+                                          'and',
+                                          [
+                                            '==',
+                                            '@u.team',
+                                            'player',
+                                          ],
+                                          [
+                                            '>',
+                                            '@u.health',
+                                            0,
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  'position',
+                                ],
+                              ],
+                              3,
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                    0,
+                  ],
+                  [
+                    'array/append',
+                    '@entity.effects',
+                    {
+                      'key': 'explosion',
+                      'ttl': 9,
+                      'x': [
+                        'object/get',
+                        [
+                          'object/get',
+                          [
+                            'array/first',
+                            [
+                              'array/filter',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  'and',
+                                  [
+                                    '==',
+                                    '@u.team',
+                                    'player',
+                                  ],
+                                  [
+                                    '>',
+                                    '@u.health',
+                                    0,
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          'position',
+                        ],
+                        'x',
+                      ],
+                      'y': [
+                        'object/get',
+                        [
+                          'object/get',
+                          [
+                            'array/first',
+                            [
+                              'array/filter',
+                              '@entity.ships',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  'and',
+                                  [
+                                    '==',
+                                    '@u.team',
+                                    'player',
+                                  ],
+                                  [
+                                    '>',
+                                    '@u.health',
+                                    0,
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          'position',
+                        ],
+                        'y',
+                      ],
+                    },
+                  ],
                   '@entity.effects',
-                  {
-                    'key': 'explosion',
-                    'ttl': 9,
-                    'x': [
-                      'object/get',
-                      [
-                        'object/get',
-                        [
-                          'array/first',
-                          [
-                            'array/filter',
-                            '@entity.ships',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  '@u.team',
-                                  'player',
-                                ],
-                                [
-                                  '>',
-                                  '@u.health',
-                                  0,
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                        'position',
-                      ],
-                      'x',
-                    ],
-                    'y': [
-                      'object/get',
-                      [
-                        'object/get',
-                        [
-                          'array/first',
-                          [
-                            'array/filter',
-                            '@entity.ships',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  '@u.team',
-                                  'player',
-                                ],
-                                [
-                                  '>',
-                                  '@u.health',
-                                  0,
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                        'position',
-                      ],
-                      'y',
-                    ],
-                  },
                 ],
               ],
               [
@@ -18733,75 +19094,66 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                         },
                         {
                           'items': [
-                            'array/map',
+                            'array/append',
                             [
-                              'array/filter',
+                              'array/map',
                               [
-                                'array/flatten',
+                                'array/filter',
                                 [
-                                  'array/map',
-                                  '@entity.ships',
+                                  'array/flatten',
                                   [
-                                    'fn',
-                                    'u',
+                                    'array/map',
+                                    '@entity.ships',
                                     [
-                                      'array/flatten',
+                                      'fn',
+                                      'u',
                                       [
-                                        'array/map',
+                                        'array/flatten',
                                         [
+                                          'array/map',
                                           [
-                                            'idle',
-                                            4,
-                                          ],
-                                          [
-                                            'walk',
-                                            2,
-                                          ],
-                                          [
-                                            'attack',
-                                            1,
-                                          ],
-                                          [
-                                            'hit',
-                                            1,
-                                          ],
-                                          [
-                                            'death',
-                                            1,
-                                          ],
-                                        ],
-                                        [
-                                          'fn',
-                                          'st',
-                                          [
-                                            'array/map',
                                             [
-                                              'array/range',
-                                              0,
-                                              [
-                                                'array/nth',
-                                                '@st',
-                                                1,
-                                              ],
+                                              'idle',
+                                              4,
                                             ],
                                             [
-                                              'fn',
-                                              'i',
+                                              'walk',
+                                              2,
+                                            ],
+                                            [
+                                              'attack',
+                                              1,
+                                            ],
+                                            [
+                                              'hit',
+                                              1,
+                                            ],
+                                            [
+                                              'death',
+                                              1,
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'st',
+                                            [
+                                              'array/map',
                                               [
-                                                'if',
+                                                'array/range',
+                                                0,
                                                 [
-                                                  'and',
+                                                  'array/nth',
+                                                  '@st',
+                                                  1,
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'i',
+                                                [
+                                                  'if',
                                                   [
-                                                    'object/get',
-                                                    [
-                                                      'object/get',
-                                                      '@u',
-                                                      'modelUrl',
-                                                    ],
-                                                    'url',
-                                                  ],
-                                                  [
-                                                    'str/includes',
+                                                    'and',
                                                     [
                                                       'object/get',
                                                       [
@@ -18811,15 +19163,8 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                       ],
                                                       'url',
                                                     ],
-                                                    '.svg',
-                                                  ],
-                                                ],
-                                                [
-                                                  'str/concat',
-                                                  [
-                                                    'array/nth',
                                                     [
-                                                      'str/split',
+                                                      'str/includes',
                                                       [
                                                         'object/get',
                                                         [
@@ -18831,31 +19176,50 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                                       ],
                                                       '.svg',
                                                     ],
-                                                    0,
                                                   ],
                                                   [
                                                     'str/concat',
-                                                    '.',
+                                                    [
+                                                      'array/nth',
+                                                      [
+                                                        'str/split',
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@u',
+                                                            'modelUrl',
+                                                          ],
+                                                          'url',
+                                                        ],
+                                                        '.svg',
+                                                      ],
+                                                      0,
+                                                    ],
                                                     [
                                                       'str/concat',
-                                                      [
-                                                        'array/nth',
-                                                        '@st',
-                                                        0,
-                                                      ],
+                                                      '.',
                                                       [
                                                         'str/concat',
-                                                        '-',
+                                                        [
+                                                          'array/nth',
+                                                          '@st',
+                                                          0,
+                                                        ],
                                                         [
                                                           'str/concat',
-                                                          '@i',
-                                                          '.svg',
+                                                          '-',
+                                                          [
+                                                            'str/concat',
+                                                            '@i',
+                                                            '.svg',
+                                                          ],
                                                         ],
                                                       ],
                                                     ],
                                                   ],
+                                                  '',
                                                 ],
-                                                '',
                                               ],
                                             ],
                                           ],
@@ -18864,34 +19228,53 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     ],
                                   ],
                                 ],
+                                [
+                                  'fn',
+                                  'w',
+                                  [
+                                    '!=',
+                                    '@w',
+                                    '',
+                                  ],
+                                ],
                               ],
                               [
                                 'fn',
-                                'w',
-                                [
-                                  '!=',
-                                  '@w',
-                                  '',
-                                ],
+                                'warmUrl',
+                                {
+                                  'asset': {
+                                    'url': '@warmUrl',
+                                  },
+                                  'height': 0.5,
+                                  'opacity': 0,
+                                  'position': {
+                                    'x': 0,
+                                    'y': 0,
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                },
                               ],
                             ],
-                            [
-                              'fn',
-                              'warmUrl',
-                              {
-                                'asset': {
-                                  'url': '@warmUrl',
-                                },
-                                'height': 0.5,
-                                'opacity': 0,
-                                'position': {
-                                  'x': 0,
-                                  'y': 0,
-                                },
-                                'type': 'draw-sprite',
-                                'width': 0.5,
+                            {
+                              'asset': [
+                                'object/get',
+                                [
+                                  'object/get',
+                                  '@config.assetManifest',
+                                  'effects',
+                                ],
+                                'explosion',
+                              ],
+                              'height': 0.5,
+                              'opacity': 0,
+                              'position': {
+                                'x': 0,
+                                'y': 0,
                               },
-                            ],
+                              'type': 'draw-sprite',
+                              'width': 0.5,
+                            },
                           ],
                           'type': 'draw-sprite-layer',
                         },

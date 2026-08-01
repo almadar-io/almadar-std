@@ -30,7 +30,7 @@ const ALIAS = 'Related';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdRelatedEventKey = 'INIT' | 'RelatedItemLoadFailed' | 'RelatedItemLoaded';
+export type StdRelatedEventKey = 'INIT' | 'RETRY' | 'RelatedItemLoadFailed' | 'RelatedItemLoaded';
 
 /**
  * Payload shape for the `RelatedItemLoaded` event.

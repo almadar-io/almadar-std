@@ -127,6 +127,15 @@
         "parent": "trt_01KXG04G2XFKTVZ6MWT4X4Y28W",
         "renames": []
       },
+      "evt_01KYXKHAWNPKKZ4XXT3K22KWDJ": {
+        "bakedName": "RETRY",
+        "curName": "RETRY",
+        "id": "evt_01KYXKHAWNPKKZ4XXT3K22KWDJ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04G2XFKTVZ6MWT4X4Y28W",
+        "renames": []
+      },
       "orb_01KXG04G2XPVD49MAX6GWP787V": {
         "bakedName": "SignatureSessionOrbital",
         "curName": "SignatureSessionOrbital",
@@ -544,6 +553,11 @@
                 "tier": "internal"
               },
               {
+                "id": "evt_01KYXKHAWNPKKZ4XXT3K22KWDJ",
+                "key": "RETRY",
+                "name": "Retry"
+              },
+              {
                 "description": "Indicates a new signature request has been initiated.",
                 "id": "evt_01KXG04G2X0H2F7DRT85NPZ50P",
                 "key": "CREATE",
@@ -857,7 +871,7 @@
                           "variant": "body"
                         },
                         {
-                          "action": "INIT",
+                          "action": "RETRY",
                           "icon": "rotate-ccw",
                           "label": "Retry",
                           "type": "button",
@@ -923,6 +937,31 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04G2X4S540XXPRT1SRB1B",
+                "from": "error",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "SignatureSession",
+                    {
+                      "emit": {
+                        "failure": "SignatureSessionLoadFailed",
+                        "success": "SignatureSessionLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "RETRY",
+                "eventId": "evt_01KYXKHAWNPKKZ4XXT3K22KWDJ",
                 "from": "error",
                 "to": "loading"
               }

@@ -88,7 +88,7 @@ orbital RelatedItemOrbital {
             type: typography
             variant: caption
           }, {
-            action: INIT
+            action: RETRY
             icon: rotate-ccw
             label: Retry
             type: button
@@ -111,6 +111,13 @@ orbital RelatedItemOrbital {
 
     state error {
       INIT -> loading
+        (fetch RelatedItem {
+          emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+        })
+        (render-ui main { type: spinner })
+      ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
+      ;; delivers it, so the affordance must target a first-class user event
+      RETRY -> loading
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
         })

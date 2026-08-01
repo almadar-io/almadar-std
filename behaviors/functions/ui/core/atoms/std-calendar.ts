@@ -30,7 +30,7 @@ const ALIAS = 'Calendar';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdCalendarEventKey = '' | 'CALENDAR_NEXT_WEEK' | 'CALENDAR_PREV_WEEK' | 'CalendarEventLoadFailed' | 'CalendarEventLoaded' | 'INIT' | 'SELECT_DAY' | 'SELECT_SLOT';
+export type StdCalendarEventKey = '' | 'CALENDAR_NEXT_WEEK' | 'CALENDAR_PREV_WEEK' | 'CalendarEventLoadFailed' | 'CalendarEventLoaded' | 'INIT' | 'RETRY' | 'SELECT_DAY' | 'SELECT_SLOT';
 
 /**
  * Payload shape for the `CalendarEventLoaded` event.

@@ -60,7 +60,7 @@ export interface StdUiMatchPuzzleBoardGameEndPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMatchPuzzleBoardConfig {
-  /** Default: `{"effects":{"spark":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/effects/spritesheet_particles.json","category":"spark","dimension":"2d","name":"spark","role":"effect","sprite":"particleYellow_3.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/effects/spritesheet_particles.png","variant":""}},"features":{},"terrains":{"cell_dark":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"cell_light":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""}},"units":{"gem_blue":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json","category":"gem_blue","dimension":"2d","name":"gem-blue","role":"unit","sprite":"tileBlue_01.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png","variant":""},"gem_green":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesGreen.json","category":"gem_green","dimension":"2d","name":"gem-green","role":"unit","sprite":"tileGreen_01.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesGreen.png","variant":""},"gem_pink":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesPink.json","category":"gem_pink","dimension":"2d","name":"gem-pink","role":"unit","sprite":"tilePink_01.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesPink.png","variant":""},"gem_red":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesRed.json","category":"gem_red","dimension":"2d","name":"gem-red","role":"unit","sprite":"tileRed_01.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesRed.png","variant":""},"gem_yellow":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesYellow.json","category":"gem_yellow","dimension":"2d","name":"gem-yellow","role":"unit","sprite":"tileYellow_01.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesYellow.png","variant":""}}}` */
+  /** Default: `{"effects":{"spark":{"animations":["static"],"aspect":"1:1","category":"spark","dimension":"2d","name":"spark","role":"effect","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/effects/spark.svg","variant":""}},"features":{},"terrains":{"cell_dark":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"cell_light":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""}},"units":{"gem_blue":{"animations":["static"],"aspect":"1:1","category":"gem_blue","dimension":"2d","name":"gem-blue","role":"unit","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_blue.svg","variant":""},"gem_green":{"animations":["static"],"aspect":"1:1","category":"gem_green","dimension":"2d","name":"gem-green","role":"unit","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_green.svg","variant":""},"gem_pink":{"animations":["static"],"aspect":"1:1","category":"gem_pink","dimension":"2d","name":"gem-pink","role":"unit","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_pink.svg","variant":""},"gem_red":{"animations":["static"],"aspect":"1:1","category":"gem_red","dimension":"2d","name":"gem-red","role":"unit","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_red.svg","variant":""},"gem_yellow":{"animations":["static"],"aspect":"1:1","category":"gem_yellow","dimension":"2d","name":"gem-yellow","role":"unit","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg","variant":""}}}` */
   assetManifest?: EntityRow;
   /** Default: `["red","blue","green","yellow","pink"]` */
   colors?: string[];
@@ -74,7 +74,7 @@ export interface StdUiMatchPuzzleBoardConfig {
   gridWidth?: number;
   /** Default: `0.85` */
   scale?: number;
-  /** Default: `[{"id":"t0-0","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":0,"y":0},{"id":"t0-1","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":0,"y":1},{"id":"t0-2","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":0,"y":2},{"id":"t0-3","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":0,"y":3},{"id":"t0-4","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":0,"y":4},{"id":"t1-0","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":1,"y":0},{"id":"t1-1","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":1,"y":1},{"id":"t1-2","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":1,"y":2},{"id":"t1-3","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":1,"y":3},{"id":"t1-4","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":1,"y":4},{"id":"t2-0","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":2,"y":0},{"id":"t2-1","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":2,"y":1},{"id":"t2-2","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":2,"y":2},{"id":"t2-3","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":2,"y":3},{"id":"t2-4","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":2,"y":4},{"id":"t3-0","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":3,"y":0},{"id":"t3-1","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":3,"y":1},{"id":"t3-2","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":3,"y":2},{"id":"t3-3","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":3,"y":3},{"id":"t3-4","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":3,"y":4},{"id":"t4-0","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":4,"y":0},{"id":"t4-1","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":4,"y":1},{"id":"t4-2","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":4,"y":2},{"id":"t4-3","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","sprite":"BackTile_06.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":4,"y":3},{"id":"t4-4","passable":true,"terrain":"cell_light","terrainSprite":{"animations":[],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","sprite":"BackTile_05.png","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png","variant":""},"tileType":"floor","x":4,"y":4}]` */
+  /** Default: `[{"id":"t0-0","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":0,"y":0},{"id":"t0-1","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":0,"y":1},{"id":"t0-2","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":0,"y":2},{"id":"t0-3","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":0,"y":3},{"id":"t0-4","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":0,"y":4},{"id":"t1-0","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":1,"y":0},{"id":"t1-1","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":1,"y":1},{"id":"t1-2","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":1,"y":2},{"id":"t1-3","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":1,"y":3},{"id":"t1-4","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":1,"y":4},{"id":"t2-0","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":2,"y":0},{"id":"t2-1","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":2,"y":1},{"id":"t2-2","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":2,"y":2},{"id":"t2-3","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":2,"y":3},{"id":"t2-4","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":2,"y":4},{"id":"t3-0","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":3,"y":0},{"id":"t3-1","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":3,"y":1},{"id":"t3-2","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":3,"y":2},{"id":"t3-3","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":3,"y":3},{"id":"t3-4","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":3,"y":4},{"id":"t4-0","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":4,"y":0},{"id":"t4-1","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":4,"y":1},{"id":"t4-2","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":4,"y":2},{"id":"t4-3","passable":true,"terrain":"cell_dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_dark","dimension":"2d","name":"cell-dark","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg","variant":""},"tileType":"floor","x":4,"y":3},{"id":"t4-4","passable":true,"terrain":"cell_light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"cell_light","dimension":"2d","name":"cell-light","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg","variant":""},"tileType":"floor","x":4,"y":4}]` */
   tiles?: EntityRow[];
 }
 
@@ -247,120 +247,120 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
             'default': {
               'effects': {
                 'spark': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/effects/spritesheet_particles.json',
                   'category': 'spark',
                   'dimension': '2d',
                   'name': 'spark',
                   'role': 'effect',
-                  'sprite': 'particleYellow_3.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/effects/spritesheet_particles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/effects/spark.svg',
                   'variant': '',
                 },
               },
               'features': {},
               'terrains': {
                 'cell_dark': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'cell_light': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
               },
               'units': {
                 'gem_blue': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.json',
                   'category': 'gem_blue',
                   'dimension': '2d',
                   'name': 'gem-blue',
                   'role': 'unit',
-                  'sprite': 'tileBlue_01.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesBlue.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_blue.svg',
                   'variant': '',
                 },
                 'gem_green': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesGreen.json',
                   'category': 'gem_green',
                   'dimension': '2d',
                   'name': 'gem-green',
                   'role': 'unit',
-                  'sprite': 'tileGreen_01.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesGreen.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_green.svg',
                   'variant': '',
                 },
                 'gem_pink': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesPink.json',
                   'category': 'gem_pink',
                   'dimension': '2d',
                   'name': 'gem-pink',
                   'role': 'unit',
-                  'sprite': 'tilePink_01.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesPink.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_pink.svg',
                   'variant': '',
                 },
                 'gem_red': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesRed.json',
                   'category': 'gem_red',
                   'dimension': '2d',
                   'name': 'gem-red',
                   'role': 'unit',
-                  'sprite': 'tileRed_01.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesRed.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_red.svg',
                   'variant': '',
                 },
                 'gem_yellow': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesYellow.json',
                   'category': 'gem_yellow',
                   'dimension': '2d',
                   'name': 'gem-yellow',
                   'role': 'unit',
-                  'sprite': 'tileYellow_01.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_tilesYellow.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                   'variant': '',
                 },
               },
@@ -907,17 +907,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -929,17 +929,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -951,17 +951,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -973,17 +973,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -995,17 +995,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1017,17 +1017,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1039,17 +1039,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1061,17 +1061,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1083,17 +1083,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1105,17 +1105,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1127,17 +1127,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1149,17 +1149,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1171,17 +1171,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1193,17 +1193,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1215,17 +1215,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1237,17 +1237,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1259,17 +1259,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1281,17 +1281,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1303,17 +1303,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1325,17 +1325,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1347,17 +1347,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1369,17 +1369,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1391,17 +1391,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1413,17 +1413,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_dark',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_dark',
                   'dimension': '2d',
                   'name': 'cell-dark',
                   'role': 'tile',
-                  'sprite': 'BackTile_06.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_dark.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1435,17 +1435,17 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                 'passable': true,
                 'terrain': 'cell_light',
                 'terrainSprite': {
-                  'animations': [],
+                  'animations': [
+                    'static',
+                  ],
                   'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.json',
                   'category': 'cell_light',
                   'dimension': '2d',
                   'name': 'cell-light',
                   'role': 'tile',
-                  'sprite': 'BackTile_05.png',
-                  'style': 'pixel',
+                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/terrain/spritesheet_backtiles.png',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/terrain/cell_light.svg',
                   'variant': '',
                 },
                 'tileType': 'floor',
@@ -1759,6 +1759,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -1772,6 +1773,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -1801,6 +1803,8 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                 'fn',
                                 'g',
                                 {
+                                  'fill': 'rgba(0,200,255,0.15)',
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -1813,12 +1817,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'y',
                                     ],
                                   },
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
-                                  'shape': 'ellipse',
+                                  'shape': 'rect',
                                   'stroke': 'rgba(0,200,255,0.8)',
                                   'strokeWidth': 3,
                                   'type': 'draw-shape',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -1909,6 +1912,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'gem_red',
                                     ],
                                   ],
+                                  'height': 1,
                                   'id': [
                                     'object/get',
                                     '@g',
@@ -1927,6 +1931,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -1953,6 +1958,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'key',
                                     ],
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -1966,6 +1972,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -1982,24 +1989,26 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     'hud': {
                       'stats': [
                         {
+                          'format': 'text',
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-score',
                             'role': 'ui',
-                            'sprite': 'coin_01.png',
-                            'style': 'pixel',
+                            'style': 'vector',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                             'variant': '',
                           },
                           'label': 'Score',
                           'value': '@entity.score',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -2018,6 +2027,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                           'value': '@entity.moves',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -2812,6 +2822,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                 '@t',
                                                 'terrainSprite',
                                               ],
+                                              'height': 1,
                                               'position': {
                                                 'x': [
                                                   'object/get',
@@ -2825,6 +2836,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                 ],
                                               },
                                               'type': 'draw-sprite',
+                                              'width': 1,
                                             },
                                           ],
                                         ],
@@ -2854,6 +2866,8 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                             'fn',
                                             'g',
                                             {
+                                              'fill': 'rgba(0,200,255,0.15)',
+                                              'height': 1,
                                               'position': {
                                                 'x': [
                                                   'object/get',
@@ -2866,12 +2880,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                   'y',
                                                 ],
                                               },
-                                              'radiusX': 0.5,
-                                              'radiusY': 0.2,
-                                              'shape': 'ellipse',
+                                              'shape': 'rect',
                                               'stroke': 'rgba(0,200,255,0.8)',
                                               'strokeWidth': 3,
                                               'type': 'draw-shape',
+                                              'width': 1,
                                             },
                                           ],
                                         ],
@@ -2962,6 +2975,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                   'gem_red',
                                                 ],
                                               ],
+                                              'height': 1,
                                               'id': [
                                                 'object/get',
                                                 '@g',
@@ -2980,6 +2994,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                 ],
                                               },
                                               'type': 'draw-sprite',
+                                              'width': 1,
                                             },
                                           ],
                                         ],
@@ -3006,6 +3021,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                   'key',
                                                 ],
                                               ],
+                                              'height': 1,
                                               'position': {
                                                 'x': [
                                                   'object/get',
@@ -3019,6 +3035,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                 ],
                                               },
                                               'type': 'draw-sprite',
+                                              'width': 1,
                                             },
                                           ],
                                         ],
@@ -3035,24 +3052,26 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                 'hud': {
                                   'stats': [
                                     {
+                                      'format': 'text',
                                       'iconUrl': {
-                                        'animations': [],
+                                        'animations': [
+                                          'static',
+                                        ],
                                         'aspect': '1:1',
-                                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.json',
                                         'category': 'ui',
                                         'dimension': '2d',
                                         'name': 'icon-score',
                                         'role': 'ui',
-                                        'sprite': 'coin_01.png',
-                                        'style': 'pixel',
+                                        'style': 'vector',
                                         'thumbnailUrl': '',
-                                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.png',
+                                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                                         'variant': '',
                                       },
                                       'label': 'Score',
                                       'value': '@entity.score',
                                     },
                                     {
+                                      'format': 'text',
                                       'iconUrl': {
                                         'animations': [],
                                         'aspect': '1:1',
@@ -3071,6 +3090,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'value': '@entity.moves',
                                     },
                                     {
+                                      'format': 'text',
                                       'iconUrl': {
                                         'animations': [],
                                         'aspect': '1:1',
@@ -3274,6 +3294,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3287,6 +3308,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3316,6 +3338,8 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                 'fn',
                                 'g',
                                 {
+                                  'fill': 'rgba(0,200,255,0.15)',
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3328,12 +3352,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'y',
                                     ],
                                   },
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
-                                  'shape': 'ellipse',
+                                  'shape': 'rect',
                                   'stroke': 'rgba(0,200,255,0.8)',
                                   'strokeWidth': 3,
                                   'type': 'draw-shape',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3424,6 +3447,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'gem_red',
                                     ],
                                   ],
+                                  'height': 1,
                                   'id': [
                                     'object/get',
                                     '@g',
@@ -3442,6 +3466,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3468,6 +3493,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'key',
                                     ],
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3481,6 +3507,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3497,24 +3524,26 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     'hud': {
                       'stats': [
                         {
+                          'format': 'text',
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-score',
                             'role': 'ui',
-                            'sprite': 'coin_01.png',
-                            'style': 'pixel',
+                            'style': 'vector',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                             'variant': '',
                           },
                           'label': 'Score',
                           'value': '@entity.score',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -3533,6 +3562,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                           'value': '@entity.moves',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -3660,6 +3690,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3673,6 +3704,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3702,6 +3734,8 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                 'fn',
                                 'g',
                                 {
+                                  'fill': 'rgba(0,200,255,0.15)',
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3714,12 +3748,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'y',
                                     ],
                                   },
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
-                                  'shape': 'ellipse',
+                                  'shape': 'rect',
                                   'stroke': 'rgba(0,200,255,0.8)',
                                   'strokeWidth': 3,
                                   'type': 'draw-shape',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3810,6 +3843,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'gem_red',
                                     ],
                                   ],
+                                  'height': 1,
                                   'id': [
                                     'object/get',
                                     '@g',
@@ -3828,6 +3862,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3854,6 +3889,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'key',
                                     ],
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3867,6 +3903,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -3883,24 +3920,26 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     'hud': {
                       'stats': [
                         {
+                          'format': 'text',
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-score',
                             'role': 'ui',
-                            'sprite': 'coin_01.png',
-                            'style': 'pixel',
+                            'style': 'vector',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                             'variant': '',
                           },
                           'label': 'Score',
                           'value': '@entity.score',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -3919,6 +3958,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                           'value': '@entity.moves',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -4006,6 +4046,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4019,6 +4060,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4048,6 +4090,8 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                 'fn',
                                 'g',
                                 {
+                                  'fill': 'rgba(0,200,255,0.15)',
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4060,12 +4104,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'y',
                                     ],
                                   },
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
-                                  'shape': 'ellipse',
+                                  'shape': 'rect',
                                   'stroke': 'rgba(0,200,255,0.8)',
                                   'strokeWidth': 3,
                                   'type': 'draw-shape',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4156,6 +4199,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'gem_red',
                                     ],
                                   ],
+                                  'height': 1,
                                   'id': [
                                     'object/get',
                                     '@g',
@@ -4174,6 +4218,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4200,6 +4245,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'key',
                                     ],
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4213,6 +4259,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4229,24 +4276,26 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     'hud': {
                       'stats': [
                         {
+                          'format': 'text',
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-score',
                             'role': 'ui',
-                            'sprite': 'coin_01.png',
-                            'style': 'pixel',
+                            'style': 'vector',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                             'variant': '',
                           },
                           'label': 'Score',
                           'value': '@entity.score',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -4265,6 +4314,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                           'value': '@entity.moves',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -4322,11 +4372,6 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
               ],
               'event': 'GAME_END',
               'from': 'playing',
-              'guard': [
-                '==',
-                '@entity.result',
-                'over',
-              ],
               'to': 'gameover',
             },
             {
@@ -4414,6 +4459,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     '@t',
                                     'terrainSprite',
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4427,6 +4473,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4456,6 +4503,8 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                 'fn',
                                 'g',
                                 {
+                                  'fill': 'rgba(0,200,255,0.15)',
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4468,12 +4517,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'y',
                                     ],
                                   },
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
-                                  'shape': 'ellipse',
+                                  'shape': 'rect',
                                   'stroke': 'rgba(0,200,255,0.8)',
                                   'strokeWidth': 3,
                                   'type': 'draw-shape',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4564,6 +4612,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'gem_red',
                                     ],
                                   ],
+                                  'height': 1,
                                   'id': [
                                     'object/get',
                                     '@g',
@@ -4582,6 +4631,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4608,6 +4658,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'key',
                                     ],
                                   ],
+                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4621,6 +4672,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'width': 1,
                                 },
                               ],
                             ],
@@ -4637,24 +4689,26 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     'hud': {
                       'stats': [
                         {
+                          'format': 'text',
                           'iconUrl': {
-                            'animations': [],
+                            'animations': [
+                              'static',
+                            ],
                             'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.json',
                             'category': 'ui',
                             'dimension': '2d',
                             'name': 'icon-score',
                             'role': 'ui',
-                            'sprite': 'coin_01.png',
-                            'style': 'pixel',
+                            'style': 'vector',
                             'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.png',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                             'variant': '',
                           },
                           'label': 'Score',
                           'value': '@entity.score',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -4673,6 +4727,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                           'value': '@entity.moves',
                         },
                         {
+                          'format': 'text',
                           'iconUrl': {
                             'animations': [],
                             'aspect': '1:1',
@@ -5608,6 +5663,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                     '@t',
                                                     'terrainSprite',
                                                   ],
+                                                  'height': 1,
                                                   'position': {
                                                     'x': [
                                                       'object/get',
@@ -5621,6 +5677,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                     ],
                                                   },
                                                   'type': 'draw-sprite',
+                                                  'width': 1,
                                                 },
                                               ],
                                             ],
@@ -5650,6 +5707,8 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                 'fn',
                                                 'g',
                                                 {
+                                                  'fill': 'rgba(0,200,255,0.15)',
+                                                  'height': 1,
                                                   'position': {
                                                     'x': [
                                                       'object/get',
@@ -5662,12 +5721,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                       'y',
                                                     ],
                                                   },
-                                                  'radiusX': 0.5,
-                                                  'radiusY': 0.2,
-                                                  'shape': 'ellipse',
+                                                  'shape': 'rect',
                                                   'stroke': 'rgba(0,200,255,0.8)',
                                                   'strokeWidth': 3,
                                                   'type': 'draw-shape',
+                                                  'width': 1,
                                                 },
                                               ],
                                             ],
@@ -5758,6 +5816,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                       'gem_red',
                                                     ],
                                                   ],
+                                                  'height': 1,
                                                   'id': [
                                                     'object/get',
                                                     '@g',
@@ -5776,6 +5835,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                     ],
                                                   },
                                                   'type': 'draw-sprite',
+                                                  'width': 1,
                                                 },
                                               ],
                                             ],
@@ -5802,6 +5862,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                       'key',
                                                     ],
                                                   ],
+                                                  'height': 1,
                                                   'position': {
                                                     'x': [
                                                       'object/get',
@@ -5815,6 +5876,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                     ],
                                                   },
                                                   'type': 'draw-sprite',
+                                                  'width': 1,
                                                 },
                                               ],
                                             ],
@@ -5831,24 +5893,26 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     'hud': {
                                       'stats': [
                                         {
+                                          'format': 'text',
                                           'iconUrl': {
-                                            'animations': [],
+                                            'animations': [
+                                              'static',
+                                            ],
                                             'aspect': '1:1',
-                                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.json',
                                             'category': 'ui',
                                             'dimension': '2d',
                                             'name': 'icon-score',
                                             'role': 'ui',
-                                            'sprite': 'coin_01.png',
-                                            'style': 'pixel',
+                                            'style': 'vector',
                                             'thumbnailUrl': '',
-                                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.png',
+                                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                                             'variant': '',
                                           },
                                           'label': 'Score',
                                           'value': '@entity.score',
                                         },
                                         {
+                                          'format': 'text',
                                           'iconUrl': {
                                             'animations': [],
                                             'aspect': '1:1',
@@ -5867,6 +5931,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                           'value': '@entity.moves',
                                         },
                                         {
+                                          'format': 'text',
                                           'iconUrl': {
                                             'animations': [],
                                             'aspect': '1:1',
@@ -6002,6 +6067,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                   '@t',
                                   'terrainSprite',
                                 ],
+                                'height': 1,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -6015,6 +6081,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 1,
                               },
                             ],
                           ],
@@ -6044,6 +6111,8 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                               'fn',
                               'g',
                               {
+                                'fill': 'rgba(0,200,255,0.15)',
+                                'height': 1,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -6056,12 +6125,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     'y',
                                   ],
                                 },
-                                'radiusX': 0.5,
-                                'radiusY': 0.2,
-                                'shape': 'ellipse',
+                                'shape': 'rect',
                                 'stroke': 'rgba(0,200,255,0.8)',
                                 'strokeWidth': 3,
                                 'type': 'draw-shape',
+                                'width': 1,
                               },
                             ],
                           ],
@@ -6152,6 +6220,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     'gem_red',
                                   ],
                                 ],
+                                'height': 1,
                                 'id': [
                                   'object/get',
                                   '@g',
@@ -6170,6 +6239,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 1,
                               },
                             ],
                           ],
@@ -6196,6 +6266,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     'key',
                                   ],
                                 ],
+                                'height': 1,
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -6209,6 +6280,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'width': 1,
                               },
                             ],
                           ],
@@ -6225,24 +6297,26 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                   'hud': {
                     'stats': [
                       {
+                        'format': 'text',
                         'iconUrl': {
-                          'animations': [],
+                          'animations': [
+                            'static',
+                          ],
                           'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.json',
                           'category': 'ui',
                           'dimension': '2d',
                           'name': 'icon-score',
                           'role': 'ui',
-                          'sprite': 'coin_01.png',
-                          'style': 'pixel',
+                          'style': 'vector',
                           'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/kenney-puzzle-assets-2/features/spritesheet_coins.png',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/svg/flat/units/gem_yellow.svg',
                           'variant': '',
                         },
                         'label': 'Score',
                         'value': '@entity.score',
                       },
                       {
+                        'format': 'text',
                         'iconUrl': {
                           'animations': [],
                           'aspect': '1:1',
@@ -6261,6 +6335,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                         'value': '@entity.moves',
                       },
                       {
+                        'format': 'text',
                         'iconUrl': {
                           'animations': [],
                           'aspect': '1:1',

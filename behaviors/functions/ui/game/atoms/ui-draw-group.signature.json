@@ -24,6 +24,102 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "animation",
+            "type": "DrawGroupAnimation",
+            "label": "Animation",
+            "description": "Keyframe animation over the group TRANSFORM tracks (`offsetX/Y/Z` in cells, `rotateX/Y/Z` in radians, `scale`; the 2D painter also honors `opacity`) — children inherit it, so nested animated groups form a joint chain. Material tracks belong on leaf meshes.",
+            "tier": "presentation",
+            "properties": {
+              "durationMs": {
+                "name": "durationMs",
+                "required": true,
+                "type": "number"
+              },
+              "keyframes": {
+                "name": "keyframes",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "at": {
+                      "name": "at",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "color": {
+                      "name": "color",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "emissive": {
+                      "name": "emissive",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "emissiveIntensity": {
+                      "name": "emissiveIntensity",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "offsetX": {
+                      "name": "offsetX",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "offsetY": {
+                      "name": "offsetY",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "offsetZ": {
+                      "name": "offsetZ",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "opacity": {
+                      "name": "opacity",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "rotateX": {
+                      "name": "rotateX",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "rotateY": {
+                      "name": "rotateY",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "rotateZ": {
+                      "name": "rotateZ",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "scale": {
+                      "name": "scale",
+                      "required": false,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "loop": {
+                "name": "loop",
+                "required": false,
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "key": "bone",
+            "type": "string",
+            "label": "Bone",
+            "description": "Skeleton bone name. A named group is addressable by a `draw-mesh` `skin` block (smooth skinning): the skinned mesh deforms with this group's animated transform. Names resolve within the nearest enclosing `skeleton: true` group (falling back to the canvas), so multiple instances of one rig never collide. Distinct from `id` (the hit-test handle).",
+            "tier": "presentation"
+          },
+          {
             "key": "clip",
             "type": "string",
             "label": "Clip",
@@ -85,10 +181,28 @@
             "tier": "presentation"
           },
           {
+            "key": "rotation",
+            "type": "[number]",
+            "default": [],
+            "label": "Rotation",
+            "description": "Euler rotation `[x, y, z]` in radians (world axes) — per-axis joint rotation for the 3D backend; a group placed at a joint with children authored joint-local IS a bone. The 2D painter applies only the in-plane `z` component, after `rotate`.",
+            "tier": "presentation",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
             "key": "scale",
             "type": "number",
             "label": "Scale",
             "description": "Uniform scale applied to the whole group.",
+            "tier": "presentation"
+          },
+          {
+            "key": "skeleton",
+            "type": "boolean",
+            "label": "Skeleton",
+            "description": "Marks this group as a skeleton SCOPE: `bone` names and `skin` bindings in its subtree resolve against each other only — one scope per rig instance.",
             "tier": "presentation"
           }
         ],

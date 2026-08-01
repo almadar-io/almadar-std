@@ -39,6 +39,8 @@ export type StdUiDrawGroupEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawGroupConfig {
+  animation?: EntityRow;
+  bone?: string;
   clip?: string;
   /** Default: `[]` */
   items?: EntityRow[];
@@ -46,7 +48,10 @@ export interface StdUiDrawGroupConfig {
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;
   rotate?: number;
+  /** Default: `[]` */
+  rotation?: number[];
   scale?: number;
+  skeleton?: boolean;
 }
 
 /**

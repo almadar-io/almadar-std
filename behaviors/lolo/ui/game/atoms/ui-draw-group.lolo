@@ -6,6 +6,25 @@ orbital DrawGroupOrbital {
     y : number!
     z : number
   }
+  type DrawGroupAnimation = {
+    durationMs : number!
+    loop : boolean
+    keyframes : [DrawGroupAnimationKeyframesItem]!
+  }
+  type DrawGroupAnimationKeyframesItem = {
+    at : number!
+    offsetX : number
+    offsetY : number
+    offsetZ : number
+    rotateX : number
+    rotateY : number
+    rotateZ : number
+    scale : number
+    opacity : number
+    emissiveIntensity : number
+    color : string
+    emissive : string
+  }
 
   entity DrawGroupItem [runtime] {
     id : string!
@@ -20,6 +39,10 @@ orbital DrawGroupOrbital {
           position: @config.position
           scale: @config.scale
           rotate: @config.rotate
+          rotation: @config.rotation
+          bone: @config.bone
+          skeleton: @config.skeleton
+          animation: @config.animation
           opacity: @config.opacity
           clip: @config.clip
           items: @config.items
@@ -39,6 +62,22 @@ orbital DrawGroupOrbital {
       rotate : number
         @label "Rotate"
         @description "Rotation in radians (painter units)."
+        @tier "presentation"
+      rotation : [number] = []
+        @label "Rotation"
+        @description "Euler rotation `[x, y, z]` in radians (world axes) — per-axis joint rotation for the 3D backend; a group placed at a joint with children authored joint-local IS a bone. The 2D painter applies only the in-plane `z` component, after `rotate`."
+        @tier "presentation"
+      bone : string
+        @label "Bone"
+        @description "Skeleton bone name. A named group is addressable by a `draw-mesh` `skin` block (smooth skinning): the skinned mesh deforms with this group's animated transform. Names resolve within the nearest enclosing `skeleton: true` group (falling back to the canvas), so multiple instances of one rig never collide. Distinct from `id` (the hit-test handle)."
+        @tier "presentation"
+      skeleton : boolean
+        @label "Skeleton"
+        @description "Marks this group as a skeleton SCOPE: `bone` names and `skin` bindings in its subtree resolve against each other only — one scope per rig instance."
+        @tier "presentation"
+      animation : DrawGroupAnimation
+        @label "Animation"
+        @description "Keyframe animation over the group TRANSFORM tracks (`offsetX/Y/Z` in cells, `rotateX/Y/Z` in radians, `scale`; the 2D painter also honors `opacity`) — children inherit it, so nested animated groups form a joint chain. Material tracks belong on leaf meshes."
         @tier "presentation"
       opacity : number
         @label "Opacity"

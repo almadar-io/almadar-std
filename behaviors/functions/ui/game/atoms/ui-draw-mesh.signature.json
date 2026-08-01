@@ -127,6 +127,20 @@
             "tier": "presentation"
           },
           {
+            "key": "faces",
+            "type": "[[number]]",
+            "default": [],
+            "label": "Faces",
+            "description": "`polyhedron` only: triangle index triples into `vertices`, wound counter-clockwise seen from OUTSIDE in the scene frame.",
+            "tier": "presentation",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          {
             "key": "height",
             "type": "number",
             "label": "Height",
@@ -239,7 +253,7 @@
             "type": "string",
             "default": "bottom",
             "label": "Pivot",
-            "description": "`bottom` (default) rests the mesh on its position's ground plane; `center` centers it there.",
+            "description": "`bottom` (default) rests the mesh on its position's ground plane; `center` centers it there. For `polyhedron`, `bottom` lifts by −min(z) and `center` applies no offset — the vertices are authoritative.",
             "tier": "presentation",
             "enumValues": [
               "bottom",
@@ -336,8 +350,59 @@
               "cone",
               "torus",
               "plane",
-              "circle"
+              "circle",
+              "polyhedron"
             ]
+          },
+          {
+            "key": "skin",
+            "type": "DrawMeshSkin",
+            "label": "Skin",
+            "description": "`polyhedron` only: smooth-skinning weights binding the vertices to named bone groups. Vertices must then be authored in BIND POSE model space; the bones' animated transforms deform them.",
+            "tier": "presentation",
+            "properties": {
+              "bones": {
+                "name": "bones",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "indices": {
+                "name": "indices",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "inverseBindMatrices": {
+                "name": "inverseBindMatrices",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "weights": {
+                "name": "weights",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
           },
           {
             "key": "tube",
@@ -345,6 +410,20 @@
             "label": "Tube",
             "description": "Torus tube radius in cells (default `radius` / 3).",
             "tier": "presentation"
+          },
+          {
+            "key": "vertices",
+            "type": "[[number]]",
+            "default": [],
+            "label": "Vertices",
+            "description": "`polyhedron` only: raw vertices as scene-frame `[x, y, z]` triples in cells, `z` = up.",
+            "tier": "presentation",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
           },
           {
             "key": "width",

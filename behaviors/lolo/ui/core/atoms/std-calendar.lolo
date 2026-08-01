@@ -63,7 +63,7 @@ orbital CalendarEventOrbital {
             type: typography
             variant: body
           }, {
-            action: INIT
+            action: RETRY
             icon: rotate-ccw
             label: Retry
             type: button
@@ -103,6 +103,13 @@ orbital CalendarEventOrbital {
 
     state error {
       INIT -> loading
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+        })
+        (render-ui main { type: spinner })
+      ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
+      ;; delivers it, so the affordance must target a first-class user event
+      RETRY -> loading
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
         })

@@ -30,7 +30,7 @@ const ALIAS = 'List';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdListEventKey = 'CREATE' | 'DELETE' | 'EDIT' | 'INIT' | 'ListItemLoadFailed' | 'ListItemLoaded';
+export type StdListEventKey = 'CREATE' | 'DELETE' | 'EDIT' | 'INIT' | 'ListItemLoadFailed' | 'ListItemLoaded' | 'RETRY';
 
 /**
  * Closed set of event keys this trait listens for —

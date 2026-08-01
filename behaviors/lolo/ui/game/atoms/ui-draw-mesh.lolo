@@ -6,6 +6,12 @@ orbital DrawMeshOrbital {
     y : number!
     z : number
   }
+  type DrawMeshSkin = {
+    bones : [string]!
+    inverseBindMatrices : [[number]]!
+    indices : [[number]]!
+    weights : [[number]]!
+  }
   type DrawMeshMaterial = {
     kind : "standard" | "physical" | "toon" | "basic"
     color : string
@@ -63,6 +69,9 @@ orbital DrawMeshOrbital {
           radiusBottom: @config.radiusBottom
           tube: @config.tube
           segments: @config.segments
+          vertices: @config.vertices
+          faces: @config.faces
+          skin: @config.skin
           rotation: @config.rotation
           pivot: @config.pivot
           material: @config.material
@@ -76,7 +85,7 @@ orbital DrawMeshOrbital {
     }
 
     config {
-      shape : "box" | "sphere" | "capsule" | "cylinder" | "cone" | "torus" | "plane" | "circle" = box
+      shape : "box" | "sphere" | "capsule" | "cylinder" | "cone" | "torus" | "plane" | "circle" | "polyhedron" = box
         @label "Shape"
         @description "shape prop"
         @tier "presentation"
@@ -116,13 +125,25 @@ orbital DrawMeshOrbital {
         @label "Segments"
         @description "Curved-surface tessellation, clamped 3..64 (default 24). 4–8 + `flatShading` = low-poly."
         @tier "presentation"
+      vertices : [[number]] = []
+        @label "Vertices"
+        @description "`polyhedron` only: raw vertices as scene-frame `[x, y, z]` triples in cells, `z` = up."
+        @tier "presentation"
+      faces : [[number]] = []
+        @label "Faces"
+        @description "`polyhedron` only: triangle index triples into `vertices`, wound counter-clockwise seen from OUTSIDE in the scene frame."
+        @tier "presentation"
+      skin : DrawMeshSkin
+        @label "Skin"
+        @description "`polyhedron` only: smooth-skinning weights binding the vertices to named bone groups. Vertices must then be authored in BIND POSE model space; the bones' animated transforms deform them."
+        @tier "presentation"
       rotation : [number] = []
         @label "Rotation"
         @description "Euler rotation `[x, y, z]` in radians."
         @tier "presentation"
       pivot : "bottom" | "center" = bottom
         @label "Pivot"
-        @description "`bottom` (default) rests the mesh on its position's ground plane; `center` centers it there."
+        @description "`bottom` (default) rests the mesh on its position's ground plane; `center` centers it there. For `polyhedron`, `bottom` lifts by −min(z) and `center` applies no offset — the vertices are authoritative."
         @tier "presentation"
       material : DrawMeshMaterial
         @label "Material"

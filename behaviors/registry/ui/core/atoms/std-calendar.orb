@@ -82,6 +82,15 @@
         "parent": "trt_01KXG04FWZGZV0R5K3Q0RRAZX0",
         "renames": []
       },
+      "evt_01KYXKERV560CXHYS3TRXBVM92": {
+        "bakedName": "RETRY",
+        "curName": "RETRY",
+        "id": "evt_01KYXKERV560CXHYS3TRXBVM92",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FWZGZV0R5K3Q0RRAZX0",
+        "renames": []
+      },
       "orb_01KXG04FWZ393C1RSEYVW6QS6A": {
         "bakedName": "CalendarEventOrbital",
         "curName": "CalendarEventOrbital",
@@ -781,6 +790,11 @@
                 "tier": "domain"
               },
               {
+                "id": "evt_01KYXKERV560CXHYS3TRXBVM92",
+                "key": "RETRY",
+                "name": "Retry"
+              },
+              {
                 "description": "Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.",
                 "id": "evt_01KYBV098PMR56F9NQ5CWWPX36",
                 "key": "@config.onEventClick",
@@ -933,7 +947,7 @@
                           "variant": "body"
                         },
                         {
-                          "action": "INIT",
+                          "action": "RETRY",
                           "icon": "rotate-ccw",
                           "label": "Retry",
                           "type": "button",
@@ -1146,6 +1160,31 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04FWZ8CQBQECFH7VXNKC2",
+                "from": "error",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "CalendarEvent",
+                    {
+                      "emit": {
+                        "failure": "CalendarEventLoadFailed",
+                        "success": "CalendarEventLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "RETRY",
+                "eventId": "evt_01KYXKERV560CXHYS3TRXBVM92",
                 "from": "error",
                 "to": "loading"
               }

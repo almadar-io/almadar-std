@@ -127,6 +127,15 @@
         "parent": "trt_01KXG04GRMJ7J1JZZS36V7QP45",
         "renames": []
       },
+      "evt_01KYXKHAR210J771VGPVXZVQF9": {
+        "bakedName": "RETRY",
+        "curName": "RETRY",
+        "id": "evt_01KYXKHAR210J771VGPVXZVQF9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04GRMJ7J1JZZS36V7QP45",
+        "renames": []
+      },
       "orb_01KXG04GRMFV2N5D00GQN2CRT6": {
         "bakedName": "ListItemOrbital",
         "curName": "ListItemOrbital",
@@ -480,6 +489,11 @@
                 "tier": "internal"
               },
               {
+                "id": "evt_01KYXKHAR210J771VGPVXZVQF9",
+                "key": "RETRY",
+                "name": "Retry"
+              },
+              {
                 "description": "Signals a new item has been successfully created.",
                 "id": "evt_01KXG04GRM98X7EWV7WPJDZ0TB",
                 "key": "CREATE",
@@ -734,7 +748,7 @@
                           "variant": "body"
                         },
                         {
-                          "action": "INIT",
+                          "action": "RETRY",
                           "icon": "rotate-ccw",
                           "label": "Retry",
                           "type": "button",
@@ -800,6 +814,31 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04GRMTCDJ94FS3AXEZ45Z",
+                "from": "error",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ListItem",
+                    {
+                      "emit": {
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "RETRY",
+                "eventId": "evt_01KYXKHAR210J771VGPVXZVQF9",
                 "from": "error",
                 "to": "loading"
               }

@@ -174,6 +174,11 @@
                   "required": false,
                   "type": "number"
                 },
+                "yaw": {
+                  "name": "yaw",
+                  "required": false,
+                  "type": "number"
+                },
                 "z": {
                   "name": "z",
                   "required": false,
@@ -353,6 +358,11 @@
                   },
                   "y": {
                     "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "yaw": {
+                    "name": "yaw",
                     "required": false,
                     "type": "number"
                   },
@@ -761,7 +771,129 @@
                               "position": {
                                 "x": "@payload.x",
                                 "y": "@payload.y"
-                              }
+                              },
+                              "x": "@payload.x",
+                              "y": "@payload.y",
+                              "yaw": [
+                                "if",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    "@payload.x",
+                                    [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "x"
+                                    ]
+                                  ],
+                                  [
+                                    "==",
+                                    "@payload.y",
+                                    [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "y"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "yaw"
+                                  ],
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "yaw"
+                                  ],
+                                  0.0
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    ">=",
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        "@payload.x",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ],
+                                          "x"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        "@payload.y",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ],
+                                          "y"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@payload.x",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "x"
+                                      ]
+                                    ],
+                                    1.5708,
+                                    -1.5708
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@payload.y",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "y"
+                                      ]
+                                    ],
+                                    0.0,
+                                    3.1416
+                                  ]
+                                ]
+                              ]
                             }
                           ],
                           "@u"
@@ -1782,7 +1914,91 @@
                                         "position": {
                                           "x": "@nextX",
                                           "y": "@nextY"
-                                        }
+                                        },
+                                        "x": "@nextX",
+                                        "y": "@nextY",
+                                        "yaw": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@nextX",
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ],
+                                              "x"
+                                            ]
+                                          ],
+                                          [
+                                            "if",
+                                            [
+                                              ">",
+                                              "@nextY",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "position"
+                                                ],
+                                                "y"
+                                              ]
+                                            ],
+                                            0.0,
+                                            [
+                                              "if",
+                                              [
+                                                "<",
+                                                "@nextY",
+                                                [
+                                                  "object/get",
+                                                  [
+                                                    "object/get",
+                                                    "@u",
+                                                    "position"
+                                                  ],
+                                                  "y"
+                                                ]
+                                              ],
+                                              3.1416,
+                                              [
+                                                "if",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "yaw"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "yaw"
+                                                ],
+                                                0.0
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "if",
+                                            [
+                                              ">",
+                                              "@nextX",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "position"
+                                                ],
+                                                "x"
+                                              ]
+                                            ],
+                                            1.5708,
+                                            -1.5708
+                                          ]
+                                        ]
                                       }
                                     ],
                                     "@u"

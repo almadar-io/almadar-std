@@ -30,7 +30,7 @@ const ALIAS = 'Selection';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdSelectionEventKey = 'CLEAR' | 'CONFIRM_SELECTION' | 'INIT' | 'SELECT' | 'SelectableItemLoadFailed' | 'SelectableItemLoaded';
+export type StdSelectionEventKey = 'CLEAR' | 'CONFIRM_SELECTION' | 'INIT' | 'RETRY' | 'SELECT' | 'SelectableItemLoadFailed' | 'SelectableItemLoaded';
 
 /**
  * Payload shape for the `SelectableItemLoaded` event.
