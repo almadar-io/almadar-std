@@ -12,7 +12,7 @@ orbital CalendarEventOrbital {
     description : string @description "event details or notes" @synonyms "details, notes, body, summary"
     status : "active" | "inactive" | "pending" @description "event lifecycle status" @synonyms "state, stage, phase" = active
     createdAt : string
-    date : datetime @intrinsic
+    date : datetime
     time : string @description "event start time of day" @synonyms "start, scheduled time, begins, when, start time" = ""
     duration : number @description "event length in minutes" @synonyms "minutes, length, span, duration" = 60
     selectedRange : string @intrinsic = month
@@ -84,11 +84,12 @@ orbital CalendarEventOrbital {
         })
         (render-ui main { type: spinner })
       SELECT_DAY -> loading
-        (set @entity.date ?value)
         (set @entity.selectedRange ?value)
+        ;; filter reads the candidate ROW's configured start column — never a
+        ;; hardcoded `date`, which retargeted consumers (startField=startTime) lack
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
-          filter: (time/isAfter (time/parse @entity.date) (if ["=", ?value, week] (time/subtract (time/now) 1 week) (if ["=", ?value, "3months"] (time/subtract (time/now) 3 month) (if ["=", ?value, year] (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month)))))
+          filter: (time/isAfter (time/parse (object/get @entity @config.startField)) (if ["=", ?value, week] (time/subtract (time/now) 1 week) (if ["=", ?value, "3months"] (time/subtract (time/now) 3 month) (if ["=", ?value, year] (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month)))))
         })
       CALENDAR_PREV_WEEK -> loading
         (set @entity.weekAnchor (time/subtract @entity.weekAnchor 1 week))

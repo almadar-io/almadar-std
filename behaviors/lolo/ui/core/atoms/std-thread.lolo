@@ -119,6 +119,22 @@ orbital ThreadPostOrbital {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           include: (replies)
         })
+      ;; replying.SUBMIT_REPLY -> browsing lands here before the persist
+      ;; resolves; a failure must be caught here too, not just replying's twin arm.
+      ThreadPostCreateFailed -> browsing
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      ;; replying.ThreadPostCreated -> browsing fires this same refetch; a
+      ;; failure must be caught here too, not just loading's twin arm.
+      ThreadPostLoadFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
     }
 
     state replying {

@@ -127,6 +127,11 @@ orbital DocumentOrbital {
     }
 
     state browsing {
+      ;; revisit re-fetches silently — landing state's own DocumentLoaded arm repaints
+      INIT -> loading
+        (fetch Document {
+          emit: { failure: DocumentLoadFailed, success: DocumentLoaded }
+        })
       OPEN -> editing
         (set @entity.id ?row.id)
         (set @entity.title ?row.title)

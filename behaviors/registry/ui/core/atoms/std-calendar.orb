@@ -158,7 +158,6 @@
             "type": "string"
           },
           {
-            "intrinsic": true,
             "name": "date",
             "type": "datetime"
           },
@@ -228,10 +227,46 @@
                 }
               ],
               "description": "Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
               "label": "Agenda item actions",
               "synonyms": "agenda actions, row actions, event actions, list actions",
               "tier": "presentation",
-              "type": "json"
+              "type": "[ItemAction]"
             },
             "agendaListBodyContent": {
               "default": {
@@ -704,7 +739,6 @@
           ],
           "entityContract": {
             "provides": [
-              "date",
               "selectedRange",
               "weekAnchor"
             ],
@@ -995,11 +1029,6 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.date",
-                    "@payload.value"
-                  ],
-                  [
-                    "set",
                     "@entity.selectedRange",
                     "@payload.value"
                   ],
@@ -1015,7 +1044,11 @@
                         "time/isAfter",
                         [
                           "time/parse",
-                          "@entity.date"
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.startField"
+                          ]
                         ],
                         [
                           "if",

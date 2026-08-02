@@ -129,6 +129,12 @@ orbital EventLogOrbital {
     }
 
     state viewing {
+      ;; revisit re-entry: re-fetch in place, no render — keeps the rendered
+      ;; timeline on screen instead of flashing the loading skeleton over it.
+      INIT -> loading
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+        })
       APPLY_FILTER -> viewing
         (set @entity.filterKind ?tabId)
         (set @entity.entries (array/filter @entity.allEntries (fn e (or ["=", ?tabId, ""] ["=", (object/get @e kind), ?tabId]))))

@@ -109,6 +109,11 @@ orbital FormEntryOrbital {
           gap: lg
           type: stack
         })
+      ;; FormEntryLoaded/FormEntryLoadFailed arrive from RESET's re-fetch (landed
+      ;; here) — the arm that emitted them already repainted, so absorb / notify.
+      FormEntryLoaded -> editing
+      FormEntryLoadFailed -> editing
+        (notify error "Failed to load form")
     }
 
     state submitted {
@@ -141,6 +146,11 @@ orbital FormEntryOrbital {
           gap: lg
           type: stack
         })
+      ;; FormEntrySaved/FormEntrySaveFailed arrive from SUBMIT's persist call —
+      ;; the success screen is already painted eagerly, so absorb / notify.
+      FormEntrySaved -> submitted
+      FormEntrySaveFailed -> submitted
+        (notify error "Failed to save form entry")
     }
 
     emits {

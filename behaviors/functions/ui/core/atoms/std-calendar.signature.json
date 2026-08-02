@@ -32,8 +32,7 @@
           {
             "name": "date",
             "type": "datetime",
-            "required": false,
-            "intrinsic": true
+            "required": false
           },
           {
             "name": "time",
@@ -144,7 +143,7 @@
           },
           {
             "key": "agendaItemActions",
-            "type": "json",
+            "type": "[ItemAction]",
             "default": [
               {
                 "event": "SELECT_DAY",
@@ -155,7 +154,43 @@
             "label": "Agenda item actions",
             "description": "Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.",
             "synonyms": "agenda actions, row actions, event actions, list actions",
-            "tier": "presentation"
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "primary",
+                    "secondary",
+                    "ghost",
+                    "danger"
+                  ]
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "agendaListBodyContent",
@@ -605,7 +640,6 @@
         "entityContract": {
           "requires": [],
           "provides": [
-            "date",
             "selectedRange",
             "weekAnchor"
           ]

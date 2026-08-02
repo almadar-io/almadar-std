@@ -116,6 +116,11 @@ orbital GalleryItemOrbital {
     }
 
     state browsing {
+      ;; Revisit re-entry: refetch without repainting over the rendered gallery.
+      INIT -> loading
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+        })
       VIEW -> viewing
         (set @entity.id ?id)
         (render-ui modal {

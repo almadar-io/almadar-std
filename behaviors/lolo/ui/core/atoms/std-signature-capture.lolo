@@ -117,6 +117,11 @@ orbital SignatureCaptureOrbital {
     }
 
     state idle {
+      ;; Revisit re-entry: refetch without repainting the already-drawn pad.
+      INIT -> loading
+        (fetch Signature {
+          emit: { failure: SignatureLoadFailed, success: SignatureLoaded }
+        })
       CHANGE -> idle
         (set @entity.signatureDataUrl ?dataUrl)
       CLEAR -> idle

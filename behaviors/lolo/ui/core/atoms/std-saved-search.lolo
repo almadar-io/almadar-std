@@ -194,6 +194,14 @@ orbital SavedSearchOrbital {
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
         })
+      ;; editing.SAVE -> browsing lands here before the persist resolves; a
+      ;; failure must be caught here too, not just by loading's twin arm.
+      SavedSearchLoadFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
     }
 
     state editing {

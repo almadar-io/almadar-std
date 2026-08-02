@@ -75,7 +75,12 @@ orbital StepFlowOrbital {
           title: "Failed to load"
           type: error-state
         })
+      ;; StepItemsSaved is never actually fired by any current consumer (std-checkin,
+      ;; std-device-fleet, std-drip-sequence, std-offer-letter, std-route-optimize,
+      ;; std-runbook) — dead-bodiless-action fix: paint the running body so state and
+      ;; screen agree if a future caller ever does fire it.
       StepItemsSaved -> running
+        (render-ui main @config.bodyContent)
       StepItemsSaveFailed -> error
         (set @entity.errorMessage ?error)
         (render-ui main {
@@ -86,6 +91,13 @@ orbital StepFlowOrbital {
     }
 
     state running {
+      ;; Revisit re-entry: 'running' settles here after StepItemsLoaded but had no
+      ;; INIT arm, so a page revisit's re-INIT dropped and the client spun forever.
+      ;; No render — the current step body stays on screen until refetch resolves.
+      INIT -> loading
+        (fetch StepFlowView {
+          emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
+        })
       ;; Role guard idiom: 3-arg object/get with a STRING sentinel default
       ;; instead of [] (Zod's SExpr schema rejects bare empty arrays inside a
       ;; guard expression; the sentinel form is structurally-valid SExpr and
