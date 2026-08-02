@@ -131,7 +131,10 @@ orbital SavedSearchOrbital {
         })
       DELETE -> browsing
         (set @entity.id ?id)
-        (persist delete SavedSearch @entity {
+        ;; `persist delete` takes an ID, not a row — passing @entity handed the
+        ;; whole object to the id slot and failed at runtime while validating
+        ;; clean. Matches the corpus idiom (std-board, std-esign-flow, …).
+        (persist delete SavedSearch ?id {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchDeleted }
         })
       EDIT -> editing

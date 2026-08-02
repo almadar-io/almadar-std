@@ -47,6 +47,7 @@ export interface StdUiDrawSpriteConfig {
   /** Default: `{}` */
   frame?: unknown;
   height?: number;
+  loop?: boolean;
   opacity?: number;
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;
