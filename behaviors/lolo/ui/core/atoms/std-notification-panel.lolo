@@ -1,0 +1,136 @@
+app std-notification-panel "1.0.0"
+"std-notification-panel — the bell's overlay surface. A dedicated modal-only trait that renders the notification list a consumer already passes to std-app-layout's `notifications` knob, and dismisses with a single (render-ui modal null). Mount it beside the app layout and route the layout's notificationClickEvent into OPEN; the catalog trait underneath is never repainted, so opening and closing the bell cannot strand the viewer. Owning the overlay in its own trait is what makes the shape legal — a modal rendered from the trait that also owns `main` is rejected by CIRCUIT_MODAL_EXIT_INCOMPLETE."
+;; @capabilities "notification overlay, alerts panel, bell dropdown, notification centre, inbox overlay"
+type NotificationSpec = { id : string, message : string, variant : string }
+orbital NotificationPanelOrbital {
+  entity NotificationRecord [runtime] {
+    id : string!
+  }
+
+  trait NotificationPanel -> @rebindable NotificationRecord [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.panelSlot null)
+      OPEN -> idle
+        (render-ui @config.panelSlot {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: @config.icon, type: icon }, {
+                content: @config.title
+                type: typography
+                variant: h3
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: CLOSE
+              icon: x
+              label: @config.closeLabel
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            children: (array/map @config.notifications (fn n {
+              align: center
+              children: [{
+                label: (object/get @n variant)
+                type: badge
+              }, {
+                content: (object/get @n message)
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }))
+            direction: vertical
+            gap: sm
+            type: stack
+          }, {
+            ;; The empty line is a VALUE-position (if …), not a branch in
+            ;; `children:` — a pattern child must be an object/string/null
+            ;; (ORB_RUI_INVALID_PATTERN), so the emptiness test lives in the
+            ;; prop. Renders nothing while there are notifications to show.
+            color: muted
+            content: (if [">", (array/len @config.notifications), 0] "" @config.emptyMessage)
+            type: typography
+            variant: caption
+          }]
+          className: "max-h-[60vh] overflow-y-auto"
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      CLOSE -> idle
+        (render-ui @config.panelSlot null)
+    }
+
+    emits {
+      CLOSE -> external {
+        id : string
+      }
+        @description "The viewer dismissed the notification overlay."
+        @synonyms "close, dismiss, hide, back"
+        @tier "presentation"
+    }
+
+    listens {
+      OPEN {
+        id : string
+      }
+        @description "The viewer asked to see notifications."
+        @synonyms "show notifications, open bell, view alerts"
+        @tier "presentation"
+      CLOSE {
+        id : string
+      }
+        @description "The notification overlay should dismiss."
+        @synonyms "close, dismiss, hide"
+        @tier "presentation"
+    }
+
+    config {
+      title : string = Notifications
+        @label "What should the overlay heading say?"
+        @description "Heading displayed at the top of the notification overlay."
+        @synonyms "panel title, overlay heading, notifications title"
+        @tier "presentation"
+      icon : string = bell
+        @label "Which icon appears in the overlay header?"
+        @description "Lucide icon name shown next to the overlay title."
+        @synonyms "header icon, bell icon, panel icon"
+        @tier "presentation"
+      notifications : [NotificationSpec] = []
+        @label "Which notifications should the overlay list?"
+        @description "Items rendered in the overlay — the same list std-app-layout takes for its bell dropdown."
+        @synonyms "alerts, messages, notices, notification items"
+        @tier "domain"
+      emptyMessage : string = "You're all caught up."
+        @label "What shows when there are no notifications?"
+        @description "Message rendered in place of the list when there is nothing to show."
+        @synonyms "empty state, no notifications, nothing here"
+        @tier "presentation"
+      closeLabel : string = Close
+        @label "What should the dismiss button say?"
+        @description "Label on the button that closes the overlay."
+        @synonyms "dismiss label, close label, back label"
+        @tier "presentation"
+      panelSlot : slot = modal
+        @label "Render slot"
+        @description "UI slot the overlay renders into. Never `main` — repainting main is what strands the viewer."
+        @tier "internal"
+    }
+  }
+
+  page "/notification-panel" as NotificationPanelPage -> NotificationPanel
+}
