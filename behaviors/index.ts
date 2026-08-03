@@ -62,7 +62,7 @@ export {
   getBehaviorSummary,
 } from './query.js';
 
-// Behavior embeddings (publish-time bake — see scripts/build-embeddings.ts)
+// Behavior embeddings (publish-time bake via scripts/embed.mjs → @almadar/calibrate)
 export {
   type BehaviorEmbeddingsManifest,
   getBehaviorEmbeddings,
@@ -72,7 +72,7 @@ export {
 // Factory signature catalog (sync-time bake — see tools/almadar-pattern-sync)
 export { getFactorySignatureCatalog } from './factory-signatures.js';
 
-// Per-knob embeddings (publish-time bake — see scripts/build-knob-embeddings.ts).
+// Per-knob embeddings (publish-time bake — see scripts/embed.mjs / @almadar/calibrate).
 // Drives Stage A's per-knob narrowing + the studio's TraitKnobsPanel
 // relevance sort. Returns null when the manifest is missing.
 export { getKnobEmbeddings } from './knob-embeddings.js';

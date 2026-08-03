@@ -35,6 +35,10 @@ export function copyDistSidecars() {
   copyIfExists('behaviors/behaviors-registry.json', 'dist/behaviors-registry.json');
   copyIfExists('behaviors/behaviors-embeddings.json', 'dist/behaviors-embeddings.json');
   copyIfExists('behaviors/knob-embeddings.json', 'dist/knob-embeddings.json');
+  // Provenance sidecars ship with the indexes so installed consumers (rabit's
+  // stale-index tripwire) can compare the baked version against package.json.
+  copyIfExists('behaviors/behaviors-embeddings.hash.json', 'dist/behaviors-embeddings.hash.json');
+  copyIfExists('behaviors/knob-embeddings.hash.json', 'dist/knob-embeddings.hash.json');
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {

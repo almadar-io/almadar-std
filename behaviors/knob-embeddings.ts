@@ -2,7 +2,7 @@
  * Knob embeddings — typed loader for the publish-time
  * `knob-embeddings.json` artifact under `behaviors/`.
  *
- * Built by `scripts/build-knob-embeddings.ts` against the factory
+ * Built by `almadar-calibrate embed` (via `scripts/embed.mjs`) against the factory
  * signature catalog; one vector per overridable knob, keyed
  * `"<organism>/<orbital>/<trait>/<knob>"`. Stage A's catalog summary
  * ranks the surviving organism's knobs by cosine similarity to the

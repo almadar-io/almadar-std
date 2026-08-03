@@ -8,6 +8,15 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
+// Explicit opt-out for the case the standalone check cannot cover: the harness
+// IS present but the embedding provider is unreachable (e.g. a 429 outage).
+// Opt-in only — never inferred from a failure, so a provider problem can never
+// silently ship stale embeddings without someone having asked for it.
+if (process.env.ALMADAR_SKIP_EMBEDDINGS === '1') {
+  console.log('[embed] ALMADAR_SKIP_EMBEDDINGS=1 — skipping regen; embeddings ship prebuilt AND STALE until the next run.');
+  process.exit(0);
+}
+
 const cli = resolve(dirname(fileURLToPath(import.meta.url)), '../../almadar-calibrate/dist/cli.js');
 if (!existsSync(cli)) {
   console.log('[embed] @almadar/calibrate not in tree (standalone checkout) — embeddings ship prebuilt.');
