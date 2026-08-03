@@ -419,6 +419,7 @@ export * from './ui/learning/organisms/learning-biology.js';
 export * from './ui/learning/organisms/learning-biology-lab.js';
 export * from './ui/learning/organisms/learning-chemistry.js';
 export * from './ui/learning/organisms/learning-chemistry-lab.js';
+export * from './ui/learning/organisms/learning-freeform.js';
 export * from './ui/learning/organisms/learning-math.js';
 export * from './ui/learning/organisms/learning-math-lab.js';
 export * from './ui/learning/organisms/learning-physics.js';

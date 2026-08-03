@@ -114,6 +114,11 @@ import {
   isStdLearningChemistryLabChemistryLabOrbitalParams,
 } from './ui/learning/organisms/learning-chemistry-lab.js';
 import {
+  stdLearningFreeformFreeformOrbital,
+  StdLearningFreeformFreeformOrbitalManifest,
+  isStdLearningFreeformFreeformOrbitalParams,
+} from './ui/learning/organisms/learning-freeform.js';
+import {
   stdLearningMathVectorAdditionOrbital,
   StdLearningMathVectorAdditionOrbitalManifest,
   isStdLearningMathVectorAdditionOrbitalParams,
@@ -917,6 +922,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLearningChemistryLabChemistryLabOrbital(p);
     },
     manifest: StdLearningChemistryLabChemistryLabOrbitalManifest,
+  }],
+  ['learning-freeform::FreeformOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningFreeformFreeformOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-freeform::FreeformOrbital');
+      }
+      return stdLearningFreeformFreeformOrbital(p);
+    },
+    manifest: StdLearningFreeformFreeformOrbitalManifest,
   }],
   ['learning-math::VectorAdditionOrbital', {
     factory: (p: object): OrbitalDefinition => {
