@@ -631,7 +631,7 @@ export function stdLearningMathLabMathLabOrbital(params: StdLearningMathLabMathL
               'type': 'object',
             },
             'label': 'Points',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[MathLabPoint]',
           },
           'shapes': {
@@ -803,7 +803,7 @@ export function stdLearningMathLabMathLabOrbital(params: StdLearningMathLabMathL
               'type': 'object',
             },
             'label': 'Shapes',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[MathLabShape]',
           },
           'showAxes': {

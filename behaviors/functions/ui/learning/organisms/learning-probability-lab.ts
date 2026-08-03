@@ -588,7 +588,7 @@ export function stdLearningProbabilityLabProbabilityLabOrbital(params: StdLearni
               'type': 'object',
             },
             'label': 'Points',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[ProbabilityLabPoint]',
           },
           'shapes': {
@@ -760,7 +760,7 @@ export function stdLearningProbabilityLabProbabilityLabOrbital(params: StdLearni
               'type': 'object',
             },
             'label': 'Shapes',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[ProbabilityLabShape]',
           },
           'showAxes': {

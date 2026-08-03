@@ -2472,14 +2472,14 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
             'default': 8,
             'description': 'Grid row count (matches TacticsAuthority.gridHeight).',
             'label': 'Grid Height',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': 'number',
           },
           'gridWidth': {
             'default': 8,
             'description': 'Grid column count (matches TacticsAuthority.gridWidth).',
             'label': 'Grid Width',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': 'number',
           },
           'hudBackgroundAsset': {

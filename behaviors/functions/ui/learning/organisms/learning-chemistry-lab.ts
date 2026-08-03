@@ -814,7 +814,7 @@ export function stdLearningChemistryLabChemistryLabOrbital(params: StdLearningCh
               'type': 'object',
             },
             'label': 'Shapes',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[ChemistryLabShape]',
           },
           'title': {

@@ -537,7 +537,7 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
               'type': 'object',
             },
             'label': 'Bodies',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[PhysicsLabBody]',
           },
           'constraints': {
@@ -792,7 +792,7 @@ export function stdLearningPhysicsLabPhysicsLabOrbital(params: StdLearningPhysic
               'type': 'object',
             },
             'label': 'Shapes',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[PhysicsLabShape]',
           },
           'showForces': {

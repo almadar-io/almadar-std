@@ -426,7 +426,7 @@ export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiolog
               'type': 'object',
             },
             'label': 'Edges',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[BiologyLabEdge]',
           },
           'height': {
@@ -534,7 +534,7 @@ export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiolog
               'type': 'object',
             },
             'label': 'Nodes',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[BiologyLabNode]',
           },
           'shapes': {
@@ -706,7 +706,7 @@ export function stdLearningBiologyLabBiologyLabOrbital(params: StdLearningBiolog
               'type': 'object',
             },
             'label': 'Shapes',
-            'tier': 'domain',
+            'tier': 'presentation',
             'type': '[BiologyLabShape]',
           },
           'title': {
