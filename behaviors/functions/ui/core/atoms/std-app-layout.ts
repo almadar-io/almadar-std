@@ -81,7 +81,7 @@ export interface StdAppLayoutConfig {
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
   /** Default: `"dashboard-layout"` */
   layoutPattern?: unknown;
-  /** Default: `[]` */
+  /** Default: `"@pages"` */
   navItems?: EntityRow[];
   /** Default: `"NOTIFY_CLICK"` */
   notificationClickEvent?: string;
@@ -89,7 +89,7 @@ export interface StdAppLayoutConfig {
   notifications?: EntityRow[];
   /** Default: `"SEARCH"` */
   searchEvent?: string;
-  /** Default: `""` */
+  /** Default: `"@currentTheme"` */
   theme?: string;
   /** Default: `[]` */
   topBarActions?: EntityRow[];
