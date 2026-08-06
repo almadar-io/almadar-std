@@ -103,6 +103,7 @@ export function stdUiSpaceStationBoardSpaceStationBoardOrbital(params: StdUiSpac
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

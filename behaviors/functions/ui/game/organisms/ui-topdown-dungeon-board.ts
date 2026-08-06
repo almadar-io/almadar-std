@@ -103,6 +103,7 @@ export function stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(params: StdUi
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

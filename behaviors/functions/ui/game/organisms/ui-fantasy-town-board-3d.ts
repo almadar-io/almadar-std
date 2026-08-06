@@ -101,6 +101,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

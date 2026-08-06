@@ -103,6 +103,7 @@ export function stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(params: S
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

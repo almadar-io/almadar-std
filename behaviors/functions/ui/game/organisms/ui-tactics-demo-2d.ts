@@ -107,6 +107,7 @@ export function stdUiTacticsDemo2dTacticsDemo2DOrbital(params: StdUiTacticsDemo2
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

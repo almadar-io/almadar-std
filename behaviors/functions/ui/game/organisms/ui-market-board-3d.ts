@@ -103,6 +103,7 @@ export function stdUiMarketBoard3dMarketBoard3DOrbital(params: StdUiMarketBoard3
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

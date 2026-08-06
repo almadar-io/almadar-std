@@ -82,6 +82,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
     entity: {
       name: 'PlatformerBoardItem',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

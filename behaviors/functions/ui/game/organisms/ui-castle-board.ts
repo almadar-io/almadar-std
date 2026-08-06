@@ -107,6 +107,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

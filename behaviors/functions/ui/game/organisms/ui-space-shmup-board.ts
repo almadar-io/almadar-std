@@ -203,6 +203,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
     entity: {
       name: 'SpaceShmupBoardItem',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

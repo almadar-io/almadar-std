@@ -138,6 +138,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
     entity: {
       name: 'HolidayRunnerBoardItem',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

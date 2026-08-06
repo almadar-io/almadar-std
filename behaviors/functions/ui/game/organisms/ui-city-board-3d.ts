@@ -103,6 +103,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

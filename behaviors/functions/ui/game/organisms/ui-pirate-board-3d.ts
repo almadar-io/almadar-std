@@ -101,6 +101,7 @@ export function stdUiPirateBoard3dPirateBoard3DOrbital(params: StdUiPirateBoard3
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

@@ -103,6 +103,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

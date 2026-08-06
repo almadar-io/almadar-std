@@ -101,6 +101,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

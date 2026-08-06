@@ -103,6 +103,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

@@ -101,6 +101,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {

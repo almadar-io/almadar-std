@@ -107,6 +107,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
     entity: {
       name: 'GameState',
       persistence: 'runtime',
+      shared: true,
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
