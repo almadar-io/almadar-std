@@ -1,0 +1,101 @@
+app learning-charts "1.0.0"
+"Statistical charts organism — shows quantities, trends, proportions, and comparisons as bar, line, pie, area, donut, scatter, or histogram charts from labeled values or multi-series data."
+orbital ChartsOrbital {
+  type ChartsDataItem = {
+    label : string!
+    value : number!
+    color : string
+  }
+  type ChartsSeriesItem = {
+    name : string!
+    data : [ChartsDataItem]!
+    color : string
+  }
+  type ChartsScatterItem = {
+    x : number!
+    y : number!
+    label : string
+    size : number
+    color : string
+  }
+
+  entity ChartsItem [runtime] {
+    id : string!
+    title : string
+  }
+
+  trait ChartsRender -> @rebindable ChartsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.title @config.title)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            {
+              type: stack
+              direction: vertical
+              gap: md
+              children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: chart,
+                  chartType: @config.chartType,
+                  data: @config.data,
+                  series: @config.series,
+                  scatterData: @config.scatterData,
+                  height: @config.height,
+                  showLegend: @config.showLegend,
+                  showValues: @config.showValues
+                }
+              ]
+            }
+          ]
+        })
+    }
+
+    config {
+      chartType : "bar" | "line" | "pie" | "area" | "donut" | "scatter" | "histogram" = bar
+        @label "Chart Type"
+        @description "What kind of statistical chart to render."
+        @synonyms "bar chart, line chart, pie chart, area chart, donut chart, scatter plot, trend over time, comparison of quantities, proportions, percentages, magnitudes, data series"
+        @tier "domain"
+      title : string = "Chart"
+        @label "Title"
+        @description "Title shown above the chart."
+        @tier "presentation"
+      data : [ChartsDataItem] = [
+        { label: "Spring", value: 24 },
+        { label: "Summer", value: 38 },
+        { label: "Fall", value: 30 },
+        { label: "Winter", value: 18 }
+      ]
+        @label "Data"
+        @description "Labeled values for a single-series chart."
+        @tier "domain"
+      series : [ChartsSeriesItem] = []
+        @label "Series"
+        @description "Multi-series line/area/bar data."
+        @tier "domain"
+      scatterData : [ChartsScatterItem] = []
+        @label "Scatter Data"
+        @description "x/y points for scatter charts."
+        @tier "domain"
+      height : number = 300
+        @label "Height"
+        @description "Chart height in pixels."
+        @tier "presentation"
+      showLegend : boolean = true
+        @label "Show Legend"
+        @description "Show the chart legend."
+        @tier "presentation"
+      showValues : boolean = false
+        @label "Show Values"
+        @description "Show values on the chart."
+        @tier "presentation"
+    }
+  }
+
+  page "/learning/charts" as ChartsPage -> ChartsRender
+}

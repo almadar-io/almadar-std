@@ -98,6 +98,11 @@ import {
   isStdLearningBiologyLabBiologyLabOrbitalParams,
 } from './ui/learning/organisms/learning-biology-lab.js';
 import {
+  stdLearningChartsChartsOrbital,
+  StdLearningChartsChartsOrbitalManifest,
+  isStdLearningChartsChartsOrbitalParams,
+} from './ui/learning/organisms/learning-charts.js';
+import {
   stdLearningChemistryDiffusionOrbital,
   StdLearningChemistryDiffusionOrbitalManifest,
   isStdLearningChemistryDiffusionOrbitalParams,
@@ -114,10 +119,10 @@ import {
   isStdLearningChemistryLabChemistryLabOrbitalParams,
 } from './ui/learning/organisms/learning-chemistry-lab.js';
 import {
-  stdLearningFreeformFreeformOrbital,
-  StdLearningFreeformFreeformOrbitalManifest,
-  isStdLearningFreeformFreeformOrbitalParams,
-} from './ui/learning/organisms/learning-freeform.js';
+  stdLearningDiagramDiagramOrbital,
+  StdLearningDiagramDiagramOrbitalManifest,
+  isStdLearningDiagramDiagramOrbitalParams,
+} from './ui/learning/organisms/learning-diagram.js';
 import {
   stdLearningMathVectorAdditionOrbital,
   StdLearningMathVectorAdditionOrbitalManifest,
@@ -887,6 +892,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLearningBiologyLabBiologyLabOrbitalManifest,
   }],
+  ['learning-charts::ChartsOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningChartsChartsOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-charts::ChartsOrbital');
+      }
+      return stdLearningChartsChartsOrbital(p);
+    },
+    manifest: StdLearningChartsChartsOrbitalManifest,
+  }],
   ['learning-chemistry::DiffusionOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdLearningChemistryDiffusionOrbitalParams(p)) {
@@ -923,14 +937,14 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLearningChemistryLabChemistryLabOrbitalManifest,
   }],
-  ['learning-freeform::FreeformOrbital', {
+  ['learning-diagram::DiagramOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningFreeformFreeformOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-freeform::FreeformOrbital');
+      if (!isStdLearningDiagramDiagramOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-diagram::DiagramOrbital');
       }
-      return stdLearningFreeformFreeformOrbital(p);
+      return stdLearningDiagramDiagramOrbital(p);
     },
-    manifest: StdLearningFreeformFreeformOrbitalManifest,
+    manifest: StdLearningDiagramDiagramOrbitalManifest,
   }],
   ['learning-math::VectorAdditionOrbital', {
     factory: (p: object): OrbitalDefinition => {

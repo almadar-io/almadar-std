@@ -57,6 +57,8 @@ export interface StdUiGraphViewConfig {
   /** Default: `[{"color":"Color","label":"Label","source":"Source","target":"Target"},{"color":"Color 2","label":"Label 2","source":"Source 2","target":"Target 2"}]` */
   edges?: EntityRow[];
   height?: number;
+  /** Default: `"force"` */
+  layout?: 'force' | 'flow' | 'tree' | 'radial';
   /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1},{"color":"Color 2","group":"Group 2","id":"Id 2","label":"Label 2","size":2}]` */
   nodes?: EntityRow[];
   /** Default: `"NODE_CLICK"` */
