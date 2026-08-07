@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -172,4 +172,1985 @@ export function stdStepFlow(params: StdStepFlowParams): OrbitalDefinition {
       stdStepFlowPage(params),
     ],
   });
+}
+
+type _StdStepFlowEntityName = 'StepFlowView';
+type _StdStepFlowListenTraitName = 'StepFlowReview';
+
+/**
+ * Tunable params for the StepFlowOrbital orbital.
+ *
+ * Canonical entity: StepFlowView — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdStepFlowStepFlowOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'StepFlowReview',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait StepFlowOrbital's `uses[]` exports. */
+type _StdStepFlowStepFlowOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the StepFlowOrbital orbital with consumer params. */
+export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'StepFlowOrbital',
+    uses: [],
+    expects: [
+      {
+        'kind': 'identity',
+      },
+    ],
+    entity: {
+      name: 'StepFlowView',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'intrinsic': true,
+            'items': {
+              'properties': {
+                'badgeVariant': {
+                  'name': 'badgeVariant',
+                  'required': false,
+                  'type': 'string',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'indexLabel': {
+                  'name': 'indexLabel',
+                  'required': false,
+                  'type': 'string',
+                },
+                'isPending': {
+                  'name': 'isPending',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'labelColor': {
+                  'name': 'labelColor',
+                  'required': false,
+                  'type': 'string',
+                },
+                'title': {
+                  'name': 'title',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'wizardSteps',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'intrinsic': true,
+            'name': 'currentStepIndex',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'intrinsic': true,
+            'name': 'totalSteps',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'intrinsic': true,
+            'name': 'currentStepLabel',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'intrinsic': true,
+            'name': 'currentStepDescription',
+            'type': 'string',
+          },
+          {
+            'default': 'user',
+            'intrinsic': true,
+            'name': 'currentStepIcon',
+            'type': 'string',
+          },
+          {
+            'default': true,
+            'intrinsic': true,
+            'name': 'isFirstStep',
+            'type': 'boolean',
+          },
+          {
+            'default': false,
+            'intrinsic': true,
+            'name': 'isLastStep',
+            'type': 'boolean',
+          },
+          {
+            'default': 'Approve & Continue',
+            'intrinsic': true,
+            'name': 'primaryActionLabel',
+            'type': 'string',
+          },
+          {
+            'default': 'primary',
+            'intrinsic': true,
+            'name': 'primaryActionVariant',
+            'type': 'string',
+            'values': [
+              'primary',
+              'success',
+            ],
+          },
+          {
+            'default': 'chevron-right',
+            'intrinsic': true,
+            'name': 'primaryActionIcon',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'intrinsic': true,
+            'name': 'finalStatus',
+            'type': 'string',
+            'values': [
+              'approved',
+              'rejected',
+              'escalated',
+              '',
+            ],
+          },
+          {
+            'default': '',
+            'intrinsic': true,
+            'name': 'rejectionReason',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'intrinsic': true,
+            'name': 'errorMessage',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'bodyContent': {
+            'default': {
+              'children': [
+                {
+                  'align': 'center',
+                  'children': [
+                    {
+                      'name': 'shield-check',
+                      'type': 'icon',
+                    },
+                    {
+                      'content': '@config.title',
+                      'type': 'typography',
+                      'variant': 'h3',
+                    },
+                  ],
+                  'direction': 'horizontal',
+                  'gap': 'sm',
+                  'type': 'stack',
+                },
+                {
+                  'allowNavigation': false,
+                  'currentStep': '@entity.currentStepIndex',
+                  'steps': '@entity.wizardSteps',
+                  'type': 'wizard-progress',
+                },
+                {
+                  'children': [
+                    {
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': '@entity.currentStepIcon',
+                              'size': 'lg',
+                              'type': 'icon',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.currentStepLabel',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'color': 'muted',
+                                  'content': '@entity.currentStepDescription',
+                                  'type': 'typography',
+                                  'variant': 'body',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'xs',
+                              'type': 'stack',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                    },
+                  ],
+                  'look': '@config.cardLook',
+                  'type': 'card',
+                },
+                {
+                  'align': 'center',
+                  'children': [
+                    {
+                      'action': 'BACK',
+                      'actionPayload': {
+                        'id': '@entity.id',
+                      },
+                      'disabled': '@entity.isFirstStep',
+                      'icon': 'chevron-left',
+                      'label': 'Back',
+                      'type': 'button',
+                      'variant': 'ghost',
+                    },
+                    {
+                      'action': 'REJECT',
+                      'actionPayload': {
+                        'id': '@entity.id',
+                      },
+                      'icon': 'x',
+                      'label': 'Reject',
+                      'type': 'button',
+                      'variant': 'ghost',
+                    },
+                    {
+                      'action': 'ESCALATE',
+                      'actionPayload': {
+                        'id': '@entity.id',
+                      },
+                      'icon': 'alert-triangle',
+                      'label': 'Escalate',
+                      'type': 'button',
+                      'variant': 'ghost',
+                    },
+                    {
+                      'action': 'ADVANCE',
+                      'actionPayload': {
+                        'id': '@entity.id',
+                      },
+                      'icon': '@entity.primaryActionIcon',
+                      'label': '@entity.primaryActionLabel',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
+                  ],
+                  'direction': 'horizontal',
+                  'gap': 'sm',
+                  'type': 'stack',
+                },
+              ],
+              'direction': 'vertical',
+              'gap': 'lg',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.',
+            'label': 'Body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'cardLook': {
+            'default': 'elevated',
+            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
+            'label': 'Card look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'elevated',
+              'flat-bordered',
+              'borderless-divider',
+              'ticket',
+              'invoice',
+              'chip',
+              'tile-image-first',
+            ],
+          },
+          'steps': {
+            'default': [
+              {
+                'description': 'Initial review by direct manager',
+                'icon': 'user',
+                'key': 'manager',
+                'label': 'Manager Review',
+              },
+              {
+                'description': 'Department director sign-off',
+                'icon': 'users',
+                'key': 'director',
+                'label': 'Director Approval',
+              },
+              {
+                'description': 'Final executive approval',
+                'icon': 'shield',
+                'key': 'executive',
+                'label': 'Executive Sign-off',
+              },
+            ],
+            'description': 'Ordered decision steps with label, icon, and optional role gates',
+            'items': {
+              'properties': {
+                'allowedRoles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'allowedRoles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Steps',
+            'tier': 'domain',
+            'type': '[StepSpec]',
+          },
+          'title': {
+            'default': 'Review',
+            'description': 'Heading shown above the step progress bar',
+            'label': 'Flow title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals progression to the next step in the sequence.',
+            'event': 'ADVANCE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'stepKey',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'next, proceed, continue, move forward',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a request to navigate to the previous step.',
+            'event': 'BACK',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'previous, undo, return',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the user or system rejected the current step.',
+            'event': 'REJECT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'reason',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'cancel, decline, dismiss',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a request to elevate the process to a higher authority.',
+            'event': 'ESCALATE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'reason',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'defer, transfer, handoff',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Initiates a reset of the current workflow process.',
+            'event': 'RESTART',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'reset, refresh, restart, reinitialize',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Signals that the step items have been successfully loaded.',
+            'event': 'StepItemsLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ObjectSpec]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved, populated',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates failure to load step configuration items.',
+            'event': 'StepItemsLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'load error, failed fetch, data problem',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'currentStepDescription',
+            'currentStepIcon',
+            'currentStepIndex',
+            'currentStepLabel',
+            'errorMessage',
+            'finalStatus',
+            'isFirstStep',
+            'isLastStep',
+            'primaryActionIcon',
+            'primaryActionLabel',
+            'primaryActionVariant',
+            'rejectionReason',
+            'totalSteps',
+            'wizardSteps',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'StepFlowView',
+        'name': 'StepFlowReview',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals that the step items have been successfully loaded.',
+              'key': 'StepItemsLoaded',
+              'name': 'Step items loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ObjectSpec]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved, populated',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates failure to load step configuration items.',
+              'key': 'StepItemsLoadFailed',
+              'name': 'Step items load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, failed fetch, data problem',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Data for the current step has been successfully saved.',
+              'key': 'StepItemsSaved',
+              'name': 'Step items saved',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'update, persist, store, commit',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a failure to save step item data.',
+              'key': 'StepItemsSaveFailed',
+              'name': 'Step items save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'save error, data failed, persistence error',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals progression to the next step in the sequence.',
+              'key': 'ADVANCE',
+              'name': 'Advance',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'stepKey',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'next, proceed, continue, move forward',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a request to navigate to the previous step.',
+              'key': 'BACK',
+              'name': 'Back',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'previous, undo, return',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the user or system rejected the current step.',
+              'key': 'REJECT',
+              'name': 'Reject',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'reason',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'cancel, decline, dismiss',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals a request to elevate the process to a higher authority.',
+              'key': 'ESCALATE',
+              'name': 'Escalate',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'reason',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'defer, transfer, handoff',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Initiates a reset of the current workflow process.',
+              'key': 'RESTART',
+              'name': 'Restart',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'reset, refresh, restart, reinitialize',
+              'tier': 'internal',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'running',
+            },
+            {
+              'name': 'approved',
+            },
+            {
+              'name': 'rejected',
+            },
+            {
+              'name': 'escalated',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StepFlowView' satisfies _StdStepFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StepItemsLoadFailed',
+                      'success': 'StepItemsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Loading review…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@payload.data',
+                      0,
+                    ],
+                    'id',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.totalSteps',
+                  [
+                    'array/len',
+                    '@config.steps',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.wizardSteps',
+                  [
+                    'array/map',
+                    '@config.steps',
+                    [
+                      'fn',
+                      'step',
+                      {
+                        'badgeVariant': [
+                          'if',
+                          [
+                            '<',
+                            '@index',
+                            '@entity.currentStepIndex',
+                          ],
+                          'success',
+                          [
+                            'if',
+                            [
+                              '=',
+                              '@index',
+                              '@entity.currentStepIndex',
+                            ],
+                            'primary',
+                            'neutral',
+                          ],
+                        ],
+                        'description': [
+                          'object/get',
+                          '@step',
+                          'description',
+                          '',
+                        ],
+                        'icon': [
+                          'object/get',
+                          '@step',
+                          'icon',
+                          'circle',
+                        ],
+                        'id': [
+                          'object/get',
+                          '@step',
+                          'key',
+                        ],
+                        'indexLabel': [
+                          'str/concat',
+                          '',
+                          [
+                            '+',
+                            '@index',
+                            1,
+                          ],
+                        ],
+                        'isPending': [
+                          '>',
+                          '@index',
+                          '@entity.currentStepIndex',
+                        ],
+                        'key': [
+                          'object/get',
+                          '@step',
+                          'key',
+                        ],
+                        'label': [
+                          'object/get',
+                          '@step',
+                          'label',
+                        ],
+                        'labelColor': [
+                          'if',
+                          [
+                            '=',
+                            '@index',
+                            '@entity.currentStepIndex',
+                          ],
+                          'default',
+                          'muted',
+                        ],
+                        'title': [
+                          'object/get',
+                          '@step',
+                          'label',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepLabel',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      0,
+                    ],
+                    'label',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepDescription',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      0,
+                    ],
+                    'description',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIcon',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      0,
+                    ],
+                    'icon',
+                    'user',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isFirstStep',
+                  true,
+                ],
+                [
+                  'set',
+                  '@entity.isLastStep',
+                  [
+                    '=',
+                    [
+                      'array/len',
+                      '@config.steps',
+                    ],
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionLabel',
+                  [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.steps',
+                      ],
+                      1,
+                    ],
+                    'Finalize Approval',
+                    'Approve & Continue',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionVariant',
+                  [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.steps',
+                      ],
+                      1,
+                    ],
+                    'success',
+                    'primary',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionIcon',
+                  [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.steps',
+                      ],
+                      1,
+                    ],
+                    'check-circle',
+                    'chevron-right',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  '@config.bodyContent',
+                ],
+              ],
+              'event': 'StepItemsLoaded',
+              'from': 'loading',
+              'to': 'running',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@entity.errorMessage',
+                    'title': 'Failed to load',
+                    'type': 'error-state',
+                  },
+                ],
+              ],
+              'event': 'StepItemsLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  '@config.bodyContent',
+                ],
+              ],
+              'event': 'StepItemsSaved',
+              'from': 'loading',
+              'to': 'running',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@entity.errorMessage',
+                    'title': 'Save failed',
+                    'type': 'error-state',
+                  },
+                ],
+              ],
+              'event': 'StepItemsSaveFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StepFlowView' satisfies _StdStepFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StepItemsLoadFailed',
+                      'success': 'StepItemsLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'running',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  [
+                    '+',
+                    '@entity.currentStepIndex',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepLabel',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'label',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepDescription',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'description',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIcon',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'icon',
+                    'user',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isFirstStep',
+                  [
+                    '=',
+                    '@entity.currentStepIndex',
+                    0,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isLastStep',
+                  [
+                    '=',
+                    '@entity.currentStepIndex',
+                    [
+                      '-',
+                      '@entity.totalSteps',
+                      1,
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionLabel',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'Finalize Approval',
+                    'Approve & Continue',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionVariant',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'success',
+                    'primary',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionIcon',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'check-circle',
+                    'chevron-right',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.wizardSteps',
+                  [
+                    'array/map',
+                    '@config.steps',
+                    [
+                      'fn',
+                      'step',
+                      {
+                        'badgeVariant': [
+                          'if',
+                          [
+                            '<',
+                            '@index',
+                            '@entity.currentStepIndex',
+                          ],
+                          'success',
+                          [
+                            'if',
+                            [
+                              '=',
+                              '@index',
+                              '@entity.currentStepIndex',
+                            ],
+                            'primary',
+                            'neutral',
+                          ],
+                        ],
+                        'description': [
+                          'object/get',
+                          '@step',
+                          'description',
+                          '',
+                        ],
+                        'icon': [
+                          'object/get',
+                          '@step',
+                          'icon',
+                          'circle',
+                        ],
+                        'id': [
+                          'object/get',
+                          '@step',
+                          'key',
+                        ],
+                        'indexLabel': [
+                          'str/concat',
+                          '',
+                          [
+                            '+',
+                            '@index',
+                            1,
+                          ],
+                        ],
+                        'isPending': [
+                          '>',
+                          '@index',
+                          '@entity.currentStepIndex',
+                        ],
+                        'key': [
+                          'object/get',
+                          '@step',
+                          'key',
+                        ],
+                        'label': [
+                          'object/get',
+                          '@step',
+                          'label',
+                        ],
+                        'labelColor': [
+                          'if',
+                          [
+                            '=',
+                            '@index',
+                            '@entity.currentStepIndex',
+                          ],
+                          'default',
+                          'muted',
+                        ],
+                        'title': [
+                          'object/get',
+                          '@step',
+                          'label',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  '@config.bodyContent',
+                ],
+              ],
+              'event': 'ADVANCE',
+              'from': 'running',
+              'guard': [
+                'and',
+                [
+                  'not',
+                  '@entity.isLastStep',
+                ],
+                [
+                  'or',
+                  [
+                    '=',
+                    [
+                      'object/get',
+                      [
+                        'array/nth',
+                        '@config.steps',
+                        '@entity.currentStepIndex',
+                      ],
+                      'allowedRoles',
+                      'ANY',
+                    ],
+                    'ANY',
+                  ],
+                  [
+                    'array/includes',
+                    [
+                      'object/get',
+                      [
+                        'array/nth',
+                        '@config.steps',
+                        '@entity.currentStepIndex',
+                      ],
+                      'allowedRoles',
+                    ],
+                    '@user.role',
+                  ],
+                ],
+              ],
+              'to': 'running',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.finalStatus',
+                  'approved',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'check-circle',
+                        'size': 'lg',
+                        'type': 'icon',
+                      },
+                      {
+                        'align': 'center',
+                        'content': 'Approved',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'align': 'center',
+                        'color': 'muted',
+                        'content': 'All review steps completed successfully.',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'allowNavigation': false,
+                        'currentStep': '@entity.totalSteps',
+                        'steps': '@entity.wizardSteps',
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'action': 'RESTART',
+                        'actionPayload': {
+                          'id': '@entity.id',
+                        },
+                        'icon': 'rotate-ccw',
+                        'label': 'Start a new review',
+                        'type': 'button',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ADVANCE',
+              'from': 'running',
+              'guard': [
+                'and',
+                '@entity.isLastStep',
+                [
+                  'or',
+                  [
+                    '=',
+                    [
+                      'object/get',
+                      [
+                        'array/nth',
+                        '@config.steps',
+                        '@entity.currentStepIndex',
+                      ],
+                      'allowedRoles',
+                      'ANY',
+                    ],
+                    'ANY',
+                  ],
+                  [
+                    'array/includes',
+                    [
+                      'object/get',
+                      [
+                        'array/nth',
+                        '@config.steps',
+                        '@entity.currentStepIndex',
+                      ],
+                      'allowedRoles',
+                    ],
+                    '@user.role',
+                  ],
+                ],
+              ],
+              'to': 'approved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  [
+                    '-',
+                    '@entity.currentStepIndex',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepLabel',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'label',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepDescription',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'description',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIcon',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'icon',
+                    'user',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isFirstStep',
+                  [
+                    '=',
+                    '@entity.currentStepIndex',
+                    0,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isLastStep',
+                  [
+                    '=',
+                    '@entity.currentStepIndex',
+                    [
+                      '-',
+                      '@entity.totalSteps',
+                      1,
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionLabel',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'Finalize Approval',
+                    'Approve & Continue',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionVariant',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'success',
+                    'primary',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionIcon',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'check-circle',
+                    'chevron-right',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.wizardSteps',
+                  [
+                    'array/map',
+                    '@config.steps',
+                    [
+                      'fn',
+                      'step',
+                      {
+                        'badgeVariant': [
+                          'if',
+                          [
+                            '<',
+                            '@index',
+                            '@entity.currentStepIndex',
+                          ],
+                          'success',
+                          [
+                            'if',
+                            [
+                              '=',
+                              '@index',
+                              '@entity.currentStepIndex',
+                            ],
+                            'primary',
+                            'neutral',
+                          ],
+                        ],
+                        'description': [
+                          'object/get',
+                          '@step',
+                          'description',
+                          '',
+                        ],
+                        'icon': [
+                          'object/get',
+                          '@step',
+                          'icon',
+                          'circle',
+                        ],
+                        'id': [
+                          'object/get',
+                          '@step',
+                          'key',
+                        ],
+                        'indexLabel': [
+                          'str/concat',
+                          '',
+                          [
+                            '+',
+                            '@index',
+                            1,
+                          ],
+                        ],
+                        'isPending': [
+                          '>',
+                          '@index',
+                          '@entity.currentStepIndex',
+                        ],
+                        'key': [
+                          'object/get',
+                          '@step',
+                          'key',
+                        ],
+                        'label': [
+                          'object/get',
+                          '@step',
+                          'label',
+                        ],
+                        'labelColor': [
+                          'if',
+                          [
+                            '=',
+                            '@index',
+                            '@entity.currentStepIndex',
+                          ],
+                          'default',
+                          'muted',
+                        ],
+                        'title': [
+                          'object/get',
+                          '@step',
+                          'label',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  '@config.bodyContent',
+                ],
+              ],
+              'event': 'BACK',
+              'from': 'running',
+              'to': 'running',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.finalStatus',
+                  'rejected',
+                ],
+                [
+                  'set',
+                  '@entity.rejectionReason',
+                  '@payload.reason',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'x-circle',
+                        'size': 'lg',
+                        'type': 'icon',
+                      },
+                      {
+                        'align': 'center',
+                        'content': 'Rejected',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Reason',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.rejectionReason',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'look': '@config.cardLook',
+                        'type': 'card',
+                      },
+                      {
+                        'action': 'RESTART',
+                        'actionPayload': {
+                          'id': '@entity.id',
+                        },
+                        'icon': 'rotate-ccw',
+                        'label': 'Start a new review',
+                        'type': 'button',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'REJECT',
+              'from': 'running',
+              'to': 'rejected',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.finalStatus',
+                  'escalated',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'alert-triangle',
+                        'size': 'lg',
+                        'type': 'icon',
+                      },
+                      {
+                        'align': 'center',
+                        'content': 'Escalated',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'align': 'center',
+                        'color': 'muted',
+                        'content': 'This item has been escalated for further review.',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'action': 'RESTART',
+                        'actionPayload': {
+                          'id': '@entity.id',
+                        },
+                        'icon': 'rotate-ccw',
+                        'label': 'Start a new review',
+                        'type': 'button',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ESCALATE',
+              'from': 'running',
+              'to': 'escalated',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.finalStatus',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  0,
+                ],
+                [
+                  'fetch',
+                  ('StepFlowView' satisfies _StdStepFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StepItemsLoadFailed',
+                      'success': 'StepItemsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Restarting…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'RESTART',
+              'from': 'approved',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.finalStatus',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.rejectionReason',
+                  '',
+                ],
+                [
+                  'fetch',
+                  ('StepFlowView' satisfies _StdStepFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StepItemsLoadFailed',
+                      'success': 'StepItemsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Restarting…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'RESTART',
+              'from': 'rejected',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.finalStatus',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  0,
+                ],
+                [
+                  'fetch',
+                  ('StepFlowView' satisfies _StdStepFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StepItemsLoadFailed',
+                      'success': 'StepItemsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Restarting…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'RESTART',
+              'from': 'escalated',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Retrying…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'StepFlowPage',
+        'path': '/step-flow',
+        'traits': [
+          {
+            'ref': 'StepFlowReview',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdStepFlowStepFlowOrbital. */
+export const StdStepFlowStepFlowOrbitalManifest = {
+  organism: 'std-step-flow',
+  orbitalName: 'StepFlowOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'StepFlowReview',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdStepFlowStepFlowOrbitalParams keys. */
+export function isStdStepFlowStepFlowOrbitalParams(p: object): p is StdStepFlowStepFlowOrbitalParams {
+  type _OverrideRecord = NonNullable<StdStepFlowStepFlowOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdStepFlowStepFlowOrbitalManifest.traitNames,
+      ...StdStepFlowStepFlowOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

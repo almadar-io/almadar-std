@@ -9,7 +9,22 @@
         "name": "PendulumState",
         "fields": [
           {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "bodies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "constraints",
             "type": "array",
             "required": false
           },
@@ -39,6 +54,24 @@
           },
           {
             "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
             "direction": "listen"
           }
         ],
@@ -206,6 +239,14 @@
             "tier": "domain"
           },
           {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
             "key": "pivotX",
             "type": "number",
             "default": 300,
@@ -238,6 +279,14 @@
             "tier": "presentation"
           },
           {
+            "key": "title",
+            "type": "string",
+            "default": "Pendulum",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
             "key": "velocityScale",
             "type": "number",
             "default": 5,
@@ -257,14 +306,21 @@
         "capabilities": [],
         "linkedEntity": "PendulumState",
         "transitionEvents": [
-          "INIT"
+          "INIT",
+          "MODE_SELECTED",
+          "PAUSE",
+          "RESET",
+          "START"
         ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
           "provides": [
+            "active",
             "bodies",
-            "running"
+            "constraints",
+            "running",
+            "title"
           ]
         }
       }

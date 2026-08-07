@@ -1,0 +1,121 @@
+[
+  {
+    "organism": "learning-economics-lab",
+    "orbital": "EconomicsLabOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/learning/organisms/learning-economics-lab.ts",
+    "entities": [
+      {
+        "name": "EconomicsLabItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "EconomicsLabRouter",
+        "emittedEvents": [
+          "MODE_SELECTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MODE_SELECTED",
+            "direction": "emit",
+            "description": "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "mode",
+            "type": "string",
+            "default": "market",
+            "label": "Mode",
+            "description": "Which economics simulation to render: a supply-and-demand market, or a production-possibilities (opportunity-cost) allocation.",
+            "synonyms": "economics, supply, demand, supply and demand, market equilibrium, equilibrium price, equilibrium quantity, market price, surplus, shortage, price floor, price ceiling, opportunity cost, PPF, production possibilities frontier, production possibilities, scarcity, trade-off, marginal rate of transformation, resource allocation, guns and butter",
+            "tier": "domain",
+            "enumValues": [
+              "market",
+              "allocation"
+            ]
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "EconomicsLabItem",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "MarketSim",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "MODE_SELECTED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "matchMode",
+            "type": "unknown",
+            "default": "market"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Economics Lab"
+          }
+        ],
+        "capabilities": [],
+        "ref": "EconMarket.traits.EconMarketSim",
+        "linkedEntity": "MarketScene"
+      },
+      {
+        "name": "PpfSim",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "MODE_SELECTED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "matchMode",
+            "type": "unknown",
+            "default": "allocation"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Economics Lab"
+          }
+        ],
+        "capabilities": [],
+        "ref": "EconPpf.traits.EconPpfSim",
+        "linkedEntity": "PpfScene"
+      }
+    ],
+    "pages": [
+      {
+        "name": "EconomicsLabPage",
+        "defaultPath": "/learning/economics-lab",
+        "primaryEntity": "EconomicsLabItem"
+      }
+    ],
+    "emittedEvents": [
+      "MODE_SELECTED"
+    ],
+    "listenedEvents": [
+      "MODE_SELECTED"
+    ],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

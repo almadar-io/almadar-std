@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -128,4 +128,759 @@ export function stdSelection(params: StdSelectionParams): OrbitalDefinition {
       stdSelectionPage(params),
     ],
   });
+}
+
+type _StdSelectionEntityName = 'SelectableItem';
+type _StdSelectionListenTraitName = 'SelectableItemSelection';
+
+/**
+ * Tunable params for the SelectableItemOrbital orbital.
+ *
+ * Canonical entity: SelectableItem — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdSelectionSelectableItemOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SelectableItemSelection',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait SelectableItemOrbital's `uses[]` exports. */
+type _StdSelectionSelectableItemOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the SelectableItemOrbital orbital with consumer params. */
+export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectableItemOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'SelectableItemOrbital',
+    uses: [],
+    entity: {
+      name: 'SelectableItem',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The item\'s display text or identifier.',
+            'name': 'name',
+            'required': true,
+            'synonyms': 'label, title, identifier',
+            'type': 'string',
+          },
+          {
+            'description': 'A textual explanation of the item.',
+            'name': 'description',
+            'synonyms': 'details, explanation, notes',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'Indicates the current operational state of the item.',
+            'name': 'status',
+            'synonyms': 'state, condition, flag',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates a selectable item has been successfully loaded.',
+            'event': 'SelectableItemLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[SelectableItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, initialized, ready',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a selectable item failed to load.',
+            'event': 'SelectableItemLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'SelectableItem',
+        'name': 'SelectableItemSelection',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates a selectable item has been successfully loaded.',
+              'key': 'SelectableItemLoaded',
+              'name': 'SelectableItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[SelectableItem]',
+                },
+              ],
+              'synonyms': 'loaded, initialized, ready',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a selectable item failed to load.',
+              'key': 'SelectableItemLoadFailed',
+              'name': 'SelectableItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates an item has been chosen.',
+              'key': 'SELECT',
+              'name': 'Select',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'chosen, picked, highlighted',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a selection has been finalized.',
+              'key': 'CONFIRM_SELECTION',
+              'name': 'Confirm Selection',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'accept, finalize, submit, choose',
+              'tier': 'domain',
+            },
+            {
+              'key': 'CLEAR',
+              'name': 'Clear',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'idle',
+            },
+            {
+              'name': 'selecting',
+            },
+            {
+              'name': 'selected',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'check-square',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'SelectableItems',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Choose a selectableitem to continue.',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'className': 'transition-shadow hover:shadow-md cursor-pointer',
+                        'entity': '@payload.data',
+                        'fields': [],
+                        'itemActions': [
+                          {
+                            'event': 'SELECT',
+                            'icon': 'check',
+                            'label': 'Select',
+                          },
+                        ],
+                        'look': '@config.tableLook',
+                        'renderItem': [
+                          'fn',
+                          'item',
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'label': '@item.name',
+                                'type': 'checkbox',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SelectableItemLoaded',
+              'from': 'loading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'color': 'error',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to load',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@payload.error',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'action': 'RETRY',
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
+                        'type': 'button',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SelectableItemLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'check-square',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'SelectableItems',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'label': 'Selecting',
+                                'type': 'badge',
+                              },
+                              {
+                                'action': 'CLEAR',
+                                'icon': 'x',
+                                'label': 'Clear',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'message': '@payload.id',
+                        'type': 'alert',
+                        'variant': 'info',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'CONFIRM_SELECTION',
+                            'actionPayload': {
+                              'id': '@payload.id',
+                            },
+                            'icon': 'check',
+                            'label': 'Confirm',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SELECT',
+              'from': 'idle',
+              'to': 'selecting',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'check-circle',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Selection Confirmed',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'label': 'Confirmed',
+                            'type': 'badge',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'message': 'Selection confirmed successfully.',
+                        'type': 'alert',
+                        'variant': 'success',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'content': 'Selected ID:',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@payload.id',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                      {
+                        'action': 'CLEAR',
+                        'icon': 'rotate-ccw',
+                        'label': 'Clear Selection',
+                        'type': 'button',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CONFIRM_SELECTION',
+              'from': 'selecting',
+              'to': 'selected',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'CLEAR',
+              'from': 'selecting',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'CLEAR',
+              'from': 'selected',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'RETRY',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'SelectableItemSelectionPage',
+        'path': '/selectableitems/selection',
+        'traits': [
+          {
+            'ref': 'SelectableItemSelection',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdSelectionSelectableItemOrbital. */
+export const StdSelectionSelectableItemOrbitalManifest = {
+  organism: 'std-selection',
+  orbitalName: 'SelectableItemOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'SelectableItemSelection',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdSelectionSelectableItemOrbitalParams keys. */
+export function isStdSelectionSelectableItemOrbitalParams(p: object): p is StdSelectionSelectableItemOrbitalParams {
+  type _OverrideRecord = NonNullable<StdSelectionSelectableItemOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdSelectionSelectableItemOrbitalManifest.traitNames,
+      ...StdSelectionSelectableItemOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

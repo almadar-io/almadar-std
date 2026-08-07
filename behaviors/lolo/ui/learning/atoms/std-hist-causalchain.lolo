@@ -1,0 +1,474 @@
+app std-hist-causalchain "1.0.0"
+"WWI causal-chain counterfactual engine — the learner toggles structural causes and triggers off/on, a dependency cascade removes any cause whose enabling edge is gone, and the summed contribution of active causes is compared against a war threshold on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital HistCausalChainOrbital {
+  type HistCausalChainShapePoint = {
+    x : number!
+    y : number!
+  }
+  type HistCausalChainShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [HistCausalChainShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type HistCausalChainCause = {
+    id : string!
+    label : string!
+    x : number
+    y : number
+    contribution : number
+    necessary : boolean
+  }
+  type HistCausalChainEdge = {
+    from : string!
+    to : string!
+  }
+
+  entity HistCausalChainScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    removedIds : [string]
+    activeIds : [string]
+    totalContribution : number
+    outcomeFires : boolean
+    missingNecessaryLabel : string
+    contributionReadout : string
+    shapes : [HistCausalChainShape]
+  }
+
+  trait HistCausalChainSim -> @rebindable HistCausalChainScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.removedIds [])
+        (let (
+            (causeIds (array/map @config.causes (fn c @c.id)))
+            (seedActiveIds (array/filter @causeIds (fn cid (not (array/includes @entity.removedIds @cid)))))
+            (passCount (array/len @config.causes))
+            (finalActiveIds (array/reduce (array/range @passCount) @seedActiveIds (fn acc i (array/filter @acc (fn cid (== (array/len (array/filter @config.edges (fn e (and (== @e.to @cid) (not (array/includes @acc @e.from)))))) 0))))))
+            (activeCauses (array/filter @config.causes (fn c (array/includes @finalActiveIds @c.id))))
+            (totalContribution (array/sum (array/map @activeCauses (fn c @c.contribution))))
+            (outcomeFires (>= @totalContribution @config.threshold))
+            (missingNecessaryList (array/filter @config.causes (fn c (and @c.necessary (not (array/includes @finalActiveIds @c.id))))))
+            (missingNecessaryCause (array/first @missingNecessaryList))
+            (missingNecessaryLabel (if (!= @missingNecessaryCause null) (object/get @missingNecessaryCause label) "none — every necessary trigger is still active"))
+            (contributionReadout (str/concat "Active contribution: " @totalContribution " of " @config.threshold " needed for war. Missing necessary trigger: " @missingNecessaryLabel))
+            (causeShapes (array/flatten (array/map @config.causes (fn c (let (
+                (isActive (array/includes @finalActiveIds @c.id))
+                (col (if @isActive @config.activeCauseColor @config.removedCauseColor))
+              )
+              [
+                { type: circle, id: @c.id, x: @c.x, y: @c.y, radius: @config.causeRadius, color: @col, fill: @col, opacity: (if @isActive 1 0.4), lineWidth: 2 },
+                { type: text, id: (str/concat @c.id "-label"), x: @c.x, y: (+ (+ @c.y @config.causeRadius) 16), text: @c.label, fontSize: 12, align: "center", color: (if @isActive "#1c1917" "#a8a29e") }
+              ]
+            )))))
+            (edgeShapes (array/map @config.edges (fn e (let (
+                (fromActive (array/includes @finalActiveIds @e.from))
+                (isOutcome (== @e.to "outcome"))
+                (fromNode (array/first (array/filter @config.causes (fn c (== @c.id @e.from)))))
+                (toNode (array/first (array/filter @config.causes (fn c (== @c.id @e.to)))))
+                (x1 (object/get @fromNode x))
+                (y1 (object/get @fromNode y))
+                (x2 (if @isOutcome @config.outcomeX (object/get @toNode x)))
+                (y2 (if @isOutcome @config.outcomeY (object/get @toNode y)))
+                (col (if @fromActive @config.edgeActiveColor @config.edgeRemovedColor))
+              )
+              { type: arrow, id: (str/concat @e.from "-to-" @e.to), x1: @x1, y1: @y1, x2: @x2, y2: @y2, color: @col, lineWidth: (if @fromActive 2.5 1), opacity: (if @fromActive 0.9 0.3) }
+            ))))
+            (outcomeShapes [
+              { type: circle, id: "outcome", x: @config.outcomeX, y: @config.outcomeY, radius: @config.outcomeRadius, color: (if @outcomeFires @config.warColor @config.noWarColor), fill: (if @outcomeFires @config.warColor @config.noWarColor), lineWidth: 2, opacity: 1 },
+              { type: text, id: "outcomeText", x: @config.outcomeX, y: @config.outcomeY, text: (if @outcomeFires "WAR" "NO WAR"), fontSize: 15, align: "center", color: "#ffffff" }
+            ])
+            (causalShapes (array/concat (array/concat @edgeShapes @causeShapes) @outcomeShapes))
+          )
+          (do
+            (set @entity.activeIds @finalActiveIds)
+            (set @entity.totalContribution @totalContribution)
+            (set @entity.outcomeFires @outcomeFires)
+            (set @entity.missingNecessaryLabel @missingNecessaryLabel)
+            (set @entity.contributionReadout @contributionReadout)
+            (set @entity.shapes @causalShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Toggle a cause to test the counterfactual: does war still break out without it?" },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.causes (fn c { type: button, action: TOGGLE_CAUSE, actionPayload: { causeId: @c.id }, label: (if (array/includes @entity.activeIds @c.id) @c.label (str/concat @c.label " — removed")), variant: (if (array/includes @entity.activeIds @c.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RESET_CAUSES, label: "Reset All Causes", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.outcomeFires "WAR" "NO WAR (counterfactual)"), variant: (if @entity.outcomeFires "danger" "success") },
+                    { type: typography, variant: body, content: @entity.contributionReadout }
+                  ] }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.removedIds [])
+        (let (
+            (causeIds (array/map @config.causes (fn c @c.id)))
+            (seedActiveIds (array/filter @causeIds (fn cid (not (array/includes @entity.removedIds @cid)))))
+            (passCount (array/len @config.causes))
+            (finalActiveIds (array/reduce (array/range @passCount) @seedActiveIds (fn acc i (array/filter @acc (fn cid (== (array/len (array/filter @config.edges (fn e (and (== @e.to @cid) (not (array/includes @acc @e.from)))))) 0))))))
+            (activeCauses (array/filter @config.causes (fn c (array/includes @finalActiveIds @c.id))))
+            (totalContribution (array/sum (array/map @activeCauses (fn c @c.contribution))))
+            (outcomeFires (>= @totalContribution @config.threshold))
+            (missingNecessaryList (array/filter @config.causes (fn c (and @c.necessary (not (array/includes @finalActiveIds @c.id))))))
+            (missingNecessaryCause (array/first @missingNecessaryList))
+            (missingNecessaryLabel (if (!= @missingNecessaryCause null) (object/get @missingNecessaryCause label) "none — every necessary trigger is still active"))
+            (contributionReadout (str/concat "Active contribution: " @totalContribution " of " @config.threshold " needed for war. Missing necessary trigger: " @missingNecessaryLabel))
+            (causeShapes (array/flatten (array/map @config.causes (fn c (let (
+                (isActive (array/includes @finalActiveIds @c.id))
+                (col (if @isActive @config.activeCauseColor @config.removedCauseColor))
+              )
+              [
+                { type: circle, id: @c.id, x: @c.x, y: @c.y, radius: @config.causeRadius, color: @col, fill: @col, opacity: (if @isActive 1 0.4), lineWidth: 2 },
+                { type: text, id: (str/concat @c.id "-label"), x: @c.x, y: (+ (+ @c.y @config.causeRadius) 16), text: @c.label, fontSize: 12, align: "center", color: (if @isActive "#1c1917" "#a8a29e") }
+              ]
+            )))))
+            (edgeShapes (array/map @config.edges (fn e (let (
+                (fromActive (array/includes @finalActiveIds @e.from))
+                (isOutcome (== @e.to "outcome"))
+                (fromNode (array/first (array/filter @config.causes (fn c (== @c.id @e.from)))))
+                (toNode (array/first (array/filter @config.causes (fn c (== @c.id @e.to)))))
+                (x1 (object/get @fromNode x))
+                (y1 (object/get @fromNode y))
+                (x2 (if @isOutcome @config.outcomeX (object/get @toNode x)))
+                (y2 (if @isOutcome @config.outcomeY (object/get @toNode y)))
+                (col (if @fromActive @config.edgeActiveColor @config.edgeRemovedColor))
+              )
+              { type: arrow, id: (str/concat @e.from "-to-" @e.to), x1: @x1, y1: @y1, x2: @x2, y2: @y2, color: @col, lineWidth: (if @fromActive 2.5 1), opacity: (if @fromActive 0.9 0.3) }
+            ))))
+            (outcomeShapes [
+              { type: circle, id: "outcome", x: @config.outcomeX, y: @config.outcomeY, radius: @config.outcomeRadius, color: (if @outcomeFires @config.warColor @config.noWarColor), fill: (if @outcomeFires @config.warColor @config.noWarColor), lineWidth: 2, opacity: 1 },
+              { type: text, id: "outcomeText", x: @config.outcomeX, y: @config.outcomeY, text: (if @outcomeFires "WAR" "NO WAR"), fontSize: 15, align: "center", color: "#ffffff" }
+            ])
+            (causalShapes (array/concat (array/concat @edgeShapes @causeShapes) @outcomeShapes))
+          )
+          (do
+            (set @entity.activeIds @finalActiveIds)
+            (set @entity.totalContribution @totalContribution)
+            (set @entity.outcomeFires @outcomeFires)
+            (set @entity.missingNecessaryLabel @missingNecessaryLabel)
+            (set @entity.contributionReadout @contributionReadout)
+            (set @entity.shapes @causalShapes)
+          )
+        )
+        (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: typography, variant: body, content: "Toggle a cause to test the counterfactual: does war still break out without it?" },
+                  { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                  { type: stack, direction: horizontal, gap: xs, children: (array/map @config.causes (fn c { type: button, action: TOGGLE_CAUSE, actionPayload: { causeId: @c.id }, label: (if (array/includes @entity.activeIds @c.id) @c.label (str/concat @c.label " — removed")), variant: (if (array/includes @entity.activeIds @c.id) "primary" "ghost"), size: sm })) },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: button, action: RESET_CAUSES, label: "Reset All Causes", variant: ghost }
+                    ] },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: badge, label: (if @entity.outcomeFires "WAR" "NO WAR (counterfactual)"), variant: (if @entity.outcomeFires "danger" "success") },
+                      { type: typography, variant: body, content: @entity.contributionReadout }
+                    ] }
+                ] }
+            ]
+        })
+
+      TOGGLE_CAUSE -> idle when (== @entity.active true)
+        (set @entity.removedIds (if (array/includes @entity.removedIds ?causeId) (array/filter @entity.removedIds (fn rid (!= @rid ?causeId))) (array/concat @entity.removedIds [?causeId])))
+        (let (
+            (causeIds (array/map @config.causes (fn c @c.id)))
+            (seedActiveIds (array/filter @causeIds (fn cid (not (array/includes @entity.removedIds @cid)))))
+            (passCount (array/len @config.causes))
+            (finalActiveIds (array/reduce (array/range @passCount) @seedActiveIds (fn acc i (array/filter @acc (fn cid (== (array/len (array/filter @config.edges (fn e (and (== @e.to @cid) (not (array/includes @acc @e.from)))))) 0))))))
+            (activeCauses (array/filter @config.causes (fn c (array/includes @finalActiveIds @c.id))))
+            (totalContribution (array/sum (array/map @activeCauses (fn c @c.contribution))))
+            (outcomeFires (>= @totalContribution @config.threshold))
+            (missingNecessaryList (array/filter @config.causes (fn c (and @c.necessary (not (array/includes @finalActiveIds @c.id))))))
+            (missingNecessaryCause (array/first @missingNecessaryList))
+            (missingNecessaryLabel (if (!= @missingNecessaryCause null) (object/get @missingNecessaryCause label) "none — every necessary trigger is still active"))
+            (contributionReadout (str/concat "Active contribution: " @totalContribution " of " @config.threshold " needed for war. Missing necessary trigger: " @missingNecessaryLabel))
+            (causeShapes (array/flatten (array/map @config.causes (fn c (let (
+                (isActive (array/includes @finalActiveIds @c.id))
+                (col (if @isActive @config.activeCauseColor @config.removedCauseColor))
+              )
+              [
+                { type: circle, id: @c.id, x: @c.x, y: @c.y, radius: @config.causeRadius, color: @col, fill: @col, opacity: (if @isActive 1 0.4), lineWidth: 2 },
+                { type: text, id: (str/concat @c.id "-label"), x: @c.x, y: (+ (+ @c.y @config.causeRadius) 16), text: @c.label, fontSize: 12, align: "center", color: (if @isActive "#1c1917" "#a8a29e") }
+              ]
+            )))))
+            (edgeShapes (array/map @config.edges (fn e (let (
+                (fromActive (array/includes @finalActiveIds @e.from))
+                (isOutcome (== @e.to "outcome"))
+                (fromNode (array/first (array/filter @config.causes (fn c (== @c.id @e.from)))))
+                (toNode (array/first (array/filter @config.causes (fn c (== @c.id @e.to)))))
+                (x1 (object/get @fromNode x))
+                (y1 (object/get @fromNode y))
+                (x2 (if @isOutcome @config.outcomeX (object/get @toNode x)))
+                (y2 (if @isOutcome @config.outcomeY (object/get @toNode y)))
+                (col (if @fromActive @config.edgeActiveColor @config.edgeRemovedColor))
+              )
+              { type: arrow, id: (str/concat @e.from "-to-" @e.to), x1: @x1, y1: @y1, x2: @x2, y2: @y2, color: @col, lineWidth: (if @fromActive 2.5 1), opacity: (if @fromActive 0.9 0.3) }
+            ))))
+            (outcomeShapes [
+              { type: circle, id: "outcome", x: @config.outcomeX, y: @config.outcomeY, radius: @config.outcomeRadius, color: (if @outcomeFires @config.warColor @config.noWarColor), fill: (if @outcomeFires @config.warColor @config.noWarColor), lineWidth: 2, opacity: 1 },
+              { type: text, id: "outcomeText", x: @config.outcomeX, y: @config.outcomeY, text: (if @outcomeFires "WAR" "NO WAR"), fontSize: 15, align: "center", color: "#ffffff" }
+            ])
+            (causalShapes (array/concat (array/concat @edgeShapes @causeShapes) @outcomeShapes))
+          )
+          (do
+            (set @entity.activeIds @finalActiveIds)
+            (set @entity.totalContribution @totalContribution)
+            (set @entity.outcomeFires @outcomeFires)
+            (set @entity.missingNecessaryLabel @missingNecessaryLabel)
+            (set @entity.contributionReadout @contributionReadout)
+            (set @entity.shapes @causalShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Toggle a cause to test the counterfactual: does war still break out without it?" },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.causes (fn c { type: button, action: TOGGLE_CAUSE, actionPayload: { causeId: @c.id }, label: (if (array/includes @entity.activeIds @c.id) @c.label (str/concat @c.label " — removed")), variant: (if (array/includes @entity.activeIds @c.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RESET_CAUSES, label: "Reset All Causes", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.outcomeFires "WAR" "NO WAR (counterfactual)"), variant: (if @entity.outcomeFires "danger" "success") },
+                    { type: typography, variant: body, content: @entity.contributionReadout }
+                  ] }
+              ] }
+          ]
+        })
+        (emit CAUSAL_CHAIN_UPDATED { activeIds: @entity.activeIds, totalContribution: @entity.totalContribution, outcomeFires: @entity.outcomeFires })
+
+      RESET_CAUSES -> idle when (== @entity.active true)
+        (set @entity.removedIds [])
+        (let (
+            (causeIds (array/map @config.causes (fn c @c.id)))
+            (finalActiveIds @causeIds)
+            (activeCauses (array/filter @config.causes (fn c (array/includes @finalActiveIds @c.id))))
+            (totalContribution (array/sum (array/map @activeCauses (fn c @c.contribution))))
+            (outcomeFires (>= @totalContribution @config.threshold))
+            (missingNecessaryList (array/filter @config.causes (fn c (and @c.necessary (not (array/includes @finalActiveIds @c.id))))))
+            (missingNecessaryCause (array/first @missingNecessaryList))
+            (missingNecessaryLabel (if (!= @missingNecessaryCause null) (object/get @missingNecessaryCause label) "none — every necessary trigger is still active"))
+            (contributionReadout (str/concat "Active contribution: " @totalContribution " of " @config.threshold " needed for war. Missing necessary trigger: " @missingNecessaryLabel))
+            (causeShapes (array/flatten (array/map @config.causes (fn c (let (
+                (isActive (array/includes @finalActiveIds @c.id))
+                (col (if @isActive @config.activeCauseColor @config.removedCauseColor))
+              )
+              [
+                { type: circle, id: @c.id, x: @c.x, y: @c.y, radius: @config.causeRadius, color: @col, fill: @col, opacity: (if @isActive 1 0.4), lineWidth: 2 },
+                { type: text, id: (str/concat @c.id "-label"), x: @c.x, y: (+ (+ @c.y @config.causeRadius) 16), text: @c.label, fontSize: 12, align: "center", color: (if @isActive "#1c1917" "#a8a29e") }
+              ]
+            )))))
+            (edgeShapes (array/map @config.edges (fn e (let (
+                (fromActive (array/includes @finalActiveIds @e.from))
+                (isOutcome (== @e.to "outcome"))
+                (fromNode (array/first (array/filter @config.causes (fn c (== @c.id @e.from)))))
+                (toNode (array/first (array/filter @config.causes (fn c (== @c.id @e.to)))))
+                (x1 (object/get @fromNode x))
+                (y1 (object/get @fromNode y))
+                (x2 (if @isOutcome @config.outcomeX (object/get @toNode x)))
+                (y2 (if @isOutcome @config.outcomeY (object/get @toNode y)))
+                (col (if @fromActive @config.edgeActiveColor @config.edgeRemovedColor))
+              )
+              { type: arrow, id: (str/concat @e.from "-to-" @e.to), x1: @x1, y1: @y1, x2: @x2, y2: @y2, color: @col, lineWidth: (if @fromActive 2.5 1), opacity: (if @fromActive 0.9 0.3) }
+            ))))
+            (outcomeShapes [
+              { type: circle, id: "outcome", x: @config.outcomeX, y: @config.outcomeY, radius: @config.outcomeRadius, color: (if @outcomeFires @config.warColor @config.noWarColor), fill: (if @outcomeFires @config.warColor @config.noWarColor), lineWidth: 2, opacity: 1 },
+              { type: text, id: "outcomeText", x: @config.outcomeX, y: @config.outcomeY, text: (if @outcomeFires "WAR" "NO WAR"), fontSize: 15, align: "center", color: "#ffffff" }
+            ])
+            (causalShapes (array/concat (array/concat @edgeShapes @causeShapes) @outcomeShapes))
+          )
+          (do
+            (set @entity.activeIds @finalActiveIds)
+            (set @entity.totalContribution @totalContribution)
+            (set @entity.outcomeFires @outcomeFires)
+            (set @entity.missingNecessaryLabel @missingNecessaryLabel)
+            (set @entity.contributionReadout @contributionReadout)
+            (set @entity.shapes @causalShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Toggle a cause to test the counterfactual: does war still break out without it?" },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.causes (fn c { type: button, action: TOGGLE_CAUSE, actionPayload: { causeId: @c.id }, label: (if (array/includes @entity.activeIds @c.id) @c.label (str/concat @c.label " — removed")), variant: (if (array/includes @entity.activeIds @c.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RESET_CAUSES, label: "Reset All Causes", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.outcomeFires "WAR" "NO WAR (counterfactual)"), variant: (if @entity.outcomeFires "danger" "success") },
+                    { type: typography, variant: body, content: @entity.contributionReadout }
+                  ] }
+              ] }
+          ]
+        })
+        (emit CAUSAL_CHAIN_UPDATED { activeIds: @entity.activeIds, totalContribution: @entity.totalContribution, outcomeFires: @entity.outcomeFires })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      TOGGLE_CAUSE {
+        causeId : string
+      }
+        @description "Learner clicked a cause button to remove or restore that cause from the causal chain."
+        @tier "domain"
+      RESET_CAUSES {
+      }
+        @description "Learner reset every cause back to active, restoring the full causal chain."
+        @tier "domain"
+    }
+
+    emits {
+      CAUSAL_CHAIN_UPDATED -> external {
+        activeIds : [string]
+        totalContribution : number
+        outcomeFires : boolean
+      }
+        @description "The causal-chain state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "causal chain update, cascade result, outcome, war, no war, counterfactual result"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Causal Chain"
+        @label "Title"
+        @description "Title shown above the lab."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 420
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#faf5eb"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      causes : [HistCausalChainCause] = [
+        { id: "militarism", label: "Militarism", x: 110, y: 80, contribution: 20, necessary: false },
+        { id: "alliances", label: "Alliance System", x: 330, y: 50, contribution: 15, necessary: false },
+        { id: "imperialism", label: "Imperial Rivalry", x: 550, y: 80, contribution: 15, necessary: false },
+        { id: "nationalism", label: "Nationalism", x: 110, y: 260, contribution: 20, necessary: false },
+        { id: "assassination-trigger", label: "Assassination of Franz Ferdinand", x: 550, y: 260, contribution: 30, necessary: true }
+      ]
+        @label "Causes"
+        @description "Roster of the five WWI causes the learner can toggle: four long-building structural causes (militarism, the alliance system, imperial rivalry, nationalism) and one short-fuse trigger (the assassination), each with a canvas position and a contribution weight toward the war threshold."
+        @synonyms "cause roster, structural cause, proximate cause, trigger, militarism, alliance system, imperial rivalry, nationalism, assassination, Franz Ferdinand, contribution weight, casus belli"
+        @tier "domain"
+      edges : [HistCausalChainEdge] = [
+        { from: "militarism", to: "outcome" },
+        { from: "alliances", to: "outcome" },
+        { from: "imperialism", to: "outcome" },
+        { from: "nationalism", to: "outcome" },
+        { from: "assassination-trigger", to: "outcome" },
+        { from: "nationalism", to: "assassination-trigger" }
+      ]
+        @label "Edges"
+        @description "Declared cause-to-outcome edges (every cause feeds the war outcome directly) plus one cause-to-cause dependency: nationalism enables the assassination trigger, so removing nationalism cascades to disable the trigger too."
+        @synonyms "causal edge, dependency edge, cause to outcome, cause to cause, cascade, structural dependency, chain of causation"
+        @tier "domain"
+      threshold : number = 60
+        @label "War Threshold"
+        @description "The summed contribution of active causes must reach this value for the outcome to fire as WAR; below it, the counterfactual reads NO WAR."
+        @synonyms "war threshold, tipping point, sufficient cause, sufficient condition"
+        @tier "domain"
+      outcomeX : number = 330
+        @label "Outcome X"
+        @description "Canvas x-position of the War/No-War outcome node."
+        @tier "presentation"
+      outcomeY : number = 360
+        @label "Outcome Y"
+        @description "Canvas y-position of the War/No-War outcome node."
+        @tier "presentation"
+      outcomeRadius : number = 46
+        @label "Outcome Radius"
+        @tier "presentation"
+      causeRadius : number = 38
+        @label "Cause Radius"
+        @tier "presentation"
+      activeCauseColor : string = "#92400e"
+        @label "Active Cause Color"
+        @tier "presentation"
+      removedCauseColor : string = "#a8a29e"
+        @label "Removed Cause Color"
+        @tier "presentation"
+      edgeActiveColor : string = "#78350f"
+        @label "Active Edge Color"
+        @tier "presentation"
+      edgeRemovedColor : string = "#d6d3d1"
+        @label "Removed Edge Color"
+        @tier "presentation"
+      warColor : string = "#b91c1c"
+        @label "War Color"
+        @tier "presentation"
+      noWarColor : string = "#15803d"
+        @label "No-War Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/hist-causalchain" as HistCausalChainPage -> HistCausalChainSim
+}

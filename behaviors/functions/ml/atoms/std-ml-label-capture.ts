@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -126,4 +126,419 @@ export function stdMlLabelCapture(params: StdMlLabelCaptureParams): OrbitalDefin
       stdMlLabelCapturePage(params),
     ],
   });
+}
+
+type _StdMlLabelCaptureEntityName = 'LabeledExample';
+type _StdMlLabelCaptureListenTraitName = 'LabelCaptureListener';
+
+/**
+ * Tunable params for the MlLabelCaptureOrbital orbital.
+ *
+ * Canonical entity: LabeledExample — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdMlLabelCaptureMlLabelCaptureOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'LabelCaptureListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlLabelCaptureOrbital's `uses[]` exports. */
+type _StdMlLabelCaptureMlLabelCaptureOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlLabelCaptureOrbital orbital with consumer params. */
+export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCaptureMlLabelCaptureOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'ml_labels');
+  const built = makeOrbitalWithUses({
+    name: 'MlLabelCaptureOrbital',
+    uses: [],
+    entity: {
+      name: 'LabeledExample',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'primaryKey': true,
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The input that was judged.',
+            'name': 'input',
+            'type': 'string',
+          },
+          {
+            'description': 'The verdict/output produced by the rung.',
+            'name': 'verdict',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Which rung produced the verdict.',
+            'name': 'source',
+            'type': 'string',
+          },
+          {
+            'description': 'The observed ground-truth outcome, once known.',
+            'name': 'outcome',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Named destination this example is attributed to.',
+            'name': 'sink',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'recordedAt',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'sampleRate': {
+            'default': 1,
+            'description': 'Fraction of examples to keep (1 = capture all). A prob/flip trial per observation.',
+            'label': 'Sample rate',
+            'tier': 'policy',
+            'type': 'float',
+          },
+          'sink': {
+            'default': '',
+            'description': 'Named destination this batch of examples is attributed to; interpreted downstream (the physical label store is not yet decided).',
+            'label': 'Label sink',
+            'tier': 'infra',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Fired after a labeled example is persisted.',
+            'event': 'LABEL_CAPTURED',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'sink',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'input',
+            'outcome',
+            'recordedAt',
+            'sink',
+            'source',
+            'verdict',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'LabeledExample',
+        'name': 'LabelCaptureListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CAPTURE',
+              'name': 'Capture',
+              'payloadSchema': [
+                {
+                  'name': 'input',
+                  'required': true,
+                  'type': 'json',
+                },
+                {
+                  'name': 'verdict',
+                  'required': true,
+                  'type': 'json',
+                },
+                {
+                  'name': 'source',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'outcome',
+                  'type': 'json',
+                },
+              ],
+            },
+            {
+              'description': 'Fired after a labeled example is persisted.',
+              'key': 'LABEL_CAPTURED',
+              'name': 'Label Captured',
+              'payloadSchema': [
+                {
+                  'name': 'source',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'sink',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.input',
+                  null,
+                ],
+                [
+                  'set',
+                  '@entity.verdict',
+                  null,
+                ],
+                [
+                  'set',
+                  '@entity.source',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.outcome',
+                  null,
+                ],
+                [
+                  'set',
+                  '@entity.sink',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.recordedAt',
+                  0,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.input',
+                  '@payload.input',
+                ],
+                [
+                  'set',
+                  '@entity.verdict',
+                  '@payload.verdict',
+                ],
+                [
+                  'set',
+                  '@entity.source',
+                  '@payload.source',
+                ],
+                [
+                  'set',
+                  '@entity.outcome',
+                  '@payload.outcome',
+                ],
+                [
+                  'set',
+                  '@entity.sink',
+                  '@config.sink',
+                ],
+                [
+                  'set',
+                  '@entity.recordedAt',
+                  '@now',
+                ],
+                [
+                  'if',
+                  [
+                    'prob/flip',
+                    '@config.sampleRate',
+                  ],
+                  [
+                    'do',
+                    [
+                      'persist',
+                      'create',
+                      ('LabeledExample' satisfies _StdMlLabelCaptureEntityName),
+                      {
+                        'input': '@entity.input',
+                        'outcome': '@entity.outcome',
+                        'recordedAt': '@entity.recordedAt',
+                        'sink': '@entity.sink',
+                        'source': '@entity.source',
+                        'verdict': '@entity.verdict',
+                      },
+                    ],
+                    [
+                      'emit',
+                      'LABEL_CAPTURED',
+                      {
+                        'sink': '@entity.sink',
+                        'source': '@entity.source',
+                      },
+                    ],
+                  ],
+                  null,
+                ],
+              ],
+              'event': 'CAPTURE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlLabelCapturePage',
+        'path': '/ml-label-capture',
+        'traits': [
+          {
+            'ref': 'LabelCaptureListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMlLabelCaptureMlLabelCaptureOrbital. */
+export const StdMlLabelCaptureMlLabelCaptureOrbitalManifest = {
+  organism: 'std-ml-label-capture',
+  orbitalName: 'MlLabelCaptureOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'LabelCaptureListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMlLabelCaptureMlLabelCaptureOrbitalParams keys. */
+export function isStdMlLabelCaptureMlLabelCaptureOrbitalParams(p: object): p is StdMlLabelCaptureMlLabelCaptureOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMlLabelCaptureMlLabelCaptureOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdMlLabelCaptureMlLabelCaptureOrbitalManifest.traitNames,
+      ...StdMlLabelCaptureMlLabelCaptureOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

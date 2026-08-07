@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -132,4 +132,643 @@ export function stdWeightValidator(params: StdWeightValidatorParams): OrbitalDef
       stdWeightValidatorPage(params),
     ],
   });
+}
+
+type _StdWeightValidatorEntityName = 'WeightValidation';
+type _StdWeightValidatorListenTraitName = 'WeightValidatorRun';
+
+/**
+ * Tunable params for the MlWeightValidatorOrbital orbital.
+ *
+ * Canonical entity: WeightValidation — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdWeightValidatorMlWeightValidatorOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'WeightValidatorRun',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlWeightValidatorOrbital's `uses[]` exports. */
+type _StdWeightValidatorMlWeightValidatorOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlWeightValidatorOrbital orbital with consumer params. */
+export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightValidatorMlWeightValidatorOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'MlWeightValidatorOrbital',
+    uses: [],
+    entity: {
+      name: 'WeightValidation',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': [],
+            'items': {
+              'type': 'number',
+            },
+            'name': 'weights',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'number',
+            },
+            'name': 'baseline',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'object',
+            },
+            'name': 'violations',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'valid',
+            'type': 'boolean',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'checked',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'forbiddenRegions': {
+            'default': [],
+            'description': 'Value ranges no weight may fall inside, even within the magnitude bound',
+            'items': {
+              'properties': {
+                'max': {
+                  'name': 'max',
+                  'required': true,
+                  'type': 'number',
+                },
+                'min': {
+                  'name': 'min',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Forbidden regions',
+            'tier': 'domain',
+            'type': '[Range]',
+          },
+          'maxMagnitude': {
+            'default': 10,
+            'description': 'Every weight\'s absolute value must not exceed this bound',
+            'label': 'Max weight magnitude',
+            'tier': 'policy',
+            'type': 'float',
+          },
+          'regressionThreshold': {
+            'default': 0,
+            'description': 'Max allowed per-element absolute drift between candidate and baseline weights; 0 disables the regression check',
+            'label': 'Regression threshold',
+            'tier': 'policy',
+            'type': 'float',
+          },
+        },
+        'emits': [
+          {
+            'description': 'All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear',
+            'event': 'WEIGHTS_ACCEPTED',
+            'payloadSchema': [
+              {
+                'name': 'weights',
+                'required': true,
+                'type': '[float]',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'event': 'WEIGHTS_REJECTED',
+            'payloadSchema': [
+              {
+                'name': 'violations',
+                'required': true,
+                'type': '[object]',
+              },
+              {
+                'name': 'request',
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'linkedEntity': 'WeightValidation',
+        'name': 'WeightValidatorRun',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VALIDATE_WEIGHTS',
+              'name': 'Validate Weights',
+              'payloadSchema': [
+                {
+                  'name': 'weights',
+                  'required': true,
+                  'type': '[float]',
+                },
+                {
+                  'name': 'baseline',
+                  'type': '[float]',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear',
+              'key': 'WEIGHTS_ACCEPTED',
+              'name': 'Weights Accepted',
+              'payloadSchema': [
+                {
+                  'name': 'weights',
+                  'required': true,
+                  'type': '[float]',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'key': 'WEIGHTS_REJECTED',
+              'name': 'Weights Rejected',
+              'payloadSchema': [
+                {
+                  'name': 'violations',
+                  'required': true,
+                  'type': '[object]',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'checked',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.weights',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.baseline',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.violations',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.valid',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'let',
+                  [
+                    [
+                      'cand',
+                      '@payload.weights',
+                    ],
+                    [
+                      'base',
+                      '@payload.baseline',
+                    ],
+                    [
+                      'magnitudeHits',
+                      [
+                        'array/filter',
+                        '@cand',
+                        [
+                          'fn',
+                          'w',
+                          [
+                            '>',
+                            [
+                              'math/abs',
+                              '@w',
+                            ],
+                            '@config.maxMagnitude',
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'regionHits',
+                      [
+                        'array/filter',
+                        '@cand',
+                        [
+                          'fn',
+                          'w',
+                          [
+                            'array/some',
+                            '@config.forbiddenRegions',
+                            [
+                              'fn',
+                              'r',
+                              [
+                                'and',
+                                [
+                                  '>=',
+                                  '@w',
+                                  '@r.min',
+                                ],
+                                [
+                                  '<=',
+                                  '@w',
+                                  '@r.max',
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'regressionHits',
+                      [
+                        'if',
+                        [
+                          '>',
+                          '@config.regressionThreshold',
+                          0,
+                        ],
+                        [
+                          'array/filter',
+                          [
+                            'array/range',
+                            0,
+                            [
+                              'array/len',
+                              '@cand',
+                            ],
+                          ],
+                          [
+                            'fn',
+                            'i',
+                            [
+                              '>',
+                              [
+                                'math/abs',
+                                [
+                                  '-',
+                                  [
+                                    'array/nth',
+                                    '@cand',
+                                    '@i',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@base',
+                                    '@i',
+                                  ],
+                                ],
+                              ],
+                              '@config.regressionThreshold',
+                            ],
+                          ],
+                        ],
+                        [],
+                      ],
+                    ],
+                    [
+                      'violations',
+                      [
+                        'array/concat',
+                        [
+                          'array/map',
+                          '@magnitudeHits',
+                          [
+                            'fn',
+                            'w',
+                            {
+                              'check': 'magnitude',
+                              'value': '@w',
+                            },
+                          ],
+                        ],
+                        [
+                          'array/map',
+                          '@regionHits',
+                          [
+                            'fn',
+                            'w',
+                            {
+                              'check': 'forbidden-region',
+                              'value': '@w',
+                            },
+                          ],
+                        ],
+                        [
+                          'array/map',
+                          '@regressionHits',
+                          [
+                            'fn',
+                            'i',
+                            {
+                              'check': 'regression',
+                              'index': '@i',
+                            },
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                  [
+                    'do',
+                    [
+                      'set',
+                      '@entity.weights',
+                      '@cand',
+                    ],
+                    [
+                      'set',
+                      '@entity.baseline',
+                      '@base',
+                    ],
+                    [
+                      'set',
+                      '@entity.violations',
+                      '@violations',
+                    ],
+                    [
+                      'if',
+                      [
+                        '==',
+                        [
+                          'array/len',
+                          '@violations',
+                        ],
+                        0,
+                      ],
+                      [
+                        'do',
+                        [
+                          'set',
+                          '@entity.valid',
+                          true,
+                        ],
+                        [
+                          'set',
+                          '@entity.status',
+                          'checked',
+                        ],
+                        [
+                          'emit',
+                          'WEIGHTS_ACCEPTED',
+                          {
+                            'weights': '@cand',
+                          },
+                        ],
+                      ],
+                      [
+                        'do',
+                        [
+                          'set',
+                          '@entity.valid',
+                          false,
+                        ],
+                        [
+                          'set',
+                          '@entity.status',
+                          'checked',
+                        ],
+                        [
+                          'emit',
+                          'WEIGHTS_REJECTED',
+                          {
+                            'request': '@payload.request',
+                            'violations': '@violations',
+                          },
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'VALIDATE_WEIGHTS',
+              'from': 'idle',
+              'to': 'checked',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'checked',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'checked',
+              'to': 'checked',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.weights',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.baseline',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.violations',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.valid',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'checked',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlWeightValidatorPage',
+        'path': '/ml-weight-validator',
+        'traits': [
+          {
+            'ref': 'WeightValidatorRun',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdWeightValidatorMlWeightValidatorOrbital. */
+export const StdWeightValidatorMlWeightValidatorOrbitalManifest = {
+  organism: 'std-weight-validator',
+  orbitalName: 'MlWeightValidatorOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'WeightValidatorRun',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdWeightValidatorMlWeightValidatorOrbitalParams keys. */
+export function isStdWeightValidatorMlWeightValidatorOrbitalParams(p: object): p is StdWeightValidatorMlWeightValidatorOrbitalParams {
+  type _OverrideRecord = NonNullable<StdWeightValidatorMlWeightValidatorOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdWeightValidatorMlWeightValidatorOrbitalManifest.traitNames,
+      ...StdWeightValidatorMlWeightValidatorOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

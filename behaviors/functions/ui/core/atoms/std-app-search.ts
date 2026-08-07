@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -118,4 +118,876 @@ export function stdAppSearch(params: StdAppSearchParams): OrbitalDefinition {
       stdAppSearchPage(params),
     ],
   });
+}
+
+type _StdAppSearchEntityName = 'AppSearchTarget';
+type _StdAppSearchListenTraitName = 'AppSearchIdleHint' | 'AppSearch';
+
+/**
+ * Tunable params for the AppSearchOrbital orbital.
+ *
+ * Canonical entity: AppSearchTarget — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAppSearchAppSearchOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'AppSearchIdleHint' | 'AppSearch',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AppSearchOrbital's `uses[]` exports. */
+type _StdAppSearchAppSearchOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AppSearchOrbital orbital with consumer params. */
+export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AppSearchOrbital',
+    uses: [],
+    entity: {
+      name: 'AppSearchTarget',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The primary human-readable label matched by search.',
+            'name': 'name',
+            'synonyms': 'title, label, productName',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The current search query the user submitted.',
+            'intrinsic': true,
+            'name': 'searchTerm',
+            'synonyms': 'query, term, q',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'linkedEntity': 'AppSearchTarget',
+        'name': 'AppSearchIdleHint',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'color': 'muted',
+                        'name': 'search',
+                        'size': 'lg',
+                        'type': 'icon',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Start typing to search',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'interaction',
+        'config': {
+          'idleContent': {
+            'default': '@trait.AppSearchIdleHint',
+            'description': 'The normal content view (e.g. the data ledger/browse trait) shown when no search is active.',
+            'label': 'Idle content',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'resultActions': {
+            'default': [],
+            'description': 'Optional per-row actions on a result, e.g. { label: "View Details", event: "VIEW" }.',
+            'items': {
+              'properties': {
+                'confirm': {
+                  'name': 'confirm',
+                  'required': false,
+                  'type': 'string',
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'event': {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'string',
+                },
+                'hidden': {
+                  'name': 'hidden',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'href': {
+                  'name': 'href',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'payload': {
+                  'name': 'payload',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Result row actions',
+            'tier': 'presentation',
+            'type': '[AppSearchActionSpec]',
+          },
+          'resultFields': {
+            'default': [
+              {
+                'label': 'Name',
+                'name': 'name',
+                'variant': 'h4',
+              },
+            ],
+            'description': 'Columns shown in the search-results grid; maps entity fields to display cells.',
+            'items': {
+              'properties': {
+                'confirm': {
+                  'name': 'confirm',
+                  'required': false,
+                  'type': 'string',
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'hidden': {
+                  'name': 'hidden',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'href': {
+                  'name': 'href',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'payload': {
+                  'name': 'payload',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Result columns',
+            'tier': 'presentation',
+            'type': '[AppSearchFieldSpec]',
+          },
+          'resultsTitle': {
+            'default': 'Search results',
+            'description': 'Heading shown above the search-results grid.',
+            'label': 'Results title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'searchField': {
+            'default': 'name',
+            'description': 'Entity field matched against the query (case-insensitive substring).',
+            'label': 'Search field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Filtered search results loaded',
+            'event': 'AppSearchLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[AppSearchTarget]',
+              },
+            ],
+            'scope': 'internal',
+          },
+          {
+            'description': 'Search fetch failed',
+            'event': 'AppSearchFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'searchTerm',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'AppSearchTarget',
+        'name': 'AppSearch',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'A search query was submitted (e.g. from the AppLayout top-bar search).',
+              'key': 'APP_SEARCH',
+              'name': 'App Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'query, find, lookup',
+              'tier': 'domain',
+            },
+            {
+              'key': 'AppSearchLoaded',
+              'name': 'App search loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[AppSearchTarget]',
+                },
+              ],
+            },
+            {
+              'key': 'AppSearchFailed',
+              'name': 'App search failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CLEAR_SEARCH',
+              'name': 'Clear Search',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'searching',
+            },
+            {
+              'name': 'results',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('AppSearchTarget' satisfies _StdAppSearchEntityName),
+                  {},
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@config.idleContent',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.searchTerm',
+                  '@payload.value',
+                ],
+                [
+                  'fetch',
+                  ('AppSearchTarget' satisfies _StdAppSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'AppSearchFailed',
+                      'success': 'AppSearchLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@payload.value',
+                        '',
+                      ],
+                      [
+                        'str/includes',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.searchField',
+                        ],
+                        '@payload.value',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Searching…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'APP_SEARCH',
+              'from': 'idle',
+              'to': 'searching',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.searchTerm',
+                  '',
+                ],
+                [
+                  'fetch',
+                  ('AppSearchTarget' satisfies _StdAppSearchEntityName),
+                  {},
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@config.idleContent',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'searching',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.searchTerm',
+                  '@payload.value',
+                ],
+                [
+                  'fetch',
+                  ('AppSearchTarget' satisfies _StdAppSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'AppSearchFailed',
+                      'success': 'AppSearchLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@payload.value',
+                        '',
+                      ],
+                      [
+                        'str/includes',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.searchField',
+                        ],
+                        '@payload.value',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Searching…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'APP_SEARCH',
+              'from': 'searching',
+              'to': 'searching',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'search',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.resultsTitle',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                          {
+                            'action': 'CLEAR_SEARCH',
+                            'icon': 'x',
+                            'label': 'Clear search',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': [
+                          'str/concat',
+                          [
+                            'str/concat',
+                            'Matching “',
+                            '@entity.searchTerm',
+                          ],
+                          '”',
+                        ],
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'entity': '@payload.data',
+                        'fields': '@config.resultFields',
+                        'itemActions': '@config.resultActions',
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'AppSearchLoaded',
+              'from': 'searching',
+              'to': 'results',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'message': '@payload.error',
+                        'type': 'alert',
+                        'variant': 'error',
+                      },
+                      '@config.idleContent',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'AppSearchFailed',
+              'from': 'searching',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.searchTerm',
+                  '',
+                ],
+                [
+                  'fetch',
+                  ('AppSearchTarget' satisfies _StdAppSearchEntityName),
+                  {},
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@config.idleContent',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'results',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.searchTerm',
+                  '@payload.value',
+                ],
+                [
+                  'fetch',
+                  ('AppSearchTarget' satisfies _StdAppSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'AppSearchFailed',
+                      'success': 'AppSearchLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@payload.value',
+                        '',
+                      ],
+                      [
+                        'str/includes',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.searchField',
+                        ],
+                        '@payload.value',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Searching…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'APP_SEARCH',
+              'from': 'results',
+              'to': 'searching',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.searchTerm',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@config.idleContent',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLEAR_SEARCH',
+              'from': 'results',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AppSearchPage',
+        'path': '/app-search',
+        'traits': [
+          {
+            'ref': 'AppSearch',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAppSearchAppSearchOrbital. */
+export const StdAppSearchAppSearchOrbitalManifest = {
+  organism: 'std-app-search',
+  orbitalName: 'AppSearchOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'AppSearchIdleHint',
+    'AppSearch',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAppSearchAppSearchOrbitalParams keys. */
+export function isStdAppSearchAppSearchOrbitalParams(p: object): p is StdAppSearchAppSearchOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAppSearchAppSearchOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAppSearchAppSearchOrbitalManifest.traitNames,
+      ...StdAppSearchAppSearchOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

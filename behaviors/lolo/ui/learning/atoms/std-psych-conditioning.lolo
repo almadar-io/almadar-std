@@ -1,0 +1,423 @@
+app std-psych-conditioning "1.0.0"
+"Classical (Pavlovian) conditioning trial-runner — the learner runs CS+US pairing trials to drive an associative-strength curve toward its asymptote (acquisition), or runs CS-alone trials to drive it toward zero (extinction), via the Rescorla-Wagner rule plotted on a biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital PsychConditioningOrbital {
+  type PsychConditioningShapePoint = {
+    x : number!
+    y : number!
+  }
+  type PsychConditioningShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [PsychConditioningShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+
+  entity PsychConditioningScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    strength : number
+    history : [number]
+    trialCount : number
+    phase : string
+    curveShapes : [PsychConditioningShape]
+  }
+
+  trait PsychConditioningSim -> @rebindable PsychConditioningScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.strength 0)
+        (set @entity.history [0])
+        (set @entity.trialCount 0)
+        (set @entity.phase "")
+        (let (
+            (n (array/len @entity.history))
+            (marginX 40)
+            (marginY 24)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (points (array/map (array/range @n) (fn i (let (
+                  (v (array/nth @entity.history @i))
+                  (x (+ @marginX (if (<= @n 1) 0 (* (/ @i (- @n 1)) @plotWidth))))
+                  (yRatio (math/clamp (/ @v @config.lambda) 0 1))
+                  (y (- @plotBottom (* @yRatio @plotHeight)))
+                )
+                { x: @x, y: @y }))))
+            (current (array/last @points))
+            (pathD (array/reduce @points "" (fn acc p (str/concat @acc (if (== @acc "") "M" " L") " " (object/get @p x) " " (object/get @p y)))))
+            (curveShapes (array/concat [
+                { type: line, id: "baseline", x1: @marginX, y1: @plotBottom, x2: (+ @marginX @plotWidth), y2: @plotBottom, color: "#94a3b8", lineWidth: 1 },
+                { type: line, id: "asymptote", x1: @marginX, y1: (- @plotBottom @plotHeight), x2: (+ @marginX @plotWidth), y2: (- @plotBottom @plotHeight), color: "#cbd5e1", lineWidth: 1 },
+                { type: path, id: "curve", path: @pathD, color: @config.curveColor, lineWidth: 2.5 }
+              ] [
+                { type: circle, id: "current", x: (object/get @current x), y: (object/get @current y), radius: 5, color: @config.curveColor, fill: @config.curveColor }
+              ]))
+          )
+          (do
+            (set @entity.curveShapes @curveShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.curveShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.phase "") "No Trials Yet" @entity.phase), variant: (if (== @entity.phase "ACQUISITION") "success" (if (== @entity.phase "EXTINCTION") "danger" "neutral")) },
+                    { type: typography, variant: caption, content: (str/concat "Trials run: " @entity.trialCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Associative strength (V): " (math/round @entity.strength 3)) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_PAIRING, label: "Run Pairing (CS+US)", variant: primary },
+                    { type: button, action: RUN_CS_ALONE, label: "Run CS Alone (Extinction)", variant: secondary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.strength 0)
+        (set @entity.history [0])
+        (set @entity.trialCount 0)
+        (set @entity.phase "")
+        (let (
+            (n (array/len @entity.history))
+            (marginX 40)
+            (marginY 24)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (points (array/map (array/range @n) (fn i (let (
+                  (v (array/nth @entity.history @i))
+                  (x (+ @marginX (if (<= @n 1) 0 (* (/ @i (- @n 1)) @plotWidth))))
+                  (yRatio (math/clamp (/ @v @config.lambda) 0 1))
+                  (y (- @plotBottom (* @yRatio @plotHeight)))
+                )
+                { x: @x, y: @y }))))
+            (current (array/last @points))
+            (pathD (array/reduce @points "" (fn acc p (str/concat @acc (if (== @acc "") "M" " L") " " (object/get @p x) " " (object/get @p y)))))
+            (curveShapes (array/concat [
+                { type: line, id: "baseline", x1: @marginX, y1: @plotBottom, x2: (+ @marginX @plotWidth), y2: @plotBottom, color: "#94a3b8", lineWidth: 1 },
+                { type: line, id: "asymptote", x1: @marginX, y1: (- @plotBottom @plotHeight), x2: (+ @marginX @plotWidth), y2: (- @plotBottom @plotHeight), color: "#cbd5e1", lineWidth: 1 },
+                { type: path, id: "curve", path: @pathD, color: @config.curveColor, lineWidth: 2.5 }
+              ] [
+                { type: circle, id: "current", x: (object/get @current x), y: (object/get @current y), radius: 5, color: @config.curveColor, fill: @config.curveColor }
+              ]))
+          )
+          (do
+            (set @entity.curveShapes @curveShapes)
+          )
+        )
+        (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.curveShapes, interactive: @config.interactive, animate: @config.animate },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: badge, label: (if (== @entity.phase "") "No Trials Yet" @entity.phase), variant: (if (== @entity.phase "ACQUISITION") "success" (if (== @entity.phase "EXTINCTION") "danger" "neutral")) },
+                      { type: typography, variant: caption, content: (str/concat "Trials run: " @entity.trialCount) }
+                    ] },
+                  { type: typography, variant: body, content: (str/concat "Associative strength (V): " (math/round @entity.strength 3)) },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: button, action: RUN_PAIRING, label: "Run Pairing (CS+US)", variant: primary },
+                      { type: button, action: RUN_CS_ALONE, label: "Run CS Alone (Extinction)", variant: secondary },
+                      { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                    ] }
+                ] }
+            ]
+        })
+
+      RUN_PAIRING -> idle when (== @entity.active true)
+        (let (
+            (newStrength (+ @entity.strength (* @config.alpha (- @config.lambda @entity.strength))))
+          )
+          (do
+            (set @entity.strength @newStrength)
+            (set @entity.history (array/takeLast (array/append @entity.history @newStrength) @config.historyCap))
+            (set @entity.trialCount (+ @entity.trialCount 1))
+            (set @entity.phase "ACQUISITION")
+          )
+        )
+        (let (
+            (n (array/len @entity.history))
+            (marginX 40)
+            (marginY 24)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (points (array/map (array/range @n) (fn i (let (
+                  (v (array/nth @entity.history @i))
+                  (x (+ @marginX (if (<= @n 1) 0 (* (/ @i (- @n 1)) @plotWidth))))
+                  (yRatio (math/clamp (/ @v @config.lambda) 0 1))
+                  (y (- @plotBottom (* @yRatio @plotHeight)))
+                )
+                { x: @x, y: @y }))))
+            (current (array/last @points))
+            (pathD (array/reduce @points "" (fn acc p (str/concat @acc (if (== @acc "") "M" " L") " " (object/get @p x) " " (object/get @p y)))))
+            (curveShapes (array/concat [
+                { type: line, id: "baseline", x1: @marginX, y1: @plotBottom, x2: (+ @marginX @plotWidth), y2: @plotBottom, color: "#94a3b8", lineWidth: 1 },
+                { type: line, id: "asymptote", x1: @marginX, y1: (- @plotBottom @plotHeight), x2: (+ @marginX @plotWidth), y2: (- @plotBottom @plotHeight), color: "#cbd5e1", lineWidth: 1 },
+                { type: path, id: "curve", path: @pathD, color: @config.curveColor, lineWidth: 2.5 }
+              ] [
+                { type: circle, id: "current", x: (object/get @current x), y: (object/get @current y), radius: 5, color: @config.curveColor, fill: @config.curveColor }
+              ]))
+          )
+          (do
+            (set @entity.curveShapes @curveShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.curveShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.phase "") "No Trials Yet" @entity.phase), variant: (if (== @entity.phase "ACQUISITION") "success" (if (== @entity.phase "EXTINCTION") "danger" "neutral")) },
+                    { type: typography, variant: caption, content: (str/concat "Trials run: " @entity.trialCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Associative strength (V): " (math/round @entity.strength 3)) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_PAIRING, label: "Run Pairing (CS+US)", variant: primary },
+                    { type: button, action: RUN_CS_ALONE, label: "Run CS Alone (Extinction)", variant: secondary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] }
+              ] }
+          ]
+        })
+        (emit CONDITIONING_UPDATED { strength: @entity.strength, trialCount: @entity.trialCount, phase: @entity.phase })
+
+      RUN_CS_ALONE -> idle when (== @entity.active true)
+        (let (
+            (newStrength (+ @entity.strength (* @config.alpha (- 0 @entity.strength))))
+          )
+          (do
+            (set @entity.strength @newStrength)
+            (set @entity.history (array/takeLast (array/append @entity.history @newStrength) @config.historyCap))
+            (set @entity.trialCount (+ @entity.trialCount 1))
+            (set @entity.phase "EXTINCTION")
+          )
+        )
+        (let (
+            (n (array/len @entity.history))
+            (marginX 40)
+            (marginY 24)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (points (array/map (array/range @n) (fn i (let (
+                  (v (array/nth @entity.history @i))
+                  (x (+ @marginX (if (<= @n 1) 0 (* (/ @i (- @n 1)) @plotWidth))))
+                  (yRatio (math/clamp (/ @v @config.lambda) 0 1))
+                  (y (- @plotBottom (* @yRatio @plotHeight)))
+                )
+                { x: @x, y: @y }))))
+            (current (array/last @points))
+            (pathD (array/reduce @points "" (fn acc p (str/concat @acc (if (== @acc "") "M" " L") " " (object/get @p x) " " (object/get @p y)))))
+            (curveShapes (array/concat [
+                { type: line, id: "baseline", x1: @marginX, y1: @plotBottom, x2: (+ @marginX @plotWidth), y2: @plotBottom, color: "#94a3b8", lineWidth: 1 },
+                { type: line, id: "asymptote", x1: @marginX, y1: (- @plotBottom @plotHeight), x2: (+ @marginX @plotWidth), y2: (- @plotBottom @plotHeight), color: "#cbd5e1", lineWidth: 1 },
+                { type: path, id: "curve", path: @pathD, color: @config.curveColor, lineWidth: 2.5 }
+              ] [
+                { type: circle, id: "current", x: (object/get @current x), y: (object/get @current y), radius: 5, color: @config.curveColor, fill: @config.curveColor }
+              ]))
+          )
+          (do
+            (set @entity.curveShapes @curveShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.curveShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.phase "") "No Trials Yet" @entity.phase), variant: (if (== @entity.phase "ACQUISITION") "success" (if (== @entity.phase "EXTINCTION") "danger" "neutral")) },
+                    { type: typography, variant: caption, content: (str/concat "Trials run: " @entity.trialCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Associative strength (V): " (math/round @entity.strength 3)) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_PAIRING, label: "Run Pairing (CS+US)", variant: primary },
+                    { type: button, action: RUN_CS_ALONE, label: "Run CS Alone (Extinction)", variant: secondary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] }
+              ] }
+          ]
+        })
+        (emit CONDITIONING_UPDATED { strength: @entity.strength, trialCount: @entity.trialCount, phase: @entity.phase })
+
+      RESET_TRIALS -> idle when (== @entity.active true)
+        (set @entity.strength 0)
+        (set @entity.history [0])
+        (set @entity.trialCount 0)
+        (set @entity.phase "")
+        (let (
+            (n (array/len @entity.history))
+            (marginX 40)
+            (marginY 24)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (points (array/map (array/range @n) (fn i (let (
+                  (v (array/nth @entity.history @i))
+                  (x (+ @marginX (if (<= @n 1) 0 (* (/ @i (- @n 1)) @plotWidth))))
+                  (yRatio (math/clamp (/ @v @config.lambda) 0 1))
+                  (y (- @plotBottom (* @yRatio @plotHeight)))
+                )
+                { x: @x, y: @y }))))
+            (current (array/last @points))
+            (pathD (array/reduce @points "" (fn acc p (str/concat @acc (if (== @acc "") "M" " L") " " (object/get @p x) " " (object/get @p y)))))
+            (curveShapes (array/concat [
+                { type: line, id: "baseline", x1: @marginX, y1: @plotBottom, x2: (+ @marginX @plotWidth), y2: @plotBottom, color: "#94a3b8", lineWidth: 1 },
+                { type: line, id: "asymptote", x1: @marginX, y1: (- @plotBottom @plotHeight), x2: (+ @marginX @plotWidth), y2: (- @plotBottom @plotHeight), color: "#cbd5e1", lineWidth: 1 },
+                { type: path, id: "curve", path: @pathD, color: @config.curveColor, lineWidth: 2.5 }
+              ] [
+                { type: circle, id: "current", x: (object/get @current x), y: (object/get @current y), radius: 5, color: @config.curveColor, fill: @config.curveColor }
+              ]))
+          )
+          (do
+            (set @entity.curveShapes @curveShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.curveShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.phase "") "No Trials Yet" @entity.phase), variant: (if (== @entity.phase "ACQUISITION") "success" (if (== @entity.phase "EXTINCTION") "danger" "neutral")) },
+                    { type: typography, variant: caption, content: (str/concat "Trials run: " @entity.trialCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Associative strength (V): " (math/round @entity.strength 3)) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_PAIRING, label: "Run Pairing (CS+US)", variant: primary },
+                    { type: button, action: RUN_CS_ALONE, label: "Run CS Alone (Extinction)", variant: secondary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] }
+              ] }
+          ]
+        })
+        (emit CONDITIONING_UPDATED { strength: @entity.strength, trialCount: @entity.trialCount, phase: @entity.phase })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      RUN_PAIRING {
+      }
+        @description "Learner ran a CS+US pairing trial, driving associative strength toward the asymptote via the Rescorla-Wagner acquisition rule."
+        @tier "domain"
+      RUN_CS_ALONE {
+      }
+        @description "Learner ran a CS-alone trial, driving associative strength toward zero via the Rescorla-Wagner extinction rule."
+        @tier "domain"
+      RESET_TRIALS {
+      }
+        @description "Learner reset the trial history — associative strength, trial count, and phase all return to their starting values."
+        @tier "domain"
+    }
+
+    emits {
+      CONDITIONING_UPDATED -> external {
+        strength : number
+        trialCount : number
+        phase : string
+      }
+        @description "The conditioning state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "conditioning update, associative strength, acquisition, extinction, trial result"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Classical Conditioning"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 420
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      alpha : number = 0.3
+        @label "Learning Rate (α)"
+        @description "Rescorla-Wagner learning-rate parameter — the fraction of the prediction error (λ − V, or 0 − V during extinction) applied to associative strength on each trial."
+        @synonyms "alpha, learning rate, Rescorla-Wagner alpha, salience, associability"
+        @tier "domain"
+      lambda : number = 1
+        @label "Asymptote (λ)"
+        @description "Maximum associative strength the unconditioned stimulus supports; RUN_PAIRING drives V toward this value, RUN_CS_ALONE (extinction) drives V toward 0."
+        @synonyms "lambda, asymptote, maximum associative strength, US intensity, unconditioned stimulus intensity"
+        @tier "domain"
+      historyCap : number = 30
+        @label "History Cap"
+        @description "Maximum number of sampled associative-strength points kept in the acquisition/extinction curve history; older points are dropped once this is exceeded."
+        @synonyms "history length, curve window, sample cap"
+        @tier "domain"
+      curveColor : string = "#2563eb"
+        @label "Curve Color"
+        @description "Color of the acquisition/extinction curve polyline and its current-value marker."
+        @tier "presentation"
+    }
+  }
+
+  page "/psych-conditioning" as PsychConditioningPage -> PsychConditioningSim
+}

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -165,4 +165,1370 @@ export function stdEventLog(params: StdEventLogParams): OrbitalDefinition {
       stdEventLogPage(params),
     ],
   });
+}
+
+type _StdEventLogEntityName = 'EventLogView';
+type _StdEventLogListenTraitName = 'EventLogTimeline';
+
+/**
+ * Tunable params for the EventLogOrbital orbital.
+ *
+ * Canonical entity: EventLogView — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdEventLogEventLogOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'EventLogTimeline',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait EventLogOrbital's `uses[]` exports. */
+type _StdEventLogEventLogOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the EventLogOrbital orbital with consumer params. */
+export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'EventLogOrbital',
+    uses: [],
+    entity: {
+      name: 'EventLogView',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The descriptive name or heading for the event log.',
+            'name': 'title',
+            'synonyms': 'heading, label, name',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'A human-readable explanation of the event.',
+            'name': 'description',
+            'synonyms': 'text, details, explanation, summary',
+            'type': 'string',
+          },
+          {
+            'default': 'created',
+            'description': 'The type of event being logged.',
+            'name': 'kind',
+            'synonyms': 'event type, event category, kind, status',
+            'type': 'string',
+            'values': [
+              'created',
+              'updated',
+              'approved',
+              'rejected',
+            ],
+          },
+          {
+            'description': 'The timestamp associated with the event.',
+            'name': 'date',
+            'synonyms': 'timestamp, time, occurred',
+            'type': 'date',
+          },
+          {
+            'default': [],
+            'description': 'An array of log entry objects.',
+            'items': {
+              'properties': {
+                'date': {
+                  'name': 'date',
+                  'required': false,
+                  'type': 'string',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'kind': {
+                  'name': 'kind',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'created',
+                    'updated',
+                    'approved',
+                    'rejected',
+                  ],
+                },
+                'status': {
+                  'name': 'status',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
+                },
+                'title': {
+                  'name': 'title',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'allEntries',
+            'synonyms': 'entries, records, items, data',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'description': 'A list of log entries, each with associated data.',
+            'items': {
+              'properties': {
+                'date': {
+                  'name': 'date',
+                  'required': false,
+                  'type': 'string',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'kind': {
+                  'name': 'kind',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'created',
+                    'updated',
+                    'approved',
+                    'rejected',
+                  ],
+                },
+                'status': {
+                  'name': 'status',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
+                },
+                'title': {
+                  'name': 'title',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'entries',
+            'synonyms': 'records, items, data, events',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'description': 'Represents selectable filter options for event categories.',
+            'items': {
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'filterChips',
+            'synonyms': 'filters, categories, types, selections',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'description': 'The type of filter currently applied to the event log.',
+            'name': 'filterKind',
+            'synonyms': 'filter, category, type',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'A descriptive title for a manually added event.',
+            'name': 'backfillTitle',
+            'synonyms': 'manual title, user-provided title, custom title',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'A textual explanation for the event backfill process.',
+            'name': 'backfillDescription',
+            'synonyms': 'explanation, details, notes, information',
+            'type': 'string',
+          },
+          {
+            'description': 'The date and time when the event was manually added.',
+            'name': 'backfillDate',
+            'synonyms': 'timestamp, entered date, manual date',
+            'type': 'date',
+          },
+          {
+            'default': '',
+            'description': 'Specifies the category or type of the manually added event.',
+            'name': 'backfillKind',
+            'synonyms': 'event type, category, kind',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'A human-readable message indicating an error condition.',
+            'name': 'errorMessage',
+            'synonyms': 'error, error message, problem, issue',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'cardLook': {
+            'default': 'elevated',
+            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
+            'label': 'Card look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'elevated',
+              'flat-bordered',
+              'borderless-divider',
+              'ticket',
+              'invoice',
+              'chip',
+              'tile-image-first',
+            ],
+          },
+          'formFields': {
+            'default': [
+              'backfillTitle',
+              'backfillDescription',
+              'backfillKind',
+              'backfillDate',
+            ],
+            'description': 'Inputs shown in the form for manually logging missed events',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Backfill fields',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'kindOptions': {
+            'default': [
+              {
+                'icon': 'plus-circle',
+                'key': 'created',
+                'label': 'Created',
+                'status': 'active',
+              },
+              {
+                'icon': 'edit-3',
+                'key': 'updated',
+                'label': 'Updated',
+                'status': 'pending',
+              },
+              {
+                'icon': 'check-circle',
+                'key': 'approved',
+                'label': 'Approved',
+                'status': 'complete',
+              },
+              {
+                'icon': 'x-circle',
+                'key': 'rejected',
+                'label': 'Rejected',
+                'status': 'error',
+              },
+            ],
+            'description': 'Maps each event kind to its label, icon, and status color',
+            'items': {
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'status': {
+                  'name': 'status',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Event kinds',
+            'tier': 'presentation',
+            'type': '[KindOption]',
+          },
+          'timelineLook': {
+            'default': 'vertical-spacious',
+            'description': 'Layer 2 visual treatment for the timeline.',
+            'label': 'Timeline look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'vertical-compact',
+              'vertical-spacious',
+              'horizontal',
+              'swimlane',
+            ],
+          },
+          'title': {
+            'default': 'Activity',
+            'description': 'Heading shown above the activity timeline',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals a filter has been applied to the event log.',
+            'event': 'APPLY_FILTER',
+            'payloadSchema': [
+              {
+                'name': 'tabId',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'filter, refine, narrow, update',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Initiates a backfill operation to retrieve historical events.',
+            'event': 'OPEN_BACKFILL',
+            'synonyms': 'refresh, retrieve, load history',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates successful completion of backfill data saving.',
+            'event': 'SAVE_BACKFILL',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'saved, persisted, committed',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Aborts the backfill process.',
+            'event': 'CANCEL_BACKFILL',
+            'synonyms': 'abort, stop, dismiss, undo',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals the event log has finished loading.',
+            'event': 'EventLogLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ObjectSpec]',
+              },
+            ],
+            'synonyms': 'loaded, ready, initialized',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates that loading the event log failed.',
+            'event': 'EventLogLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, failed, problem',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates a new event has been successfully logged.',
+            'event': 'EventLogSaved',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'saved, added, created, recorded',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates that saving an event failed.',
+            'event': 'EventLogSaveFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, failed, problem',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'allEntries',
+            'backfillDate',
+            'backfillDescription',
+            'backfillKind',
+            'backfillTitle',
+            'entries',
+            'errorMessage',
+            'filterChips',
+            'filterKind',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'EventLogView',
+        'name': 'EventLogTimeline',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals the event log has finished loading.',
+              'key': 'EventLogLoaded',
+              'name': 'Event log loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ObjectSpec]',
+                },
+              ],
+              'synonyms': 'loaded, ready, initialized',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates that loading the event log failed.',
+              'key': 'EventLogLoadFailed',
+              'name': 'Event log load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, failed, problem',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a new event has been successfully logged.',
+              'key': 'EventLogSaved',
+              'name': 'Event log saved',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'saved, added, created, recorded',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates that saving an event failed.',
+              'key': 'EventLogSaveFailed',
+              'name': 'Event log save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, failed, problem',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals a filter has been applied to the event log.',
+              'key': 'APPLY_FILTER',
+              'name': 'Apply Filter',
+              'payloadSchema': [
+                {
+                  'name': 'tabId',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'filter, refine, narrow, update',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Initiates a backfill operation to retrieve historical events.',
+              'key': 'OPEN_BACKFILL',
+              'name': 'Open Backfill',
+              'synonyms': 'refresh, retrieve, load history',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates successful completion of backfill data saving.',
+              'key': 'SAVE_BACKFILL',
+              'name': 'Save Backfill',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'saved, persisted, committed',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Aborts the backfill process.',
+              'key': 'CANCEL_BACKFILL',
+              'name': 'Cancel Backfill',
+              'synonyms': 'abort, stop, dismiss, undo',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'viewing',
+            },
+            {
+              'name': 'backfilling',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('EventLogView' satisfies _StdEventLogEntityName),
+                  {
+                    'emit': {
+                      'failure': 'EventLogLoadFailed',
+                      'success': 'EventLogLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Loading activity…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.filterChips',
+                  [
+                    'array/prepend',
+                    [
+                      'array/map',
+                      '@config.kindOptions',
+                      [
+                        'fn',
+                        'k',
+                        {
+                          'icon': [
+                            'object/get',
+                            '@k',
+                            'icon',
+                            'circle',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@k',
+                            'key',
+                          ],
+                          'label': [
+                            'object/get',
+                            '@k',
+                            'label',
+                          ],
+                        },
+                      ],
+                    ],
+                    {
+                      'icon': 'list',
+                      'id': '',
+                      'label': 'All',
+                    },
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.allEntries',
+                  [
+                    'array/sort',
+                    [
+                      'array/map',
+                      '@payload.data',
+                      [
+                        'fn',
+                        'row',
+                        {
+                          'date': [
+                            'object/get',
+                            '@row',
+                            'createdAt',
+                            [
+                              'object/get',
+                              '@row',
+                              'date',
+                              '',
+                            ],
+                          ],
+                          'description': [
+                            'object/get',
+                            '@row',
+                            'description',
+                            '',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@row',
+                            'id',
+                            '',
+                          ],
+                          'kind': [
+                            'object/get',
+                            '@row',
+                            'kind',
+                            '',
+                          ],
+                          'status': [
+                            'object/get',
+                            [
+                              'or',
+                              [
+                                'array/find',
+                                '@config.kindOptions',
+                                [
+                                  'fn',
+                                  'k',
+                                  [
+                                    '=',
+                                    [
+                                      'object/get',
+                                      '@k',
+                                      'key',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@row',
+                                      'kind',
+                                      '',
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {},
+                            ],
+                            'status',
+                            'pending',
+                          ],
+                          'title': [
+                            'object/get',
+                            '@row',
+                            'title',
+                            '',
+                          ],
+                        },
+                      ],
+                    ],
+                    'date',
+                    'desc',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.entries',
+                  [
+                    'array/sort',
+                    [
+                      'array/map',
+                      '@payload.data',
+                      [
+                        'fn',
+                        'row',
+                        {
+                          'date': [
+                            'object/get',
+                            '@row',
+                            'createdAt',
+                            [
+                              'object/get',
+                              '@row',
+                              'date',
+                              '',
+                            ],
+                          ],
+                          'description': [
+                            'object/get',
+                            '@row',
+                            'description',
+                            '',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@row',
+                            'id',
+                            '',
+                          ],
+                          'kind': [
+                            'object/get',
+                            '@row',
+                            'kind',
+                            '',
+                          ],
+                          'status': [
+                            'object/get',
+                            [
+                              'or',
+                              [
+                                'array/find',
+                                '@config.kindOptions',
+                                [
+                                  'fn',
+                                  'k',
+                                  [
+                                    '=',
+                                    [
+                                      'object/get',
+                                      '@k',
+                                      'key',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@row',
+                                      'kind',
+                                      '',
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {},
+                            ],
+                            'status',
+                            'pending',
+                          ],
+                          'title': [
+                            'object/get',
+                            '@row',
+                            'title',
+                            '',
+                          ],
+                        },
+                      ],
+                    ],
+                    'date',
+                    'desc',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'history',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'action': 'OPEN_BACKFILL',
+                            'icon': 'plus',
+                            'label': 'Log event',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'activeTab': '@entity.filterKind',
+                        'tabChangeEvent': 'APPLY_FILTER',
+                        'tabs': '@entity.filterChips',
+                        'type': 'tabs',
+                      },
+                      {
+                        'entity': '@entity.entries',
+                        'fields': [
+                          'title',
+                          'description',
+                          'date',
+                          'status',
+                        ],
+                        'look': '@config.timelineLook',
+                        'type': 'timeline',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'EventLogLoaded',
+              'from': 'loading',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@entity.errorMessage',
+                    'title': 'Failed to load',
+                    'type': 'error-state',
+                  },
+                ],
+              ],
+              'event': 'EventLogLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('EventLogView' satisfies _StdEventLogEntityName),
+                  {
+                    'emit': {
+                      'failure': 'EventLogLoadFailed',
+                      'success': 'EventLogLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Refreshing…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'EventLogSaved',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@entity.errorMessage',
+                    'title': 'Save failed',
+                    'type': 'error-state',
+                  },
+                ],
+              ],
+              'event': 'EventLogSaveFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('EventLogView' satisfies _StdEventLogEntityName),
+                  {
+                    'emit': {
+                      'failure': 'EventLogLoadFailed',
+                      'success': 'EventLogLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'viewing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.filterKind',
+                  '@payload.tabId',
+                ],
+                [
+                  'set',
+                  '@entity.entries',
+                  [
+                    'array/filter',
+                    '@entity.allEntries',
+                    [
+                      'fn',
+                      'e',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@payload.tabId',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@e',
+                            'kind',
+                          ],
+                          '@payload.tabId',
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'history',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'action': 'OPEN_BACKFILL',
+                            'icon': 'plus',
+                            'label': 'Log event',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'activeTab': '@entity.filterKind',
+                        'tabChangeEvent': 'APPLY_FILTER',
+                        'tabs': '@entity.filterChips',
+                        'type': 'tabs',
+                      },
+                      {
+                        'entity': '@entity.entries',
+                        'fields': [
+                          'title',
+                          'description',
+                          'date',
+                          'status',
+                        ],
+                        'look': '@config.timelineLook',
+                        'type': 'timeline',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'APPLY_FILTER',
+              'from': 'viewing',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.backfillTitle',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.backfillDescription',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.backfillDate',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.backfillKind',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'CANCEL_BACKFILL',
+                            'icon': 'arrow-left',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'name': 'plus-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Log event',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'cancelEvent': 'CANCEL_BACKFILL',
+                            'entity': '@entity',
+                            'fields': '@config.formFields',
+                            'mode': 'create',
+                            'submitEvent': 'SAVE_BACKFILL',
+                            'type': 'form-section',
+                          },
+                        ],
+                        'look': '@config.cardLook',
+                        'type': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'OPEN_BACKFILL',
+              'from': 'viewing',
+              'to': 'backfilling',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('EventLogView' satisfies _StdEventLogEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'EventLogSaveFailed',
+                      'success': 'EventLogSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Saving entry…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'SAVE_BACKFILL',
+              'from': 'backfilling',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'history',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'action': 'OPEN_BACKFILL',
+                            'icon': 'plus',
+                            'label': 'Log event',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'activeTab': '@entity.filterKind',
+                        'tabChangeEvent': 'APPLY_FILTER',
+                        'tabs': '@entity.filterChips',
+                        'type': 'tabs',
+                      },
+                      {
+                        'entity': '@entity.entries',
+                        'fields': [
+                          'title',
+                          'description',
+                          'date',
+                          'status',
+                        ],
+                        'look': '@config.timelineLook',
+                        'type': 'timeline',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CANCEL_BACKFILL',
+              'from': 'backfilling',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Retrying…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'EventLogPage',
+        'path': '/event-log',
+        'traits': [
+          {
+            'ref': 'EventLogTimeline',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdEventLogEventLogOrbital. */
+export const StdEventLogEventLogOrbitalManifest = {
+  organism: 'std-event-log',
+  orbitalName: 'EventLogOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'EventLogTimeline',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdEventLogEventLogOrbitalParams keys. */
+export function isStdEventLogEventLogOrbitalParams(p: object): p is StdEventLogEventLogOrbitalParams {
+  type _OverrideRecord = NonNullable<StdEventLogEventLogOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdEventLogEventLogOrbitalManifest.traitNames,
+      ...StdEventLogEventLogOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

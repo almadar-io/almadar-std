@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -158,4 +158,646 @@ export function stdLifecycle(params: StdLifecycleParams): OrbitalDefinition {
       stdLifecyclePage(params),
     ],
   });
+}
+
+type _StdLifecycleEntityName = 'LifecycleRunLog';
+type _StdLifecycleListenTraitName = 'LifecycleScheduler';
+
+/**
+ * Tunable params for the LifecycleOrbital orbital.
+ *
+ * Canonical entity: LifecycleRunLog — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLifecycleLifecycleOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'LifecycleScheduler',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait LifecycleOrbital's `uses[]` exports. */
+type _StdLifecycleLifecycleOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the LifecycleOrbital orbital with consumer params. */
+export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'lifecycle_runs');
+  const built = makeOrbitalWithUses({
+    name: 'LifecycleOrbital',
+    uses: [],
+    entity: {
+      name: 'LifecycleRunLog',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The entity to which lifecycle rules apply.',
+            'name': 'targetEntity',
+            'synonyms': 'subject, reference, target',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'The number of records processed.',
+            'name': 'recordCount',
+            'synonyms': 'count, size, quantity',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Timestamp indicating when the lifecycle run occurred.',
+            'name': 'ranAt',
+            'synonyms': 'timestamp, execution time, run time',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'description': 'A textual description of any errors encountered.',
+            'name': 'errors',
+            'synonyms': 'error message, problem, issue, fault',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Lifecycle status (also lets the standalone default target validate).',
+            'name': 'status',
+            'synonyms': 'state, stage',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Scratch: id of the record the scan loop is currently transitioning.',
+            'name': 'headId',
+            'synonyms': 'current id, cursor',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Scratch: the status applied to the current record.',
+            'name': 'headStatus',
+            'synonyms': 'new status, to status',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'ageDays': {
+            'default': 30,
+            'description': 'Records older than this many days move from the source status to the destination status.',
+            'label': 'How old (in days) before a record is transitioned?',
+            'synonyms': 'age threshold, days until archive, expiry days, max age, retention days',
+            'tier': 'infra',
+            'type': 'number',
+          },
+          'dateField': {
+            'default': 'ranAt',
+            'description': 'Numeric (ms-epoch) entity field compared against the age threshold (e.g. \'createdAt\').',
+            'label': 'Which date field measures the record\'s age?',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'dryRun': {
+            'default': false,
+            'description': 'When true, the scan runs but no status transitions are persisted.',
+            'label': 'Run in dry-run mode (no changes written)?',
+            'synonyms': 'test mode, preview, simulate, dry run, no write',
+            'tier': 'infra',
+            'type': 'boolean',
+          },
+          'enabled': {
+            'default': false,
+            'description': 'Automatically change the status of records once they age past a threshold. Off by default.',
+            'label': 'Auto-archive old records',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive',
+            'tier': 'infra',
+            'type': 'boolean',
+          },
+          'fromStatus': {
+            'default': '',
+            'description': 'Only records currently in this status are candidates for automatic transition.',
+            'label': 'Which status triggers the age-out?',
+            'synonyms': 'source status, current status, eligible status, starting status',
+            'tier': 'infra',
+            'type': 'string',
+          },
+          'targetEntity': {
+            'default': 'LifecycleRunLog',
+            'description': 'Entity name to scan and transition (e.g. \'Task\'). Defaults to the atom\'s own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
+            'label': 'Target entity',
+            'tier': 'internal',
+            'type': 'entity',
+          },
+          'toStatus': {
+            'default': '',
+            'description': 'Status assigned once a record ages past the threshold (e.g. \'archived\', \'expired\').',
+            'label': 'What status should old records move to?',
+            'synonyms': 'target status, end status, destination status, archive status',
+            'tier': 'infra',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'event': 'LifecycleTransitioned',
+            'payloadSchema': [
+              {
+                'name': 'entityId',
+                'type': 'string',
+              },
+              {
+                'name': 'status',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+          },
+          {
+            'event': 'ScanRecordsLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+              },
+            ],
+          },
+          {
+            'event': 'ScanFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'LifecycleStepped',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'headId',
+            'headStatus',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'LifecycleRunLog',
+        'name': 'LifecycleScheduler',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ScanRecordsLoaded',
+              'name': 'Scan records loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                },
+              ],
+            },
+            {
+              'key': 'ScanFailed',
+              'name': 'Scan failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'LifecycleStepped',
+              'name': 'Lifecycle stepped',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'LifecycleTransitioned',
+              'name': 'Lifecycle transitioned',
+              'payloadSchema': [
+                {
+                  'name': 'entityId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'status',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'scanning',
+            },
+          ],
+          'transitions': [
+            {
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.headId',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      '@payload.data',
+                    ],
+                    'id',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.headStatus',
+                  '@config.toStatus',
+                ],
+                [
+                  'emit',
+                  'LifecycleTransitioned',
+                  {
+                    'status': '@entity.headStatus',
+                  },
+                ],
+                [
+                  'persist',
+                  'update',
+                  '@config.targetEntity',
+                  {
+                    'id': '@entity.headId',
+                    'status': '@entity.headStatus',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ScanFailed',
+                      'success': 'LifecycleStepped',
+                    },
+                  },
+                ],
+              ],
+              'event': 'ScanRecordsLoaded',
+              'from': 'idle',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  '>',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                  0,
+                ],
+              ],
+              'to': 'scanning',
+            },
+            {
+              'event': 'ScanRecordsLoaded',
+              'from': 'idle',
+              'guard': [
+                '=',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
+              'to': 'idle',
+            },
+            {
+              'event': 'ScanFailed',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  '@config.targetEntity',
+                  {
+                    'emit': {
+                      'failure': 'ScanFailed',
+                      'success': 'ScanRecordsLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          'status',
+                        ],
+                        '@config.fromStatus',
+                      ],
+                      [
+                        '<',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.dateField',
+                        ],
+                        [
+                          '-',
+                          '@now',
+                          [
+                            '*',
+                            '@config.ageDays',
+                            86400000,
+                          ],
+                        ],
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'LifecycleStepped',
+              'from': 'scanning',
+              'to': 'scanning',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.headId',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      '@payload.data',
+                    ],
+                    'id',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.headStatus',
+                  '@config.toStatus',
+                ],
+                [
+                  'emit',
+                  'LifecycleTransitioned',
+                  {
+                    'status': '@entity.headStatus',
+                  },
+                ],
+                [
+                  'persist',
+                  'update',
+                  '@config.targetEntity',
+                  {
+                    'id': '@entity.headId',
+                    'status': '@entity.headStatus',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ScanFailed',
+                      'success': 'LifecycleStepped',
+                    },
+                  },
+                ],
+              ],
+              'event': 'ScanRecordsLoaded',
+              'from': 'scanning',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
+              'to': 'scanning',
+            },
+            {
+              'event': 'ScanRecordsLoaded',
+              'from': 'scanning',
+              'guard': [
+                '=',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
+              'to': 'idle',
+            },
+            {
+              'event': 'ScanFailed',
+              'from': 'scanning',
+              'to': 'idle',
+            },
+          ],
+        },
+        'ticks': [
+          {
+            'effects': [
+              [
+                'fetch',
+                '@config.targetEntity',
+                {
+                  'emit': {
+                    'failure': 'ScanFailed',
+                    'success': 'ScanRecordsLoaded',
+                  },
+                  'filter': [
+                    'and',
+                    [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'status',
+                      ],
+                      '@config.fromStatus',
+                    ],
+                    [
+                      '<',
+                      [
+                        'object/get',
+                        '@entity',
+                        '@config.dateField',
+                      ],
+                      [
+                        '-',
+                        '@now',
+                        [
+                          '*',
+                          '@config.ageDays',
+                          86400000,
+                        ],
+                      ],
+                    ],
+                  ],
+                },
+              ],
+            ],
+            'interval': '0 * * * *',
+            'name': 'scanCycle',
+          },
+        ],
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'LifecycleSchedulerPage',
+        'path': '/lifecycle/scheduler',
+        'traits': [
+          {
+            'ref': 'LifecycleScheduler',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLifecycleLifecycleOrbital. */
+export const StdLifecycleLifecycleOrbitalManifest = {
+  organism: 'std-lifecycle',
+  orbitalName: 'LifecycleOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'LifecycleScheduler',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLifecycleLifecycleOrbitalParams keys. */
+export function isStdLifecycleLifecycleOrbitalParams(p: object): p is StdLifecycleLifecycleOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLifecycleLifecycleOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLifecycleLifecycleOrbitalManifest.traitNames,
+      ...StdLifecycleLifecycleOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

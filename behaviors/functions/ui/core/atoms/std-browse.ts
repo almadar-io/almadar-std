@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -171,4 +171,2176 @@ export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {
       stdBrowsePage(params),
     ],
   });
+}
+
+type _StdBrowseEntityName = 'BrowseItem';
+type _StdBrowseListenTraitName = 'DataGrid1' | 'DenseTableView' | 'MasterListView' | 'BrowseItemBrowse';
+
+/**
+ * Tunable params for the BrowseItemOrbital orbital.
+ *
+ * Canonical entity: BrowseItem — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdBrowseBrowseItemOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'DataGrid1' | 'DenseTableView' | 'MasterListView' | 'BrowseItemBrowse',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait BrowseItemOrbital's `uses[]` exports. */
+type _StdBrowseBrowseItemOrbitalUsesRef = 'Typography.traits.TypographyRender' | 'DataGrid.traits.DataGridRender' | 'TableView.traits.TableViewRender' | 'DataList.traits.DataListRender';
+
+/** Per-orbital factory: builds the BrowseItemOrbital orbital with consumer params. */
+export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'BrowseItemOrbital',
+    uses: [
+      {
+        'as': 'Typography',
+        'from': 'std/behaviors/ui-typography',
+      },
+      {
+        'as': 'DataGrid',
+        'from': 'std/behaviors/ui-data-grid',
+      },
+      {
+        'as': 'TableView',
+        'from': 'std/behaviors/ui-table-view',
+      },
+      {
+        'as': 'DataList',
+        'from': 'std/behaviors/ui-data-list',
+      },
+    ],
+    expects: [
+      {
+        'kind': 'identity',
+      },
+    ],
+    entity: {
+      name: 'BrowseItem',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The item\'s identifier or title.',
+            'name': 'name',
+            'required': true,
+            'synonyms': 'title, label, itemName',
+            'type': 'string',
+          },
+          {
+            'description': 'A textual explanation or summary of the item.',
+            'name': 'description',
+            'synonyms': 'summary, details, notes, explanation',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'Indicates the current operational state of the item.',
+            'name': 'status',
+            'synonyms': 'state, condition, flag',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'cols': {
+            'default': '@config.cols',
+            'type': 'unknown',
+          },
+          'fields': {
+            'default': '@config.fields',
+            'type': 'unknown',
+          },
+          'gap': {
+            'default': '@config.gap',
+            'type': 'unknown',
+          },
+          'imageField': {
+            'default': '@config.imageField',
+            'type': 'unknown',
+          },
+          'itemActions': {
+            'default': '@config.itemActions',
+            'type': 'unknown',
+          },
+          'maxInlineActions': {
+            'default': '@config.maxInlineActions',
+            'type': 'unknown',
+          },
+          'pageSize': {
+            'default': '@config.displayPageSize',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'BrowseItem',
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BrowseItemBrowse',
+            },
+            'triggers': 'DataGridLoaded',
+          },
+        ],
+        'name': 'DataGrid1',
+        'ref': ('DataGrid.traits.DataGridRender' satisfies _StdBrowseBrowseItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'columns': {
+            'default': '@config.columns',
+            'type': 'unknown',
+          },
+          'emptyMessage': {
+            'default': 'No records',
+            'type': 'unknown',
+          },
+          'itemActions': {
+            'default': '@config.itemActions',
+            'type': 'unknown',
+          },
+          'itemClickEvent': {
+            'default': '@config.itemClickEvent',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': 'dense',
+            'type': 'unknown',
+          },
+          'maxInlineActions': {
+            'default': '@config.maxInlineActions',
+            'type': 'unknown',
+          },
+          'pageSize': {
+            'default': '@config.displayPageSize',
+            'type': 'unknown',
+          },
+          'selectable': {
+            'default': '@config.selectable',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'BrowseItem',
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BrowseItemBrowse',
+            },
+            'triggers': 'TableViewLoaded',
+          },
+        ],
+        'name': 'DenseTableView',
+        'ref': ('TableView.traits.TableViewRender' satisfies _StdBrowseBrowseItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'fields': {
+            'default': '@config.fields',
+            'type': 'unknown',
+          },
+          'itemActions': {
+            'default': '@config.itemActions',
+            'type': 'unknown',
+          },
+          'itemClickEvent': {
+            'default': '@config.itemClickEvent',
+            'type': 'unknown',
+          },
+          'maxInlineActions': {
+            'default': '@config.maxInlineActions',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'compact',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'BrowseItem',
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BrowseItemBrowse',
+            },
+            'triggers': 'DataListLoaded',
+          },
+        ],
+        'name': 'MasterListView',
+        'ref': ('DataList.traits.DataListRender' satisfies _StdBrowseBrowseItemOrbitalUsesRef),
+      }),
+      {
+        'category': 'interaction',
+        'config': {
+          'assigneeBinding': {
+            'default': '@item.assignee',
+            'description': 'Binding path for the assignee/owner slot.',
+            'label': 'Assignee field binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'badgeBinding': {
+            'default': '@item.status',
+            'description': 'Binding path for the status/badge slot.',
+            'label': 'Badge field binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'bodyContent': {
+            'default': {
+              'children': [
+                '@trait.DataGrid1',
+              ],
+              'direction': 'vertical',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = table (the default). Composes the canonical data-grid call wrapped in a stack. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens.',
+            'label': 'Body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'bodySearch': {
+            'default': true,
+            'description': 'The dense/feed/gallery looks embed their own search box above the rows. Set false when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.',
+            'label': 'Show the list\'s own search box?',
+            'synonyms': 'inline search, list search, built-in search, show search, duplicate search',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'browseLook': {
+            'default': 'table',
+            'description': 'Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style table with toolbar search (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent); master-detail = record-work split view — dense list left, clicked record\'s detail right (masterDetailBodyContent); triage = inbox-register compact rows for queue work (triageBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any body may still be overridden directly at the call site for a one-off layout.',
+            'label': 'Browse look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'table',
+              'dense',
+              'feed',
+              'gallery',
+              'master-detail',
+              'triage',
+            ],
+          },
+          'categoryBinding': {
+            'default': '@item.category',
+            'description': 'Binding path for the category/tag slot.',
+            'label': 'Category field binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'cols': {
+            'default': 1,
+            'description': 'Number of columns in the responsive card/grid layout.',
+            'label': 'How many columns in the grid?',
+            'synonyms': 'columns, grid width, card columns, num columns',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'columns': {
+            'default': [
+              {
+                'align': 'left',
+                'field': 'name',
+                'header': 'Name',
+                'key': 'name',
+                'weight': 'medium',
+              },
+              {
+                'align': 'left',
+                'field': 'description',
+                'header': 'Detail',
+                'key': 'description',
+              },
+              {
+                'align': 'center',
+                'field': 'status',
+                'format': 'badge',
+                'header': 'Status',
+                'key': 'status',
+              },
+            ],
+            'description': 'Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.',
+            'items': {
+              'properties': {
+                'align': {
+                  'name': 'align',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'left',
+                    'center',
+                    'right',
+                  ],
+                },
+                'className': {
+                  'name': 'className',
+                  'required': false,
+                  'type': 'string',
+                },
+                'field': {
+                  'name': 'field',
+                  'required': false,
+                  'type': 'string',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'badge',
+                    'date',
+                    'currency',
+                    'number',
+                    'percent',
+                    'boolean',
+                  ],
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'string',
+                },
+                'weight': {
+                  'name': 'weight',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'normal',
+                    'medium',
+                    'semibold',
+                  ],
+                },
+                'width': {
+                  'name': 'width',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Table columns',
+            'tier': 'presentation',
+            'type': '[ColumnSpec]',
+          },
+          'denseBodyContent': {
+            'default': {
+              'children': [
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                {
+                  'children': [
+                    '@trait.DenseTableView',
+                  ],
+                  'className': 'overflow-x-auto',
+                  'direction': 'vertical',
+                  'gap': 'none',
+                  'type': 'stack',
+                },
+              ],
+              'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden',
+              'direction': 'vertical',
+              'gap': 'none',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B).',
+            'label': 'Dense look body',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'descriptionBinding': {
+            'default': '@item.description',
+            'description': 'Binding path for the card body/subtitle slot.',
+            'label': 'Description field binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'detailActions': {
+            'default': [
+              {
+                'event': 'CLOSE',
+                'label': 'Close',
+              },
+            ],
+            'description': 'Action buttons on the master-detail record pane (detail-panel `actions` descriptors: label/event/icon/variant). Consumers add their own record actions (Edit/Delete/…) alongside or instead of Close.',
+            'label': 'Master-detail record pane actions',
+            'synonyms': 'record actions, detail actions, pane actions',
+            'tier': 'presentation',
+            'type': 'json',
+          },
+          'detailFields': {
+            'default': [
+              'name',
+              'description',
+              'status',
+              'createdAt',
+            ],
+            'description': 'Field names shown in the detail panel when browseLook = master-detail; the first entry doubles as the pane title. Consumers overriding columns/fields should override this list to match their entity.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Which fields appear in the master-detail record pane?',
+            'synonyms': 'detail columns, record fields, detail pane fields',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'displayPageSize': {
+            'default': 10,
+            'description': 'Rows visible per page before the pagination control appears.',
+            'label': 'How many rows to show at once?',
+            'synonyms': 'visible rows, items per page, display limit, show per page',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'feedBodyContent': {
+            'default': {
+              'children': [
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'className': 'w-full',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'className': 'w-full',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                {
+                  'entity': '@payload.data',
+                  'fields': [],
+                  'gap': 'md',
+                  'itemActions': '@config.itemActions',
+                  'renderItem': [
+                    'fn',
+                    'item',
+                    {
+                      'children': [
+                        {
+                          'align': 'start',
+                          'children': [
+                            {
+                              'className': 'rounded-full flex-shrink-0',
+                              'fallback': '@config.titleBinding',
+                              'size': 'md',
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'className': 'truncate',
+                                      'content': '@config.titleBinding',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'weight': 'medium',
+                                    },
+                                    {
+                                      'label': '@config.categoryBinding',
+                                      'size': 'sm',
+                                      'type': 'badge',
+                                      'variant': 'neutral',
+                                    },
+                                  ],
+                                  'className': 'flex-wrap',
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'className': 'text-[var(--color-foreground)] whitespace-pre-wrap break-words leading-relaxed',
+                                  'content': '@config.descriptionBinding',
+                                  'type': 'typography',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'color': 'muted',
+                                      'content': '@config.metaBinding',
+                                      'format': '@config.metaFormat',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'label': '@config.badgeBinding',
+                                      'size': 'sm',
+                                      'type': 'badge',
+                                      'variant': 'default',
+                                    },
+                                  ],
+                                  'className': 'pt-1',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'flex-1 min-w-0',
+                              'direction': 'vertical',
+                              'gap': 'xs',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'p-card-md',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                      ],
+                      'className': 'rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px',
+                      'look': 'flat-bordered',
+                      'padding': 'none',
+                      'type': 'card',
+                    },
+                  ],
+                  'type': 'data-list',
+                  'variant': 'card',
+                },
+              ],
+              'className': 'w-full',
+              'direction': 'vertical',
+              'gap': 'lg',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = feed. Chronological card-per-item stream with avatar, title, meta, body, timestamp; composes titleBinding/descriptionBinding/categoryBinding/badgeBinding/metaBinding/searchPlaceholder/itemActions. Folded from std-browse-feed (Phase 5.B).',
+            'label': 'Feed look body',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'fields': {
+            'default': [
+              {
+                'label': 'Name',
+                'name': 'name',
+                'variant': 'h4',
+              },
+              {
+                'label': 'Description',
+                'name': 'description',
+                'variant': 'caption',
+              },
+              {
+                'label': 'Status',
+                'name': 'status',
+                'variant': 'badge',
+              },
+            ],
+            'description': 'Each entry maps one entity field to a display column with an optional label and variant.',
+            'items': {
+              'properties': {
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which fields should appear as columns?',
+            'synonyms': 'visible columns, displayed fields, card fields, column list',
+            'tier': 'presentation',
+            'type': '[FieldSpec]',
+          },
+          'filters': {
+            'default': [],
+            'description': 'Dropdown filter facets by field. Each fires a refetch when the user changes the selection. Empty = no filter bar.',
+            'items': {
+              'properties': {
+                'field': {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'options': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'options',
+                  'required': false,
+                  'type': 'array',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which filters should appear above the list?',
+            'synonyms': 'filter bar, faceted filters, field filters, column filters, dropdowns',
+            'tier': 'presentation',
+            'type': '[FilterSpec]',
+          },
+          'galleryBodyContent': {
+            'default': {
+              'children': [
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'className': 'w-full',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'className': 'sticky top-0 z-10 py-3 bg-[var(--color-surface)]/95 backdrop-blur',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                {
+                  'className': 'w-full',
+                  'entity': '@payload.data',
+                  'fields': '@config.fields',
+                  'gap': 'lg',
+                  'imageField': '@config.imageField',
+                  'itemActions': '@config.itemActions',
+                  'maxInlineActions': '@config.maxInlineActions',
+                  'minCardWidth': 260,
+                  'type': 'data-grid',
+                },
+              ],
+              'className': 'w-full',
+              'direction': 'vertical',
+              'gap': 'lg',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = gallery. Image-first responsive card grid (auto-fit minCardWidth) on the data-grid fields path: imageField renders the card photo when set (falsy-safe when empty), fields drive title/badges/meta. One tree, no renderItem lambda — lambdas do not survive inside (if) arms (2026-07-27).',
+            'label': 'Gallery look body',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'gap': {
+            'default': 'md',
+            'description': 'Gap between grid cells: sm, md, or lg.',
+            'label': 'Spacing between rows',
+            'synonyms': 'row gap, cell spacing, grid gap, padding between items',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'imageField': {
+            'default': '',
+            'description': 'Entity field containing the thumbnail URL for each row.',
+            'label': 'Which field holds the row image?',
+            'synonyms': 'image field, thumbnail field, photo field, picture column',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'imageLabelBinding': {
+            'default': '@item.thumbnailLabel',
+            'description': 'Binding path for the image-area label slot.',
+            'label': 'Image label binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'initialFilterField': {
+            'default': '',
+            'description': 'Name the field the INITIAL load filters on, paired with initialFilterValue. This is the detail half of a list-detail pair: a thread that must wait for a conversation to be picked sets the field to its parent key and leaves the value blank, so the first load matches nothing and the empty state shows instead of every record in the table. REFETCH_FILTER then supplies the real selection. Left blank the first load is unfiltered, which is the default.',
+            'label': 'Which field does the first load filter on?',
+            'synonyms': 'initial filter, first load filter, wait for selection, detail pane filter, requires selection, start empty',
+            'tier': 'policy',
+            'type': 'string',
+          },
+          'initialFilterValue': {
+            'default': '',
+            'description': 'The value initialFilterField must equal on the first load. Blank is meaningful: it matches only records whose field is itself blank, which for a detail pane is normally none — that is how a thread stays empty until its parent is selected.',
+            'label': 'What value does the first load filter for?',
+            'synonyms': 'initial filter value, first load value, default selection',
+            'tier': 'policy',
+            'type': 'string',
+          },
+          'itemActions': {
+            'default': [],
+            'description': 'Buttons rendered on each row (e.g. Edit, Delete, View).',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'What actions can users take on each row?',
+            'synonyms': 'row buttons, row actions, item actions, per-row buttons, table actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'itemClickEvent': {
+            'default': 'VIEW',
+            'description': 'Row-click channel. Retarget when two browse lists coexist in one orbital and their VIEW payloads differ, so each gets its own typed channel.',
+            'label': 'Which event does clicking a row fire?',
+            'synonyms': 'row click event, item click, open event, select event',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'masterDetailBodyContent': {
+            'default': {
+              'children': [
+                {
+                  'children': [
+                    {
+                      'className': 'w-full max-w-md',
+                      'clearable': true,
+                      'event': 'REFETCH_QUERY',
+                      'placeholder': '@config.searchPlaceholder',
+                      'type': 'search-input',
+                    },
+                  ],
+                  'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                  'direction': 'horizontal',
+                  'gap': 'sm',
+                  'type': 'stack',
+                },
+                {
+                  'detail': {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                  'emptyDetail': {
+                    'description': 'Select a record from the list to see its details.',
+                    'icon': 'mouse-pointer-click',
+                    'title': 'Nothing selected',
+                    'type': 'empty-state',
+                  },
+                  'hasSelection': false,
+                  'master': {
+                    'children': [
+                      '@trait.MasterListView',
+                    ],
+                    'className': 'overflow-y-auto',
+                    'direction': 'vertical',
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                  'type': 'master-detail-layout',
+                },
+              ],
+              'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden',
+              'direction': 'vertical',
+              'gap': 'none',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = master-detail: record-work split view — toolbar search, dense list left, empty-state pane right until a row is opened. Opening a row renders masterDetailRecordBodyContent. The toolbar is always present in this look (bodySearch does not apply).',
+            'label': 'Master-detail look body (no selection)',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'masterDetailRecordBodyContent': {
+            'default': {
+              'children': [
+                {
+                  'children': [
+                    {
+                      'className': 'w-full max-w-md',
+                      'clearable': true,
+                      'event': 'REFETCH_QUERY',
+                      'placeholder': '@config.searchPlaceholder',
+                      'type': 'search-input',
+                    },
+                  ],
+                  'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                  'direction': 'horizontal',
+                  'gap': 'sm',
+                  'type': 'stack',
+                },
+                {
+                  'detail': {
+                    'actions': '@config.detailActions',
+                    'fieldNames': '@config.detailFields',
+                    'initialData': '@payload.row',
+                    'showActions': true,
+                    'type': 'detail-panel',
+                  },
+                  'hasSelection': true,
+                  'master': {
+                    'children': [
+                      '@trait.MasterListView',
+                    ],
+                    'className': 'overflow-y-auto',
+                    'direction': 'vertical',
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                  'type': 'master-detail-layout',
+                },
+              ],
+              'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden',
+              'direction': 'vertical',
+              'gap': 'none',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered by the VIEW transition when browseLook = master-detail: the same split view with the clicked record\'s detail panel on the right, fed by the VIEW payload row and detailFields.',
+            'label': 'Master-detail look body (record open)',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'maxInlineActions': {
+            'default': 3,
+            'description': 'Actions beyond this count collapse into a \'⋯\' overflow menu. Set 2–3 for dense tables.',
+            'label': 'How many row actions to show before collapsing?',
+            'synonyms': 'inline actions limit, overflow threshold, max buttons per row',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'metaBinding': {
+            'default': '@item.createdAt',
+            'description': 'Binding path for the secondary meta slot (timestamp / category). Hosts binding a count or other non-date value should label it in the binding itself (e.g. (str/concat "Vehicles: " @item.vehicleCount)) and set metaFormat: none.',
+            'label': 'Meta field binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'metaFormat': {
+            'default': 'date',
+            'description': 'Typography format for the feed meta slot — date by default so the createdAt binding renders human-readable instead of raw ISO; set none for non-date bindings.',
+            'label': 'Meta value format',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'date',
+              'time',
+              'datetime',
+              'number',
+            ],
+          },
+          'pageSize': {
+            'default': 10,
+            'description': 'Records fetched from the server per page request.',
+            'label': 'How many rows to fetch per page?',
+            'synonyms': 'fetch limit, records per page, batch size, page limit',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'priceBinding': {
+            'default': '@item.price',
+            'description': 'Binding path for the price/amount overlay slot.',
+            'label': 'Price field binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'priorityBinding': {
+            'default': '@item.priority',
+            'description': 'Binding path for the priority slot.',
+            'label': 'Priority field binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'scopeField': {
+            'default': '',
+            'description': 'Name the field on this entity that holds the viewer\'s id (e.g. memberId, patientId, assignee). When set, the list loads ONLY rows whose that field equals @user.id — the \'my bookings\' / \'my appointments\' shape. Left blank the list loads every row, which is the default. Declared, never inferred: guessing the column from its name would silently scope the wrong one.',
+            'label': 'Only show records owned by the signed-in user?',
+            'synonyms': 'owner field, my records, only mine, only my own, scope to user, per-user list, mine only, owned by me',
+            'tier': 'policy',
+            'type': 'string',
+          },
+          'searchPlaceholder': {
+            'default': 'Search…',
+            'description': 'Hint text inside the list search box (e.g. \'Search orders…\').',
+            'label': 'Search box placeholder text',
+            'synonyms': 'search hint, placeholder, search box text, search label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'selectable': {
+            'default': false,
+            'description': 'Adds a checkbox column with select-all to the dense table. Enable only when the surface offers bulk actions — checkboxes with nothing to act on are a dead affordance.',
+            'label': 'Show row selection checkboxes?',
+            'synonyms': 'row checkboxes, multi-select, bulk select, selection column',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'titleBinding': {
+            'default': '@item.name',
+            'description': 'Binding path for the card title slot (e.g. @item.dishName).',
+            'label': 'Title field binding',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'triageBodyContent': {
+            'default': {
+              'children': [
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                {
+                  'children': [
+                    {
+                      'entity': '@payload.data',
+                      'fields': '@config.fields',
+                      'itemActions': '@config.itemActions',
+                      'maxInlineActions': '@config.maxInlineActions',
+                      'type': 'data-list',
+                      'variant': 'compact',
+                    },
+                  ],
+                  'className': 'overflow-x-auto',
+                  'direction': 'vertical',
+                  'gap': 'none',
+                  'type': 'stack',
+                },
+              ],
+              'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden',
+              'direction': 'vertical',
+              'gap': 'none',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = triage. Inbox-register queue: one surface with a toolbar search and compact list rows (title + badges + inline meta) built for keyboard-pace queue work; row actions collapse per maxInlineActions. Composes fields/itemActions/searchPlaceholder/bodySearch.',
+            'label': 'Triage look body',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'viewPattern': {
+            'default': 'data-grid',
+            'description': 'UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob.',
+            'label': 'Render pattern',
+            'tier': 'internal',
+            'type': 'pattern',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals that a browse item has been successfully loaded.',
+            'event': 'BrowseItemLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[BrowseItem]',
+              },
+              {
+                'name': 'totalCount',
+                'type': 'number',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, received, populated',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load a browse item.',
+            'event': 'BrowseItemLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failed, problem, unsuccessful',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Signals a grid view has been displayed or updated.',
+            'event': 'VIEW',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'display, show, update, render',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a request to edit the selected item.',
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'modify, update, change',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a request to remove an item from the dataset.',
+            'event': 'DELETE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'remove, discard, delete, purge',
+            'tier': 'presentation',
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'BrowseItem',
+        'name': 'BrowseItemBrowse',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals that a browse item has been successfully loaded.',
+              'key': 'BrowseItemLoaded',
+              'name': 'BrowseItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BrowseItem]',
+                },
+                {
+                  'name': 'totalCount',
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'loaded, received, populated',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load a browse item.',
+              'key': 'BrowseItemLoadFailed',
+              'name': 'BrowseItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failed, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Triggers a data refresh based on the current query.',
+              'key': 'REFETCH_QUERY',
+              'name': 'Refetch Query',
+              'payloadSchema': [
+                {
+                  'name': 'searchTerm',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'refresh, reload, update, re-query',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Triggers a data refresh based on current filter criteria.',
+              'key': 'REFETCH_FILTER',
+              'name': 'Refetch Filter',
+              'payloadSchema': [
+                {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Triggers a data grid page refresh.',
+              'key': 'REFETCH_PAGE',
+              'name': 'Refetch Page',
+              'payloadSchema': [
+                {
+                  'name': 'page',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'reload, refresh, update, paginate',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals a grid view has been displayed or updated.',
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'display, show, update, render',
+              'tier': 'domain',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'description': 'Signals a request to edit the selected item.',
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'modify, update, change',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals a request to remove an item from the dataset.',
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'remove, discard, delete, purge',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BrowseItem' satisfies _StdBrowseEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BrowseItemLoadFailed',
+                      'success': 'BrowseItemLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@config.scopeField',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.scopeField',
+                          ],
+                          '@user.id',
+                        ],
+                      ],
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@config.initialFilterField',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.initialFilterField',
+                          ],
+                          '@config.initialFilterValue',
+                        ],
+                      ],
+                    ],
+                    'limit': '@config.pageSize',
+                    'offset': 0,
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'rows': 4,
+                    'type': 'skeleton',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.browseLook',
+                    'dense',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    '@config.denseBodyContent',
+                  ],
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@config.browseLook',
+                      'feed',
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      '@config.feedBodyContent',
+                    ],
+                    [
+                      'if',
+                      [
+                        '=',
+                        '@config.browseLook',
+                        'gallery',
+                      ],
+                      [
+                        'render-ui',
+                        'main',
+                        '@config.galleryBodyContent',
+                      ],
+                      [
+                        'if',
+                        [
+                          '=',
+                          '@config.browseLook',
+                          'master-detail',
+                        ],
+                        [
+                          'render-ui',
+                          'main',
+                          '@config.masterDetailBodyContent',
+                        ],
+                        [
+                          'if',
+                          [
+                            '=',
+                            '@config.browseLook',
+                            'triage',
+                          ],
+                          [
+                            'render-ui',
+                            'main',
+                            '@config.triageBodyContent',
+                          ],
+                          [
+                            'render-ui',
+                            'main',
+                            '@config.bodyContent',
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'BrowseItemLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'title': 'Couldn\'t load this list',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'BrowseItemLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BrowseItem' satisfies _StdBrowseEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BrowseItemLoadFailed',
+                      'success': 'BrowseItemLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@config.scopeField',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.scopeField',
+                          ],
+                          '@user.id',
+                        ],
+                      ],
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@config.initialFilterField',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.initialFilterField',
+                          ],
+                          '@config.initialFilterValue',
+                        ],
+                      ],
+                    ],
+                    'limit': '@config.pageSize',
+                    'offset': 0,
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BrowseItem' satisfies _StdBrowseEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BrowseItemLoadFailed',
+                      'success': 'BrowseItemLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@config.scopeField',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.scopeField',
+                          ],
+                          '@user.id',
+                        ],
+                      ],
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@payload.searchTerm',
+                          '',
+                        ],
+                        [
+                          'str/includes',
+                          [
+                            'object/get',
+                            '@entity',
+                            'name',
+                          ],
+                          '@payload.searchTerm',
+                        ],
+                      ],
+                    ],
+                    'limit': '@config.pageSize',
+                    'offset': 0,
+                  },
+                ],
+              ],
+              'event': 'REFETCH_QUERY',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BrowseItem' satisfies _StdBrowseEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BrowseItemLoadFailed',
+                      'success': 'BrowseItemLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@config.scopeField',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.scopeField',
+                          ],
+                          '@user.id',
+                        ],
+                      ],
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@payload.value',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@payload.field',
+                          ],
+                          '@payload.value',
+                        ],
+                      ],
+                    ],
+                    'limit': '@config.pageSize',
+                    'offset': 0,
+                  },
+                ],
+              ],
+              'event': 'REFETCH_FILTER',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BrowseItem' satisfies _StdBrowseEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BrowseItemLoadFailed',
+                      'success': 'BrowseItemLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.scopeField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.scopeField',
+                        ],
+                        '@user.id',
+                      ],
+                    ],
+                    'limit': '@config.pageSize',
+                    'offset': [
+                      '*',
+                      [
+                        '-',
+                        '@payload.page',
+                        1,
+                      ],
+                      '@config.pageSize',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'REFETCH_PAGE',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  '@config.masterDetailRecordBodyContent',
+                ],
+              ],
+              'event': 'VIEW',
+              'from': 'browsing',
+              'guard': [
+                '=',
+                '@config.browseLook',
+                'master-detail',
+              ],
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  '@config.masterDetailBodyContent',
+                ],
+              ],
+              'event': 'CLOSE',
+              'from': 'browsing',
+              'guard': [
+                '=',
+                '@config.browseLook',
+                'master-detail',
+              ],
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.browseLook',
+                    'dense',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    '@config.denseBodyContent',
+                  ],
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@config.browseLook',
+                      'feed',
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      '@config.feedBodyContent',
+                    ],
+                    [
+                      'if',
+                      [
+                        '=',
+                        '@config.browseLook',
+                        'gallery',
+                      ],
+                      [
+                        'render-ui',
+                        'main',
+                        '@config.galleryBodyContent',
+                      ],
+                      [
+                        'if',
+                        [
+                          '=',
+                          '@config.browseLook',
+                          'master-detail',
+                        ],
+                        [
+                          'render-ui',
+                          'main',
+                          '@config.masterDetailBodyContent',
+                        ],
+                        [
+                          'if',
+                          [
+                            '=',
+                            '@config.browseLook',
+                            'triage',
+                          ],
+                          [
+                            'render-ui',
+                            'main',
+                            '@config.triageBodyContent',
+                          ],
+                          [
+                            'render-ui',
+                            'main',
+                            '@config.bodyContent',
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'BrowseItemLoaded',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BrowseItem' satisfies _StdBrowseEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BrowseItemLoadFailed',
+                      'success': 'BrowseItemLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@config.scopeField',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.scopeField',
+                          ],
+                          '@user.id',
+                        ],
+                      ],
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@config.initialFilterField',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.initialFilterField',
+                          ],
+                          '@config.initialFilterValue',
+                        ],
+                      ],
+                    ],
+                    'limit': '@config.pageSize',
+                    'offset': 0,
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'rows': 4,
+                    'type': 'skeleton',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'BrowseItemPage',
+        'path': '/browseitems',
+        'traits': [
+          {
+            'ref': 'BrowseItemBrowse',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdBrowseBrowseItemOrbital. */
+export const StdBrowseBrowseItemOrbitalManifest = {
+  organism: 'std-browse',
+  orbitalName: 'BrowseItemOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'DataGrid1',
+    'DenseTableView',
+    'MasterListView',
+  ] as const,
+  inlineTraitNames: [
+    'BrowseItemBrowse',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdBrowseBrowseItemOrbitalParams keys. */
+export function isStdBrowseBrowseItemOrbitalParams(p: object): p is StdBrowseBrowseItemOrbitalParams {
+  type _OverrideRecord = NonNullable<StdBrowseBrowseItemOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdBrowseBrowseItemOrbitalManifest.traitNames,
+      ...StdBrowseBrowseItemOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

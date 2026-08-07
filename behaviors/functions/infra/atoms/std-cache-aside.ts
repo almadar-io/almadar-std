@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -607,4 +607,1420 @@ export function stdCacheAside(params: StdCacheAsideParams): OrbitalDefinition {
       stdCacheAsidePage(params),
     ],
   });
+}
+
+type _StdCacheAsideEntityName = 'CacheEntry';
+type _StdCacheAsideListenTraitName = 'FetchButton' | 'InvalidateButton' | 'RefreshButton' | 'RetryButton' | 'CacheEntryCacheManager' | 'InlineIconRender1' | 'InlineTypographyRender2' | 'InlineDividerRender3' | 'InlineEmptyStateRender4' | 'InlineSpinnerRender5' | 'InlineTypographyRender6' | 'InlineIconRender7' | 'InlineTypographyRender8' | 'InlineStatusDotRender9' | 'InlineDividerRender10' | 'InlineIconRender11' | 'InlineTypographyRender12' | 'InlineBadgeRender13' | 'InlineTypographyRender14' | 'InlineIconRender15' | 'InlineTypographyRender16' | 'InlineTypographyRender17' | 'InlineIconRender18' | 'InlineTypographyRender19' | 'InlineStatusDotRender20' | 'InlineDividerRender21' | 'InlineAlertRender22' | 'InlineSpinnerRender23' | 'InlineSpinnerRender24' | 'InlineSpinnerRender25' | 'InlineEmptyStateRender26' | 'InlineSpinnerRender27';
+
+/**
+ * Tunable params for the CacheEntryOrbital orbital.
+ *
+ * Canonical entity: CacheEntry — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdCacheAsideCacheEntryOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'FetchButton' | 'InvalidateButton' | 'RefreshButton' | 'RetryButton' | 'InlineIconRender1' | 'InlineTypographyRender2' | 'InlineDividerRender3' | 'InlineEmptyStateRender4' | 'InlineSpinnerRender5' | 'InlineTypographyRender6' | 'InlineIconRender7' | 'InlineTypographyRender8' | 'InlineStatusDotRender9' | 'InlineDividerRender10' | 'InlineIconRender11' | 'InlineTypographyRender12' | 'InlineBadgeRender13' | 'InlineTypographyRender14' | 'InlineIconRender15' | 'InlineTypographyRender16' | 'InlineTypographyRender17' | 'InlineIconRender18' | 'InlineTypographyRender19' | 'InlineStatusDotRender20' | 'InlineDividerRender21' | 'InlineAlertRender22' | 'InlineSpinnerRender23' | 'InlineSpinnerRender24' | 'InlineSpinnerRender25' | 'InlineEmptyStateRender26' | 'InlineSpinnerRender27' | 'CacheEntryCacheManager',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait CacheEntryOrbital's `uses[]` exports. */
+type _StdCacheAsideCacheEntryOrbitalUsesRef = 'Icon.traits.IconRender' | 'Typography.traits.TypographyRender' | 'Button.traits.ButtonRender' | 'Divider.traits.DividerRender' | 'EmptyState.traits.EmptyStateRender' | 'Spinner.traits.SpinnerRender' | 'StatusDot.traits.StatusDotRender' | 'Badge.traits.BadgeRender' | 'Alert.traits.AlertRender';
+
+/** Per-orbital factory: builds the CacheEntryOrbital orbital with consumer params. */
+export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'CacheEntryOrbital',
+    uses: [
+      {
+        'as': 'Icon',
+        'from': 'std/behaviors/ui-icon',
+      },
+      {
+        'as': 'Typography',
+        'from': 'std/behaviors/ui-typography',
+      },
+      {
+        'as': 'Button',
+        'from': 'std/behaviors/ui-button',
+      },
+      {
+        'as': 'Divider',
+        'from': 'std/behaviors/ui-divider',
+      },
+      {
+        'as': 'EmptyState',
+        'from': 'std/behaviors/ui-empty-state',
+      },
+      {
+        'as': 'Spinner',
+        'from': 'std/behaviors/ui-spinner',
+      },
+      {
+        'as': 'StatusDot',
+        'from': 'std/behaviors/ui-status-dot',
+      },
+      {
+        'as': 'Badge',
+        'from': 'std/behaviors/ui-badge',
+      },
+      {
+        'as': 'Alert',
+        'from': 'std/behaviors/ui-alert',
+      },
+    ],
+    entity: {
+      name: 'CacheEntry',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'A user-defined identifier for the cache entry.',
+            'name': 'name',
+            'required': true,
+            'synonyms': 'key, identifier, alias',
+            'type': 'string',
+          },
+          {
+            'description': 'A human-readable explanation of the entry\'s content.',
+            'name': 'description',
+            'synonyms': 'explanation, details, notes, summary',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'Current operational state of the entry.',
+            'name': 'status',
+            'synonyms': 'state, condition, operationalStatus',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'The number of times this entry has been retrieved.',
+            'name': 'hitCount',
+            'synonyms': 'count, occurrences, retrievals',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Duration since the cache entry was last updated.',
+            'name': 'cacheAge',
+            'synonyms': 'age, duration, expiry',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'FETCH',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'download',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Fetch',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'primary',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'FetchButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'INVALIDATE',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'trash',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Invalidate',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'ghost',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InvalidateButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'REFRESH',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'refresh-cw',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Refresh',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'primary',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'RefreshButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'FETCH',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'rotate-ccw',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Retry',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'primary',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'RetryButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      {
+        'category': 'interaction',
+        'config': {
+          'emptyLook': {
+            'default': 'icon-only',
+            'description': 'Layer 2 visual treatment for the empty-state placeholder.',
+            'label': 'Empty-state look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'illustrated',
+              'icon-only',
+              'text-only',
+              'mascot',
+            ],
+          },
+          'evictionPolicy': {
+            'default': 'lru',
+            'description': 'How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early).',
+            'label': 'Eviction policy',
+            'synonyms': 'cache replacement, eviction strategy',
+            'tier': 'domain',
+            'type': 'string',
+            'values': [
+              'lru',
+              'lfu',
+              'fifo',
+              'ttl-only',
+            ],
+          },
+          'maxCacheSize': {
+            'default': 1000,
+            'description': 'Hard cap on cached entries before eviction. 0 = unlimited.',
+            'label': 'Max cache entries',
+            'synonyms': 'cache capacity, max entries',
+            'tier': 'domain',
+            'type': 'number',
+          },
+          'staleWhileRevalidate': {
+            'default': true,
+            'description': 'When true, serve stale entries to consumers while a background refresh fetches fresh data. Reduces latency at the cost of brief staleness.',
+            'label': 'Serve stale while revalidating',
+            'synonyms': 'SWR, stale serving',
+            'tier': 'domain',
+            'type': 'boolean',
+          },
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'ttlSeconds': {
+            'default': 300,
+            'description': 'Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching.',
+            'label': 'TTL (seconds)',
+            'synonyms': 'expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)',
+            'tier': 'domain',
+            'type': 'number',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates a cache entry has been successfully retrieved.',
+            'event': 'CacheEntryLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[CacheEntry]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, retrieved, fetched',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load a cache entry.',
+            'event': 'CacheEntryLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failure, miss, not found',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Signals that a cached entry\'s data has been modified.',
+            'event': 'CacheEntryUpdated',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'modified, refreshed, changed, updated',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a failure to update a cached entry.',
+            'event': 'CacheEntryUpdateFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'CacheEntry',
+        'listens': [
+          {
+            'event': 'FETCH',
+            'source': {
+              'kind': 'trait',
+              'trait': ('FetchButton' satisfies _StdCacheAsideListenTraitName),
+            },
+            'triggers': 'FETCH',
+          },
+          {
+            'event': 'INVALIDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': ('InvalidateButton' satisfies _StdCacheAsideListenTraitName),
+            },
+            'triggers': 'INVALIDATE',
+          },
+          {
+            'event': 'REFRESH',
+            'source': {
+              'kind': 'trait',
+              'trait': ('RefreshButton' satisfies _StdCacheAsideListenTraitName),
+            },
+            'triggers': 'REFRESH',
+          },
+          {
+            'event': 'FETCH',
+            'source': {
+              'kind': 'trait',
+              'trait': ('RetryButton' satisfies _StdCacheAsideListenTraitName),
+            },
+            'triggers': 'FETCH',
+          },
+        ],
+        'name': 'CacheEntryCacheManager',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'FETCH',
+              'name': 'Fetch',
+            },
+            {
+              'description': 'Indicates a cache entry has been successfully retrieved.',
+              'key': 'CacheEntryLoaded',
+              'name': 'CacheEntry loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[CacheEntry]',
+                },
+              ],
+              'synonyms': 'loaded, retrieved, fetched',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load a cache entry.',
+              'key': 'CacheEntryLoadFailed',
+              'name': 'CacheEntry load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, miss, not found',
+              'tier': 'internal',
+            },
+            {
+              'key': 'INVALIDATE',
+              'name': 'Invalidate',
+            },
+            {
+              'description': 'Data retrieved successfully from the cache.',
+              'key': 'CACHED',
+              'name': 'Cached',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'CacheEntry',
+                },
+              ],
+              'synonyms': 'hit, found, retrieved',
+              'tier': 'domain',
+            },
+            {
+              'key': 'REFRESH',
+              'name': 'Refresh',
+            },
+            {
+              'description': 'Signals that a cached entry\'s data has been modified.',
+              'key': 'CacheEntryUpdated',
+              'name': 'CacheEntry updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'modified, refreshed, changed, updated',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a failure to update a cached entry.',
+              'key': 'CacheEntryUpdateFailed',
+              'name': 'CacheEntry update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'empty',
+            },
+            {
+              'name': 'loading',
+            },
+            {
+              'name': 'cached',
+            },
+            {
+              'name': 'stale',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              '@trait.InlineIconRender1',
+                              '@trait.InlineTypographyRender2',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.FetchButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.InlineDividerRender3',
+                      '@trait.InlineEmptyStateRender4',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'empty',
+              'to': 'empty',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CacheEntry' satisfies _StdCacheAsideEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CacheEntryLoadFailed',
+                      'success': 'CacheEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      '@trait.InlineSpinnerRender5',
+                      '@trait.InlineTypographyRender6',
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'FETCH',
+              'from': 'empty',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              '@trait.InlineIconRender7',
+                              '@trait.InlineTypographyRender8',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.InlineStatusDotRender9',
+                              '@trait.InvalidateButton',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.InlineDividerRender10',
+                      {
+                        'entity': '@payload.data',
+                        'fields': [],
+                        'look': '@config.tableLook',
+                        'renderItem': [
+                          'fn',
+                          'item',
+                          {
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      '@trait.InlineIconRender11',
+                                      '@trait.InlineTypographyRender12',
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'type': 'stack',
+                                  },
+                                  '@trait.InlineBadgeRender13',
+                                ],
+                                'direction': 'horizontal',
+                                'justify': 'between',
+                                'type': 'stack',
+                              },
+                              '@trait.InlineTypographyRender14',
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CacheEntryLoaded',
+              'from': 'loading',
+              'to': 'cached',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      '@trait.InlineIconRender15',
+                      '@trait.InlineTypographyRender16',
+                      '@trait.InlineTypographyRender17',
+                      '@trait.RetryButton',
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CacheEntryLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              '@trait.InlineIconRender18',
+                              '@trait.InlineTypographyRender19',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.InlineStatusDotRender20',
+                              '@trait.RefreshButton',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.InlineDividerRender21',
+                      '@trait.InlineAlertRender22',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INVALIDATE',
+              'from': 'cached',
+              'to': 'stale',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  ('CacheEntry' satisfies _StdCacheAsideEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'CacheEntryUpdateFailed',
+                      'success': 'CacheEntryUpdated',
+                    },
+                  },
+                ],
+                [
+                  'fetch',
+                  ('CacheEntry' satisfies _StdCacheAsideEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CacheEntryLoadFailed',
+                      'success': 'CacheEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.InlineSpinnerRender23',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CACHED',
+              'from': 'cached',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CacheEntry' satisfies _StdCacheAsideEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CacheEntryLoadFailed',
+                      'success': 'CacheEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.InlineSpinnerRender24',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'REFRESH',
+              'from': 'stale',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CacheEntry' satisfies _StdCacheAsideEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CacheEntryLoadFailed',
+                      'success': 'CacheEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.InlineSpinnerRender25',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'FETCH',
+              'from': 'stale',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.InlineEmptyStateRender26',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'empty',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CacheEntry' satisfies _StdCacheAsideEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CacheEntryLoadFailed',
+                      'success': 'CacheEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.InlineSpinnerRender27',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'FETCH',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender1',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Cache (empty)',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h2',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender2',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineDividerRender3',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'description': {
+            'default': 'Fetch data to populate the cache.',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'inbox',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.emptyLook',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Cache is empty',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineEmptyStateRender4',
+        'ref': ('EmptyState.traits.EmptyStateRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineSpinnerRender5',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'color': {
+            'default': 'muted',
+            'type': 'unknown',
+          },
+          'content': {
+            'default': 'Fetching cache…',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'caption',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender6',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender7',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Cache (hot)',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h2',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender8',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': 'Cached',
+            'type': 'unknown',
+          },
+          'pulse': {
+            'default': false,
+            'type': 'unknown',
+          },
+          'status': {
+            'default': 'online',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineStatusDotRender9',
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineDividerRender10',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender11',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': '@item.name',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h4',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender12',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': '@item.description',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineBadgeRender13',
+        'ref': ('Badge.traits.BadgeRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': '@item.status',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'caption',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender14',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'color': {
+            'default': 'error',
+            'type': 'unknown',
+          },
+          'name': {
+            'default': 'alert-triangle',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender15',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Failed to load',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h3',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender16',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'color': {
+            'default': 'muted',
+            'type': 'unknown',
+          },
+          'content': {
+            'default': '@callsitePayload.error',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'body',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender17',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender18',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Cache (stale)',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h2',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender19',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': 'Stale',
+            'type': 'unknown',
+          },
+          'pulse': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'status': {
+            'default': 'warning',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineStatusDotRender20',
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineDividerRender21',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'message': {
+            'default': 'Cache data is stale. Refresh to get the latest data.',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'warning',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineAlertRender22',
+        'ref': ('Alert.traits.AlertRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineSpinnerRender23',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineSpinnerRender24',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineSpinnerRender25',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'description': {
+            'default': 'Fetch data to populate the cache.',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'inbox',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.emptyLook',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Cache is empty',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineEmptyStateRender26',
+        'ref': ('EmptyState.traits.EmptyStateRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineSpinnerRender27',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+    ],
+    pages: [
+      {
+        'name': 'CacheEntryPage',
+        'path': '/cacheentrys',
+        'traits': [
+          {
+            'ref': 'CacheEntryCacheManager',
+          },
+          {
+            'ref': 'InlineIconRender1',
+          },
+          {
+            'ref': 'InlineTypographyRender2',
+          },
+          {
+            'ref': 'InlineDividerRender3',
+          },
+          {
+            'ref': 'InlineEmptyStateRender4',
+          },
+          {
+            'ref': 'InlineSpinnerRender5',
+          },
+          {
+            'ref': 'InlineTypographyRender6',
+          },
+          {
+            'ref': 'InlineIconRender7',
+          },
+          {
+            'ref': 'InlineTypographyRender8',
+          },
+          {
+            'ref': 'InlineStatusDotRender9',
+          },
+          {
+            'ref': 'InlineDividerRender10',
+          },
+          {
+            'ref': 'InlineIconRender11',
+          },
+          {
+            'ref': 'InlineTypographyRender12',
+          },
+          {
+            'ref': 'InlineBadgeRender13',
+          },
+          {
+            'ref': 'InlineTypographyRender14',
+          },
+          {
+            'ref': 'InlineIconRender15',
+          },
+          {
+            'ref': 'InlineTypographyRender16',
+          },
+          {
+            'ref': 'InlineTypographyRender17',
+          },
+          {
+            'ref': 'InlineIconRender18',
+          },
+          {
+            'ref': 'InlineTypographyRender19',
+          },
+          {
+            'ref': 'InlineStatusDotRender20',
+          },
+          {
+            'ref': 'InlineDividerRender21',
+          },
+          {
+            'ref': 'InlineAlertRender22',
+          },
+          {
+            'ref': 'InlineSpinnerRender23',
+          },
+          {
+            'ref': 'InlineSpinnerRender24',
+          },
+          {
+            'ref': 'InlineSpinnerRender25',
+          },
+          {
+            'ref': 'InlineEmptyStateRender26',
+          },
+          {
+            'ref': 'InlineSpinnerRender27',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdCacheAsideCacheEntryOrbital. */
+export const StdCacheAsideCacheEntryOrbitalManifest = {
+  organism: 'std-cache-aside',
+  orbitalName: 'CacheEntryOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'FetchButton',
+    'InvalidateButton',
+    'RefreshButton',
+    'RetryButton',
+    'InlineIconRender1',
+    'InlineTypographyRender2',
+    'InlineDividerRender3',
+    'InlineEmptyStateRender4',
+    'InlineSpinnerRender5',
+    'InlineTypographyRender6',
+    'InlineIconRender7',
+    'InlineTypographyRender8',
+    'InlineStatusDotRender9',
+    'InlineDividerRender10',
+    'InlineIconRender11',
+    'InlineTypographyRender12',
+    'InlineBadgeRender13',
+    'InlineTypographyRender14',
+    'InlineIconRender15',
+    'InlineTypographyRender16',
+    'InlineTypographyRender17',
+    'InlineIconRender18',
+    'InlineTypographyRender19',
+    'InlineStatusDotRender20',
+    'InlineDividerRender21',
+    'InlineAlertRender22',
+    'InlineSpinnerRender23',
+    'InlineSpinnerRender24',
+    'InlineSpinnerRender25',
+    'InlineEmptyStateRender26',
+    'InlineSpinnerRender27',
+  ] as const,
+  inlineTraitNames: [
+    'CacheEntryCacheManager',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdCacheAsideCacheEntryOrbitalParams keys. */
+export function isStdCacheAsideCacheEntryOrbitalParams(p: object): p is StdCacheAsideCacheEntryOrbitalParams {
+  type _OverrideRecord = NonNullable<StdCacheAsideCacheEntryOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdCacheAsideCacheEntryOrbitalManifest.traitNames,
+      ...StdCacheAsideCacheEntryOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

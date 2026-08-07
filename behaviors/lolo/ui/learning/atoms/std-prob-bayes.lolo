@@ -1,0 +1,477 @@
+app std-prob-bayes "1.0.0"
+"Interactive Bayes' theorem engine — priors/likelihoods sliders drive a population-grid visualization (true/false positive/negative cells) and a computed posterior via Bayes' rule; a Run Evidence Trial button draws a random individual and accumulates an empirical posterior against the analytic one, on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital ProbBayesOrbital {
+  type ProbBayesShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [ProbBayesShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type ProbBayesShapePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity ProbBayesScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    priorH : number
+    likelihoodEGivenH : number
+    likelihoodEGivenNotH : number
+    countTP : number
+    countFN : number
+    countFP : number
+    countTN : number
+    posteriorH : number
+    trialsRun : number
+    trialsPositive : number
+    trialsTruePositive : number
+    empiricalPosterior : number
+    lastTrialLabel : string
+    shapes : [ProbBayesShape]
+  }
+
+  trait ProbBayesSim -> @rebindable ProbBayesScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.priorH @config.priorH)
+        (set @entity.likelihoodEGivenH @config.likelihoodEGivenH)
+        (set @entity.likelihoodEGivenNotH @config.likelihoodEGivenNotH)
+        (set @entity.trialsRun 0)
+        (set @entity.trialsPositive 0)
+        (set @entity.trialsTruePositive 0)
+        (set @entity.empiricalPosterior 0)
+        (set @entity.lastTrialLabel "")
+        (let (
+            (population @config.populationSize)
+            (cols @config.gridColumns)
+            (gridRows (+ (math/floor (/ (- @population 1) @cols)) 1))
+            (cellW (/ (- @config.width 48) @cols))
+            (cellH (/ (- @config.height 48) @gridRows))
+            (countH (math/round (* @entity.priorH @population)))
+            (countNotH (- @population @countH))
+            (truePos (math/round (* @countH @entity.likelihoodEGivenH)))
+            (falseNeg (- @countH @truePos))
+            (falsePos (math/round (* @countNotH @entity.likelihoodEGivenNotH)))
+            (trueNeg (- @countNotH @falsePos))
+            (posterior (if (> (+ @truePos @falsePos) 0) (/ @truePos (+ @truePos @falsePos)) 0))
+            (bayesShapes (array/map (array/range @population) (fn i
+              (let (
+                  (col (math/mod @i @cols))
+                  (row (math/floor (/ @i @cols)))
+                  (category (if (< @i @truePos) "tp" (if (< @i (+ @truePos @falseNeg)) "fn" (if (< @i (+ @truePos @falseNeg @falsePos)) "fp" "tn"))))
+                )
+                {
+                  type: "rect",
+                  x: (+ 24 (* @col @cellW)),
+                  y: (+ 24 (* @row @cellH)),
+                  width: (* @cellW 0.86),
+                  height: (* @cellH 0.86),
+                  fill: (if (== @category "tp") "#dc2626" (if (== @category "fn") "#fca5a5" (if (== @category "fp") "#f59e0b" "#e5e7eb"))),
+                  lineWidth: 0
+                }))))
+          )
+          (do
+            (set @entity.countTP @truePos)
+            (set @entity.countFN @falseNeg)
+            (set @entity.countFP @falsePos)
+            (set @entity.countTN @trueNeg)
+            (set @entity.posteriorH @posterior)
+            (set @entity.shapes @bayesShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: caption, content: (str/concat "Prior P(H): " (math/round (* @entity.priorH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.priorH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "prior" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|H) — chance of " @config.evidenceLabel " given " @config.hypothesisLabel ": " (math/round (* @entity.likelihoodEGivenH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodH" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|¬H) — false-alarm rate: " (math/round (* @entity.likelihoodEGivenNotH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenNotH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodNotH" } },
+                { type: meter, value: (math/round (* @entity.posteriorH 100) 1), min: 0, max: 100, unit: "%", label: "Posterior P(H|E)", showValue: true },
+                { type: typography, variant: caption, content: (str/concat "Population grid: " @entity.countTP " true positive + " @entity.countFP " false positive out of " @config.populationSize " -> P(H|E) = " @entity.countTP " / (" @entity.countTP " + " @entity.countFP ")") },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIAL, label: "Run Evidence Trial", variant: primary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.lastTrialLabel },
+                { type: meter, value: (math/round (* @entity.empiricalPosterior 100) 1), min: 0, max: 100, unit: "%", label: (str/concat "Empirical P(H|E) from " @entity.trialsRun " trial(s)"), showValue: true }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.priorH @config.priorH)
+        (set @entity.likelihoodEGivenH @config.likelihoodEGivenH)
+        (set @entity.likelihoodEGivenNotH @config.likelihoodEGivenNotH)
+        (set @entity.trialsRun 0)
+        (set @entity.trialsPositive 0)
+        (set @entity.trialsTruePositive 0)
+        (set @entity.empiricalPosterior 0)
+        (set @entity.lastTrialLabel "")
+        (let (
+            (population @config.populationSize)
+            (cols @config.gridColumns)
+            (gridRows (+ (math/floor (/ (- @population 1) @cols)) 1))
+            (cellW (/ (- @config.width 48) @cols))
+            (cellH (/ (- @config.height 48) @gridRows))
+            (countH (math/round (* @entity.priorH @population)))
+            (countNotH (- @population @countH))
+            (truePos (math/round (* @countH @entity.likelihoodEGivenH)))
+            (falseNeg (- @countH @truePos))
+            (falsePos (math/round (* @countNotH @entity.likelihoodEGivenNotH)))
+            (trueNeg (- @countNotH @falsePos))
+            (posterior (if (> (+ @truePos @falsePos) 0) (/ @truePos (+ @truePos @falsePos)) 0))
+            (bayesShapes (array/map (array/range @population) (fn i
+              (let (
+                  (col (math/mod @i @cols))
+                  (row (math/floor (/ @i @cols)))
+                  (category (if (< @i @truePos) "tp" (if (< @i (+ @truePos @falseNeg)) "fn" (if (< @i (+ @truePos @falseNeg @falsePos)) "fp" "tn"))))
+                )
+                {
+                  type: "rect",
+                  x: (+ 24 (* @col @cellW)),
+                  y: (+ 24 (* @row @cellH)),
+                  width: (* @cellW 0.86),
+                  height: (* @cellH 0.86),
+                  fill: (if (== @category "tp") "#dc2626" (if (== @category "fn") "#fca5a5" (if (== @category "fp") "#f59e0b" "#e5e7eb"))),
+                  lineWidth: 0
+                }))))
+          )
+          (do
+            (set @entity.countTP @truePos)
+            (set @entity.countFN @falseNeg)
+            (set @entity.countFP @falsePos)
+            (set @entity.countTN @trueNeg)
+            (set @entity.posteriorH @posterior)
+            (set @entity.shapes @bayesShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: caption, content: (str/concat "Prior P(H): " (math/round (* @entity.priorH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.priorH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "prior" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|H) — chance of " @config.evidenceLabel " given " @config.hypothesisLabel ": " (math/round (* @entity.likelihoodEGivenH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodH" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|¬H) — false-alarm rate: " (math/round (* @entity.likelihoodEGivenNotH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenNotH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodNotH" } },
+                { type: meter, value: (math/round (* @entity.posteriorH 100) 1), min: 0, max: 100, unit: "%", label: "Posterior P(H|E)", showValue: true },
+                { type: typography, variant: caption, content: (str/concat "Population grid: " @entity.countTP " true positive + " @entity.countFP " false positive out of " @config.populationSize " -> P(H|E) = " @entity.countTP " / (" @entity.countTP " + " @entity.countFP ")") },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIAL, label: "Run Evidence Trial", variant: primary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.lastTrialLabel },
+                { type: meter, value: (math/round (* @entity.empiricalPosterior 100) 1), min: 0, max: 100, unit: "%", label: (str/concat "Empirical P(H|E) from " @entity.trialsRun " trial(s)"), showValue: true }
+              ] }
+          ]
+        })
+
+      SET_PARAM -> idle when (== @entity.active true)
+        (let (
+            (p (if (== ?param "prior") ?value @entity.priorH))
+            (lh (if (== ?param "likelihoodH") ?value @entity.likelihoodEGivenH))
+            (lnh (if (== ?param "likelihoodNotH") ?value @entity.likelihoodEGivenNotH))
+            (population @config.populationSize)
+            (cols @config.gridColumns)
+            (gridRows (+ (math/floor (/ (- @population 1) @cols)) 1))
+            (cellW (/ (- @config.width 48) @cols))
+            (cellH (/ (- @config.height 48) @gridRows))
+            (countH (math/round (* @p @population)))
+            (countNotH (- @population @countH))
+            (truePos (math/round (* @countH @lh)))
+            (falseNeg (- @countH @truePos))
+            (falsePos (math/round (* @countNotH @lnh)))
+            (trueNeg (- @countNotH @falsePos))
+            (posterior (if (> (+ @truePos @falsePos) 0) (/ @truePos (+ @truePos @falsePos)) 0))
+            (newShapes (array/map (array/range @population) (fn i
+              (let (
+                  (col (math/mod @i @cols))
+                  (row (math/floor (/ @i @cols)))
+                  (category (if (< @i @truePos) "tp" (if (< @i (+ @truePos @falseNeg)) "fn" (if (< @i (+ @truePos @falseNeg @falsePos)) "fp" "tn"))))
+                )
+                {
+                  type: "rect",
+                  x: (+ 24 (* @col @cellW)),
+                  y: (+ 24 (* @row @cellH)),
+                  width: (* @cellW 0.86),
+                  height: (* @cellH 0.86),
+                  fill: (if (== @category "tp") "#dc2626" (if (== @category "fn") "#fca5a5" (if (== @category "fp") "#f59e0b" "#e5e7eb"))),
+                  lineWidth: 0
+                }))))
+          )
+          (do
+            (set @entity.priorH @p)
+            (set @entity.likelihoodEGivenH @lh)
+            (set @entity.likelihoodEGivenNotH @lnh)
+            (set @entity.trialsRun 0)
+            (set @entity.trialsPositive 0)
+            (set @entity.trialsTruePositive 0)
+            (set @entity.empiricalPosterior 0)
+            (set @entity.lastTrialLabel "")
+            (set @entity.countTP @truePos)
+            (set @entity.countFN @falseNeg)
+            (set @entity.countFP @falsePos)
+            (set @entity.countTN @trueNeg)
+            (set @entity.posteriorH @posterior)
+            (set @entity.shapes @newShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: caption, content: (str/concat "Prior P(H): " (math/round (* @entity.priorH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.priorH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "prior" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|H) — chance of " @config.evidenceLabel " given " @config.hypothesisLabel ": " (math/round (* @entity.likelihoodEGivenH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodH" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|¬H) — false-alarm rate: " (math/round (* @entity.likelihoodEGivenNotH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenNotH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodNotH" } },
+                { type: meter, value: (math/round (* @entity.posteriorH 100) 1), min: 0, max: 100, unit: "%", label: "Posterior P(H|E)", showValue: true },
+                { type: typography, variant: caption, content: (str/concat "Population grid: " @entity.countTP " true positive + " @entity.countFP " false positive out of " @config.populationSize " -> P(H|E) = " @entity.countTP " / (" @entity.countTP " + " @entity.countFP ")") },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIAL, label: "Run Evidence Trial", variant: primary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.lastTrialLabel },
+                { type: meter, value: (math/round (* @entity.empiricalPosterior 100) 1), min: 0, max: 100, unit: "%", label: (str/concat "Empirical P(H|E) from " @entity.trialsRun " trial(s)"), showValue: true }
+              ] }
+          ]
+        })
+        (emit BAYES_UPDATED { priorH: @entity.priorH, likelihoodEGivenH: @entity.likelihoodEGivenH, likelihoodEGivenNotH: @entity.likelihoodEGivenNotH, posteriorH: @entity.posteriorH, trialsRun: @entity.trialsRun, empiricalPosterior: @entity.empiricalPosterior })
+
+      RUN_TRIAL -> idle when (== @entity.active true)
+        (let (
+            (drawH (< (math/random) @entity.priorH))
+            (roll (math/random))
+            (drawE (if @drawH (< @roll @entity.likelihoodEGivenH) (< @roll @entity.likelihoodEGivenNotH)))
+            (newTrialsRun (+ @entity.trialsRun 1))
+            (newTrialsPositive (if @drawE (+ @entity.trialsPositive 1) @entity.trialsPositive))
+            (newTrialsTruePositive (if (and @drawH @drawE) (+ @entity.trialsTruePositive 1) @entity.trialsTruePositive))
+            (newEmpirical (if (> @newTrialsPositive 0) (/ @newTrialsTruePositive @newTrialsPositive) 0))
+            (drawLabel (if @drawH
+              (if @drawE
+                (str/concat "Drew: has " @config.hypothesisLabel ", observed " @config.evidenceLabel)
+                (str/concat "Drew: has " @config.hypothesisLabel ", no " @config.evidenceLabel))
+              (if @drawE
+                (str/concat "Drew: no " @config.hypothesisLabel ", but observed " @config.evidenceLabel " (false alarm)")
+                (str/concat "Drew: no " @config.hypothesisLabel ", no " @config.evidenceLabel))))
+          )
+          (do
+            (set @entity.trialsRun @newTrialsRun)
+            (set @entity.trialsPositive @newTrialsPositive)
+            (set @entity.trialsTruePositive @newTrialsTruePositive)
+            (set @entity.empiricalPosterior @newEmpirical)
+            (set @entity.lastTrialLabel @drawLabel)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: caption, content: (str/concat "Prior P(H): " (math/round (* @entity.priorH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.priorH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "prior" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|H) — chance of " @config.evidenceLabel " given " @config.hypothesisLabel ": " (math/round (* @entity.likelihoodEGivenH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodH" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|¬H) — false-alarm rate: " (math/round (* @entity.likelihoodEGivenNotH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenNotH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodNotH" } },
+                { type: meter, value: (math/round (* @entity.posteriorH 100) 1), min: 0, max: 100, unit: "%", label: "Posterior P(H|E)", showValue: true },
+                { type: typography, variant: caption, content: (str/concat "Population grid: " @entity.countTP " true positive + " @entity.countFP " false positive out of " @config.populationSize " -> P(H|E) = " @entity.countTP " / (" @entity.countTP " + " @entity.countFP ")") },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIAL, label: "Run Evidence Trial", variant: primary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.lastTrialLabel },
+                { type: meter, value: (math/round (* @entity.empiricalPosterior 100) 1), min: 0, max: 100, unit: "%", label: (str/concat "Empirical P(H|E) from " @entity.trialsRun " trial(s)"), showValue: true }
+              ] }
+          ]
+        })
+        (emit BAYES_UPDATED { priorH: @entity.priorH, likelihoodEGivenH: @entity.likelihoodEGivenH, likelihoodEGivenNotH: @entity.likelihoodEGivenNotH, posteriorH: @entity.posteriorH, trialsRun: @entity.trialsRun, empiricalPosterior: @entity.empiricalPosterior })
+
+      RESET_TRIALS -> idle when (== @entity.active true)
+        (set @entity.trialsRun 0)
+        (set @entity.trialsPositive 0)
+        (set @entity.trialsTruePositive 0)
+        (set @entity.empiricalPosterior 0)
+        (set @entity.lastTrialLabel "")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: caption, content: (str/concat "Prior P(H): " (math/round (* @entity.priorH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.priorH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "prior" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|H) — chance of " @config.evidenceLabel " given " @config.hypothesisLabel ": " (math/round (* @entity.likelihoodEGivenH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodH" } },
+                { type: typography, variant: caption, content: (str/concat "P(E|¬H) — false-alarm rate: " (math/round (* @entity.likelihoodEGivenNotH 100) 1) "%") },
+                { type: range-slider, min: 0, max: 1, step: 0.01, value: @entity.likelihoodEGivenNotH, showTooltip: true, action: "SET_PARAM", actionPayload: { param: "likelihoodNotH" } },
+                { type: meter, value: (math/round (* @entity.posteriorH 100) 1), min: 0, max: 100, unit: "%", label: "Posterior P(H|E)", showValue: true },
+                { type: typography, variant: caption, content: (str/concat "Population grid: " @entity.countTP " true positive + " @entity.countFP " false positive out of " @config.populationSize " -> P(H|E) = " @entity.countTP " / (" @entity.countTP " + " @entity.countFP ")") },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIAL, label: "Run Evidence Trial", variant: primary },
+                    { type: button, action: RESET_TRIALS, label: "Reset Trials", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.lastTrialLabel },
+                { type: meter, value: (math/round (* @entity.empiricalPosterior 100) 1), min: 0, max: 100, unit: "%", label: (str/concat "Empirical P(H|E) from " @entity.trialsRun " trial(s)"), showValue: true }
+              ] }
+          ]
+        })
+        (emit BAYES_UPDATED { priorH: @entity.priorH, likelihoodEGivenH: @entity.likelihoodEGivenH, likelihoodEGivenNotH: @entity.likelihoodEGivenNotH, posteriorH: @entity.posteriorH, trialsRun: @entity.trialsRun, empiricalPosterior: @entity.empiricalPosterior })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_PARAM {
+        param : string
+        value : number
+      }
+        @description "Learner dragged a prior/likelihood slider — param is one of prior, likelihoodH, likelihoodNotH."
+        @tier "domain"
+    }
+
+    emits {
+      BAYES_UPDATED -> external {
+        priorH : number
+        likelihoodEGivenH : number
+        likelihoodEGivenNotH : number
+        posteriorH : number
+        trialsRun : number
+        empiricalPosterior : number
+      }
+        @description "The Bayes state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "bayes update, posterior update, trial run, evidence trial"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Probability Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      xMin : number = 0
+        @label "X Min"
+        @tier "presentation"
+      xMax : number = 10
+        @label "X Max"
+        @tier "presentation"
+      yMin : number = 0
+        @label "Y Min"
+        @tier "presentation"
+      yMax : number = 1
+        @label "Y Max"
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      priorH : number = 0.01
+        @label "Prior P(H)"
+        @description "Prior probability that the hypothesis is true before seeing evidence — the base rate."
+        @synonyms "base rate, prior probability"
+        @tier "domain"
+      likelihoodEGivenH : number = 0.9
+        @label "P(E|H)"
+        @description "Likelihood of observing the evidence given the hypothesis is true, e.g. a test's sensitivity."
+        @synonyms "sensitivity, true positive rate"
+        @tier "domain"
+      likelihoodEGivenNotH : number = 0.08
+        @label "P(E|¬H)"
+        @description "Likelihood of observing the evidence given the hypothesis is false, e.g. a test's false-positive rate."
+        @synonyms "false positive rate, false alarm rate"
+        @tier "domain"
+      hypothesisLabel : string = "the condition"
+        @label "Hypothesis Label"
+        @description "Human label for the hypothesis H, used in trial readouts."
+        @tier "presentation"
+      evidenceLabel : string = "a positive test"
+        @label "Evidence Label"
+        @description "Human label for the evidence E, used in trial readouts."
+        @tier "presentation"
+      populationSize : number = 100
+        @label "Population Size"
+        @description "Number of individuals in the population grid."
+        @tier "presentation"
+      gridColumns : number = 10
+        @label "Grid Columns"
+        @description "Number of columns in the population grid."
+        @tier "presentation"
+    }
+  }
+
+  page "/prob-bayes" as ProbBayesPage -> ProbBayesSim
+}

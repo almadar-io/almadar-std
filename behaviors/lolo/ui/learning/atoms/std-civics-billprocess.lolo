@@ -1,0 +1,754 @@
+app std-civics-billprocess "1.0.0"
+"How a bill becomes law — a bill token travels Introduced -> House vote -> Senate vote -> President, with veto and a two-thirds congressional override, on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital CivicsBillProcessOrbital {
+  type CivicsBillProcessShapePoint = {
+    x : number!
+    y : number!
+  }
+  type CivicsBillProcessShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [CivicsBillProcessShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type CivicsBillProcessBranch = {
+    key : "legislative" | "executive" | "judicial"!
+    label : string
+    color : string
+  }
+  type CivicsBillProcessVoteTally = {
+    yes : number!
+    no : number!
+  }
+  type CivicsBillProcessBill = {
+    title : string!
+    houseVotes : CivicsBillProcessVoteTally
+    senateVotes : CivicsBillProcessVoteTally
+    overrideVotes : CivicsBillProcessVoteTally
+  }
+
+  entity CivicsBillProcessScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    billIndex : number
+    billTitle : string
+    houseVotesLabel : string
+    senateVotesLabel : string
+    overrideVotesLabel : string
+    stationIndex : number
+    stationLabel : string
+    narration : string
+    vetoed : boolean
+    outcome : string
+    outcomeBadgeLabel : string
+    outcomeBadgeVariant : string
+    overrideReadout : string
+    renderChildren : [json]
+  }
+
+  trait CivicsBillProcessSim -> @rebindable CivicsBillProcessScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.billIndex 0)
+        (set @entity.stationIndex 0)
+        (set @entity.vetoed false)
+        (set @entity.outcome "")
+        (set @entity.outcomeBadgeLabel "IN PROGRESS")
+        (set @entity.outcomeBadgeVariant "neutral")
+        (set @entity.overrideReadout "")
+        (let (
+            (bill (array/nth @config.bills @entity.billIndex))
+            (houseVotes (object/get @bill houseVotes))
+            (senateVotes (object/get @bill senateVotes))
+            (overrideVotes (object/get @bill overrideVotes))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (laneY (+ @boxY (+ @boxH 46)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (stationX (if (== @entity.stationIndex 0) (- @legCx (* @boxW 0.28)) (if (== @entity.stationIndex 1) @legCx (if (== @entity.stationIndex 2) (+ @legCx (* @boxW 0.28)) @execCx))))
+            (billShapes (array/concat @branchShapes [
+                { type: circle, id: "bill-token", x: @stationX, y: @laneY, radius: 10, color: @config.billColor, fill: @config.billColor },
+                { type: text, id: "bill-token-label", x: @stationX, y: (+ @laneY 24), text: "Introduced", fontSize: 12, align: "center", color: @config.billColor }
+              ]))
+            (houseLabel (str/concat "House declared vote: " (object/get @houseVotes yes) "-" (object/get @houseVotes no)))
+            (senateLabel (str/concat "Senate declared vote: " (object/get @senateVotes yes) "-" (object/get @senateVotes no)))
+            (overrideLabel (str/concat "Override declared vote (if attempted): " (object/get @overrideVotes yes) "-" (object/get @overrideVotes no) " (needs two-thirds)"))
+            (introNarration (str/concat "\"" (object/get @bill title) "\" is introduced in the House of Representatives."))
+            (processChildren [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (str/concat "Bill: " (object/get @bill title)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @billShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @introNarration },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE_BILL, label: "Advance Bill", variant: primary, disabled: (if (and (< @entity.stationIndex 3) (== @entity.outcome "")) false true) },
+                    { type: button, action: SIGN_BILL, label: "Sign Bill", variant: primary, disabled: (if (and (and (== @entity.stationIndex 3) (== @entity.outcome "")) (not @entity.vetoed)) false true) },
+                    { type: button, action: VETO_BILL, label: "Veto Bill", variant: danger, disabled: (if (and (and (== @entity.stationIndex 3) (== @entity.outcome "")) (not @entity.vetoed)) false true) },
+                    { type: button, action: OVERRIDE_VETO, label: "Attempt Override", variant: secondary, disabled: (if (and @entity.vetoed (== @entity.outcome "")) false true) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: @houseLabel },
+                    { type: typography, variant: caption, content: @senateLabel },
+                    { type: typography, variant: caption, content: @overrideLabel },
+                    { type: typography, variant: caption, content: "" }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: @entity.outcomeBadgeLabel, variant: @entity.outcomeBadgeVariant },
+                    { type: button, action: RESET_BILL, label: "Next Bill", variant: ghost }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.billTitle (object/get @bill title))
+            (set @entity.stationLabel "Introduced")
+            (set @entity.narration @introNarration)
+            (set @entity.houseVotesLabel @houseLabel)
+            (set @entity.senateVotesLabel @senateLabel)
+            (set @entity.overrideVotesLabel @overrideLabel)
+            (set @entity.renderChildren @processChildren)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.billIndex 0)
+        (set @entity.stationIndex 0)
+        (set @entity.vetoed false)
+        (set @entity.outcome "")
+        (set @entity.outcomeBadgeLabel "IN PROGRESS")
+        (set @entity.outcomeBadgeVariant "neutral")
+        (set @entity.overrideReadout "")
+        (let (
+            (bill (array/nth @config.bills @entity.billIndex))
+            (houseVotes (object/get @bill houseVotes))
+            (senateVotes (object/get @bill senateVotes))
+            (overrideVotes (object/get @bill overrideVotes))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (laneY (+ @boxY (+ @boxH 46)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (stationX (if (== @entity.stationIndex 0) (- @legCx (* @boxW 0.28)) (if (== @entity.stationIndex 1) @legCx (if (== @entity.stationIndex 2) (+ @legCx (* @boxW 0.28)) @execCx))))
+            (billShapes (array/concat @branchShapes [
+                { type: circle, id: "bill-token", x: @stationX, y: @laneY, radius: 10, color: @config.billColor, fill: @config.billColor },
+                { type: text, id: "bill-token-label", x: @stationX, y: (+ @laneY 24), text: "Introduced", fontSize: 12, align: "center", color: @config.billColor }
+              ]))
+            (houseLabel (str/concat "House declared vote: " (object/get @houseVotes yes) "-" (object/get @houseVotes no)))
+            (senateLabel (str/concat "Senate declared vote: " (object/get @senateVotes yes) "-" (object/get @senateVotes no)))
+            (overrideLabel (str/concat "Override declared vote (if attempted): " (object/get @overrideVotes yes) "-" (object/get @overrideVotes no) " (needs two-thirds)"))
+            (introNarration (str/concat "\"" (object/get @bill title) "\" is introduced in the House of Representatives."))
+            (processChildren [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (str/concat "Bill: " (object/get @bill title)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @billShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @introNarration },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE_BILL, label: "Advance Bill", variant: primary, disabled: (if (and (< @entity.stationIndex 3) (== @entity.outcome "")) false true) },
+                    { type: button, action: SIGN_BILL, label: "Sign Bill", variant: primary, disabled: (if (and (and (== @entity.stationIndex 3) (== @entity.outcome "")) (not @entity.vetoed)) false true) },
+                    { type: button, action: VETO_BILL, label: "Veto Bill", variant: danger, disabled: (if (and (and (== @entity.stationIndex 3) (== @entity.outcome "")) (not @entity.vetoed)) false true) },
+                    { type: button, action: OVERRIDE_VETO, label: "Attempt Override", variant: secondary, disabled: (if (and @entity.vetoed (== @entity.outcome "")) false true) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: @houseLabel },
+                    { type: typography, variant: caption, content: @senateLabel },
+                    { type: typography, variant: caption, content: @overrideLabel },
+                    { type: typography, variant: caption, content: "" }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: @entity.outcomeBadgeLabel, variant: @entity.outcomeBadgeVariant },
+                    { type: button, action: RESET_BILL, label: "Next Bill", variant: ghost }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.billTitle (object/get @bill title))
+            (set @entity.stationLabel "Introduced")
+            (set @entity.narration @introNarration)
+            (set @entity.houseVotesLabel @houseLabel)
+            (set @entity.senateVotesLabel @senateLabel)
+            (set @entity.overrideVotesLabel @overrideLabel)
+            (set @entity.renderChildren @processChildren)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      ADVANCE_BILL -> idle when (== @entity.active true)
+        (let (
+            (bill (array/nth @config.bills @entity.billIndex))
+            (houseVotes (object/get @bill houseVotes))
+            (senateVotes (object/get @bill senateVotes))
+            (nextIndex (+ @entity.stationIndex 1))
+            (housePasses (> (object/get @houseVotes yes) (object/get @houseVotes no)))
+            (senatePasses (> (object/get @senateVotes yes) (object/get @senateVotes no)))
+            (stationLabel (if (== @nextIndex 1) "House Vote" (if (== @nextIndex 2) "Senate Vote" "President")))
+            (narration (if (== @nextIndex 1)
+                (if @housePasses
+                  (str/concat "The House votes " (object/get @houseVotes yes) "-" (object/get @houseVotes no) " — the bill passes the House.")
+                  (str/concat "The House votes " (object/get @houseVotes yes) "-" (object/get @houseVotes no) " — the bill fails in the House and dies."))
+              (if (== @nextIndex 2)
+                (if @senatePasses
+                  (str/concat "The Senate votes " (object/get @senateVotes yes) "-" (object/get @senateVotes no) " — the bill passes the Senate.")
+                  (str/concat "The Senate votes " (object/get @senateVotes yes) "-" (object/get @senateVotes no) " — the bill fails in the Senate and dies."))
+                "The bill reaches the President's desk, awaiting a decision.")))
+            (outcome (if (== @nextIndex 1) (if @housePasses "" "dead") (if (== @nextIndex 2) (if @senatePasses "" "dead") "")))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (laneY (+ @boxY (+ @boxH 46)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (stationX (if (== @nextIndex 1) @legCx (if (== @nextIndex 2) (+ @legCx (* @boxW 0.28)) @execCx)))
+            (billShapes (array/concat @branchShapes [
+                { type: circle, id: "bill-token", x: @stationX, y: @laneY, radius: 10, color: @config.billColor, fill: @config.billColor },
+                { type: text, id: "bill-token-label", x: @stationX, y: (+ @laneY 24), text: @stationLabel, fontSize: 12, align: "center", color: @config.billColor }
+              ]))
+            (badgeLabel (if (== @outcome "dead") "DEAD" "IN PROGRESS"))
+            (badgeVariant (if (== @outcome "dead") "danger" "neutral"))
+            (children [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (str/concat "Bill: " @entity.billTitle) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @billShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @narration },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE_BILL, label: "Advance Bill", variant: primary, disabled: (if (and (< @nextIndex 3) (== @outcome "")) false true) },
+                    { type: button, action: SIGN_BILL, label: "Sign Bill", variant: primary, disabled: (if (and (and (== @nextIndex 3) (== @outcome "")) (not @entity.vetoed)) false true) },
+                    { type: button, action: VETO_BILL, label: "Veto Bill", variant: danger, disabled: (if (and (and (== @nextIndex 3) (== @outcome "")) (not @entity.vetoed)) false true) },
+                    { type: button, action: OVERRIDE_VETO, label: "Attempt Override", variant: secondary, disabled: (if (and @entity.vetoed (== @outcome "")) false true) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: @entity.houseVotesLabel },
+                    { type: typography, variant: caption, content: @entity.senateVotesLabel },
+                    { type: typography, variant: caption, content: @entity.overrideVotesLabel },
+                    { type: typography, variant: caption, content: @entity.overrideReadout }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: @badgeLabel, variant: @badgeVariant },
+                    { type: button, action: RESET_BILL, label: "Next Bill", variant: ghost }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.stationIndex @nextIndex)
+            (set @entity.stationLabel @stationLabel)
+            (set @entity.narration @narration)
+            (set @entity.outcome @outcome)
+            (set @entity.outcomeBadgeLabel @badgeLabel)
+            (set @entity.outcomeBadgeVariant @badgeVariant)
+            (set @entity.renderChildren @children)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit BILL_PROCESS_UPDATED { stationLabel: @entity.stationLabel, outcome: @entity.outcome, vetoed: @entity.vetoed, billTitle: @entity.billTitle })
+
+      SIGN_BILL -> idle when (== @entity.active true)
+        (let (
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (laneY (+ @boxY (+ @boxH 46)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (billShapes (array/concat @branchShapes [
+                { type: circle, id: "bill-token", x: @execCx, y: @laneY, radius: 10, color: @config.billColor, fill: @config.billColor },
+                { type: text, id: "bill-token-label", x: @execCx, y: (+ @laneY 24), text: "Signed", fontSize: 12, align: "center", color: @config.billColor }
+              ]))
+            (narration (str/concat "The President signs \"" @entity.billTitle "\" — it becomes law."))
+            (children [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (str/concat "Bill: " @entity.billTitle) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @billShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @narration },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE_BILL, label: "Advance Bill", variant: primary, disabled: true },
+                    { type: button, action: SIGN_BILL, label: "Sign Bill", variant: primary, disabled: true },
+                    { type: button, action: VETO_BILL, label: "Veto Bill", variant: danger, disabled: true },
+                    { type: button, action: OVERRIDE_VETO, label: "Attempt Override", variant: secondary, disabled: true }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: @entity.houseVotesLabel },
+                    { type: typography, variant: caption, content: @entity.senateVotesLabel },
+                    { type: typography, variant: caption, content: @entity.overrideVotesLabel },
+                    { type: typography, variant: caption, content: @entity.overrideReadout }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: "LAW", variant: success },
+                    { type: button, action: RESET_BILL, label: "Next Bill", variant: ghost }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.outcome "law")
+            (set @entity.narration @narration)
+            (set @entity.outcomeBadgeLabel "LAW")
+            (set @entity.outcomeBadgeVariant "success")
+            (set @entity.renderChildren @children)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit BILL_PROCESS_UPDATED { stationLabel: @entity.stationLabel, outcome: @entity.outcome, vetoed: @entity.vetoed, billTitle: @entity.billTitle })
+
+      VETO_BILL -> idle when (== @entity.active true)
+        (let (
+            (bill (array/nth @config.bills @entity.billIndex))
+            (overrideVotes (object/get @bill overrideVotes))
+            (overrideYes (object/get @overrideVotes yes))
+            (overrideNo (object/get @overrideVotes no))
+            (overrideTotal (+ @overrideYes @overrideNo))
+            (overridePasses (>= (* @overrideYes 3) (* @overrideTotal 2)))
+            (overridePct (math/round (* (/ @overrideYes @overrideTotal) 100) 1))
+            (overrideReadout (str/concat "If Congress attempts an override with the declared vote (" @overrideYes "-" @overrideNo ", " @overridePct "% yes), it would " (if @overridePasses "PASS (meets two-thirds)." "FAIL (short of two-thirds).")))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (laneY (+ @boxY (+ @boxH 46)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (billShapes (array/concat @branchShapes [
+                { type: circle, id: "bill-token", x: @execCx, y: @laneY, radius: 10, color: @config.billColor, fill: @config.billColor },
+                { type: text, id: "bill-token-label", x: @execCx, y: (+ @laneY 24), text: "Vetoed", fontSize: 12, align: "center", color: @config.billColor }
+              ]))
+            (narration (str/concat "The President vetoes \"" @entity.billTitle "\" — Congress may attempt to override the veto."))
+            (children [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (str/concat "Bill: " @entity.billTitle) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @billShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @narration },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE_BILL, label: "Advance Bill", variant: primary, disabled: true },
+                    { type: button, action: SIGN_BILL, label: "Sign Bill", variant: primary, disabled: true },
+                    { type: button, action: VETO_BILL, label: "Veto Bill", variant: danger, disabled: true },
+                    { type: button, action: OVERRIDE_VETO, label: "Attempt Override", variant: secondary, disabled: false }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: @entity.houseVotesLabel },
+                    { type: typography, variant: caption, content: @entity.senateVotesLabel },
+                    { type: typography, variant: caption, content: @entity.overrideVotesLabel },
+                    { type: typography, variant: caption, content: @overrideReadout }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: "IN PROGRESS", variant: neutral },
+                    { type: button, action: RESET_BILL, label: "Next Bill", variant: ghost }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.vetoed true)
+            (set @entity.narration @narration)
+            (set @entity.overrideReadout @overrideReadout)
+            (set @entity.renderChildren @children)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit BILL_PROCESS_UPDATED { stationLabel: @entity.stationLabel, outcome: @entity.outcome, vetoed: @entity.vetoed, billTitle: @entity.billTitle })
+
+      OVERRIDE_VETO -> idle when (== @entity.active true)
+        (let (
+            (bill (array/nth @config.bills @entity.billIndex))
+            (overrideVotes (object/get @bill overrideVotes))
+            (overrideYes (object/get @overrideVotes yes))
+            (overrideNo (object/get @overrideVotes no))
+            (overrideTotal (+ @overrideYes @overrideNo))
+            (overridePasses (>= (* @overrideYes 3) (* @overrideTotal 2)))
+            (outcome (if @overridePasses "law" "dead"))
+            (badgeLabel (if @overridePasses "LAW" "DEAD"))
+            (badgeVariant (if @overridePasses "success" "danger"))
+            (narration (if @overridePasses
+                (str/concat "Congress overrides the veto " @overrideYes "-" @overrideNo " — the two-thirds threshold is met and \"" @entity.billTitle "\" becomes law over the President's objection.")
+                (str/concat "Congress attempts to override " @overrideYes "-" @overrideNo " — short of two-thirds, the override fails and the bill dies.")))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (laneY (+ @boxY (+ @boxH 46)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (billShapes (array/concat @branchShapes [
+                { type: circle, id: "bill-token", x: (- @legCx (* @boxW 0.28)), y: @laneY, radius: 10, color: @config.billColor, fill: @config.billColor },
+                { type: text, id: "bill-token-label", x: (- @legCx (* @boxW 0.28)), y: (+ @laneY 24), text: (if @overridePasses "Override — Law" "Override Failed"), fontSize: 12, align: "center", color: @config.billColor }
+              ]))
+            (children [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (str/concat "Bill: " @entity.billTitle) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @billShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @narration },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE_BILL, label: "Advance Bill", variant: primary, disabled: true },
+                    { type: button, action: SIGN_BILL, label: "Sign Bill", variant: primary, disabled: true },
+                    { type: button, action: VETO_BILL, label: "Veto Bill", variant: danger, disabled: true },
+                    { type: button, action: OVERRIDE_VETO, label: "Attempt Override", variant: secondary, disabled: true }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: @entity.houseVotesLabel },
+                    { type: typography, variant: caption, content: @entity.senateVotesLabel },
+                    { type: typography, variant: caption, content: @entity.overrideVotesLabel },
+                    { type: typography, variant: caption, content: @entity.overrideReadout }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: @badgeLabel, variant: @badgeVariant },
+                    { type: button, action: RESET_BILL, label: "Next Bill", variant: ghost }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.outcome @outcome)
+            (set @entity.narration @narration)
+            (set @entity.outcomeBadgeLabel @badgeLabel)
+            (set @entity.outcomeBadgeVariant @badgeVariant)
+            (set @entity.renderChildren @children)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit BILL_PROCESS_UPDATED { stationLabel: @entity.stationLabel, outcome: @entity.outcome, vetoed: @entity.vetoed, billTitle: @entity.billTitle })
+
+      RESET_BILL -> idle when (== @entity.active true)
+        (let (
+            (nextBillIndex (% (+ @entity.billIndex 1) (array/len @config.bills)))
+            (bill (array/nth @config.bills @nextBillIndex))
+            (houseVotes (object/get @bill houseVotes))
+            (senateVotes (object/get @bill senateVotes))
+            (overrideVotes (object/get @bill overrideVotes))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (laneY (+ @boxY (+ @boxH 46)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (stationX (- @legCx (* @boxW 0.28)))
+            (billShapes (array/concat @branchShapes [
+                { type: circle, id: "bill-token", x: @stationX, y: @laneY, radius: 10, color: @config.billColor, fill: @config.billColor },
+                { type: text, id: "bill-token-label", x: @stationX, y: (+ @laneY 24), text: "Introduced", fontSize: 12, align: "center", color: @config.billColor }
+              ]))
+            (narration (str/concat "\"" (object/get @bill title) "\" is introduced in the House of Representatives."))
+            (houseLabel (str/concat "House declared vote: " (object/get @houseVotes yes) "-" (object/get @houseVotes no)))
+            (senateLabel (str/concat "Senate declared vote: " (object/get @senateVotes yes) "-" (object/get @senateVotes no)))
+            (overrideLabel (str/concat "Override declared vote (if attempted): " (object/get @overrideVotes yes) "-" (object/get @overrideVotes no) " (needs two-thirds)"))
+            (children [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (str/concat "Bill: " (object/get @bill title)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @billShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @narration },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE_BILL, label: "Advance Bill", variant: primary, disabled: false },
+                    { type: button, action: SIGN_BILL, label: "Sign Bill", variant: primary, disabled: true },
+                    { type: button, action: VETO_BILL, label: "Veto Bill", variant: danger, disabled: true },
+                    { type: button, action: OVERRIDE_VETO, label: "Attempt Override", variant: secondary, disabled: true }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: @houseLabel },
+                    { type: typography, variant: caption, content: @senateLabel },
+                    { type: typography, variant: caption, content: @overrideLabel },
+                    { type: typography, variant: caption, content: "" }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: "IN PROGRESS", variant: neutral },
+                    { type: button, action: RESET_BILL, label: "Next Bill", variant: ghost }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.billIndex @nextBillIndex)
+            (set @entity.billTitle (object/get @bill title))
+            (set @entity.stationIndex 0)
+            (set @entity.stationLabel "Introduced")
+            (set @entity.vetoed false)
+            (set @entity.outcome "")
+            (set @entity.outcomeBadgeLabel "IN PROGRESS")
+            (set @entity.outcomeBadgeVariant "neutral")
+            (set @entity.overrideReadout "")
+            (set @entity.narration @narration)
+            (set @entity.houseVotesLabel @houseLabel)
+            (set @entity.senateVotesLabel @senateLabel)
+            (set @entity.overrideVotesLabel @overrideLabel)
+            (set @entity.renderChildren @children)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit BILL_PROCESS_UPDATED { stationLabel: @entity.stationLabel, outcome: @entity.outcome, vetoed: @entity.vetoed, billTitle: @entity.billTitle })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ADVANCE_BILL {
+      }
+        @description "Learner advances the bill token to its next station (House vote, Senate vote, or the President's desk)."
+        @tier "domain"
+      SIGN_BILL {
+      }
+        @description "Learner signs the bill at the President's desk, enacting it into law."
+        @tier "domain"
+      VETO_BILL {
+      }
+        @description "Learner vetoes the bill at the President's desk, allowing Congress to attempt an override."
+        @tier "domain"
+      OVERRIDE_VETO {
+      }
+        @description "Learner attempts a congressional override of a presidential veto, evaluated against the bill's declared override vote and the two-thirds threshold."
+        @tier "domain"
+      RESET_BILL {
+      }
+        @description "Learner advances to the next bill in the roster, resetting the process to Introduced."
+        @tier "domain"
+    }
+
+    emits {
+      BILL_PROCESS_UPDATED -> external {
+        stationLabel : string
+        outcome : string
+        vetoed : boolean
+        billTitle : string
+      }
+        @description "The bill's progress state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "bill progress, station update, outcome update, veto update"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Civics Lab"
+        @label "Title"
+        @description "Title shown above the lab."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 460
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      branches : [CivicsBillProcessBranch] = [
+        { key: legislative, label: "Legislative — Congress", color: "#2563eb" },
+        { key: executive, label: "Executive — President", color: "#dc2626" },
+        { key: judicial, label: "Judicial — Courts", color: "#7c3aed" }
+      ]
+        @label "Branches"
+        @description "The three branches of government drawn as labelled boxes, in fixed left-to-right order: Legislative (index 0), Executive (index 1), Judicial (index 2). Label and color are re-themeable; the key and order are fixed."
+        @tier "domain"
+      billColor : string = "#0f172a"
+        @label "Bill Token Color"
+        @description "Color of the bill token that moves between stations."
+        @tier "presentation"
+      bills : [CivicsBillProcessBill] = [
+        { title: "Clean Water Infrastructure Act", houseVotes: { yes: 290, no: 135 }, senateVotes: { yes: 64, no: 34 }, overrideVotes: { yes: 290, no: 145 } },
+        { title: "National Digital Privacy Act", houseVotes: { yes: 250, no: 180 }, senateVotes: { yes: 51, no: 47 }, overrideVotes: { yes: 260, no: 170 } },
+        { title: "Border Security Modernization Act", houseVotes: { yes: 230, no: 200 }, senateVotes: { yes: 40, no: 55 }, overrideVotes: { yes: 230, no: 200 } },
+        { title: "Veterans Healthcare Expansion Act", houseVotes: { yes: 310, no: 115 }, senateVotes: { yes: 70, no: 28 }, overrideVotes: { yes: 300, no: 135 } },
+        { title: "Small Business Tax Relief Act", houseVotes: { yes: 245, no: 175 }, senateVotes: { yes: 58, no: 40 }, overrideVotes: { yes: 250, no: 180 } }
+      ]
+        @label "Bills"
+        @description "Roster of bills cycled through by Next Bill (RESET_BILL). Each bill declares its own House vote, Senate vote, and (hypothetical, in case of a veto) override vote as yes/no tallies; pass/fail and the two-thirds override threshold are computed exactly from these counts — no randomness."
+        @synonyms "bill roster, legislation roster, vote tally, roll call vote"
+        @tier "domain"
+    }
+  }
+
+  page "/civics-billprocess" as CivicsBillProcessPage -> CivicsBillProcessSim
+}

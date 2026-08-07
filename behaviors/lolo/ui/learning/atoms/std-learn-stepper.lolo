@@ -1,0 +1,572 @@
+app std-learn-stepper "1.0.0"
+"Generic staged-sequence instrument — the learner moves a Next/Prev cursor across an ordered roster of stages, each revealing its label and description plus a running per-category tally, and can filter the timeline to a single category lens. Stage and category vocabulary is entirely config-declared, so the same mechanism serves any ordered-sequence domain (periodization timelines, phase cycles, stellar evolution, and beyond) on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnStepperOrbital {
+  type LearnStepperShapePoint = {
+    x : number!
+    y : number!
+  }
+  type LearnStepperShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [LearnStepperShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type LearnStepperStage = {
+    id : string!
+    position : number!
+    label : string!
+    category : string!
+    description : string
+  }
+  type LearnStepperCategory = {
+    category : string!
+    color : string!
+    label : string
+  }
+  type LearnStepperCategorySummary = {
+    category : string!
+    summary : string!
+  }
+
+  entity LearnStepperScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    cursorIndex : number
+    activeFilter : string
+    narration : string
+    categoryTally : string
+    visibleThreadNote : string
+    shapes : [LearnStepperShape]
+    filterButtons : [json]
+  }
+
+  trait LearnStepperSim -> @rebindable LearnStepperScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.cursorIndex -1)
+        (set @entity.activeFilter "all")
+        (let (
+            (narration @config.startPrompt)
+            (tallyParts (array/map @config.categories (fn cc (str/concat (object/get @cc label) ": " (array/len (array/filter @config.stages (fn s (and (<= @s.position (- @config.minPosition 1)) (== @s.category (object/get @cc category))))))))))
+            (categoryTally (str/join @tallyParts " · "))
+            (visibleThreadNote @config.allSummary)
+            (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (baseShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+            ])
+            (markerShapes (array/map @config.stages (fn s (let (
+                (xPos (+ @config.axisMarginLeft (* (/ (- @s.position @config.minPosition) (- @config.maxPosition @config.minPosition)) @axisWidth)))
+              )
+              { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @config.markerRadius, color: @config.unreachedColor, fill: @config.unreachedColor, opacity: 0.35 }
+            ))))
+            (shapes (array/concat @baseShapes @markerShapes))
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes @shapes)
+            (set @entity.filterButtons @filterButtons)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
+                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: @entity.categoryTally },
+                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.cursorIndex -1)
+        (set @entity.activeFilter "all")
+        (let (
+            (narration @config.startPrompt)
+            (tallyParts (array/map @config.categories (fn cc (str/concat (object/get @cc label) ": " (array/len (array/filter @config.stages (fn s (and (<= @s.position (- @config.minPosition 1)) (== @s.category (object/get @cc category))))))))))
+            (categoryTally (str/join @tallyParts " · "))
+            (visibleThreadNote @config.allSummary)
+            (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (baseShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+            ])
+            (markerShapes (array/map @config.stages (fn s (let (
+                (xPos (+ @config.axisMarginLeft (* (/ (- @s.position @config.minPosition) (- @config.maxPosition @config.minPosition)) @axisWidth)))
+              )
+              { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @config.markerRadius, color: @config.unreachedColor, fill: @config.unreachedColor, opacity: 0.35 }
+            ))))
+            (shapes (array/concat @baseShapes @markerShapes))
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes @shapes)
+            (set @entity.filterButtons @filterButtons)
+          )
+        )
+        (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                  { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
+                      { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
+                      { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                    ] },
+                  { type: typography, variant: body, content: @entity.narration },
+                  { type: typography, variant: caption, content: @entity.categoryTally },
+                  { type: typography, variant: caption, content: @entity.visibleThreadNote }
+                ] }
+            ]
+        })
+
+      NEXT -> idle when (== @entity.active true)
+        (set @entity.cursorIndex (math/min (+ @entity.cursorIndex 1) (- (array/len @config.stages) 1)))
+        (let (
+            (currentPosition (if (>= @entity.cursorIndex 0) (object/get (array/nth @config.stages @entity.cursorIndex) position) (- @config.minPosition 1)))
+            (currentStage (if (>= @entity.cursorIndex 0) (array/nth @config.stages @entity.cursorIndex) null))
+            (narration (if (!= @currentStage null) (str/concat (object/get @currentStage position) " — " (object/get @currentStage label) ". " (object/get @currentStage description)) @config.startPrompt))
+            (tallyParts (array/map @config.categories (fn cc (str/concat (object/get @cc label) ": " (array/len (array/filter @config.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category))))))))))
+            (categoryTally (str/join @tallyParts " · "))
+            (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
+            (visibleStages (if (== @entity.activeFilter "all") @config.stages (array/filter @config.stages (fn s (== @s.category @entity.activeFilter)))))
+            (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (baseShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+            ])
+            (markerShapes (array/flatten (array/map @visibleStages (fn s (let (
+                (isRevealed (<= @s.position @currentPosition))
+                (isCurrent (== @s.position @currentPosition))
+                (catColorObj (array/first (array/filter @config.categories (fn cc (== @cc.category @s.category)))))
+                (catColor (object/get @catColorObj color))
+                (col (if @isRevealed @catColor @config.unreachedColor))
+                (xPos (+ @config.axisMarginLeft (* (/ (- @s.position @config.minPosition) (- @config.maxPosition @config.minPosition)) @axisWidth)))
+                (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
+              )
+              (if @isCurrent
+                [
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: 1 }
+                ]
+                [
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: (if @isRevealed 0.9 0.35) }
+                ]
+              )
+            )))))
+            (allShapes (array/concat @baseShapes @markerShapes))
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes @allShapes)
+            (set @entity.filterButtons @filterButtons)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
+                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: @entity.categoryTally },
+                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+              ] }
+          ]
+        })
+        (emit STEPPER_ADVANCED { cursorIndex: @entity.cursorIndex, activeFilter: @entity.activeFilter, currentLabel: @entity.narration })
+
+      PREV -> idle when (== @entity.active true)
+        (set @entity.cursorIndex (math/max (- @entity.cursorIndex 1) -1))
+        (let (
+            (currentPosition (if (>= @entity.cursorIndex 0) (object/get (array/nth @config.stages @entity.cursorIndex) position) (- @config.minPosition 1)))
+            (currentStage (if (>= @entity.cursorIndex 0) (array/nth @config.stages @entity.cursorIndex) null))
+            (narration (if (!= @currentStage null) (str/concat (object/get @currentStage position) " — " (object/get @currentStage label) ". " (object/get @currentStage description)) @config.startPrompt))
+            (tallyParts (array/map @config.categories (fn cc (str/concat (object/get @cc label) ": " (array/len (array/filter @config.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category))))))))))
+            (categoryTally (str/join @tallyParts " · "))
+            (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
+            (visibleStages (if (== @entity.activeFilter "all") @config.stages (array/filter @config.stages (fn s (== @s.category @entity.activeFilter)))))
+            (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (baseShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+            ])
+            (markerShapes (array/flatten (array/map @visibleStages (fn s (let (
+                (isRevealed (<= @s.position @currentPosition))
+                (isCurrent (== @s.position @currentPosition))
+                (catColorObj (array/first (array/filter @config.categories (fn cc (== @cc.category @s.category)))))
+                (catColor (object/get @catColorObj color))
+                (col (if @isRevealed @catColor @config.unreachedColor))
+                (xPos (+ @config.axisMarginLeft (* (/ (- @s.position @config.minPosition) (- @config.maxPosition @config.minPosition)) @axisWidth)))
+                (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
+              )
+              (if @isCurrent
+                [
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: 1 }
+                ]
+                [
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: (if @isRevealed 0.9 0.35) }
+                ]
+              )
+            )))))
+            (allShapes (array/concat @baseShapes @markerShapes))
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes @allShapes)
+            (set @entity.filterButtons @filterButtons)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
+                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: @entity.categoryTally },
+                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+              ] }
+          ]
+        })
+        (emit STEPPER_ADVANCED { cursorIndex: @entity.cursorIndex, activeFilter: @entity.activeFilter, currentLabel: @entity.narration })
+
+      FILTER_CATEGORY -> idle when (== @entity.active true)
+        (set @entity.activeFilter ?category)
+        (let (
+            (currentPosition (if (>= @entity.cursorIndex 0) (object/get (array/nth @config.stages @entity.cursorIndex) position) (- @config.minPosition 1)))
+            (currentStage (if (>= @entity.cursorIndex 0) (array/nth @config.stages @entity.cursorIndex) null))
+            (narration (if (!= @currentStage null) (str/concat (object/get @currentStage position) " — " (object/get @currentStage label) ". " (object/get @currentStage description)) @config.startPrompt))
+            (tallyParts (array/map @config.categories (fn cc (str/concat (object/get @cc label) ": " (array/len (array/filter @config.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category))))))))))
+            (categoryTally (str/join @tallyParts " · "))
+            (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
+            (visibleStages (if (== @entity.activeFilter "all") @config.stages (array/filter @config.stages (fn s (== @s.category @entity.activeFilter)))))
+            (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (baseShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+            ])
+            (markerShapes (array/flatten (array/map @visibleStages (fn s (let (
+                (isRevealed (<= @s.position @currentPosition))
+                (isCurrent (== @s.position @currentPosition))
+                (catColorObj (array/first (array/filter @config.categories (fn cc (== @cc.category @s.category)))))
+                (catColor (object/get @catColorObj color))
+                (col (if @isRevealed @catColor @config.unreachedColor))
+                (xPos (+ @config.axisMarginLeft (* (/ (- @s.position @config.minPosition) (- @config.maxPosition @config.minPosition)) @axisWidth)))
+                (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
+              )
+              (if @isCurrent
+                [
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: 1 }
+                ]
+                [
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: (if @isRevealed 0.9 0.35) }
+                ]
+              )
+            )))))
+            (allShapes (array/concat @baseShapes @markerShapes))
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes @allShapes)
+            (set @entity.filterButtons @filterButtons)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
+                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: @entity.categoryTally },
+                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+              ] }
+          ]
+        })
+        (emit STEPPER_ADVANCED { cursorIndex: @entity.cursorIndex, activeFilter: @entity.activeFilter, currentLabel: @entity.narration })
+
+      RESET_STEPPER -> idle when (== @entity.active true)
+        (set @entity.cursorIndex -1)
+        (set @entity.activeFilter "all")
+        (let (
+            (narration @config.startPrompt)
+            (tallyParts (array/map @config.categories (fn cc (str/concat (object/get @cc label) ": " (array/len (array/filter @config.stages (fn s (and (<= @s.position (- @config.minPosition 1)) (== @s.category (object/get @cc category))))))))))
+            (categoryTally (str/join @tallyParts " · "))
+            (visibleThreadNote @config.allSummary)
+            (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (baseShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+            ])
+            (markerShapes (array/map @config.stages (fn s (let (
+                (xPos (+ @config.axisMarginLeft (* (/ (- @s.position @config.minPosition) (- @config.maxPosition @config.minPosition)) @axisWidth)))
+              )
+              { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @config.markerRadius, color: @config.unreachedColor, fill: @config.unreachedColor, opacity: 0.35 }
+            ))))
+            (allShapes (array/concat @baseShapes @markerShapes))
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes @allShapes)
+            (set @entity.filterButtons @filterButtons)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
+                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: @entity.categoryTally },
+                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+              ] }
+          ]
+        })
+        (emit STEPPER_ADVANCED { cursorIndex: @entity.cursorIndex, activeFilter: @entity.activeFilter, currentLabel: @entity.narration })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      NEXT {
+      }
+        @description "Learner advanced the cursor to the next stage in the ordered roster."
+        @tier "domain"
+      PREV {
+      }
+        @description "Learner moved the cursor back to the previous stage in the ordered roster."
+        @tier "domain"
+      FILTER_CATEGORY {
+        category : string
+      }
+        @description "Learner picked a category lens (or all) to filter which stage markers are visible on the axis."
+        @tier "domain"
+      RESET_STEPPER {
+      }
+        @description "Learner reset the cursor to before the first stage and cleared the category filter."
+        @tier "domain"
+    }
+
+    emits {
+      STEPPER_ADVANCED -> external {
+        cursorIndex : number
+        activeFilter : string
+        currentLabel : string
+      }
+        @description "The cursor/filter state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "stepper update, cursor advance, stage reveal, timeline step"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Stepper"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 420
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      stages : [LearnStepperStage] = [
+        { id: "stage-1", position: 1, label: "Stage One", category: "a", description: "First stage in the sequence." },
+        { id: "stage-2", position: 2, label: "Stage Two", category: "b", description: "Second stage in the sequence." },
+        { id: "stage-3", position: 3, label: "Stage Three", category: "a", description: "Third stage in the sequence." }
+      ]
+        @label "Stages"
+        @description "Ordered roster of stages (position, label, category, description) stepped through by NEXT/PREV and filtered by FILTER_CATEGORY. Sorted ascending by position."
+        @synonyms "stage roster, sequence, timeline, cycle, phase, event roster, ordered stages"
+        @tier "domain"
+      categories : [LearnStepperCategory] = [
+        { category: "a", color: "#7c3aed", label: "Category A" },
+        { category: "b", color: "#15803d", label: "Category B" }
+      ]
+        @label "Categories"
+        @description "Marker color and button label per stage category, used for both the axis dots and the FILTER_CATEGORY buttons, and for the running per-category tally."
+        @synonyms "category color, category legend, stage category, filter lens"
+        @tier "domain"
+      categorySummaries : [LearnStepperCategorySummary] = [
+        { category: "a", summary: "Viewed through Category A alone, only the stages tagged A are highlighted." },
+        { category: "b", summary: "Viewed through Category B alone, only the stages tagged B are highlighted." }
+      ]
+        @label "Category Summaries"
+        @description "Narrative summary shown when the learner filters the sequence to a single category — how the sequence reads through that lens alone."
+        @synonyms "historiographical lens, primary source lens, single-cause narrative, category narrative, visible thread"
+        @tier "domain"
+      allSummary : string = "Taken together, every stage contributes to the full sequence. No single category tells the whole story."
+        @label "All-Lens Summary"
+        @description "Narrative summary shown when no category filter is applied — the full, multi-category picture."
+        @synonyms "multi-causal, full picture, no single lens"
+        @tier "domain"
+      allLabel : string = "All"
+        @label "All Filter Label"
+        @tier "presentation"
+      startPrompt : string = "Press Next to begin."
+        @label "Start Prompt"
+        @description "Narration shown before the learner has advanced past the first stage."
+        @tier "presentation"
+      minPosition : number = 0
+        @label "Min Position"
+        @description "Earliest position on the axis (before the first stage)."
+        @tier "domain"
+      maxPosition : number = 4
+        @label "Max Position"
+        @description "Latest position on the axis (after the last stage)."
+        @tier "domain"
+      axisY : number = 220
+        @label "Axis Y"
+        @description "Canvas y-position of the horizontal axis."
+        @tier "presentation"
+      axisMarginLeft : number = 60
+        @label "Axis Left Margin"
+        @tier "presentation"
+      axisMarginRight : number = 60
+        @label "Axis Right Margin"
+        @tier "presentation"
+      markerRadius : number = 8
+        @label "Marker Radius"
+        @tier "presentation"
+      markerHighlightRadius : number = 14
+        @label "Marker Highlight Radius"
+        @description "Radius of the current step's marker, larger than an ordinary stage marker."
+        @tier "presentation"
+      unreachedColor : string = "#d6d3d1"
+        @label "Unreached Marker Color"
+        @description "Color of stage markers the learner has not yet stepped to."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-stepper" as LearnStepperPage -> LearnStepperSim
+}

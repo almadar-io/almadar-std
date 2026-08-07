@@ -1,0 +1,334 @@
+[
+  {
+    "organism": "std-econ-ppf",
+    "orbital": "EconPpfOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-econ-ppf.ts",
+    "entities": [
+      {
+        "name": "EconPpfScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goodALabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goodBLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goodAMax",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "goodBMax",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "allocationShare",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "outputA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "outputB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "marginalOppCost",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "marginalOppCostLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "wasteActive",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "actualOutputA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "actualOutputB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "allocationStatusLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "EconPpfSim",
+        "emittedEvents": [
+          "PPF_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PPF_UPDATED",
+            "direction": "emit",
+            "description": "The allocation state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "allocation update, opportunity cost, frontier point, efficiency",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ALLOCATE",
+            "direction": "listen",
+            "description": "Learner dragged the allocation slider to set the share of resources devoted to good A.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_WASTE",
+            "direction": "listen",
+            "description": "Learner toggled the idle-resources demo, dropping actual output inside the frontier.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "actualPointColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Actual Output Point Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "allocationStep",
+            "type": "number",
+            "default": 1,
+            "label": "Allocation Step",
+            "description": "Slider increment for the resource-allocation share.",
+            "tier": "presentation"
+          },
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "frontierColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Frontier Curve Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "frontierPointColor",
+            "type": "string",
+            "default": "#16a34a",
+            "label": "Frontier Point Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "goods",
+            "type": "[EconPpfGood]",
+            "default": [
+              {
+                "key": "A",
+                "label": "Robots",
+                "maxOutput": 100
+              },
+              {
+                "key": "B",
+                "label": "Wheat",
+                "maxOutput": 100
+              }
+            ],
+            "label": "Goods",
+            "description": "The two goods on the production-possibilities frontier — good A (x-axis) and good B (y-axis) — each with a label and the maximum output attainable if all resources went to it.",
+            "synonyms": "goods roster, production possibilities frontier, PPF, guns and butter, two goods, resource allocation",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "A",
+                    "B"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxOutput": {
+                  "name": "maxOutput",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 10,
+            "label": "Grid Step",
+            "description": "Spacing between gridlines on the canvas, in output units.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 440,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialShare",
+            "type": "number",
+            "default": 50,
+            "label": "Initial Allocation Share",
+            "description": "Starting share (0-100) of resources devoted to good A, before the learner adjusts the slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Production Possibilities Frontier",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "wasteFactor",
+            "type": "number",
+            "default": 0.7,
+            "label": "Waste Factor",
+            "description": "Fraction of frontier output retained at the inefficient point when idle resources are shown — models unemployment / underused resources leaving the economy inside its frontier.",
+            "synonyms": "unemployment, idle resources, underutilization, production inefficiency, inefficiency",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "EconPpfScene",
+        "transitionEvents": [
+          "ALLOCATE",
+          "INIT",
+          "MODE_SELECTED",
+          "TOGGLE_WASTE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "actualOutputA",
+            "actualOutputB",
+            "allocationShare",
+            "allocationStatusLabel",
+            "curves",
+            "goodALabel",
+            "goodAMax",
+            "goodBLabel",
+            "goodBMax",
+            "marginalOppCost",
+            "marginalOppCostLabel",
+            "outputA",
+            "outputB",
+            "points",
+            "title",
+            "wasteActive"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "EconPpfPage",
+        "defaultPath": "/econ-ppf",
+        "primaryEntity": "EconPpfScene"
+      }
+    ],
+    "emittedEvents": [
+      "PPF_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

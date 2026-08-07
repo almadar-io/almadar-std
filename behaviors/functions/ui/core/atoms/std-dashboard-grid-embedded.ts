@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -139,4 +139,458 @@ export function stdDashboardGridEmbedded(params: StdDashboardGridEmbeddedParams)
       stdDashboardGridEmbeddedPage(params),
     ],
   });
+}
+
+type _StdDashboardGridEmbeddedEntityName = 'DashboardGridEmbeddedData';
+type _StdDashboardGridEmbeddedListenTraitName = 'SimpleGrid1' | 'EmptyTile' | 'DashboardGridEmbedded';
+
+/**
+ * Tunable params for the DashboardGridEmbeddedOrbital orbital.
+ *
+ * Canonical entity: DashboardGridEmbeddedData — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SimpleGrid1' | 'EmptyTile' | 'DashboardGridEmbedded',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait DashboardGridEmbeddedOrbital's `uses[]` exports. */
+type _StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalUsesRef = 'SimpleGrid.traits.SimpleGridRender';
+
+/** Per-orbital factory: builds the DashboardGridEmbeddedOrbital orbital with consumer params. */
+export function stdDashboardGridEmbeddedDashboardGridEmbeddedOrbital(params: StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'DashboardGridEmbeddedOrbital',
+    uses: [
+      {
+        'as': 'SimpleGrid',
+        'from': 'std/behaviors/ui-simple-grid',
+      },
+    ],
+    entity: {
+      name: 'DashboardGridEmbeddedData',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'children': {
+            'default': [
+              '@config.tile1Trait',
+              '@config.tile2Trait',
+              '@config.tile3Trait',
+              '@config.tile4Trait',
+              '@config.tile5Trait',
+              '@config.tile6Trait',
+              '@config.tile7Trait',
+              '@config.tile8Trait',
+              '@config.tile9Trait',
+              '@config.tile10Trait',
+              '@config.tile11Trait',
+              '@config.tile12Trait',
+            ],
+            'type': 'unknown',
+          },
+          'minChildWidth': {
+            'default': '@config.minTileWidth',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'DashboardGridEmbeddedData',
+        'name': 'SimpleGrid1',
+        'ref': ('SimpleGrid.traits.SimpleGridRender' satisfies _StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalUsesRef),
+      }),
+      {
+        'category': 'interaction',
+        'linkedEntity': 'DashboardGridEmbeddedData',
+        'name': 'EmptyTile',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'interaction',
+        'config': {
+          'filter1Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for the first filter-row position. Format \'@trait.<TraitName>\' picks any trait declared on the orbital (typical use: date range picker); \'@trait.EmptyTile\' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.',
+            'label': 'Filter slot 1',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'filter2Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for the second filter-row position. Format \'@trait.<TraitName>\' picks any trait declared on the orbital (typical use: search input); \'@trait.EmptyTile\' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.',
+            'label': 'Filter slot 2',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'filter3Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for the third filter-row position. Format \'@trait.<TraitName>\' picks any trait declared on the orbital (typical use: dropdown filter); \'@trait.EmptyTile\' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.',
+            'label': 'Filter slot 3',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'filter4Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for the fourth filter-row position. Format \'@trait.<TraitName>\' picks any trait declared on the orbital (typical use: secondary dropdown filter); \'@trait.EmptyTile\' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.',
+            'label': 'Filter slot 4',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'minTileWidth': {
+            'default': 320,
+            'description': 'Minimum pixel width per tile before the grid re-flows',
+            'label': 'Tile min width',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'theme': {
+            'default': '',
+            'description': 'Design-system skin applied to the embedded grid surface via data-theme (e.g. \'linear-clean-light\'). Empty inherits the surrounding shell\'s theme. Needed because this atom renders without app-shell chrome, so no layout-level theme cascade reaches it.',
+            'label': 'Theme',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'tile10Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 10. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 10',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile11Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 11. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 11',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile12Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 12. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 12',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile1Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 1. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 1',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile2Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 2. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 2',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile3Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 3. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 3',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile4Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 4. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 4',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile5Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 5. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 5',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile6Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 6. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 6',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile7Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 7. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 7',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile8Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 8. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 8',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'tile9Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for grid cell 9. Format \'@trait.<TraitName>\' picks any trait declared on the orbital; \'@trait.EmptyTile\' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.',
+            'label': 'Tile slot 9',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'toolbar1Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for the first top-right toolbar tile. Format \'@trait.<TraitName>\' picks any trait declared on the orbital (typical use: export action); \'@trait.EmptyTile\' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.',
+            'label': 'Toolbar slot 1',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'toolbar2Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for the second top-right toolbar tile. Format \'@trait.<TraitName>\' picks any trait declared on the orbital (typical use: share action); \'@trait.EmptyTile\' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.',
+            'label': 'Toolbar slot 2',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'toolbar3Trait': {
+            'default': '@trait.EmptyTile',
+            'description': 'Trait reference for the third top-right toolbar tile. Format \'@trait.<TraitName>\' picks any trait declared on the orbital (typical use: settings action); \'@trait.EmptyTile\' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.',
+            'label': 'Toolbar slot 3',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+        },
+        'linkedEntity': 'DashboardGridEmbeddedData',
+        'name': 'DashboardGridEmbedded',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  '@config.filter1Trait',
+                                  '@config.filter2Trait',
+                                  '@config.filter3Trait',
+                                  '@config.filter4Trait',
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                                'type': 'stack',
+                                'wrap': true,
+                              },
+                              {
+                                'align': 'center',
+                                'children': [
+                                  '@config.toolbar1Trait',
+                                  '@config.toolbar2Trait',
+                                  '@config.toolbar3Trait',
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'wrap': true,
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          '@trait.SimpleGrid1',
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                    ],
+                    'data-theme': '@config.theme',
+                    'type': 'box',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'composing',
+              'to': 'composing',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'DashboardGridEmbeddedPage',
+        'path': '/dashboard-embedded',
+        'traits': [
+          {
+            'ref': 'DashboardGridEmbedded',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdDashboardGridEmbeddedDashboardGridEmbeddedOrbital. */
+export const StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalManifest = {
+  organism: 'std-dashboard-grid-embedded',
+  orbitalName: 'DashboardGridEmbeddedOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'SimpleGrid1',
+  ] as const,
+  inlineTraitNames: [
+    'EmptyTile',
+    'DashboardGridEmbedded',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalParams keys. */
+export function isStdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalParams(p: object): p is StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalParams {
+  type _OverrideRecord = NonNullable<StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalManifest.traitNames,
+      ...StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -148,4 +148,837 @@ export function stdAgentContext(params: StdAgentContextParams): OrbitalDefinitio
       stdAgentContextPage(params),
     ],
   });
+}
+
+type _StdAgentContextEntityName = 'ContextWindow';
+type _StdAgentContextListenTraitName = 'ContextCounter' | 'ContextCompactor' | 'ContextListener';
+
+/**
+ * Tunable params for the AgentContextOrbital orbital.
+ *
+ * Canonical entity: ContextWindow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAgentContextAgentContextOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ContextCounter' | 'ContextCompactor' | 'ContextListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AgentContextOrbital's `uses[]` exports. */
+type _StdAgentContextAgentContextOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AgentContextOrbital orbital with consumer params. */
+export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentContextOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AgentContextOrbital',
+    uses: [],
+    entity: {
+      name: 'ContextWindow',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': 0,
+            'name': 'tokenCount',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'name': 'beforeTokens',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'name': 'afterTokens',
+            'type': 'number',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'counted',
+              'compacted',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'COUNTED',
+            'payloadSchema': [
+              {
+                'name': 'tokenCount',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'TOKEN_COUNTED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'ContextWindow',
+        'name': 'ContextCounter',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'COUNT',
+              'name': 'Count',
+            },
+            {
+              'key': 'TOKEN_COUNTED',
+              'name': 'Token Counted',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': 'COUNT_FAILED',
+              'name': 'Count Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'COUNTED',
+              'name': 'Counted',
+              'payloadSchema': [
+                {
+                  'name': 'tokenCount',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'counting',
+            },
+            {
+              'name': 'counted',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.tokenCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'llm/token-count',
+                  {
+                    'emit': {
+                      'failure': 'COUNT_FAILED',
+                      'success': 'TOKEN_COUNTED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'COUNT',
+              'from': 'idle',
+              'to': 'counting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.tokenCount',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'counted',
+                ],
+                [
+                  'emit',
+                  'COUNTED',
+                  {
+                    'tokenCount': '@entity.tokenCount',
+                  },
+                ],
+              ],
+              'event': 'TOKEN_COUNTED',
+              'from': 'counting',
+              'to': 'counted',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.tokenCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'COUNT_FAILED',
+              'from': 'counting',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'counted',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'counted',
+              'to': 'counted',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.tokenCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'counted',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'COMPACTED',
+            'payloadSchema': [
+              {
+                'name': 'before',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'after',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'BEFORE_COUNTED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'AFTER_COUNTED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'ContextWindow',
+        'name': 'ContextCompactor',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'COMPACT',
+              'name': 'Compact',
+            },
+            {
+              'key': 'BEFORE_COUNTED',
+              'name': 'Before Counted',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': 'COMPACT_COUNT_FAILED',
+              'name': 'Compact Count Failed',
+            },
+            {
+              'key': 'COMPACTED_OK',
+              'name': 'Compacted Ok',
+            },
+            {
+              'key': 'COMPACT_FAILED',
+              'name': 'Compact Failed',
+            },
+            {
+              'key': 'AFTER_COUNTED',
+              'name': 'After Counted',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'COMPACTED',
+              'name': 'Compacted',
+              'payloadSchema': [
+                {
+                  'name': 'before',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'after',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'counting_before',
+            },
+            {
+              'name': 'compacting',
+            },
+            {
+              'name': 'counting_after',
+            },
+            {
+              'name': 'compacted',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.beforeTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.afterTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'llm/token-count',
+                  {
+                    'emit': {
+                      'failure': 'COMPACT_COUNT_FAILED',
+                      'success': 'BEFORE_COUNTED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'COMPACT',
+              'from': 'idle',
+              'to': 'counting_before',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.beforeTokens',
+                  '@payload.result',
+                ],
+                [
+                  'llm/compact',
+                  {
+                    'emit': {
+                      'failure': 'COMPACT_FAILED',
+                      'success': 'COMPACTED_OK',
+                    },
+                  },
+                ],
+              ],
+              'event': 'BEFORE_COUNTED',
+              'from': 'counting_before',
+              'to': 'compacting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.beforeTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.afterTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'COMPACT_COUNT_FAILED',
+              'from': 'counting_before',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'llm/token-count',
+                  {
+                    'emit': {
+                      'failure': 'COMPACT_COUNT_FAILED',
+                      'success': 'AFTER_COUNTED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'COMPACTED_OK',
+              'from': 'compacting',
+              'to': 'counting_after',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.beforeTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.afterTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'COMPACT_FAILED',
+              'from': 'compacting',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.afterTokens',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'compacted',
+                ],
+                [
+                  'emit',
+                  'COMPACTED',
+                  {
+                    'after': '@entity.afterTokens',
+                    'before': '@entity.beforeTokens',
+                  },
+                ],
+              ],
+              'event': 'AFTER_COUNTED',
+              'from': 'counting_after',
+              'to': 'compacted',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.beforeTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.afterTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'COMPACT_COUNT_FAILED',
+              'from': 'counting_after',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'compacted',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'compacted',
+              'to': 'compacted',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.beforeTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.afterTokens',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'compacted',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'linkedEntity': 'ContextWindow',
+        'listens': [
+          {
+            'event': 'COUNTED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ContextCounter' satisfies _StdAgentContextListenTraitName),
+            },
+            'triggers': 'COUNTED',
+          },
+          {
+            'event': 'COMPACTED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ContextCompactor' satisfies _StdAgentContextListenTraitName),
+            },
+            'triggers': 'COMPACTED',
+          },
+        ],
+        'name': 'ContextListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'COUNTED',
+              'name': 'Counted',
+            },
+            {
+              'key': 'COMPACTED',
+              'name': 'Compacted',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'waiting',
+            },
+            {
+              'name': 'active',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'waiting',
+              'to': 'waiting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'counted',
+                ],
+              ],
+              'event': 'COUNTED',
+              'from': 'waiting',
+              'to': 'active',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'compacted',
+                ],
+              ],
+              'event': 'COMPACTED',
+              'from': 'waiting',
+              'to': 'active',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'waiting',
+              'to': 'waiting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'active',
+              'to': 'active',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'active',
+              'to': 'waiting',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AgentContextPage',
+        'path': '/agent-context',
+        'traits': [
+          {
+            'ref': 'ContextCounter',
+          },
+          {
+            'ref': 'ContextCompactor',
+          },
+          {
+            'ref': 'ContextListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAgentContextAgentContextOrbital. */
+export const StdAgentContextAgentContextOrbitalManifest = {
+  organism: 'std-agent-context',
+  orbitalName: 'AgentContextOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'ContextCounter',
+    'ContextCompactor',
+    'ContextListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAgentContextAgentContextOrbitalParams keys. */
+export function isStdAgentContextAgentContextOrbitalParams(p: object): p is StdAgentContextAgentContextOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAgentContextAgentContextOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAgentContextAgentContextOrbitalManifest.traitNames,
+      ...StdAgentContextAgentContextOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

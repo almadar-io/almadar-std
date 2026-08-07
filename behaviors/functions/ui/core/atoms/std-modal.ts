@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -145,4 +145,488 @@ export function stdModal(params: StdModalParams): OrbitalDefinition {
       stdModalPage(params),
     ],
   });
+}
+
+type _StdModalEntityName = 'ModalRecord';
+type _StdModalListenTraitName = 'ModalRecordModal';
+
+/**
+ * Tunable params for the ModalRecordOrbital orbital.
+ *
+ * Canonical entity: ModalRecord — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdModalModalRecordOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ModalRecordModal',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait ModalRecordOrbital's `uses[]` exports. */
+type _StdModalModalRecordOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the ModalRecordOrbital orbital with consumer params. */
+export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'ModalRecordOrbital',
+    uses: [],
+    entity: {
+      name: 'ModalRecord',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+          },
+          {
+            'description': 'A user-facing identifier for the modal.',
+            'name': 'name',
+            'synonyms': 'title, label, identifier',
+            'type': 'string',
+          },
+          {
+            'description': 'A textual explanation of the modal\'s content or function.',
+            'name': 'description',
+            'synonyms': 'details, explanation, notes, summary',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'Current operational state of the record.',
+            'name': 'status',
+            'synonyms': 'state, condition, flag',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'detailPattern': {
+            'default': 'stack',
+            'description': 'Pattern used to arrange the form body',
+            'label': 'Layout pattern',
+            'tier': 'internal',
+            'type': 'pattern',
+          },
+          'detailSlot': {
+            'default': 'modal',
+            'description': 'UI slot the modal renders into',
+            'label': 'Render slot',
+            'tier': 'internal',
+            'type': 'slot',
+          },
+          'fields': {
+            'default': [],
+            'description': 'Entity fields rendered as inputs inside the modal form.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Which fields appear in the form?',
+            'synonyms': 'form fields, inputs, editable fields, field list',
+            'tier': 'domain',
+            'type': '[string]',
+          },
+          'icon': {
+            'default': 'layout-panel-top',
+            'description': 'Lucide icon name shown next to the modal title.',
+            'label': 'Which icon appears in the modal header?',
+            'synonyms': 'header icon, modal icon, title icon',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'mode': {
+            'default': 'create',
+            'description': 'create = blank form; edit = pre-filled from the selected row.',
+            'label': 'Is this for creating or editing?',
+            'synonyms': 'form mode, create or edit, new or update, add or modify',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'title': {
+            'default': 'Details',
+            'description': 'Heading displayed at the top of the modal.',
+            'label': 'What should the modal heading say?',
+            'synonyms': 'modal title, dialog heading, panel title, form title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates a successful data save operation.',
+            'event': 'SAVE',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'submit, persist, confirm',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the modal window is being closed.',
+            'event': 'CLOSE',
+            'synonyms': 'dismiss, hide, cancel',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load the record data.',
+            'event': 'ModalRecordLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Signals that the modal\'s data has been successfully loaded.',
+            'event': 'ModalRecordLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ModalRecord]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, data ready, populated',
+            'tier': 'domain',
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ModalRecord',
+        'name': 'ModalRecordModal',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'A request to display the modal window.',
+              'key': 'OPEN',
+              'name': 'Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'ModalRecord',
+                },
+              ],
+              'synonyms': 'show, display, present, reveal',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the modal window is being closed.',
+              'key': 'CLOSE',
+              'name': 'Close',
+              'synonyms': 'dismiss, hide, cancel',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a successful data save operation.',
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'submit, persist, confirm',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load the record data.',
+              'key': 'ModalRecordLoadFailed',
+              'name': 'ModalRecord load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals that the modal\'s data has been successfully loaded.',
+              'key': 'ModalRecordLoaded',
+              'name': 'ModalRecord loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ModalRecord]',
+                },
+              ],
+              'synonyms': 'loaded, data ready, populated',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'closed',
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ModalRecord' satisfies _StdModalEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ModalRecordLoadFailed',
+                      'success': 'ModalRecordLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'closed',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'render-ui',
+                  '@config.detailSlot',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': '@config.icon',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CLOSE',
+                        'entity': '@payload.row',
+                        'fields': '@config.fields',
+                        'mode': '@config.mode',
+                        'submitEvent': 'SAVE',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': '@config.detailPattern',
+                  },
+                ],
+              ],
+              'event': 'OPEN',
+              'from': 'closed',
+              'guard': [
+                'or',
+                [
+                  '=',
+                  '@config.mode',
+                  'create',
+                ],
+                '@payload.row',
+              ],
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.detailSlot',
+                  null,
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+              'event': 'CLOSE',
+              'from': 'open',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.detailSlot',
+                  null,
+                ],
+              ],
+              'event': 'SAVE',
+              'from': 'open',
+              'to': 'closed',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'ModalRecordModalPage',
+        'path': '/modalrecords/modal',
+        'traits': [
+          {
+            'ref': 'ModalRecordModal',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdModalModalRecordOrbital. */
+export const StdModalModalRecordOrbitalManifest = {
+  organism: 'std-modal',
+  orbitalName: 'ModalRecordOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'ModalRecordModal',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdModalModalRecordOrbitalParams keys. */
+export function isStdModalModalRecordOrbitalParams(p: object): p is StdModalModalRecordOrbitalParams {
+  type _OverrideRecord = NonNullable<StdModalModalRecordOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdModalModalRecordOrbitalManifest.traitNames,
+      ...StdModalModalRecordOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

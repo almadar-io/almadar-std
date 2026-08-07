@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -148,4 +148,804 @@ export function stdAgentMemory(params: StdAgentMemoryParams): OrbitalDefinition 
       stdAgentMemoryPage(params),
     ],
   });
+}
+
+type _StdAgentMemoryEntityName = 'AgentMemory';
+type _StdAgentMemoryListenTraitName = 'MemoryRecall' | 'MemoryStore' | 'MemoryListener';
+
+/**
+ * Tunable params for the AgentMemoryOrbital orbital.
+ *
+ * Canonical entity: AgentMemory — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAgentMemoryAgentMemoryOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'MemoryRecall' | 'MemoryStore' | 'MemoryListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AgentMemoryOrbital's `uses[]` exports. */
+type _StdAgentMemoryAgentMemoryOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AgentMemoryOrbital orbital with consumer params. */
+export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemoryOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AgentMemoryOrbital',
+    uses: [],
+    entity: {
+      name: 'AgentMemory',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': '',
+            'name': 'query',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'category': {
+                  'name': 'category',
+                  'required': true,
+                  'type': 'string',
+                },
+                'content': {
+                  'name': 'content',
+                  'required': true,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'strength': {
+                  'name': 'strength',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'results',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'memoryId',
+            'type': 'string',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'recalled',
+              'stored',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'RECALLED',
+            'payloadSchema': [
+              {
+                'name': 'results',
+                'required': true,
+                'type': '[MemoryRecord]',
+              },
+            ],
+          },
+          {
+            'event': 'RECALL_COMPLETE',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': '[MemoryRecord]',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'AgentMemory',
+        'name': 'MemoryRecall',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'RECALL',
+              'name': 'Recall',
+              'payloadSchema': [
+                {
+                  'name': 'query',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RECALL_COMPLETE',
+              'name': 'Recall Complete',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': '[MemoryRecord]',
+                },
+              ],
+            },
+            {
+              'key': 'RECALL_FAILED',
+              'name': 'Recall Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'RECALLED',
+              'name': 'Recalled',
+              'payloadSchema': [
+                {
+                  'name': 'results',
+                  'required': true,
+                  'type': '[MemoryRecord]',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'recalling',
+            },
+            {
+              'name': 'recalled',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.results',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.content',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.memoryId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '@payload.query',
+                ],
+                [
+                  'memory/recall',
+                  '@entity.query',
+                  {
+                    'emit': {
+                      'failure': 'RECALL_FAILED',
+                      'success': 'RECALL_COMPLETE',
+                    },
+                  },
+                ],
+              ],
+              'event': 'RECALL',
+              'from': 'idle',
+              'to': 'recalling',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.results',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'recalled',
+                ],
+                [
+                  'emit',
+                  'RECALLED',
+                  {
+                    'results': '@entity.results',
+                  },
+                ],
+              ],
+              'event': 'RECALL_COMPLETE',
+              'from': 'recalling',
+              'to': 'recalled',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.results',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'recalled',
+                ],
+                [
+                  'emit',
+                  'RECALLED',
+                  {
+                    'results': '@entity.results',
+                  },
+                ],
+              ],
+              'event': 'RECALL_FAILED',
+              'from': 'recalling',
+              'to': 'recalled',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'recalled',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'recalled',
+              'to': 'recalled',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.results',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.query',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'recalled',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'STORED',
+            'payloadSchema': [
+              {
+                'name': 'memoryId',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'STORE_COMPLETE',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'AgentMemory',
+        'name': 'MemoryStore',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'STORE',
+              'name': 'Store',
+              'payloadSchema': [
+                {
+                  'name': 'content',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'category',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'STORE_COMPLETE',
+              'name': 'Store Complete',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'STORE_FAILED',
+              'name': 'Store Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'STORED',
+              'name': 'Stored',
+              'payloadSchema': [
+                {
+                  'name': 'memoryId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'storing',
+            },
+            {
+              'name': 'stored',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.content',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.memoryId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.content',
+                  '@payload.content',
+                ],
+                [
+                  'set',
+                  '@entity.category',
+                  '@payload.category',
+                ],
+                [
+                  'memory/store',
+                  '@entity.content',
+                  '@entity.category',
+                  {
+                    'emit': {
+                      'failure': 'STORE_FAILED',
+                      'success': 'STORE_COMPLETE',
+                    },
+                  },
+                ],
+              ],
+              'event': 'STORE',
+              'from': 'idle',
+              'to': 'storing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.memoryId',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'stored',
+                ],
+                [
+                  'emit',
+                  'STORED',
+                  {
+                    'memoryId': '@entity.memoryId',
+                  },
+                ],
+              ],
+              'event': 'STORE_COMPLETE',
+              'from': 'storing',
+              'to': 'stored',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.memoryId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'stored',
+                ],
+                [
+                  'emit',
+                  'STORED',
+                  {
+                    'memoryId': '@entity.memoryId',
+                  },
+                ],
+              ],
+              'event': 'STORE_FAILED',
+              'from': 'storing',
+              'to': 'stored',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'stored',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'stored',
+              'to': 'stored',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.content',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.memoryId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'stored',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentMemory',
+        'listens': [
+          {
+            'event': 'RECALLED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('MemoryRecall' satisfies _StdAgentMemoryListenTraitName),
+            },
+            'triggers': 'RECALLED',
+          },
+          {
+            'event': 'STORED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('MemoryStore' satisfies _StdAgentMemoryListenTraitName),
+            },
+            'triggers': 'STORED',
+          },
+        ],
+        'name': 'MemoryListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'RECALLED',
+              'name': 'Recalled',
+            },
+            {
+              'key': 'STORED',
+              'name': 'Stored',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'waiting',
+            },
+            {
+              'name': 'updated',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'waiting',
+              'to': 'waiting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'recalled',
+                ],
+              ],
+              'event': 'RECALLED',
+              'from': 'waiting',
+              'to': 'updated',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'stored',
+                ],
+              ],
+              'event': 'STORED',
+              'from': 'waiting',
+              'to': 'updated',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'updated',
+              'to': 'updated',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'updated',
+              'to': 'waiting',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AgentMemoryPage',
+        'path': '/agent-memory',
+        'traits': [
+          {
+            'ref': 'MemoryRecall',
+          },
+          {
+            'ref': 'MemoryStore',
+          },
+          {
+            'ref': 'MemoryListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAgentMemoryAgentMemoryOrbital. */
+export const StdAgentMemoryAgentMemoryOrbitalManifest = {
+  organism: 'std-agent-memory',
+  orbitalName: 'AgentMemoryOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'MemoryRecall',
+    'MemoryStore',
+    'MemoryListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAgentMemoryAgentMemoryOrbitalParams keys. */
+export function isStdAgentMemoryAgentMemoryOrbitalParams(p: object): p is StdAgentMemoryAgentMemoryOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAgentMemoryAgentMemoryOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAgentMemoryAgentMemoryOrbitalManifest.traitNames,
+      ...StdAgentMemoryAgentMemoryOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

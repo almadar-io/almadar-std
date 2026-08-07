@@ -1,0 +1,210 @@
+app std-logic-inference "1.0.0"
+"Propositional inference engine — the learner applies inference rules (modus ponens, modus tollens) step by step to derive new propositions from premises, building a guided proof toward a goal. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LogicInferenceOrbital {
+  type LogicInferencePremise = {
+    id : string!
+    label : string!
+    kind : "fact" | "conditional"!
+    subject : string
+    negated : boolean
+    antecedent : string
+    antecedentNegated : boolean
+    consequent : string
+    consequentNegated : boolean
+  }
+  type LogicInferenceRule = {
+    key : string!
+    label : string!
+  }
+
+  entity LogicInferenceScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    proofLines : [json]
+    feedback : string
+    goalReached : boolean
+    renderChildren : [json]
+  }
+
+  trait LogicInferenceSim -> @rebindable LogicInferenceScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.feedback "")
+        (set @entity.goalReached false)
+        (set @entity.proofLines @config.premises)
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: (str/concat "Goal: derive " @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.proofLines (fn line
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: badge, label: (if (== @line.kind "conditional") "RULE" "FACT"), variant: (if (== @line.kind "conditional") "info" "neutral") },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.rules (fn r { type: button, action: APPLY_RULE, actionPayload: { rule: @r.key }, label: @r.label, variant: primary })) },
+          { type: typography, variant: caption, content: @entity.feedback },
+          { type: typography, variant: caption, content: (if @entity.goalReached "Goal reached." "") }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.feedback "")
+        (set @entity.goalReached false)
+        (set @entity.proofLines @config.premises)
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: (str/concat "Goal: derive " @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.proofLines (fn line
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: badge, label: (if (== @line.kind "conditional") "RULE" "FACT"), variant: (if (== @line.kind "conditional") "info" "neutral") },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.rules (fn r { type: button, action: APPLY_RULE, actionPayload: { rule: @r.key }, label: @r.label, variant: primary })) },
+          { type: typography, variant: caption, content: @entity.feedback },
+          { type: typography, variant: caption, content: (if @entity.goalReached "Goal reached." "") }
+        ])
+        (render-ui main {
+            type: box
+            padding: md
+            maxWidth: (str/concat @config.width "px")
+            children: [
+              { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+            ]
+        })
+
+      APPLY_RULE -> idle when (== @entity.active true)
+        (let (
+          (conditionals (array/filter @entity.proofLines (fn l (== @l.kind "conditional"))))
+          (facts (array/filter @entity.proofLines (fn l (== @l.kind "fact"))))
+          (mpCond (array/first (array/filter @conditionals (fn c (array/some @facts (fn f (and (== @f.subject @c.antecedent) (== @f.negated @c.antecedentNegated))))))))
+          (mtCond (array/first (array/filter @conditionals (fn c (array/some @facts (fn f (and (== @f.subject @c.consequent) (!= @f.negated @c.consequentNegated))))))))
+          (activeCond (if (== ?rule "MODUS_PONENS") @mpCond @mtCond))
+          (ruleName (if (== ?rule "MODUS_PONENS") "Modus Ponens" "Modus Tollens"))
+          (derivedSubject (if (!= @activeCond null)
+            (if (== ?rule "MODUS_PONENS") @activeCond.consequent @activeCond.antecedent)
+            ""))
+          (derivedNegated (if (!= @activeCond null)
+            (if (== ?rule "MODUS_PONENS") @activeCond.consequentNegated (not @activeCond.antecedentNegated))
+            false))
+          (derivedLabel (if (!= @activeCond null) (if @derivedNegated (str/concat "¬" @derivedSubject) @derivedSubject) ""))
+          (alreadyPresent (array/some @entity.proofLines (fn l (== @l.label @derivedLabel))))
+          (canDerive (and (!= @activeCond null) (not @alreadyPresent)))
+        )
+        (do
+          (set @entity.proofLines (if @canDerive
+            (array/concat @entity.proofLines [{ id: (str/concat "line-" (array/len @entity.proofLines)), label: @derivedLabel, kind: "fact", subject: @derivedSubject, negated: @derivedNegated }])
+            @entity.proofLines))
+          (set @entity.feedback (if @canDerive
+            (str/concat "Derived " @derivedLabel " via " @ruleName ".")
+            (if @alreadyPresent
+              (str/concat @derivedLabel " is already in the proof.")
+              (str/concat "No matching premises yet for " @ruleName "."))))
+          (set @entity.goalReached (if @canDerive (== @derivedLabel @config.goalLabel) @entity.goalReached))
+        )
+        )
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: (str/concat "Goal: derive " @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.proofLines (fn line
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: badge, label: (if (== @line.kind "conditional") "RULE" "FACT"), variant: (if (== @line.kind "conditional") "info" "neutral") },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.rules (fn r { type: button, action: APPLY_RULE, actionPayload: { rule: @r.key }, label: @r.label, variant: primary })) },
+          { type: typography, variant: caption, content: @entity.feedback },
+          { type: typography, variant: caption, content: (if @entity.goalReached "Goal reached." "") }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit INFERENCE_UPDATED { feedback: @entity.feedback, goalReached: @entity.goalReached, lineCount: (array/len @entity.proofLines) })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      APPLY_RULE {
+        rule : string
+      }
+        @description "Learner clicked an inference-rule button to try to derive the next proof line."
+        @tier "domain"
+    }
+
+    emits {
+      INFERENCE_UPDATED -> external {
+        feedback : string
+        goalReached : boolean
+        lineCount : number
+      }
+        @description "The proof state after each learner rule application — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "inference update, proof step, derived line, modus ponens, modus tollens, goal reached"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Logical Inference"
+        @label "Title"
+        @description "Title shown above the lab."
+        @tier "presentation"
+      premises : [LogicInferencePremise] = [
+        { id: "premise-1", label: "P", kind: fact, subject: "P", negated: false },
+        { id: "premise-2", label: "P → Q", kind: conditional, antecedent: "P", antecedentNegated: false, consequent: "Q", consequentNegated: false }
+      ]
+        @label "Premises"
+        @description "The starting lines of the proof: plain facts (or their negations) and conditional (if-then) statements the learner combines with inference rules."
+        @synonyms "premise, given, hypothesis, starting proposition, conditional statement, if-then statement"
+        @tier "domain"
+      rules : [LogicInferenceRule] = [
+        { key: "MODUS_PONENS", label: "Modus Ponens" },
+        { key: "MODUS_TOLLENS", label: "Modus Tollens" }
+      ]
+        @label "Rules"
+        @description "Inference rules offered as buttons. Modus Ponens: from P and P→Q, derive Q. Modus Tollens: from ¬Q and P→Q, derive ¬P."
+        @synonyms "inference rule, modus ponens, modus tollens, rule of inference, deduction rule, logical deduction, logical proof, syllogism"
+        @tier "domain"
+      goalLabel : string = "Q"
+        @label "Goal"
+        @description "The proposition label the learner is trying to derive, e.g. \"Q\" or \"¬P\"."
+        @synonyms "proof goal, target proposition, conclusion"
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Maximum width of the lab, in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Maximum height of the scrollable proof panel, in pixels."
+        @tier "presentation"
+    }
+  }
+
+  page "/logic-inference" as LogicInferencePage -> LogicInferenceSim
+}

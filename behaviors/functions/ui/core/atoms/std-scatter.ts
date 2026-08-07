@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -129,4 +129,422 @@ export function stdScatter(params: StdScatterParams): OrbitalDefinition {
       stdScatterPage(params),
     ],
   });
+}
+
+type _StdScatterEntityName = 'ScatterItem';
+type _StdScatterListenTraitName = 'ScatterItemPlot';
+
+/**
+ * Tunable params for the ScatterItemOrbital orbital.
+ *
+ * Canonical entity: ScatterItem — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdScatterScatterItemOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ScatterItemPlot',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait ScatterItemOrbital's `uses[]` exports. */
+type _StdScatterScatterItemOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the ScatterItemOrbital orbital with consumer params. */
+export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'ScatterItemOrbital',
+    uses: [],
+    entity: {
+      name: 'ScatterItem',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'description': 'An array of data points for the scatter chart.',
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'points',
+            'synonyms': 'data, values, records',
+            'type': 'array',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'colorField': {
+            'default': '',
+            'description': 'Field used to color-code points (blank = single color)',
+            'label': 'Color field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'drillEvent': {
+            'default': '',
+            'description': 'Event emitted when the user clicks a data point',
+            'label': 'Drill event',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'height': {
+            'default': 280,
+            'description': 'Pixel height of the rendered scatter plot',
+            'label': 'Chart height',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'labelField': {
+            'default': '',
+            'description': 'Field used as the point label tooltip (blank = none)',
+            'label': 'Label field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'sizeField': {
+            'default': '',
+            'description': 'Numeric field that scales bubble size (blank = uniform)',
+            'label': 'Size field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'subtitle': {
+            'default': 'x vs y',
+            'description': 'Secondary line below the title',
+            'label': 'Subtitle',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'title': {
+            'default': 'Correlation',
+            'description': 'Heading shown above the chart',
+            'label': 'Title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'xField': {
+            'default': 'x',
+            'description': 'Entity field mapped to the horizontal axis',
+            'label': 'X-axis field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'yField': {
+            'default': 'y',
+            'description': 'Entity field mapped to the vertical axis',
+            'label': 'Y-axis field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'linkedEntity': 'ScatterItem',
+        'name': 'ScatterItemPlot',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Data has been received and is ready for visualization.',
+              'key': 'ITEMS_LOADED',
+              'name': 'Items Loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ObjectSpec]',
+                },
+                {
+                  'name': 'totalCount',
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'data-ready, data-available, loaded',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.points',
+                  [
+                    {
+                      'color': '',
+                      'label': 'A',
+                      'size': 8,
+                      'x': 12,
+                      'y': 24,
+                    },
+                    {
+                      'color': '',
+                      'label': 'B',
+                      'size': 6,
+                      'x': 28,
+                      'y': 42,
+                    },
+                    {
+                      'color': '',
+                      'label': 'C',
+                      'size': 10,
+                      'x': 45,
+                      'y': 18,
+                    },
+                    {
+                      'color': '',
+                      'label': 'D',
+                      'size': 7,
+                      'x': 60,
+                      'y': 55,
+                    },
+                    {
+                      'color': '',
+                      'label': 'E',
+                      'size': 9,
+                      'x': 78,
+                      'y': 38,
+                    },
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'chartType': 'scatter',
+                    'drillEvent': '@config.drillEvent',
+                    'height': '@config.height',
+                    'scatterData': '@entity.points',
+                    'subtitle': '@config.subtitle',
+                    'title': '@config.title',
+                    'type': 'chart',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.points',
+                  [
+                    'array/map',
+                    '@payload.data',
+                    [
+                      'fn',
+                      'row',
+                      {
+                        'color': [
+                          'object/get',
+                          '@row',
+                          '@config.colorField',
+                          '',
+                        ],
+                        'label': [
+                          'object/get',
+                          '@row',
+                          '@config.labelField',
+                          '',
+                        ],
+                        'size': [
+                          'object/get',
+                          '@row',
+                          '@config.sizeField',
+                          5,
+                        ],
+                        'x': [
+                          'object/get',
+                          '@row',
+                          '@config.xField',
+                          0,
+                        ],
+                        'y': [
+                          'object/get',
+                          '@row',
+                          '@config.yField',
+                          0,
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'chartType': 'scatter',
+                    'drillEvent': '@config.drillEvent',
+                    'height': '@config.height',
+                    'scatterData': '@entity.points',
+                    'subtitle': '@config.subtitle',
+                    'title': '@config.title',
+                    'type': 'chart',
+                  },
+                ],
+              ],
+              'event': 'ITEMS_LOADED',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'ScatterItemPlotPage',
+        'path': '/scatteritems',
+        'traits': [
+          {
+            'ref': 'ScatterItemPlot',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdScatterScatterItemOrbital. */
+export const StdScatterScatterItemOrbitalManifest = {
+  organism: 'std-scatter',
+  orbitalName: 'ScatterItemOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'ScatterItemPlot',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdScatterScatterItemOrbitalParams keys. */
+export function isStdScatterScatterItemOrbitalParams(p: object): p is StdScatterScatterItemOrbitalParams {
+  type _OverrideRecord = NonNullable<StdScatterScatterItemOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdScatterScatterItemOrbitalManifest.traitNames,
+      ...StdScatterScatterItemOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

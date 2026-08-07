@@ -1,0 +1,114 @@
+app learning-economics-lab "1.0.0"
+"Economics lab organism — a supply-and-demand market simulator (learner shifts demand/supply curves and sets a price to see surplus or shortage) and a production-possibilities frontier simulator (learner allocates resources between two goods and sees opportunity cost, with an inefficiency demo), composed from the std-econ-market and std-econ-ppf instrument atoms behind a mode router."
+orbital EconomicsLabOrbital {
+  uses EconMarket from "std/behaviors/std-econ-market"
+  uses EconPpf from "std/behaviors/std-econ-ppf"
+
+  type EconomicsLabSample = {
+    x : number!
+    y : number!
+  }
+  type EconomicsLabCurve = {
+    label : string
+    color : string
+    samples : [EconomicsLabSample]!
+  }
+  type EconomicsLabMarker = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity EconomicsLabItem [runtime] {
+    id : string!
+  }
+
+  entity MarketScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    demandIntercept : number
+    demandSlope : number
+    supplyIntercept : number
+    supplySlope : number
+    price : number
+    equilibriumPrice : number
+    equilibriumQuantity : number
+    qDemanded : number
+    qSupplied : number
+    marketStatusLabel : string
+    marketStatusMagnitude : number
+    curves : [EconomicsLabCurve]
+    points : [EconomicsLabMarker]
+  }
+
+  entity PpfScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    goodALabel : string
+    goodBLabel : string
+    goodAMax : number
+    goodBMax : number
+    allocationShare : number
+    outputA : number
+    outputB : number
+    marginalOppCost : number
+    marginalOppCostLabel : string
+    wasteActive : boolean
+    actualOutputA : number
+    actualOutputB : number
+    allocationStatusLabel : string
+    curves : [EconomicsLabCurve]
+    points : [EconomicsLabMarker]
+  }
+
+  trait EconomicsLabRouter -> @rebindable EconomicsLabItem [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (emit MODE_SELECTED { mode: @config.mode })
+    }
+
+    emits {
+      MODE_SELECTED -> external {
+        mode : string
+      }
+        @description "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null."
+        @tier "domain"
+    }
+
+    config {
+      mode : "market" | "allocation" = market
+        @label "Mode"
+        @description "Which economics simulation to render: a supply-and-demand market, or a production-possibilities (opportunity-cost) allocation."
+        @synonyms "economics, supply, demand, supply and demand, market equilibrium, equilibrium price, equilibrium quantity, market price, surplus, shortage, price floor, price ceiling, opportunity cost, PPF, production possibilities frontier, production possibilities, scarcity, trade-off, marginal rate of transformation, resource allocation, guns and butter"
+        @tier "domain"
+    }
+  }
+
+  trait MarketSim = EconMarket.traits.EconMarketSim -> MarketScene {
+    listens {
+      EconomicsLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "market"
+      title: "Economics Lab"
+    }
+  }
+
+  trait PpfSim = EconPpf.traits.EconPpfSim -> PpfScene {
+    listens {
+      EconomicsLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "allocation"
+      title: "Economics Lab"
+    }
+  }
+
+  page "/learning/economics-lab" as EconomicsLabPage -> EconomicsLabRouter, MarketSim, PpfSim
+}

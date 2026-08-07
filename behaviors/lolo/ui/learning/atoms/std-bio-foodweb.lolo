@@ -1,5 +1,5 @@
 app std-bio-foodweb "1.0.0"
-"Food-web / ecosystem engine — five trophic species whose radii breathe at staggered phases (trophic lag) on biology-canvas."
+"Food-web / ecosystem engine — five trophic species whose radii breathe at staggered phases (trophic lag) on biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 orbital BioFoodwebEngineOrbital {
   type BioNode = {
     id : string
@@ -20,6 +20,8 @@ orbital BioFoodwebEngineOrbital {
 
   entity BioFoodwebState [runtime] {
     id : string!
+    active : boolean = false
+    title : string
     phase : number = 0
     nodes : [BioNode]
     running : boolean = false
@@ -29,17 +31,39 @@ orbital BioFoodwebEngineOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
         (set @entity.phase 0)
         (set @entity.nodes @config.nodes)
         (set @entity.running @config.running)
         (render-ui main {
-          type: biology-canvas
-          width: @config.width
-          height: @config.height
-          backgroundColor: @config.backgroundColor
-          nodes: @entity.nodes
-          edges: @config.edges
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @config.edges }
+              ] }
+          ]
+        })
+        (emit POPULATION_UPDATED { nodes: @entity.nodes })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.phase 0)
+        (set @entity.nodes @config.nodes)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @config.edges }
+              ] }
+          ]
         })
         (emit POPULATION_UPDATED { nodes: @entity.nodes })
     }
@@ -60,14 +84,24 @@ orbital BioFoodwebEngineOrbital {
           )
           (object/merge @n { radius: @nr })))))))
         (render-ui main {
-          type: biology-canvas
-          width: @config.width
-          height: @config.height
-          backgroundColor: @config.backgroundColor
-          nodes: @entity.nodes
-          edges: @config.edges
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @config.edges }
+              ] }
+          ]
         })
         (emit POPULATION_UPDATED { nodes: @entity.nodes })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
     }
 
     emits {
@@ -80,6 +114,14 @@ orbital BioFoodwebEngineOrbital {
     }
 
     config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Food Web"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
       running : boolean = true
         @label "Running"
         @description "When true the tick advances the phase and recomputes every species radius; toggle to start/pause."

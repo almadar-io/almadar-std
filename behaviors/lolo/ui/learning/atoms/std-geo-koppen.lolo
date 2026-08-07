@@ -1,0 +1,594 @@
+app std-geo-koppen "1.0.0"
+"Simplified Köppen climate classifier engine — the learner sets a summer/winter temperature and average-monthly-precipitation profile and a 12-month climograph classifies the climate by first-match-wins rule, on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital GeoKoppenOrbital {
+  type GeoKoppenShapePoint = {
+    x : number!
+    y : number!
+  }
+  type GeoKoppenShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [GeoKoppenShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type GeoKoppenCurveSample = {
+    x : number!
+    y : number!
+  }
+  type GeoKoppenCurve = {
+    label : string
+    color : string
+    samples : [GeoKoppenCurveSample]!
+  }
+  type GeoKoppenClimateMonth = {
+    id : string!
+    label : string!
+    order : number!
+    tempWeight : number!
+    precipWeight : number!
+  }
+  type GeoKoppenClimateClass = {
+    code : string!
+    name : string!
+    metric : "coldestMonthTemp" | "warmestMonthTemp" | "annualPrecip"!
+    comparator : "gte" | "lt"!
+    threshold : number!
+    ruleText : string!
+  }
+
+  entity GeoKoppenScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    tempSummer : number
+    tempWinter : number
+    precip : number
+    coldestMonthTemp : number
+    warmestMonthTemp : number
+    annualPrecipTotal : number
+    climateClassCode : string
+    climateClassName : string
+    climateClassReadout : string
+    climateCurves : [GeoKoppenCurve]
+    climateShapes : [GeoKoppenShape]
+  }
+
+  trait GeoKoppenSim -> @rebindable GeoKoppenScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.tempSummer @config.tempSummer)
+        (set @entity.tempWinter @config.tempWinter)
+        (set @entity.precip @config.precip)
+        (let (
+            (plotLeft 40)
+            (plotRight (- @config.width 40))
+            (plotWidthPx (- @plotRight @plotLeft))
+            (plotTop 30)
+            (plotBottom (- @config.height 40))
+            (plotHeightPx (- @plotBottom @plotTop))
+            (monthlyRows (array/map @config.months (fn m (let (
+                    (temp (+ @entity.tempWinter (* (- @entity.tempSummer @entity.tempWinter) (object/get @m tempWeight))))
+                    (precipVal (* @entity.precip (object/get @m precipWeight)))
+                  )
+                  { label: (object/get @m label), order: (object/get @m order), temp: @temp, precip: @precipVal }))))
+            (coldestMonthTemp (array/min @monthlyRows "temp"))
+            (warmestMonthTemp (array/max @monthlyRows "temp"))
+            (annualPrecipTotal (array/sum @monthlyRows "precip"))
+            (matchedClass (array/first (array/filter @config.climateClasses (fn c (let (
+                    (metricVal (if (== (object/get @c metric) "coldestMonthTemp") @coldestMonthTemp (if (== (object/get @c metric) "warmestMonthTemp") @warmestMonthTemp @annualPrecipTotal)))
+                    (thresh (object/get @c threshold))
+                  )
+                  (if (== (object/get @c comparator) "lt") (< @metricVal @thresh) (>= @metricVal @thresh)))))))
+            (matchedClassFinal (if (== @matchedClass null) (array/last @config.climateClasses) @matchedClass))
+            (climateClassCode (object/get @matchedClassFinal code))
+            (climateClassName (object/get @matchedClassFinal name))
+            (climateClassReadout (str/concat "Köppen class " @climateClassCode " (" @climateClassName ") — rule: " (object/get @matchedClassFinal ruleText) " — coldest month " (math/round @coldestMonthTemp 1) "°C, warmest month " (math/round @warmestMonthTemp 1) "°C, annual precipitation " (math/round @annualPrecipTotal 0) " mm"))
+            (climoRows (array/map @monthlyRows (fn r (let (
+                    (xPos (+ @plotLeft (* (/ (object/get @r order) 11) @plotWidthPx)))
+                    (tempY (math/clamp (- @plotBottom (* (/ (- (object/get @r temp) @config.tempAxisMin) (- @config.tempAxisMax @config.tempAxisMin)) @plotHeightPx)) @plotTop @plotBottom))
+                    (precipHeightPx (math/clamp (* (/ (object/get @r precip) @config.precipAxisMax) @plotHeightPx) 0 @plotHeightPx))
+                    (barHalfWidth (* (/ @plotWidthPx 12) 0.35))
+                  )
+                  { label: (object/get @r label), xPos: @xPos, tempY: @tempY, precipHeightPx: @precipHeightPx, barHalfWidth: @barHalfWidth }))))
+            (tempCurveSamples (array/map @climoRows (fn cr { x: (object/get @cr xPos), y: (- @config.height (object/get @cr tempY)) })))
+            (precipBars (array/map @climoRows (fn cr { type: rect, x: (- (object/get @cr xPos) (object/get @cr barHalfWidth)), y: (- @plotBottom (object/get @cr precipHeightPx)), width: (* (object/get @cr barHalfWidth) 2), height: (object/get @cr precipHeightPx), color: @config.precipColor, fill: @config.precipColor })))
+            (monthLabels (array/map @climoRows (fn cr { type: text, x: (object/get @cr xPos), y: (+ @plotBottom 16), text: (object/get @cr label), fontSize: 10, align: "center", color: @config.textColor })))
+            (baseline [ { type: line, x1: @plotLeft, y1: @plotBottom, x2: @plotRight, y2: @plotBottom, color: @config.axisColor, lineWidth: 1 } ])
+            (climateShapes (array/concat (array/concat @precipBars @monthLabels) @baseline))
+            (climateCurves [ { label: "Temperature (°C)", color: @config.tempCurveColor, samples: @tempCurveSamples } ])
+          )
+          (do
+            (set @entity.coldestMonthTemp @coldestMonthTemp)
+            (set @entity.warmestMonthTemp @warmestMonthTemp)
+            (set @entity.annualPrecipTotal @annualPrecipTotal)
+            (set @entity.climateClassCode @climateClassCode)
+            (set @entity.climateClassName @climateClassName)
+            (set @entity.climateClassReadout @climateClassReadout)
+            (set @entity.climateShapes @climateShapes)
+            (set @entity.climateCurves @climateCurves)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: @entity.climateCurves, points: [], vectors: [], shapes: @entity.climateShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Summer high: " @entity.tempSummer "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempSummer, showTooltip: true, onChange: SET_TEMP_SUMMER },
+                    { type: typography, variant: caption, content: (str/concat "Winter low: " @entity.tempWinter "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempWinter, showTooltip: true, onChange: SET_TEMP_WINTER },
+                    { type: typography, variant: caption, content: (str/concat "Avg monthly precipitation: " @entity.precip " mm") },
+                    { type: range-slider, min: 0, max: @config.precipAxisMax, step: 5, value: @entity.precip, showTooltip: true, onChange: SET_PRECIP }
+                  ] },
+                { type: typography, variant: h4, content: (str/concat @entity.climateClassCode " — " @entity.climateClassName) },
+                { type: typography, variant: body, content: @entity.climateClassReadout },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.climateClasses (fn c { type: badge, label: (str/concat (object/get @c code) " " (object/get @c name)), variant: (if (== (object/get @c code) @entity.climateClassCode) "primary" "neutral") })) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.tempSummer @config.tempSummer)
+        (set @entity.tempWinter @config.tempWinter)
+        (set @entity.precip @config.precip)
+        (let (
+            (plotLeft 40)
+            (plotRight (- @config.width 40))
+            (plotWidthPx (- @plotRight @plotLeft))
+            (plotTop 30)
+            (plotBottom (- @config.height 40))
+            (plotHeightPx (- @plotBottom @plotTop))
+            (monthlyRows (array/map @config.months (fn m (let (
+                    (temp (+ @entity.tempWinter (* (- @entity.tempSummer @entity.tempWinter) (object/get @m tempWeight))))
+                    (precipVal (* @entity.precip (object/get @m precipWeight)))
+                  )
+                  { label: (object/get @m label), order: (object/get @m order), temp: @temp, precip: @precipVal }))))
+            (coldestMonthTemp (array/min @monthlyRows "temp"))
+            (warmestMonthTemp (array/max @monthlyRows "temp"))
+            (annualPrecipTotal (array/sum @monthlyRows "precip"))
+            (matchedClass (array/first (array/filter @config.climateClasses (fn c (let (
+                    (metricVal (if (== (object/get @c metric) "coldestMonthTemp") @coldestMonthTemp (if (== (object/get @c metric) "warmestMonthTemp") @warmestMonthTemp @annualPrecipTotal)))
+                    (thresh (object/get @c threshold))
+                  )
+                  (if (== (object/get @c comparator) "lt") (< @metricVal @thresh) (>= @metricVal @thresh)))))))
+            (matchedClassFinal (if (== @matchedClass null) (array/last @config.climateClasses) @matchedClass))
+            (climateClassCode (object/get @matchedClassFinal code))
+            (climateClassName (object/get @matchedClassFinal name))
+            (climateClassReadout (str/concat "Köppen class " @climateClassCode " (" @climateClassName ") — rule: " (object/get @matchedClassFinal ruleText) " — coldest month " (math/round @coldestMonthTemp 1) "°C, warmest month " (math/round @warmestMonthTemp 1) "°C, annual precipitation " (math/round @annualPrecipTotal 0) " mm"))
+            (climoRows (array/map @monthlyRows (fn r (let (
+                    (xPos (+ @plotLeft (* (/ (object/get @r order) 11) @plotWidthPx)))
+                    (tempY (math/clamp (- @plotBottom (* (/ (- (object/get @r temp) @config.tempAxisMin) (- @config.tempAxisMax @config.tempAxisMin)) @plotHeightPx)) @plotTop @plotBottom))
+                    (precipHeightPx (math/clamp (* (/ (object/get @r precip) @config.precipAxisMax) @plotHeightPx) 0 @plotHeightPx))
+                    (barHalfWidth (* (/ @plotWidthPx 12) 0.35))
+                  )
+                  { label: (object/get @r label), xPos: @xPos, tempY: @tempY, precipHeightPx: @precipHeightPx, barHalfWidth: @barHalfWidth }))))
+            (tempCurveSamples (array/map @climoRows (fn cr { x: (object/get @cr xPos), y: (- @config.height (object/get @cr tempY)) })))
+            (precipBars (array/map @climoRows (fn cr { type: rect, x: (- (object/get @cr xPos) (object/get @cr barHalfWidth)), y: (- @plotBottom (object/get @cr precipHeightPx)), width: (* (object/get @cr barHalfWidth) 2), height: (object/get @cr precipHeightPx), color: @config.precipColor, fill: @config.precipColor })))
+            (monthLabels (array/map @climoRows (fn cr { type: text, x: (object/get @cr xPos), y: (+ @plotBottom 16), text: (object/get @cr label), fontSize: 10, align: "center", color: @config.textColor })))
+            (baseline [ { type: line, x1: @plotLeft, y1: @plotBottom, x2: @plotRight, y2: @plotBottom, color: @config.axisColor, lineWidth: 1 } ])
+            (climateShapes (array/concat (array/concat @precipBars @monthLabels) @baseline))
+            (climateCurves [ { label: "Temperature (°C)", color: @config.tempCurveColor, samples: @tempCurveSamples } ])
+          )
+          (do
+            (set @entity.coldestMonthTemp @coldestMonthTemp)
+            (set @entity.warmestMonthTemp @warmestMonthTemp)
+            (set @entity.annualPrecipTotal @annualPrecipTotal)
+            (set @entity.climateClassCode @climateClassCode)
+            (set @entity.climateClassName @climateClassName)
+            (set @entity.climateClassReadout @climateClassReadout)
+            (set @entity.climateShapes @climateShapes)
+            (set @entity.climateCurves @climateCurves)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: @entity.climateCurves, points: [], vectors: [], shapes: @entity.climateShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Summer high: " @entity.tempSummer "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempSummer, showTooltip: true, onChange: SET_TEMP_SUMMER },
+                    { type: typography, variant: caption, content: (str/concat "Winter low: " @entity.tempWinter "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempWinter, showTooltip: true, onChange: SET_TEMP_WINTER },
+                    { type: typography, variant: caption, content: (str/concat "Avg monthly precipitation: " @entity.precip " mm") },
+                    { type: range-slider, min: 0, max: @config.precipAxisMax, step: 5, value: @entity.precip, showTooltip: true, onChange: SET_PRECIP }
+                  ] },
+                { type: typography, variant: h4, content: (str/concat @entity.climateClassCode " — " @entity.climateClassName) },
+                { type: typography, variant: body, content: @entity.climateClassReadout },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.climateClasses (fn c { type: badge, label: (str/concat (object/get @c code) " " (object/get @c name)), variant: (if (== (object/get @c code) @entity.climateClassCode) "primary" "neutral") })) }
+              ] }
+          ]
+        })
+
+      SET_TEMP_SUMMER -> idle when (== @entity.active true)
+        (set @entity.tempSummer ?value)
+        (let (
+            (plotLeft 40)
+            (plotRight (- @config.width 40))
+            (plotWidthPx (- @plotRight @plotLeft))
+            (plotTop 30)
+            (plotBottom (- @config.height 40))
+            (plotHeightPx (- @plotBottom @plotTop))
+            (monthlyRows (array/map @config.months (fn m (let (
+                    (temp (+ @entity.tempWinter (* (- @entity.tempSummer @entity.tempWinter) (object/get @m tempWeight))))
+                    (precipVal (* @entity.precip (object/get @m precipWeight)))
+                  )
+                  { label: (object/get @m label), order: (object/get @m order), temp: @temp, precip: @precipVal }))))
+            (coldestMonthTemp (array/min @monthlyRows "temp"))
+            (warmestMonthTemp (array/max @monthlyRows "temp"))
+            (annualPrecipTotal (array/sum @monthlyRows "precip"))
+            (matchedClass (array/first (array/filter @config.climateClasses (fn c (let (
+                    (metricVal (if (== (object/get @c metric) "coldestMonthTemp") @coldestMonthTemp (if (== (object/get @c metric) "warmestMonthTemp") @warmestMonthTemp @annualPrecipTotal)))
+                    (thresh (object/get @c threshold))
+                  )
+                  (if (== (object/get @c comparator) "lt") (< @metricVal @thresh) (>= @metricVal @thresh)))))))
+            (matchedClassFinal (if (== @matchedClass null) (array/last @config.climateClasses) @matchedClass))
+            (climateClassCode (object/get @matchedClassFinal code))
+            (climateClassName (object/get @matchedClassFinal name))
+            (climateClassReadout (str/concat "Köppen class " @climateClassCode " (" @climateClassName ") — rule: " (object/get @matchedClassFinal ruleText) " — coldest month " (math/round @coldestMonthTemp 1) "°C, warmest month " (math/round @warmestMonthTemp 1) "°C, annual precipitation " (math/round @annualPrecipTotal 0) " mm"))
+            (climoRows (array/map @monthlyRows (fn r (let (
+                    (xPos (+ @plotLeft (* (/ (object/get @r order) 11) @plotWidthPx)))
+                    (tempY (math/clamp (- @plotBottom (* (/ (- (object/get @r temp) @config.tempAxisMin) (- @config.tempAxisMax @config.tempAxisMin)) @plotHeightPx)) @plotTop @plotBottom))
+                    (precipHeightPx (math/clamp (* (/ (object/get @r precip) @config.precipAxisMax) @plotHeightPx) 0 @plotHeightPx))
+                    (barHalfWidth (* (/ @plotWidthPx 12) 0.35))
+                  )
+                  { label: (object/get @r label), xPos: @xPos, tempY: @tempY, precipHeightPx: @precipHeightPx, barHalfWidth: @barHalfWidth }))))
+            (tempCurveSamples (array/map @climoRows (fn cr { x: (object/get @cr xPos), y: (- @config.height (object/get @cr tempY)) })))
+            (precipBars (array/map @climoRows (fn cr { type: rect, x: (- (object/get @cr xPos) (object/get @cr barHalfWidth)), y: (- @plotBottom (object/get @cr precipHeightPx)), width: (* (object/get @cr barHalfWidth) 2), height: (object/get @cr precipHeightPx), color: @config.precipColor, fill: @config.precipColor })))
+            (monthLabels (array/map @climoRows (fn cr { type: text, x: (object/get @cr xPos), y: (+ @plotBottom 16), text: (object/get @cr label), fontSize: 10, align: "center", color: @config.textColor })))
+            (baseline [ { type: line, x1: @plotLeft, y1: @plotBottom, x2: @plotRight, y2: @plotBottom, color: @config.axisColor, lineWidth: 1 } ])
+            (climateShapes (array/concat (array/concat @precipBars @monthLabels) @baseline))
+            (climateCurves [ { label: "Temperature (°C)", color: @config.tempCurveColor, samples: @tempCurveSamples } ])
+          )
+          (do
+            (set @entity.coldestMonthTemp @coldestMonthTemp)
+            (set @entity.warmestMonthTemp @warmestMonthTemp)
+            (set @entity.annualPrecipTotal @annualPrecipTotal)
+            (set @entity.climateClassCode @climateClassCode)
+            (set @entity.climateClassName @climateClassName)
+            (set @entity.climateClassReadout @climateClassReadout)
+            (set @entity.climateShapes @climateShapes)
+            (set @entity.climateCurves @climateCurves)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: @entity.climateCurves, points: [], vectors: [], shapes: @entity.climateShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Summer high: " @entity.tempSummer "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempSummer, showTooltip: true, onChange: SET_TEMP_SUMMER },
+                    { type: typography, variant: caption, content: (str/concat "Winter low: " @entity.tempWinter "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempWinter, showTooltip: true, onChange: SET_TEMP_WINTER },
+                    { type: typography, variant: caption, content: (str/concat "Avg monthly precipitation: " @entity.precip " mm") },
+                    { type: range-slider, min: 0, max: @config.precipAxisMax, step: 5, value: @entity.precip, showTooltip: true, onChange: SET_PRECIP }
+                  ] },
+                { type: typography, variant: h4, content: (str/concat @entity.climateClassCode " — " @entity.climateClassName) },
+                { type: typography, variant: body, content: @entity.climateClassReadout },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.climateClasses (fn c { type: badge, label: (str/concat (object/get @c code) " " (object/get @c name)), variant: (if (== (object/get @c code) @entity.climateClassCode) "primary" "neutral") })) }
+              ] }
+          ]
+        })
+        (emit KOPPEN_UPDATED { climateClassCode: @entity.climateClassCode, climateClassName: @entity.climateClassName, coldestMonthTemp: @entity.coldestMonthTemp, warmestMonthTemp: @entity.warmestMonthTemp, annualPrecipTotal: @entity.annualPrecipTotal })
+
+      SET_TEMP_WINTER -> idle when (== @entity.active true)
+        (set @entity.tempWinter ?value)
+        (let (
+            (plotLeft 40)
+            (plotRight (- @config.width 40))
+            (plotWidthPx (- @plotRight @plotLeft))
+            (plotTop 30)
+            (plotBottom (- @config.height 40))
+            (plotHeightPx (- @plotBottom @plotTop))
+            (monthlyRows (array/map @config.months (fn m (let (
+                    (temp (+ @entity.tempWinter (* (- @entity.tempSummer @entity.tempWinter) (object/get @m tempWeight))))
+                    (precipVal (* @entity.precip (object/get @m precipWeight)))
+                  )
+                  { label: (object/get @m label), order: (object/get @m order), temp: @temp, precip: @precipVal }))))
+            (coldestMonthTemp (array/min @monthlyRows "temp"))
+            (warmestMonthTemp (array/max @monthlyRows "temp"))
+            (annualPrecipTotal (array/sum @monthlyRows "precip"))
+            (matchedClass (array/first (array/filter @config.climateClasses (fn c (let (
+                    (metricVal (if (== (object/get @c metric) "coldestMonthTemp") @coldestMonthTemp (if (== (object/get @c metric) "warmestMonthTemp") @warmestMonthTemp @annualPrecipTotal)))
+                    (thresh (object/get @c threshold))
+                  )
+                  (if (== (object/get @c comparator) "lt") (< @metricVal @thresh) (>= @metricVal @thresh)))))))
+            (matchedClassFinal (if (== @matchedClass null) (array/last @config.climateClasses) @matchedClass))
+            (climateClassCode (object/get @matchedClassFinal code))
+            (climateClassName (object/get @matchedClassFinal name))
+            (climateClassReadout (str/concat "Köppen class " @climateClassCode " (" @climateClassName ") — rule: " (object/get @matchedClassFinal ruleText) " — coldest month " (math/round @coldestMonthTemp 1) "°C, warmest month " (math/round @warmestMonthTemp 1) "°C, annual precipitation " (math/round @annualPrecipTotal 0) " mm"))
+            (climoRows (array/map @monthlyRows (fn r (let (
+                    (xPos (+ @plotLeft (* (/ (object/get @r order) 11) @plotWidthPx)))
+                    (tempY (math/clamp (- @plotBottom (* (/ (- (object/get @r temp) @config.tempAxisMin) (- @config.tempAxisMax @config.tempAxisMin)) @plotHeightPx)) @plotTop @plotBottom))
+                    (precipHeightPx (math/clamp (* (/ (object/get @r precip) @config.precipAxisMax) @plotHeightPx) 0 @plotHeightPx))
+                    (barHalfWidth (* (/ @plotWidthPx 12) 0.35))
+                  )
+                  { label: (object/get @r label), xPos: @xPos, tempY: @tempY, precipHeightPx: @precipHeightPx, barHalfWidth: @barHalfWidth }))))
+            (tempCurveSamples (array/map @climoRows (fn cr { x: (object/get @cr xPos), y: (- @config.height (object/get @cr tempY)) })))
+            (precipBars (array/map @climoRows (fn cr { type: rect, x: (- (object/get @cr xPos) (object/get @cr barHalfWidth)), y: (- @plotBottom (object/get @cr precipHeightPx)), width: (* (object/get @cr barHalfWidth) 2), height: (object/get @cr precipHeightPx), color: @config.precipColor, fill: @config.precipColor })))
+            (monthLabels (array/map @climoRows (fn cr { type: text, x: (object/get @cr xPos), y: (+ @plotBottom 16), text: (object/get @cr label), fontSize: 10, align: "center", color: @config.textColor })))
+            (baseline [ { type: line, x1: @plotLeft, y1: @plotBottom, x2: @plotRight, y2: @plotBottom, color: @config.axisColor, lineWidth: 1 } ])
+            (climateShapes (array/concat (array/concat @precipBars @monthLabels) @baseline))
+            (climateCurves [ { label: "Temperature (°C)", color: @config.tempCurveColor, samples: @tempCurveSamples } ])
+          )
+          (do
+            (set @entity.coldestMonthTemp @coldestMonthTemp)
+            (set @entity.warmestMonthTemp @warmestMonthTemp)
+            (set @entity.annualPrecipTotal @annualPrecipTotal)
+            (set @entity.climateClassCode @climateClassCode)
+            (set @entity.climateClassName @climateClassName)
+            (set @entity.climateClassReadout @climateClassReadout)
+            (set @entity.climateShapes @climateShapes)
+            (set @entity.climateCurves @climateCurves)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: @entity.climateCurves, points: [], vectors: [], shapes: @entity.climateShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Summer high: " @entity.tempSummer "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempSummer, showTooltip: true, onChange: SET_TEMP_SUMMER },
+                    { type: typography, variant: caption, content: (str/concat "Winter low: " @entity.tempWinter "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempWinter, showTooltip: true, onChange: SET_TEMP_WINTER },
+                    { type: typography, variant: caption, content: (str/concat "Avg monthly precipitation: " @entity.precip " mm") },
+                    { type: range-slider, min: 0, max: @config.precipAxisMax, step: 5, value: @entity.precip, showTooltip: true, onChange: SET_PRECIP }
+                  ] },
+                { type: typography, variant: h4, content: (str/concat @entity.climateClassCode " — " @entity.climateClassName) },
+                { type: typography, variant: body, content: @entity.climateClassReadout },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.climateClasses (fn c { type: badge, label: (str/concat (object/get @c code) " " (object/get @c name)), variant: (if (== (object/get @c code) @entity.climateClassCode) "primary" "neutral") })) }
+              ] }
+          ]
+        })
+        (emit KOPPEN_UPDATED { climateClassCode: @entity.climateClassCode, climateClassName: @entity.climateClassName, coldestMonthTemp: @entity.coldestMonthTemp, warmestMonthTemp: @entity.warmestMonthTemp, annualPrecipTotal: @entity.annualPrecipTotal })
+
+      SET_PRECIP -> idle when (== @entity.active true)
+        (set @entity.precip ?value)
+        (let (
+            (plotLeft 40)
+            (plotRight (- @config.width 40))
+            (plotWidthPx (- @plotRight @plotLeft))
+            (plotTop 30)
+            (plotBottom (- @config.height 40))
+            (plotHeightPx (- @plotBottom @plotTop))
+            (monthlyRows (array/map @config.months (fn m (let (
+                    (temp (+ @entity.tempWinter (* (- @entity.tempSummer @entity.tempWinter) (object/get @m tempWeight))))
+                    (precipVal (* @entity.precip (object/get @m precipWeight)))
+                  )
+                  { label: (object/get @m label), order: (object/get @m order), temp: @temp, precip: @precipVal }))))
+            (coldestMonthTemp (array/min @monthlyRows "temp"))
+            (warmestMonthTemp (array/max @monthlyRows "temp"))
+            (annualPrecipTotal (array/sum @monthlyRows "precip"))
+            (matchedClass (array/first (array/filter @config.climateClasses (fn c (let (
+                    (metricVal (if (== (object/get @c metric) "coldestMonthTemp") @coldestMonthTemp (if (== (object/get @c metric) "warmestMonthTemp") @warmestMonthTemp @annualPrecipTotal)))
+                    (thresh (object/get @c threshold))
+                  )
+                  (if (== (object/get @c comparator) "lt") (< @metricVal @thresh) (>= @metricVal @thresh)))))))
+            (matchedClassFinal (if (== @matchedClass null) (array/last @config.climateClasses) @matchedClass))
+            (climateClassCode (object/get @matchedClassFinal code))
+            (climateClassName (object/get @matchedClassFinal name))
+            (climateClassReadout (str/concat "Köppen class " @climateClassCode " (" @climateClassName ") — rule: " (object/get @matchedClassFinal ruleText) " — coldest month " (math/round @coldestMonthTemp 1) "°C, warmest month " (math/round @warmestMonthTemp 1) "°C, annual precipitation " (math/round @annualPrecipTotal 0) " mm"))
+            (climoRows (array/map @monthlyRows (fn r (let (
+                    (xPos (+ @plotLeft (* (/ (object/get @r order) 11) @plotWidthPx)))
+                    (tempY (math/clamp (- @plotBottom (* (/ (- (object/get @r temp) @config.tempAxisMin) (- @config.tempAxisMax @config.tempAxisMin)) @plotHeightPx)) @plotTop @plotBottom))
+                    (precipHeightPx (math/clamp (* (/ (object/get @r precip) @config.precipAxisMax) @plotHeightPx) 0 @plotHeightPx))
+                    (barHalfWidth (* (/ @plotWidthPx 12) 0.35))
+                  )
+                  { label: (object/get @r label), xPos: @xPos, tempY: @tempY, precipHeightPx: @precipHeightPx, barHalfWidth: @barHalfWidth }))))
+            (tempCurveSamples (array/map @climoRows (fn cr { x: (object/get @cr xPos), y: (- @config.height (object/get @cr tempY)) })))
+            (precipBars (array/map @climoRows (fn cr { type: rect, x: (- (object/get @cr xPos) (object/get @cr barHalfWidth)), y: (- @plotBottom (object/get @cr precipHeightPx)), width: (* (object/get @cr barHalfWidth) 2), height: (object/get @cr precipHeightPx), color: @config.precipColor, fill: @config.precipColor })))
+            (monthLabels (array/map @climoRows (fn cr { type: text, x: (object/get @cr xPos), y: (+ @plotBottom 16), text: (object/get @cr label), fontSize: 10, align: "center", color: @config.textColor })))
+            (baseline [ { type: line, x1: @plotLeft, y1: @plotBottom, x2: @plotRight, y2: @plotBottom, color: @config.axisColor, lineWidth: 1 } ])
+            (climateShapes (array/concat (array/concat @precipBars @monthLabels) @baseline))
+            (climateCurves [ { label: "Temperature (°C)", color: @config.tempCurveColor, samples: @tempCurveSamples } ])
+          )
+          (do
+            (set @entity.coldestMonthTemp @coldestMonthTemp)
+            (set @entity.warmestMonthTemp @warmestMonthTemp)
+            (set @entity.annualPrecipTotal @annualPrecipTotal)
+            (set @entity.climateClassCode @climateClassCode)
+            (set @entity.climateClassName @climateClassName)
+            (set @entity.climateClassReadout @climateClassReadout)
+            (set @entity.climateShapes @climateShapes)
+            (set @entity.climateCurves @climateCurves)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: @entity.climateCurves, points: [], vectors: [], shapes: @entity.climateShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Summer high: " @entity.tempSummer "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempSummer, showTooltip: true, onChange: SET_TEMP_SUMMER },
+                    { type: typography, variant: caption, content: (str/concat "Winter low: " @entity.tempWinter "°C") },
+                    { type: range-slider, min: @config.tempAxisMin, max: @config.tempAxisMax, step: 1, value: @entity.tempWinter, showTooltip: true, onChange: SET_TEMP_WINTER },
+                    { type: typography, variant: caption, content: (str/concat "Avg monthly precipitation: " @entity.precip " mm") },
+                    { type: range-slider, min: 0, max: @config.precipAxisMax, step: 5, value: @entity.precip, showTooltip: true, onChange: SET_PRECIP }
+                  ] },
+                { type: typography, variant: h4, content: (str/concat @entity.climateClassCode " — " @entity.climateClassName) },
+                { type: typography, variant: body, content: @entity.climateClassReadout },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.climateClasses (fn c { type: badge, label: (str/concat (object/get @c code) " " (object/get @c name)), variant: (if (== (object/get @c code) @entity.climateClassCode) "primary" "neutral") })) }
+              ] }
+          ]
+        })
+        (emit KOPPEN_UPDATED { climateClassCode: @entity.climateClassCode, climateClassName: @entity.climateClassName, coldestMonthTemp: @entity.coldestMonthTemp, warmestMonthTemp: @entity.warmestMonthTemp, annualPrecipTotal: @entity.annualPrecipTotal })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_TEMP_SUMMER {
+        value : number
+      }
+        @description "Learner dragged the summer-high temperature dial."
+        @tier "domain"
+      SET_TEMP_WINTER {
+        value : number
+      }
+        @description "Learner dragged the winter-low temperature dial."
+        @tier "domain"
+      SET_PRECIP {
+        value : number
+      }
+        @description "Learner dragged the average-monthly-precipitation dial."
+        @tier "domain"
+    }
+
+    emits {
+      KOPPEN_UPDATED -> external {
+        climateClassCode : string
+        climateClassName : string
+        coldestMonthTemp : number
+        warmestMonthTemp : number
+        annualPrecipTotal : number
+      }
+        @description "The Köppen classification state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "climate update, Köppen classification, climograph, coldest month, warmest month, annual precipitation"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Geography Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 460
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      months : [GeoKoppenClimateMonth] = [
+        { id: "jan", label: "Jan", order: 0, tempWeight: 0.05, precipWeight: 0.6 },
+        { id: "feb", label: "Feb", order: 1, tempWeight: 0.05, precipWeight: 0.6 },
+        { id: "mar", label: "Mar", order: 2, tempWeight: 0.25, precipWeight: 0.7 },
+        { id: "apr", label: "Apr", order: 3, tempWeight: 0.45, precipWeight: 0.8 },
+        { id: "may", label: "May", order: 4, tempWeight: 0.7, precipWeight: 1.0 },
+        { id: "jun", label: "Jun", order: 5, tempWeight: 0.9, precipWeight: 1.3 },
+        { id: "jul", label: "Jul", order: 6, tempWeight: 1.0, precipWeight: 1.5 },
+        { id: "aug", label: "Aug", order: 7, tempWeight: 0.95, precipWeight: 1.4 },
+        { id: "sep", label: "Sep", order: 8, tempWeight: 0.75, precipWeight: 1.1 },
+        { id: "oct", label: "Oct", order: 9, tempWeight: 0.5, precipWeight: 0.8 },
+        { id: "nov", label: "Nov", order: 10, tempWeight: 0.25, precipWeight: 0.6 },
+        { id: "dec", label: "Dec", order: 11, tempWeight: 0.1, precipWeight: 0.6 }
+      ]
+        @label "Climate Months"
+        @description "Ordered 12-month roster; each month declares a 0-1 temperature interpolation weight between the winter-low and summer-high dials, and a precipitation seasonality multiplier applied to the average-monthly-precipitation dial."
+        @synonyms "climograph, climatograph, month, seasonality, temperature weight, precipitation seasonality"
+        @tier "domain"
+      climateClasses : [GeoKoppenClimateClass] = [
+        { code: "B", name: "Arid", metric: annualPrecip, comparator: lt, threshold: 500, ruleText: "annual precipitation < 500 mm" },
+        { code: "A", name: "Tropical", metric: coldestMonthTemp, comparator: gte, threshold: 18, ruleText: "coldest month >= 18°C" },
+        { code: "E", name: "Polar", metric: warmestMonthTemp, comparator: lt, threshold: 10, ruleText: "warmest month < 10°C" },
+        { code: "D", name: "Continental", metric: coldestMonthTemp, comparator: lt, threshold: -3, ruleText: "coldest month < -3°C" },
+        { code: "C", name: "Temperate", metric: coldestMonthTemp, comparator: gte, threshold: -3, ruleText: "coldest month >= -3°C (mild-winter, sufficient precipitation, warm-enough summer)" }
+      ]
+        @label "Köppen Classification Rules"
+        @description "Ordered simplified-Köppen decision roster; each rule declares which computed metric (coldest/warmest month temperature or annual precipitation), comparator, and threshold it tests, plus the rule text shown in the readout. The first rule whose test passes wins."
+        @synonyms "Köppen, Koppen, climate classification, tropical, arid, temperate, continental, polar, climate class, climate zone"
+        @tier "domain"
+      tempSummer : number = 24
+        @label "Starting Summer High"
+        @description "Starting summer-high temperature dial, in °C."
+        @synonyms "summer temperature, summer high, warmest month temperature"
+        @tier "domain"
+      tempWinter : number = 4
+        @label "Starting Winter Low"
+        @description "Starting winter-low temperature dial, in °C."
+        @synonyms "winter temperature, winter low, coldest month temperature"
+        @tier "domain"
+      precip : number = 80
+        @label "Starting Average Monthly Precipitation"
+        @description "Starting average-monthly-precipitation dial, in mm, scaled per month by the months roster's precipitation seasonality."
+        @synonyms "precipitation, rainfall, monthly precipitation, annual precipitation"
+        @tier "domain"
+      tempAxisMin : number = -30
+        @label "Temperature Axis Min"
+        @description "Lower bound of the temperature dial range and climograph vertical axis, in °C."
+        @tier "presentation"
+      tempAxisMax : number = 40
+        @label "Temperature Axis Max"
+        @description "Upper bound of the temperature dial range and climograph vertical axis, in °C."
+        @tier "presentation"
+      precipAxisMax : number = 400
+        @label "Precipitation Axis Max"
+        @description "Upper bound of the precipitation dial range and the climograph's precipitation-bar scale, in mm."
+        @tier "presentation"
+      tempCurveColor : string = "#f97316"
+        @label "Temperature Curve Color"
+        @tier "presentation"
+      precipColor : string = "#38bdf8"
+        @label "Precipitation Bar Color"
+        @tier "presentation"
+      axisColor : string = "#94a3b8"
+        @label "Axis Color"
+        @tier "presentation"
+      textColor : string = "#1e293b"
+        @label "Text Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/geo-koppen" as GeoKoppenPage -> GeoKoppenSim
+}

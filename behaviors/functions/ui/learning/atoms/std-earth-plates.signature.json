@@ -1,0 +1,366 @@
+[
+  {
+    "organism": "std-earth-plates",
+    "orbital": "EarthPlatesOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-earth-plates.ts",
+    "entities": [
+      {
+        "name": "EarthPlatesScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "boundaryType",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "boundaryDescription",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "advanceSteps",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "landformLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "quakeProfileLabel",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "EarthPlatesSim",
+        "emittedEvents": [
+          "PLATES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PLATES_UPDATED",
+            "direction": "emit",
+            "description": "The plate-boundary state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "plate boundary update, landform, earthquake, subduction, rift, transform fault",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SELECT_BOUNDARY",
+            "direction": "listen",
+            "description": "Learner picked a plate boundary type (convergent, divergent, or transform).",
+            "tier": "domain"
+          },
+          {
+            "name": "ADVANCE",
+            "direction": "listen",
+            "description": "Learner pressed Advance to step plate motion forward, accumulating landforms and earthquakes.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "advanceStepYears",
+            "type": "number",
+            "default": 5,
+            "label": "Advance Step (million years)",
+            "description": "How many million years each Advance press represents, shown on the button label.",
+            "tier": "presentation"
+          },
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f0f9ff",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "boundaries",
+            "type": "[EarthPlatesBoundary]",
+            "default": [
+              {
+                "description": "Two plates move toward each other; the denser oceanic plate subducts beneath the other.",
+                "label": "Convergent",
+                "landform": "Subduction zone — volcanic arc and mountain range",
+                "quakeProfile": "Deep, inclined seismicity along the subducting slab (Wadati-Benioff zone)",
+                "type": "convergent"
+              },
+              {
+                "description": "Two plates move apart; magma rises to fill the gap, forming new crust.",
+                "label": "Divergent",
+                "landform": "Rift valley / mid-ocean ridge with new oceanic crust",
+                "quakeProfile": "Shallow seismicity concentrated along the rift axis",
+                "type": "divergent"
+              },
+              {
+                "description": "Two plates slide past each other horizontally; no crust is created or destroyed.",
+                "label": "Transform",
+                "landform": "Transform fault with lateral (strike-slip) offset",
+                "quakeProfile": "Shallow, strike-slip seismicity along the fault trace",
+                "type": "transform"
+              }
+            ],
+            "label": "Boundaries",
+            "description": "Roster of the three plate-boundary types the learner can pick, each carrying the label/description shown and the landform + quake-profile text used in the readout.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "landform": {
+                  "name": "landform",
+                  "required": false,
+                  "type": "string"
+                },
+                "quakeProfile": {
+                  "name": "quakeProfile",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "convergent",
+                    "divergent",
+                    "transform"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "convergeRatePixels",
+            "type": "number",
+            "default": 3,
+            "label": "Convergence Rate (px/step)",
+            "description": "How many pixels the gap closes per Advance press in convergent mode.",
+            "tier": "domain"
+          },
+          {
+            "key": "crustNewColor",
+            "type": "string",
+            "default": "#f97316",
+            "label": "New Crust Color",
+            "description": "Color of freshly formed crust at a divergent rift.",
+            "tier": "presentation"
+          },
+          {
+            "key": "divergeRatePixels",
+            "type": "number",
+            "default": 4,
+            "label": "Divergence Rate (px/step)",
+            "description": "How many pixels the rift widens per Advance press in divergent mode.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 420,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxAdvanceSteps",
+            "type": "number",
+            "default": 8,
+            "label": "Max Advance Steps",
+            "description": "Caps how many times the learner can press Advance.",
+            "tier": "domain"
+          },
+          {
+            "key": "plateColorLeft",
+            "type": "string",
+            "default": "#92400e",
+            "label": "Left Plate Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "plateColorRight",
+            "type": "string",
+            "default": "#78350f",
+            "label": "Right Plate Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "plateGapHalf",
+            "type": "number",
+            "default": 26,
+            "label": "Initial Half-Gap (px)",
+            "description": "Half the starting gap between the two plates, in pixels, before any advance.",
+            "tier": "domain"
+          },
+          {
+            "key": "quakeColor",
+            "type": "string",
+            "default": "#1e293b",
+            "label": "Quake Marker Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "shearRatePixels",
+            "type": "number",
+            "default": 6,
+            "label": "Shear Rate (px/step)",
+            "description": "How many pixels the fault offsets per Advance press in transform mode.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Earth Lab",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "transformQuakeSpacing",
+            "type": "number",
+            "default": 10,
+            "label": "Transform Quake Spacing (px)",
+            "description": "Horizontal spacing between successive quake markers along a transform fault.",
+            "tier": "domain"
+          },
+          {
+            "key": "volcanoColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Volcano Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "volcanoThresholdSteps",
+            "type": "number",
+            "default": 3,
+            "label": "Volcano Threshold (steps)",
+            "description": "Number of Advance presses in convergent mode before the volcanic arc appears.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "EarthPlatesScene",
+        "transitionEvents": [
+          "ADVANCE",
+          "INIT",
+          "MODE_SELECTED",
+          "SELECT_BOUNDARY"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "advanceSteps",
+            "boundaryDescription",
+            "boundaryType",
+            "edges",
+            "landformLabel",
+            "nodes",
+            "quakeProfileLabel",
+            "shapes",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "EarthPlatesPage",
+        "defaultPath": "/earth-plates",
+        "primaryEntity": "EarthPlatesScene"
+      }
+    ],
+    "emittedEvents": [
+      "PLATES_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

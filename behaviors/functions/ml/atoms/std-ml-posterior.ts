@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -150,4 +150,689 @@ export function stdMlPosterior(params: StdMlPosteriorParams): OrbitalDefinition 
       stdMlPosteriorPage(params),
     ],
   });
+}
+
+type _StdMlPosteriorEntityName = 'Posterior';
+type _StdMlPosteriorListenTraitName = 'PosteriorBelief';
+
+/**
+ * Tunable params for the MlPosteriorOrbital orbital.
+ *
+ * Canonical entity: Posterior — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdMlPosteriorMlPosteriorOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'PosteriorBelief',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlPosteriorOrbital's `uses[]` exports. */
+type _StdMlPosteriorMlPosteriorOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlPosteriorOrbital orbital with consumer params. */
+export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteriorOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'MlPosteriorOrbital',
+    uses: [],
+    entity: {
+      name: 'Posterior',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': 1,
+            'description': 'Beta distribution success count (prior + observed successes).',
+            'name': 'alpha',
+            'type': 'number',
+          },
+          {
+            'default': 1,
+            'description': 'Beta distribution failure count (prior + observed failures).',
+            'name': 'beta',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Posterior mean: alpha / (alpha + beta).',
+            'name': 'mean',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Lower bound of the last computed credible interval.',
+            'name': 'intervalLow',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Upper bound of the last computed credible interval.',
+            'name': 'intervalHigh',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Number of observations folded into the posterior so far.',
+            'name': 'observations',
+            'type': 'number',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'insufficient',
+              'mastered',
+              'remediate',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'intervalWidthMax': {
+            'default': 0.3,
+            'description': 'Above this width the posterior is too uncertain to decide — abstain with EVIDENCE_INSUFFICIENT.',
+            'label': 'Max credible-interval width',
+            'tier': 'policy',
+            'type': 'float',
+          },
+          'masteryFloor': {
+            'default': 0.8,
+            'description': 'Posterior mean at or above this, with a tight interval, licenses MASTERY_REACHED.',
+            'label': 'Mastery floor',
+            'tier': 'policy',
+            'type': 'float',
+          },
+          'priorAlpha': {
+            'default': 1,
+            'description': 'Beta prior success pseudo-count before any observation.',
+            'label': 'Prior alpha',
+            'tier': 'domain',
+            'type': 'float',
+          },
+          'priorBeta': {
+            'default': 1,
+            'description': 'Beta prior failure pseudo-count before any observation.',
+            'label': 'Prior beta',
+            'tier': 'domain',
+            'type': 'float',
+          },
+          'remediationCeiling': {
+            'default': 0.4,
+            'description': 'Posterior mean at or below this, with a tight interval, licenses REMEDIATION_NEEDED.',
+            'label': 'Remediation ceiling',
+            'tier': 'policy',
+            'type': 'float',
+          },
+          'sampleCount': {
+            'default': 200,
+            'description': 'Number of Monte Carlo draws from the Beta posterior used to estimate the credible interval.',
+            'label': 'Posterior sample count',
+            'tier': 'infra',
+            'type': 'int',
+          },
+        },
+        'emits': [
+          {
+            'description': 'The posterior mean clears masteryFloor with a credible interval narrow enough to trust.',
+            'event': 'MASTERY_REACHED',
+            'payloadSchema': [
+              {
+                'name': 'mean',
+                'required': true,
+                'type': 'float',
+              },
+              {
+                'name': 'intervalLow',
+                'required': true,
+                'type': 'float',
+              },
+              {
+                'name': 'intervalHigh',
+                'required': true,
+                'type': 'float',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'The posterior mean is at or below remediationCeiling with a credible interval narrow enough to trust.',
+            'event': 'REMEDIATION_NEEDED',
+            'payloadSchema': [
+              {
+                'name': 'mean',
+                'required': true,
+                'type': 'float',
+              },
+              {
+                'name': 'intervalLow',
+                'required': true,
+                'type': 'float',
+              },
+              {
+                'name': 'intervalHigh',
+                'required': true,
+                'type': 'float',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'The abstain — the credible interval is still wider than intervalWidthMax, so no verdict is licensed yet.',
+            'event': 'EVIDENCE_INSUFFICIENT',
+            'payloadSchema': [
+              {
+                'name': 'mean',
+                'required': true,
+                'type': 'float',
+              },
+              {
+                'name': 'intervalLow',
+                'required': true,
+                'type': 'float',
+              },
+              {
+                'name': 'intervalHigh',
+                'required': true,
+                'type': 'float',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'alpha',
+            'beta',
+            'intervalHigh',
+            'intervalLow',
+            'mean',
+            'observations',
+            'status',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'Posterior',
+        'name': 'PosteriorBelief',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'OBSERVE',
+              'name': 'Observe',
+              'payloadSchema': [
+                {
+                  'name': 'outcome',
+                  'required': true,
+                  'type': 'boolean',
+                },
+              ],
+            },
+            {
+              'description': 'The posterior mean clears masteryFloor with a credible interval narrow enough to trust.',
+              'key': 'MASTERY_REACHED',
+              'name': 'Mastery Reached',
+              'payloadSchema': [
+                {
+                  'name': 'mean',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'intervalLow',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'intervalHigh',
+                  'required': true,
+                  'type': 'float',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'The posterior mean is at or below remediationCeiling with a credible interval narrow enough to trust.',
+              'key': 'REMEDIATION_NEEDED',
+              'name': 'Remediation Needed',
+              'payloadSchema': [
+                {
+                  'name': 'mean',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'intervalLow',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'intervalHigh',
+                  'required': true,
+                  'type': 'float',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'The abstain — the credible interval is still wider than intervalWidthMax, so no verdict is licensed yet.',
+              'key': 'EVIDENCE_INSUFFICIENT',
+              'name': 'Evidence Insufficient',
+              'payloadSchema': [
+                {
+                  'name': 'mean',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'intervalLow',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'intervalHigh',
+                  'required': true,
+                  'type': 'float',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.alpha',
+                  '@config.priorAlpha',
+                ],
+                [
+                  'set',
+                  '@entity.beta',
+                  '@config.priorBeta',
+                ],
+                [
+                  'set',
+                  '@entity.mean',
+                  [
+                    '/',
+                    '@config.priorAlpha',
+                    [
+                      '+',
+                      '@config.priorAlpha',
+                      '@config.priorBeta',
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.intervalLow',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.intervalHigh',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.observations',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.alpha',
+                  [
+                    'if',
+                    '@payload.outcome',
+                    [
+                      '+',
+                      '@entity.alpha',
+                      1,
+                    ],
+                    '@entity.alpha',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.beta',
+                  [
+                    'if',
+                    '@payload.outcome',
+                    '@entity.beta',
+                    [
+                      '+',
+                      '@entity.beta',
+                      1,
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.observations',
+                  [
+                    '+',
+                    '@entity.observations',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.mean',
+                  [
+                    '/',
+                    '@entity.alpha',
+                    [
+                      '+',
+                      '@entity.alpha',
+                      '@entity.beta',
+                    ],
+                  ],
+                ],
+                [
+                  'let',
+                  [
+                    [
+                      'samples',
+                      [
+                        'prob/sample',
+                        '@config.sampleCount',
+                        [
+                          'prob/beta',
+                          '@entity.alpha',
+                          '@entity.beta',
+                        ],
+                      ],
+                    ],
+                    [
+                      'interval',
+                      [
+                        'prob/credible-interval',
+                        '@samples',
+                        0.05,
+                      ],
+                    ],
+                    [
+                      'low',
+                      [
+                        'array/nth',
+                        '@interval',
+                        0,
+                      ],
+                    ],
+                    [
+                      'high',
+                      [
+                        'array/nth',
+                        '@interval',
+                        1,
+                      ],
+                    ],
+                    [
+                      'width',
+                      [
+                        '-',
+                        '@high',
+                        '@low',
+                      ],
+                    ],
+                  ],
+                  [
+                    'do',
+                    [
+                      'set',
+                      '@entity.intervalLow',
+                      '@low',
+                    ],
+                    [
+                      'set',
+                      '@entity.intervalHigh',
+                      '@high',
+                    ],
+                    [
+                      'if',
+                      [
+                        '>',
+                        '@width',
+                        '@config.intervalWidthMax',
+                      ],
+                      [
+                        'do',
+                        [
+                          'set',
+                          '@entity.status',
+                          'insufficient',
+                        ],
+                        [
+                          'emit',
+                          'EVIDENCE_INSUFFICIENT',
+                          {
+                            'intervalHigh': '@high',
+                            'intervalLow': '@low',
+                            'mean': '@entity.mean',
+                          },
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '>=',
+                          '@entity.mean',
+                          '@config.masteryFloor',
+                        ],
+                        [
+                          'do',
+                          [
+                            'set',
+                            '@entity.status',
+                            'mastered',
+                          ],
+                          [
+                            'emit',
+                            'MASTERY_REACHED',
+                            {
+                              'intervalHigh': '@high',
+                              'intervalLow': '@low',
+                              'mean': '@entity.mean',
+                            },
+                          ],
+                        ],
+                        [
+                          'if',
+                          [
+                            '<=',
+                            '@entity.mean',
+                            '@config.remediationCeiling',
+                          ],
+                          [
+                            'do',
+                            [
+                              'set',
+                              '@entity.status',
+                              'remediate',
+                            ],
+                            [
+                              'emit',
+                              'REMEDIATION_NEEDED',
+                              {
+                                'intervalHigh': '@high',
+                                'intervalLow': '@low',
+                                'mean': '@entity.mean',
+                              },
+                            ],
+                          ],
+                          [
+                            'do',
+                            [
+                              'set',
+                              '@entity.status',
+                              'insufficient',
+                            ],
+                            [
+                              'emit',
+                              'EVIDENCE_INSUFFICIENT',
+                              {
+                                'intervalHigh': '@high',
+                                'intervalLow': '@low',
+                                'mean': '@entity.mean',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'OBSERVE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlPosteriorPage',
+        'path': '/ml-posterior',
+        'traits': [
+          {
+            'ref': 'PosteriorBelief',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMlPosteriorMlPosteriorOrbital. */
+export const StdMlPosteriorMlPosteriorOrbitalManifest = {
+  organism: 'std-ml-posterior',
+  orbitalName: 'MlPosteriorOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'PosteriorBelief',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMlPosteriorMlPosteriorOrbitalParams keys. */
+export function isStdMlPosteriorMlPosteriorOrbitalParams(p: object): p is StdMlPosteriorMlPosteriorOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMlPosteriorMlPosteriorOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdMlPosteriorMlPosteriorOrbitalManifest.traitNames,
+      ...StdMlPosteriorMlPosteriorOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

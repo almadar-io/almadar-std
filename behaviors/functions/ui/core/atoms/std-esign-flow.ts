@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -190,4 +190,1206 @@ export function stdEsignFlow(params: StdEsignFlowParams): OrbitalDefinition {
       stdEsignFlowPage(params),
     ],
   });
+}
+
+type _StdEsignFlowEntityName = 'SignatureSession';
+type _StdEsignFlowListenTraitName = 'SignatureSessionBrowse' | 'SignatureSessionCreate' | 'SignatureSessionDelete' | 'SignatureSessionPersistor';
+
+/**
+ * Tunable params for the SignatureSessionOrbital orbital.
+ *
+ * Canonical entity: SignatureSession — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdEsignFlowSignatureSessionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SignatureSessionCreate' | 'SignatureSessionDelete' | 'SignatureSessionBrowse' | 'SignatureSessionPersistor',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait SignatureSessionOrbital's `uses[]` exports. */
+type _StdEsignFlowSignatureSessionOrbitalUsesRef = 'StoredFile.traits.StoredFileStore' | 'ESignRequest.traits.TitleHeading' | 'ESignRequest.traits.RequestDataGrid' | 'ESignRequest.traits.ErrorAlert' | 'ESignRequest.traits.ESignRequestSigning' | 'Modal.traits.ModalRecordModal' | 'Confirmation.traits.ConfirmActionConfirmation';
+
+/** Per-orbital factory: builds the SignatureSessionOrbital orbital with consumer params. */
+export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatureSessionOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'signaturesessions');
+  const built = makeOrbitalWithUses({
+    name: 'SignatureSessionOrbital',
+    uses: [
+      {
+        'as': 'StoredFile',
+        'from': 'std/behaviors/std-file-store',
+      },
+      {
+        'as': 'ESignRequest',
+        'from': 'std/behaviors/std-esign-request',
+      },
+      {
+        'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
+      },
+      {
+        'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
+      },
+    ],
+    entity: {
+      name: 'SignatureSession',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'Unique identifier for the associated document.',
+            'name': 'documentId',
+            'required': true,
+            'synonyms': 'fileID, docID, documentReference',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The name of the document associated with the signature request.',
+            'name': 'documentName',
+            'synonyms': 'filename, document, file',
+            'type': 'string',
+          },
+          {
+            'description': 'The name of the recipient for the signature request.',
+            'name': 'recipientName',
+            'required': true,
+            'synonyms': 'recipient, name, user',
+            'type': 'string',
+          },
+          {
+            'description': 'The email address of the recipient.',
+            'name': 'recipientEmail',
+            'required': true,
+            'synonyms': 'email, address, contact',
+            'type': 'email',
+          },
+          {
+            'default': '',
+            'description': 'The name of the user initiating the signature request.',
+            'name': 'requesterName',
+            'synonyms': 'initiator, sender, originator',
+            'type': 'string',
+          },
+          {
+            'default': 'draft',
+            'description': 'Current state of the signature request.',
+            'name': 'status',
+            'synonyms': 'state, condition, stage',
+            'type': 'string',
+            'values': [
+              'draft',
+              'sent',
+              'viewed',
+              'signed',
+              'declined',
+            ],
+          },
+          {
+            'description': 'Timestamp indicating when the request was sent.',
+            'name': 'sentAt',
+            'synonyms': 'sent date, submission time, dispatched',
+            'type': 'datetime',
+          },
+          {
+            'description': 'The date and time the signature was applied.',
+            'name': 'signedAt',
+            'synonyms': 'signed date, completion date, signature time',
+            'type': 'datetime',
+          },
+          {
+            'default': '',
+            'description': 'Unique identifier for a pending action or task.',
+            'name': 'pendingId',
+            'synonyms': 'taskId, pendingKey, referenceId',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'emits': [
+          {
+            'description': 'Indicates a new signature request has been initiated.',
+            'event': 'CREATE',
+            'synonyms': 'new, initiate, start, begin',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a signature request has been resent.',
+            'event': 'RESEND_REQUEST',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'recipientName',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'recipientEmail',
+                    'required': true,
+                    'type': 'email',
+                  },
+                  {
+                    'name': 'requesterName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sentAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'signedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'pendingId',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'resend, retransmit, repeat',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals a signature request has been removed.',
+            'event': 'REQUEST_DELETE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'recipientName',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'recipientEmail',
+                    'required': true,
+                    'type': 'email',
+                  },
+                  {
+                    'name': 'requesterName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sentAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'signedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'pendingId',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'remove, purge, discard',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals that a signature session has been successfully loaded.',
+            'event': 'SignatureSessionLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[SignatureSession]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, initialized, ready',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates failure to load a signature session.',
+            'event': 'SignatureSessionLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'SignatureSession',
+        'listens': [
+          {
+            'event': 'SESSION_CREATED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SignatureSessionPersistor' satisfies _StdEsignFlowListenTraitName),
+            },
+            'triggers': 'INIT',
+          },
+          {
+            'event': 'SESSION_RESENT',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SignatureSessionPersistor' satisfies _StdEsignFlowListenTraitName),
+            },
+            'triggers': 'INIT',
+          },
+          {
+            'event': 'SESSION_DELETED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SignatureSessionPersistor' satisfies _StdEsignFlowListenTraitName),
+            },
+            'triggers': 'INIT',
+          },
+        ],
+        'name': 'SignatureSessionBrowse',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals that a signature session has been successfully loaded.',
+              'key': 'SignatureSessionLoaded',
+              'name': 'SignatureSession loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[SignatureSession]',
+                },
+              ],
+              'synonyms': 'loaded, initialized, ready',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates failure to load a signature session.',
+              'key': 'SignatureSessionLoadFailed',
+              'name': 'SignatureSession load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'description': 'Indicates a new signature request has been initiated.',
+              'key': 'CREATE',
+              'name': 'Create',
+              'synonyms': 'new, initiate, start, begin',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a signature request has been resent.',
+              'key': 'RESEND_REQUEST',
+              'name': 'Resend Request',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'required': true,
+                      'type': 'email',
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'resend, retransmit, repeat',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Signals a signature request has been removed.',
+              'key': 'REQUEST_DELETE',
+              'name': 'Request Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'required': true,
+                      'type': 'email',
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'remove, purge, discard',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureSessionLoadFailed',
+                      'success': 'SignatureSessionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading signature requests…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'name': 'file-signature',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Signature Requests',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'action': 'CREATE',
+                            'icon': 'plus',
+                            'label': 'New Signature Request',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'entity': '@payload.data',
+                        'fields': [
+                          {
+                            'icon': 'file-text',
+                            'label': 'Document',
+                            'name': 'documentName',
+                            'variant': 'h4',
+                          },
+                          {
+                            'label': 'Recipient',
+                            'name': 'recipientName',
+                            'variant': 'body',
+                          },
+                          {
+                            'label': 'Email',
+                            'name': 'recipientEmail',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Status',
+                            'name': 'status',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Sent',
+                            'name': 'sentAt',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'itemActions': [
+                          {
+                            'event': 'RESEND_REQUEST',
+                            'label': 'Resend',
+                            'variant': 'primary',
+                          },
+                          {
+                            'event': 'REQUEST_DELETE',
+                            'label': 'Cancel',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SignatureSessionLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'color': 'error',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to load signature requests',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@payload.error',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'action': 'RETRY',
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
+                        'type': 'button',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SignatureSessionLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureSessionLoadFailed',
+                      'success': 'SignatureSessionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureSessionLoadFailed',
+                      'success': 'SignatureSessionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureSessionLoadFailed',
+                      'success': 'SignatureSessionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'RETRY',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+      makeTraitRef({
+        'config': {
+          'fields': {
+            'default': [
+              'documentId',
+              'recipientName',
+              'recipientEmail',
+              'requesterName',
+            ],
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'file-signature',
+            'type': 'unknown',
+          },
+          'mode': {
+            'default': 'create',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'New Signature Request',
+            'type': 'unknown',
+          },
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'linkedEntity': 'SignatureSession',
+        'listens': [
+          {
+            'event': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SignatureSessionBrowse',
+            },
+            'triggers': 'CREATE',
+          },
+        ],
+        'name': 'SignatureSessionCreate',
+        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdEsignFlowSignatureSessionOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'alertMessage': {
+            'default': 'Are you sure you want to cancel this signature request?',
+            'type': 'unknown',
+          },
+          'confirmLabel': {
+            'default': 'Cancel Request',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'alert-triangle',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Cancel Signature Request',
+            'type': 'unknown',
+          },
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'linkedEntity': 'SignatureSession',
+        'listens': [
+          {
+            'event': 'REQUEST_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SignatureSessionBrowse',
+            },
+            'triggers': 'DELETE',
+          },
+        ],
+        'name': 'SignatureSessionDelete',
+        'ref': ('Confirmation.traits.ConfirmActionConfirmation' satisfies _StdEsignFlowSignatureSessionOrbitalUsesRef),
+      }),
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'description': 'A new signature session has been initialized.',
+            'event': 'SESSION_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'start, begin, initialize',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a signature request has been resent.',
+            'event': 'SESSION_RESENT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'resend, retransmit, send again',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a signature session has been removed or invalidated.',
+            'event': 'SESSION_DELETED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'removed, cleared, expired, terminated',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'SignatureSession',
+        'listens': [
+          {
+            'event': 'SAVE',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SignatureSessionCreate' satisfies _StdEsignFlowListenTraitName),
+            },
+            'triggers': 'DO_CREATE',
+          },
+          {
+            'event': 'RESEND_REQUEST',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SignatureSessionBrowse' satisfies _StdEsignFlowListenTraitName),
+            },
+            'triggers': 'DO_RESEND',
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SignatureSessionDelete' satisfies _StdEsignFlowListenTraitName),
+            },
+            'triggers': 'DO_DELETE',
+          },
+        ],
+        'name': 'SignatureSessionPersistor',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Initiates the creation of a new signature request.',
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'new, add, generate, start',
+              'tier': 'domain',
+            },
+            {
+              'description': 'A request to resend a signature request.',
+              'key': 'DO_RESEND',
+              'name': 'Do Resend',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'retry, repeat, send again',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'A request to remove an item from the current view.',
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'remove, discard, clear, erase',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'A new signature session has been initialized.',
+              'key': 'SESSION_CREATED',
+              'name': 'Session Created',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'start, begin, initialize',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a signature request has been resent.',
+              'key': 'SESSION_RESENT',
+              'name': 'Session Resent',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'resend, retransmit, send again',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a signature session has been removed or invalidated.',
+              'key': 'SESSION_DELETED',
+              'name': 'Session Deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'removed, cleared, expired, terminated',
+              'tier': 'internal',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'SESSION_CREATED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DO_CREATE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'SESSION_RESENT',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DO_RESEND',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'SESSION_DELETED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'SignatureSessionPage',
+        'path': '/esign-flow',
+        'traits': [
+          {
+            'ref': 'SignatureSessionBrowse',
+          },
+          {
+            'ref': 'SignatureSessionCreate',
+          },
+          {
+            'ref': 'SignatureSessionDelete',
+          },
+          {
+            'ref': 'SignatureSessionPersistor',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdEsignFlowSignatureSessionOrbital. */
+export const StdEsignFlowSignatureSessionOrbitalManifest = {
+  organism: 'std-esign-flow',
+  orbitalName: 'SignatureSessionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'SignatureSessionCreate',
+    'SignatureSessionDelete',
+  ] as const,
+  inlineTraitNames: [
+    'SignatureSessionBrowse',
+    'SignatureSessionPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdEsignFlowSignatureSessionOrbitalParams keys. */
+export function isStdEsignFlowSignatureSessionOrbitalParams(p: object): p is StdEsignFlowSignatureSessionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdEsignFlowSignatureSessionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdEsignFlowSignatureSessionOrbitalManifest.traitNames,
+      ...StdEsignFlowSignatureSessionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

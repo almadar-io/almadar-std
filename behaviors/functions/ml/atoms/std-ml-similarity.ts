@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -140,4 +140,912 @@ export function stdMlSimilarity(params: StdMlSimilarityParams): OrbitalDefinitio
       stdMlSimilarityPage(params),
     ],
   });
+}
+
+type _StdMlSimilarityEntityName = 'SimilarityComparison';
+type _StdMlSimilarityListenTraitName = 'SimilarityRun';
+
+/**
+ * Tunable params for the MlSimilarityOrbital orbital.
+ *
+ * Canonical entity: SimilarityComparison — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdMlSimilarityMlSimilarityOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SimilarityRun',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlSimilarityOrbital's `uses[]` exports. */
+type _StdMlSimilarityMlSimilarityOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlSimilarityOrbital orbital with consumer params. */
+export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimilarityOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'MlSimilarityOrbital',
+    uses: [],
+    entity: {
+      name: 'SimilarityComparison',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': '',
+            'name': 'query',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+            'name': 'candidates',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'items': {
+                'type': 'number',
+              },
+              'type': 'array',
+            },
+            'name': 'embeddings',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'number',
+            },
+            'name': 'queryVector',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'items': {
+                'type': 'number',
+              },
+              'type': 'array',
+            },
+            'name': 'candidateVectors',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'name': 'matchIndex',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'name': 'matchScore',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'name': 'matchMargin',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'name': 'reason',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'name': 'request',
+            'type': 'object',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'embedding',
+              'resolved',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'embedModel': {
+            'default': '',
+            'description': 'Reserved for embedding-model selection; llm/embed takes only a texts array today, so this knob is not yet wired into the call',
+            'label': 'Embedding model',
+            'tier': 'infra',
+            'type': 'string',
+          },
+          'floor': {
+            'default': 0.82,
+            'description': 'Minimum cosine score for a confident match',
+            'label': 'Match floor',
+            'tier': 'policy',
+            'type': 'float',
+          },
+          'margin': {
+            'default': 0.05,
+            'description': 'Minimum gap between the best and second-best score required to trust the match',
+            'label': 'Match margin',
+            'tier': 'policy',
+            'type': 'float',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order',
+            'event': 'EMBEDDED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': '[[float]]',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'Candidate matched with high confidence — score at or above floor, with a clear margin over the runner-up',
+            'event': 'SIMILARITY_MATCHED',
+            'payloadSchema': [
+              {
+                'name': 'index',
+                'required': true,
+                'type': 'int',
+              },
+              {
+                'name': 'score',
+                'required': true,
+                'type': 'float',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'event': 'SIMILARITY_ABSTAINED',
+            'payloadSchema': [
+              {
+                'name': 'reason',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'request',
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'linkedEntity': 'SimilarityComparison',
+        'name': 'SimilarityRun',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'COMPARE',
+              'name': 'Compare',
+              'payloadSchema': [
+                {
+                  'name': 'query',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'candidates',
+                  'required': true,
+                  'type': '[string]',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'description': 'Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order',
+              'key': 'EMBEDDED',
+              'name': 'Embedded',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': '[[float]]',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'key': 'EMBED_FAILED',
+              'name': 'Embed Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'Candidate matched with high confidence — score at or above floor, with a clear margin over the runner-up',
+              'key': 'SIMILARITY_MATCHED',
+              'name': 'Similarity Matched',
+              'payloadSchema': [
+                {
+                  'name': 'index',
+                  'required': true,
+                  'type': 'int',
+                },
+                {
+                  'name': 'score',
+                  'required': true,
+                  'type': 'float',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'key': 'SIMILARITY_ABSTAINED',
+              'name': 'Similarity Abstained',
+              'payloadSchema': [
+                {
+                  'name': 'reason',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'embedding',
+            },
+            {
+              'name': 'resolved',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.candidates',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.embeddings',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.queryVector',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.candidateVectors',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.matchIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchScore',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchMargin',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '@payload.query',
+                ],
+                [
+                  'set',
+                  '@entity.candidates',
+                  '@payload.candidates',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  '@payload.request',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'embedding',
+                ],
+                [
+                  'llm/embed',
+                  [
+                    'array/prepend',
+                    '@payload.candidates',
+                    '@payload.query',
+                  ],
+                  {
+                    'emit': {
+                      'failure': 'EMBED_FAILED',
+                      'success': 'EMBEDDED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'COMPARE',
+              'from': 'idle',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.candidates',
+                ],
+                0,
+              ],
+              'to': 'embedding',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '@payload.query',
+                ],
+                [
+                  'set',
+                  '@entity.candidates',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.embeddings',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.queryVector',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.candidateVectors',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.matchIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchScore',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchMargin',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  'empty candidate list',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  '@payload.request',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'resolved',
+                ],
+                [
+                  'emit',
+                  'SIMILARITY_ABSTAINED',
+                  {
+                    'reason': 'empty candidate list',
+                    'request': '@entity.request',
+                  },
+                ],
+              ],
+              'event': 'COMPARE',
+              'from': 'idle',
+              'guard': [
+                '==',
+                [
+                  'array/len',
+                  '@payload.candidates',
+                ],
+                0,
+              ],
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.embeddings',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'resolved',
+                ],
+                [
+                  'if',
+                  [
+                    '<',
+                    [
+                      'array/len',
+                      '@payload.result',
+                    ],
+                    2,
+                  ],
+                  [
+                    'do',
+                    [
+                      'set',
+                      '@entity.queryVector',
+                      [],
+                    ],
+                    [
+                      'set',
+                      '@entity.candidateVectors',
+                      [],
+                    ],
+                    [
+                      'set',
+                      '@entity.matchIndex',
+                      0,
+                    ],
+                    [
+                      'set',
+                      '@entity.matchScore',
+                      0,
+                    ],
+                    [
+                      'set',
+                      '@entity.matchMargin',
+                      0,
+                    ],
+                    [
+                      'set',
+                      '@entity.reason',
+                      'embedding result incomplete',
+                    ],
+                    [
+                      'emit',
+                      'SIMILARITY_ABSTAINED',
+                      {
+                        'reason': 'embedding result incomplete',
+                        'request': '@entity.request',
+                      },
+                    ],
+                  ],
+                  [
+                    'do',
+                    [
+                      'set',
+                      '@entity.queryVector',
+                      [
+                        'array/first',
+                        '@entity.embeddings',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.candidateVectors',
+                      [
+                        'array/drop',
+                        '@entity.embeddings',
+                        1,
+                      ],
+                    ],
+                    [
+                      'let',
+                      [
+                        [
+                          'nearest',
+                          [
+                            'array/nearest',
+                            '@entity.queryVector',
+                            '@entity.candidateVectors',
+                          ],
+                        ],
+                      ],
+                      [
+                        'do',
+                        [
+                          'set',
+                          '@entity.matchIndex',
+                          [
+                            'object/get',
+                            '@nearest',
+                            'index',
+                          ],
+                        ],
+                        [
+                          'set',
+                          '@entity.matchScore',
+                          [
+                            'object/get',
+                            '@nearest',
+                            'score',
+                          ],
+                        ],
+                        [
+                          'set',
+                          '@entity.matchMargin',
+                          [
+                            'object/get',
+                            '@nearest',
+                            'margin',
+                          ],
+                        ],
+                        [
+                          'if',
+                          [
+                            'and',
+                            [
+                              '>=',
+                              '@entity.matchScore',
+                              '@config.floor',
+                            ],
+                            [
+                              '>=',
+                              '@entity.matchMargin',
+                              '@config.margin',
+                            ],
+                          ],
+                          [
+                            'do',
+                            [
+                              'set',
+                              '@entity.reason',
+                              '',
+                            ],
+                            [
+                              'emit',
+                              'SIMILARITY_MATCHED',
+                              {
+                                'index': '@entity.matchIndex',
+                                'score': '@entity.matchScore',
+                              },
+                            ],
+                          ],
+                          [
+                            'do',
+                            [
+                              'set',
+                              '@entity.reason',
+                              [
+                                'if',
+                                [
+                                  '<',
+                                  '@entity.matchScore',
+                                  '@config.floor',
+                                ],
+                                'below floor',
+                                'thin margin',
+                              ],
+                            ],
+                            [
+                              'emit',
+                              'SIMILARITY_ABSTAINED',
+                              {
+                                'reason': '@entity.reason',
+                                'request': '@entity.request',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'EMBEDDED',
+              'from': 'embedding',
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.embeddings',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.queryVector',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.candidateVectors',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.matchIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchScore',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchMargin',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  'embedding unavailable',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'resolved',
+                ],
+                [
+                  'emit',
+                  'SIMILARITY_ABSTAINED',
+                  {
+                    'reason': 'embedding unavailable',
+                    'request': '@entity.request',
+                  },
+                ],
+              ],
+              'event': 'EMBED_FAILED',
+              'from': 'embedding',
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'resolved',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'resolved',
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.candidates',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.embeddings',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.queryVector',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.candidateVectors',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.matchIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchScore',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchMargin',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'resolved',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlSimilarityPage',
+        'path': '/ml-similarity',
+        'traits': [
+          {
+            'ref': 'SimilarityRun',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMlSimilarityMlSimilarityOrbital. */
+export const StdMlSimilarityMlSimilarityOrbitalManifest = {
+  organism: 'std-ml-similarity',
+  orbitalName: 'MlSimilarityOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'SimilarityRun',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMlSimilarityMlSimilarityOrbitalParams keys. */
+export function isStdMlSimilarityMlSimilarityOrbitalParams(p: object): p is StdMlSimilarityMlSimilarityOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMlSimilarityMlSimilarityOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdMlSimilarityMlSimilarityOrbitalManifest.traitNames,
+      ...StdMlSimilarityMlSimilarityOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

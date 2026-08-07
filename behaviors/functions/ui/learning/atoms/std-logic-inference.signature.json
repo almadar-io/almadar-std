@@ -1,0 +1,269 @@
+[
+  {
+    "organism": "std-logic-inference",
+    "orbital": "LogicInferenceOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-logic-inference.ts",
+    "entities": [
+      {
+        "name": "LogicInferenceScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "proofLines",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goalReached",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "renderChildren",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LogicInferenceSim",
+        "emittedEvents": [
+          "INFERENCE_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INFERENCE_UPDATED",
+            "direction": "emit",
+            "description": "The proof state after each learner rule application — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "inference update, proof step, derived line, modus ponens, modus tollens, goal reached",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "APPLY_RULE",
+            "direction": "listen",
+            "description": "Learner clicked an inference-rule button to try to derive the next proof line.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "goalLabel",
+            "type": "string",
+            "default": "Q",
+            "label": "Goal",
+            "description": "The proposition label the learner is trying to derive, e.g. \"Q\" or \"¬P\".",
+            "synonyms": "proof goal, target proposition, conclusion",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Maximum height of the scrollable proof panel, in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "premises",
+            "type": "[LogicInferencePremise]",
+            "default": [
+              {
+                "id": "premise-1",
+                "kind": "fact",
+                "label": "P",
+                "negated": false,
+                "subject": "P"
+              },
+              {
+                "antecedent": "P",
+                "antecedentNegated": false,
+                "consequent": "Q",
+                "consequentNegated": false,
+                "id": "premise-2",
+                "kind": "conditional",
+                "label": "P → Q"
+              }
+            ],
+            "label": "Premises",
+            "description": "The starting lines of the proof: plain facts (or their negations) and conditional (if-then) statements the learner combines with inference rules.",
+            "synonyms": "premise, given, hypothesis, starting proposition, conditional statement, if-then statement",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "antecedent": {
+                  "name": "antecedent",
+                  "required": false,
+                  "type": "string"
+                },
+                "antecedentNegated": {
+                  "name": "antecedentNegated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "consequent": {
+                  "name": "consequent",
+                  "required": false,
+                  "type": "string"
+                },
+                "consequentNegated": {
+                  "name": "consequentNegated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "fact",
+                    "conditional"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "negated": {
+                  "name": "negated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "subject": {
+                  "name": "subject",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "rules",
+            "type": "[LogicInferenceRule]",
+            "default": [
+              {
+                "key": "MODUS_PONENS",
+                "label": "Modus Ponens"
+              },
+              {
+                "key": "MODUS_TOLLENS",
+                "label": "Modus Tollens"
+              }
+            ],
+            "label": "Rules",
+            "description": "Inference rules offered as buttons. Modus Ponens: from P and P→Q, derive Q. Modus Tollens: from ¬Q and P→Q, derive ¬P.",
+            "synonyms": "inference rule, modus ponens, modus tollens, rule of inference, deduction rule, logical deduction, logical proof, syllogism",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Logical Inference",
+            "label": "Title",
+            "description": "Title shown above the lab.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Maximum width of the lab, in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LogicInferenceScene",
+        "transitionEvents": [
+          "APPLY_RULE",
+          "INIT",
+          "MODE_SELECTED"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "feedback",
+            "goalReached",
+            "proofLines",
+            "renderChildren",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LogicInferencePage",
+        "defaultPath": "/logic-inference",
+        "primaryEntity": "LogicInferenceScene"
+      }
+    ],
+    "emittedEvents": [
+      "INFERENCE_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

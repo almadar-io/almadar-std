@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -225,4 +225,1227 @@ export function stdApprovalGate(params: StdApprovalGateParams): OrbitalDefinitio
       stdApprovalGatePage(params),
     ],
   });
+}
+
+type _StdApprovalGateEntityName = 'ApprovalRequest';
+type _StdApprovalGateListenTraitName = 'LoadingSpinner' | 'ErrorSpinner' | 'LoadingText' | 'ShieldCheckIcon' | 'ApprovalQueueTitle' | 'CloseButton' | 'ApprovalDivider' | 'ErrorAlert' | 'ApprovalGateReview';
+
+/**
+ * Tunable params for the ApprovalGateOrbital orbital.
+ *
+ * Canonical entity: ApprovalRequest — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdApprovalGateApprovalGateOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'LoadingSpinner' | 'ErrorSpinner' | 'LoadingText' | 'ShieldCheckIcon' | 'ApprovalQueueTitle' | 'CloseButton' | 'ApprovalDivider' | 'ErrorAlert' | 'ApprovalGateReview',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait ApprovalGateOrbital's `uses[]` exports. */
+type _StdApprovalGateApprovalGateOrbitalUsesRef = 'Spinner.traits.SpinnerRender' | 'Typography.traits.TypographyRender' | 'Icon.traits.IconRender' | 'Button.traits.ButtonRender' | 'Divider.traits.DividerRender' | 'Alert.traits.AlertRender';
+
+/** Per-orbital factory: builds the ApprovalGateOrbital orbital with consumer params. */
+export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprovalGateOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'approval_requests');
+  const built = makeOrbitalWithUses({
+    name: 'ApprovalGateOrbital',
+    uses: [
+      {
+        'as': 'Spinner',
+        'from': 'std/behaviors/ui-spinner',
+      },
+      {
+        'as': 'Typography',
+        'from': 'std/behaviors/ui-typography',
+      },
+      {
+        'as': 'Icon',
+        'from': 'std/behaviors/ui-icon',
+      },
+      {
+        'as': 'Button',
+        'from': 'std/behaviors/ui-button',
+      },
+      {
+        'as': 'Divider',
+        'from': 'std/behaviors/ui-divider',
+      },
+      {
+        'as': 'Alert',
+        'from': 'std/behaviors/ui-alert',
+      },
+    ],
+    expects: [
+      {
+        'kind': 'identity',
+      },
+    ],
+    entity: {
+      name: 'ApprovalRequest',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The event that triggered the approval request.',
+            'name': 'gatedEvent',
+            'synonyms': 'trigger, event, source',
+            'type': 'string',
+          },
+          {
+            'default': 'pending',
+            'description': 'Current state of the approval process.',
+            'name': 'status',
+            'synonyms': 'approval status, state, condition',
+            'type': 'string',
+            'values': [
+              'pending',
+              'approved',
+              'denied',
+              'escalated',
+            ],
+          },
+          {
+            'default': '',
+            'description': 'The user or system responsible for reviewing the request.',
+            'name': 'reviewer',
+            'synonyms': 'assignee, owner, approver, responsible party',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'Timestamp indicating when the approval request was initiated.',
+            'name': 'requestedAt',
+            'synonyms': 'creation time, request date, submission time',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Timestamp indicating when a decision was made on the request.',
+            'name': 'decidedAt',
+            'synonyms': 'decision time, resolved at, completed at',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Timestamp indicating when the request was escalated.',
+            'name': 'escalatedAt',
+            'synonyms': 'escalation time, escalation timestamp, escalated time',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'description': 'Free-form text providing additional context or details.',
+            'name': 'notes',
+            'synonyms': 'comments, remarks, explanation, details',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'description': 'The held data of the gated action, replayed by the downstream listener when the request is granted.',
+            'name': 'payload',
+            'synonyms': 'request data, held payload, pending data, gated data',
+            'type': 'object',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'linkedEntity': 'ApprovalRequest',
+        'name': 'LoadingSpinner',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdApprovalGateApprovalGateOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'size': {
+            'default': 'sm',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ApprovalRequest',
+        'name': 'ErrorSpinner',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdApprovalGateApprovalGateOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'color': {
+            'default': 'muted',
+            'type': 'unknown',
+          },
+          'content': {
+            'default': 'Loading approval queue…',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'caption',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ApprovalRequest',
+        'name': 'LoadingText',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdApprovalGateApprovalGateOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'shield-check',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ApprovalRequest',
+        'name': 'ShieldCheckIcon',
+        'ref': ('Icon.traits.IconRender' satisfies _StdApprovalGateApprovalGateOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Approval queue',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h3',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ApprovalRequest',
+        'name': 'ApprovalQueueTitle',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdApprovalGateApprovalGateOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'CLOSE',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'x',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Close',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'ghost',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ApprovalRequest',
+        'name': 'CloseButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdApprovalGateApprovalGateOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'ApprovalRequest',
+        'name': 'ApprovalDivider',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdApprovalGateApprovalGateOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'message': {
+            'default': '@payload.error',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'error',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ApprovalRequest',
+        'name': 'ErrorAlert',
+        'ref': ('Alert.traits.AlertRender' satisfies _StdApprovalGateApprovalGateOrbitalUsesRef),
+      }),
+      {
+        'capabilities': [
+          'approval',
+        ],
+        'category': 'interaction',
+        'config': {
+          'approverRoles': {
+            'default': [],
+            'description': 'Roles eligible to approve. The host application enforces role-gating on the page.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Who can approve requests?',
+            'synonyms': 'approver, reviewer, authorized roles, sign-off roles, who approves',
+            'tier': 'policy',
+            'type': '[string]',
+          },
+          'autoApproveBelowThreshold': {
+            'default': true,
+            'description': 'When true, auto-approves requests below the threshold without queuing. v1.0 declarative only.',
+            'label': 'Skip review queue for low-value requests?',
+            'synonyms': 'auto approve, skip review, bypass queue, automatic approval',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+          'enabled': {
+            'default': false,
+            'description': 'Require sign-off before a record is finalized. Off by default.',
+            'label': 'Require approval',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+          'escalationHours': {
+            'default': 0,
+            'description': 'Hours a request can sit pending before escalating. v1.0 declarative only.',
+            'label': 'Escalate after how many hours pending?',
+            'synonyms': 'escalation time, SLA hours, pending timeout, escalate after',
+            'tier': 'policy',
+            'type': 'number',
+          },
+          'escalationRoles': {
+            'default': [],
+            'description': 'Roles notified on escalation (compose sibling std-notify-on-event to deliver).',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Who gets notified when a request escalates?',
+            'synonyms': 'escalation contacts, escalate to, notify roles, escalated approver',
+            'tier': 'policy',
+            'type': '[string]',
+          },
+          'reviewSlot': {
+            'default': 'modal',
+            'description': 'UI slot the review queue renders into. Defaults to the modal overlay so the queue never seizes the host\'s main content; summoned via OPEN, cleared via CLOSE.',
+            'label': 'Review slot',
+            'tier': 'internal',
+            'type': 'slot',
+          },
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Visual treatment for the approval-queue data table.',
+            'label': 'Review queue table style',
+            'synonyms': 'table style, grid look, compact, spacious, striped',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'threshold': {
+            'default': 0,
+            'description': 'Requests whose gated value is below this threshold are auto-approved. v1.0 declarative only.',
+            'label': 'Auto-approve below this value',
+            'synonyms': 'auto approve amount, skip review under, threshold, limit',
+            'tier': 'policy',
+            'type': 'number',
+          },
+          'valueField': {
+            'default': '',
+            'description': 'Payload field name to compare against threshold (e.g. \'amount\' on a RefundRequested event). v1.0 declarative only.',
+            'label': 'Value field',
+            'tier': 'internal',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals that an approval request has been approved.',
+            'event': 'APPROVE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'gatedEvent',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reviewer',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'decidedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'escalatedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'notes',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'payload',
+                    'type': 'object',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'accept, authorize, confirm, pass',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals that an approval request has been denied.',
+            'event': 'DENY',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'gatedEvent',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reviewer',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'decidedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'escalatedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'notes',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'payload',
+                    'type': 'object',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'reject, decline',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Dismisses the review queue overlay.',
+            'event': 'CLOSE',
+            'synonyms': 'dismiss, hide, cancel, done',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay.',
+            'event': 'ApprovalGranted',
+            'payloadSchema': [
+              {
+                'name': 'requestId',
+                'type': 'string',
+              },
+              {
+                'name': 'payload',
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'approved, authorized, confirmed, validated',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates an approval request has been denied.',
+            'event': 'ApprovalDenied',
+            'payloadSchema': [
+              {
+                'name': 'requestId',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'rejected, declined',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates an approval request has been successfully loaded.',
+            'event': 'ApprovalRequestLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ApprovalRequest]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates failure to load an approval request.',
+            'event': 'ApprovalRequestLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'load error, failed load, request failure',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Signals that an approval request has been reviewed.',
+            'event': 'ApprovalRequestReviewed',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'gatedEvent',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reviewer',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'decidedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'escalatedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'notes',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'payload',
+                    'type': 'object',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'reviewed, processed, examined',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates a failure to load or process an approval request for review.',
+            'event': 'ApprovalRequestReviewFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'load error, failed review, processing failure',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'reviewer',
+            'status',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ApprovalRequest',
+        'listens': [
+          {
+            'event': 'CLOSE',
+            'source': {
+              'kind': 'trait',
+              'trait': ('CloseButton' satisfies _StdApprovalGateListenTraitName),
+            },
+            'triggers': 'CLOSE',
+          },
+        ],
+        'name': 'ApprovalGateReview',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates an approval request has been successfully loaded.',
+              'key': 'ApprovalRequestLoaded',
+              'name': 'ApprovalRequest loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ApprovalRequest]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates failure to load an approval request.',
+              'key': 'ApprovalRequestLoadFailed',
+              'name': 'ApprovalRequest load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, failed load, request failure',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Summons the review queue (host nav/affordance requests it).',
+              'key': 'OPEN',
+              'name': 'Open',
+              'synonyms': 'open, show, review, view queue, open approvals',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Dismisses the review queue overlay.',
+              'key': 'CLOSE',
+              'name': 'Close',
+              'synonyms': 'dismiss, hide, cancel, done',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals that an approval request has been approved.',
+              'key': 'APPROVE',
+              'name': 'Approve',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'ApprovalRequest',
+                },
+              ],
+              'synonyms': 'accept, authorize, confirm, pass',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals that an approval request has been denied.',
+              'key': 'DENY',
+              'name': 'Deny',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'ApprovalRequest',
+                },
+              ],
+              'synonyms': 'reject, decline',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals that an approval request has been reviewed.',
+              'key': 'ApprovalRequestReviewed',
+              'name': 'ApprovalRequest reviewed',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'ApprovalRequest',
+                },
+              ],
+              'synonyms': 'reviewed, processed, examined',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a failure to load or process an approval request for review.',
+              'key': 'ApprovalRequestReviewFailed',
+              'name': 'ApprovalRequest review failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, failed review, processing failure',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay.',
+              'key': 'ApprovalGranted',
+              'name': 'Approval granted',
+              'payloadSchema': [
+                {
+                  'name': 'requestId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'payload',
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'approved, authorized, confirmed, validated',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates an approval request has been denied.',
+              'key': 'ApprovalDenied',
+              'name': 'Approval denied',
+              'payloadSchema': [
+                {
+                  'name': 'requestId',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'rejected, declined',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'loading',
+            },
+            {
+              'name': 'reviewing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestLoadFailed',
+                      'success': 'ApprovalRequestLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'event': 'ApprovalRequestLoaded',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'event': 'ApprovalRequestLoadFailed',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestLoadFailed',
+                      'success': 'ApprovalRequestLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  {
+                    'align': 'center',
+                    'children': [
+                      '@trait.LoadingSpinner',
+                      '@trait.LoadingText',
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'OPEN',
+              'from': 'idle',
+              'guard': '@config.enabled',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldCheckIcon',
+                              '@trait.ApprovalQueueTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                          '@trait.CloseButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.ApprovalDivider',
+                      {
+                        'cols': 1,
+                        'entity': '@payload.data',
+                        'fields': [
+                          {
+                            'label': 'Action',
+                            'name': 'gatedEvent',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Requested',
+                            'name': 'requestedAt',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Status',
+                            'name': 'status',
+                            'variant': 'badge',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'itemActions': [
+                          {
+                            'event': 'APPROVE',
+                            'icon': 'check',
+                            'label': 'Approve',
+                            'variant': 'primary',
+                          },
+                          {
+                            'event': 'DENY',
+                            'icon': 'x',
+                            'label': 'Deny',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'look': '@config.tableLook',
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ApprovalRequestLoaded',
+              'from': 'loading',
+              'to': 'reviewing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  {
+                    'children': [
+                      '@trait.ErrorAlert',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ApprovalRequestLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+              ],
+              'event': 'CLOSE',
+              'from': 'loading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'approved',
+                ],
+                [
+                  'set',
+                  '@entity.reviewer',
+                  '@user.id',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestReviewFailed',
+                      'success': 'ApprovalRequestReviewed',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'ApprovalGranted',
+                  {
+                    'payload': '@payload.row.payload',
+                    'requestId': '@payload.id',
+                  },
+                ],
+              ],
+              'event': 'APPROVE',
+              'from': 'reviewing',
+              'to': 'reviewing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'denied',
+                ],
+                [
+                  'set',
+                  '@entity.reviewer',
+                  '@user.id',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestReviewFailed',
+                      'success': 'ApprovalRequestReviewed',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'ApprovalDenied',
+                  {
+                    'requestId': '@payload.id',
+                  },
+                ],
+              ],
+              'event': 'DENY',
+              'from': 'reviewing',
+              'to': 'reviewing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestLoadFailed',
+                      'success': 'ApprovalRequestLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'ApprovalRequestReviewed',
+              'from': 'reviewing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  {
+                    'children': [
+                      '@trait.ErrorAlert',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ApprovalRequestReviewFailed',
+              'from': 'reviewing',
+              'to': 'reviewing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+              ],
+              'event': 'CLOSE',
+              'from': 'reviewing',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestLoadFailed',
+                      'success': 'ApprovalRequestLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  {
+                    'children': [
+                      '@trait.ErrorSpinner',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'OPEN',
+              'from': 'error',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+              ],
+              'event': 'CLOSE',
+              'from': 'error',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'ApprovalGateReviewPage',
+        'path': '/approvals/queue',
+        'traits': [
+          {
+            'ref': 'ApprovalGateReview',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdApprovalGateApprovalGateOrbital. */
+export const StdApprovalGateApprovalGateOrbitalManifest = {
+  organism: 'std-approval-gate',
+  orbitalName: 'ApprovalGateOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'LoadingSpinner',
+    'ErrorSpinner',
+    'LoadingText',
+    'ShieldCheckIcon',
+    'ApprovalQueueTitle',
+    'CloseButton',
+    'ApprovalDivider',
+    'ErrorAlert',
+  ] as const,
+  inlineTraitNames: [
+    'ApprovalGateReview',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdApprovalGateApprovalGateOrbitalParams keys. */
+export function isStdApprovalGateApprovalGateOrbitalParams(p: object): p is StdApprovalGateApprovalGateOrbitalParams {
+  type _OverrideRecord = NonNullable<StdApprovalGateApprovalGateOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdApprovalGateApprovalGateOrbitalManifest.traitNames,
+      ...StdApprovalGateApprovalGateOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

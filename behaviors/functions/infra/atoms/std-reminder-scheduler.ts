@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -157,4 +157,657 @@ export function stdReminderScheduler(params: StdReminderSchedulerParams): Orbita
       stdReminderSchedulerPage(params),
     ],
   });
+}
+
+type _StdReminderSchedulerEntityName = 'ReminderRunLog';
+type _StdReminderSchedulerListenTraitName = 'ReminderScheduler';
+
+/**
+ * Tunable params for the ReminderSchedulerOrbital orbital.
+ *
+ * Canonical entity: ReminderRunLog — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdReminderSchedulerReminderSchedulerOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ReminderScheduler',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait ReminderSchedulerOrbital's `uses[]` exports. */
+type _StdReminderSchedulerReminderSchedulerOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the ReminderSchedulerOrbital orbital with consumer params. */
+export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminderSchedulerReminderSchedulerOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'reminder_runs');
+  const built = makeOrbitalWithUses({
+    name: 'ReminderSchedulerOrbital',
+    uses: [],
+    entity: {
+      name: 'ReminderRunLog',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The entity to which the reminder applies.',
+            'name': 'targetEntity',
+            'synonyms': 'subject, referenced entity, related object',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'The number of records processed during this run.',
+            'name': 'recordCount',
+            'synonyms': 'count, total, size',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'Timestamp indicating when the process was executed.',
+            'name': 'ranAt',
+            'synonyms': 'execution time, timestamp, run time',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'description': 'Records any errors encountered during processing.',
+            'name': 'errors',
+            'synonyms': 'error, problem, fault',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'Deadline timestamp (also lets the standalone default target validate).',
+            'name': 'dueAt',
+            'synonyms': 'deadline, due, expiry',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'When this record was last reminded — the dedup marker; 0 = not yet reminded.',
+            'name': 'remindedAt',
+            'synonyms': 'notified at, last reminder',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'description': 'Scratch: id of the record the scan loop is currently reminding.',
+            'name': 'headId',
+            'synonyms': 'current id, cursor',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'dateField': {
+            'default': 'dueAt',
+            'description': 'Numeric (ms-epoch) field on the target entity holding the deadline (e.g. \'dueAt\', \'startsAt\').',
+            'label': 'Which date field is the deadline?',
+            'synonyms': 'due date field, timestamp field, cutoff field, expiry field, when it\'s due',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'enabled': {
+            'default': false,
+            'description': 'Automatically remind about upcoming deadlines. Off by default.',
+            'label': 'Send deadline reminders',
+            'synonyms': 'enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due',
+            'tier': 'infra',
+            'type': 'boolean',
+          },
+          'offsetHours': {
+            'default': 24,
+            'description': 'A reminder fires once the deadline is within this many hours of now.',
+            'label': 'How many hours before the deadline to remind?',
+            'synonyms': 'advance notice, lead time, heads up, early warning hours, how far ahead',
+            'tier': 'infra',
+            'type': 'number',
+          },
+          'severity': {
+            'default': 'info',
+            'description': 'Severity passed to the notifier: info / warning / error.',
+            'label': 'How urgent are the reminders?',
+            'synonyms': 'urgency level, priority, importance, alert level, how urgent',
+            'tier': 'infra',
+            'type': 'string',
+          },
+          'targetEntity': {
+            'default': 'ReminderRunLog',
+            'description': 'Entity to scan for upcoming deadlines (e.g. \'Task\', \'ClassSession\'). Defaults to the atom\'s own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
+            'label': 'Target entity',
+            'synonyms': 'entity to monitor, entity to watch, record type, object type',
+            'tier': 'internal',
+            'type': 'entity',
+          },
+          'template': {
+            'default': '',
+            'description': 'Message body passed to the notifier.',
+            'label': 'What should the reminder message say?',
+            'synonyms': 'message text, reminder body, notification copy, alert message, what to say',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'event': 'ReminderDue',
+            'payloadSchema': [
+              {
+                'name': 'entityId',
+                'type': 'string',
+              },
+              {
+                'name': 'severity',
+                'type': 'string',
+              },
+              {
+                'name': 'template',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+          },
+          {
+            'event': 'ScanRecordsLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+              },
+            ],
+          },
+          {
+            'event': 'ScanFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ReminderStepped',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'headId',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ReminderRunLog',
+        'name': 'ReminderScheduler',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ScanRecordsLoaded',
+              'name': 'Scan records loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                },
+              ],
+            },
+            {
+              'key': 'ScanFailed',
+              'name': 'Scan failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ReminderStepped',
+              'name': 'Reminder stepped',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ReminderDue',
+              'name': 'Reminder due',
+              'payloadSchema': [
+                {
+                  'name': 'entityId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'severity',
+                  'type': 'string',
+                },
+                {
+                  'name': 'template',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'scanning',
+            },
+          ],
+          'transitions': [
+            {
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.headId',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      '@payload.data',
+                    ],
+                    'id',
+                  ],
+                ],
+                [
+                  'emit',
+                  'ReminderDue',
+                  {
+                    'severity': '@config.severity',
+                    'template': '@config.template',
+                  },
+                ],
+                [
+                  'persist',
+                  'update',
+                  '@config.targetEntity',
+                  {
+                    'id': '@entity.headId',
+                    'remindedAt': '@now',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ScanFailed',
+                      'success': 'ReminderStepped',
+                    },
+                  },
+                ],
+              ],
+              'event': 'ScanRecordsLoaded',
+              'from': 'idle',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  '>',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                  0,
+                ],
+              ],
+              'to': 'scanning',
+            },
+            {
+              'event': 'ScanRecordsLoaded',
+              'from': 'idle',
+              'guard': [
+                '=',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
+              'to': 'idle',
+            },
+            {
+              'event': 'ScanFailed',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  '@config.targetEntity',
+                  {
+                    'emit': {
+                      'failure': 'ScanFailed',
+                      'success': 'ScanRecordsLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          'remindedAt',
+                        ],
+                        0,
+                      ],
+                      [
+                        '>',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.dateField',
+                        ],
+                        '@now',
+                      ],
+                      [
+                        '<',
+                        [
+                          '-',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@config.dateField',
+                          ],
+                          '@now',
+                        ],
+                        [
+                          '*',
+                          '@config.offsetHours',
+                          3600000,
+                        ],
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'ReminderStepped',
+              'from': 'scanning',
+              'to': 'scanning',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.headId',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      '@payload.data',
+                    ],
+                    'id',
+                  ],
+                ],
+                [
+                  'emit',
+                  'ReminderDue',
+                  {
+                    'severity': '@config.severity',
+                    'template': '@config.template',
+                  },
+                ],
+                [
+                  'persist',
+                  'update',
+                  '@config.targetEntity',
+                  {
+                    'id': '@entity.headId',
+                    'remindedAt': '@now',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ScanFailed',
+                      'success': 'ReminderStepped',
+                    },
+                  },
+                ],
+              ],
+              'event': 'ScanRecordsLoaded',
+              'from': 'scanning',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
+              'to': 'scanning',
+            },
+            {
+              'event': 'ScanRecordsLoaded',
+              'from': 'scanning',
+              'guard': [
+                '=',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
+              'to': 'idle',
+            },
+            {
+              'event': 'ScanFailed',
+              'from': 'scanning',
+              'to': 'idle',
+            },
+          ],
+        },
+        'ticks': [
+          {
+            'effects': [
+              [
+                'fetch',
+                '@config.targetEntity',
+                {
+                  'emit': {
+                    'failure': 'ScanFailed',
+                    'success': 'ScanRecordsLoaded',
+                  },
+                  'filter': [
+                    'and',
+                    [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'remindedAt',
+                      ],
+                      0,
+                    ],
+                    [
+                      '>',
+                      [
+                        'object/get',
+                        '@entity',
+                        '@config.dateField',
+                      ],
+                      '@now',
+                    ],
+                    [
+                      '<',
+                      [
+                        '-',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.dateField',
+                        ],
+                        '@now',
+                      ],
+                      [
+                        '*',
+                        '@config.offsetHours',
+                        3600000,
+                      ],
+                    ],
+                  ],
+                },
+              ],
+            ],
+            'interval': '*/15 * * * *',
+            'name': 'scanCycle',
+          },
+        ],
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'ReminderSchedulerPage',
+        'path': '/reminders/scheduler',
+        'traits': [
+          {
+            'ref': 'ReminderScheduler',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdReminderSchedulerReminderSchedulerOrbital. */
+export const StdReminderSchedulerReminderSchedulerOrbitalManifest = {
+  organism: 'std-reminder-scheduler',
+  orbitalName: 'ReminderSchedulerOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'ReminderScheduler',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdReminderSchedulerReminderSchedulerOrbitalParams keys. */
+export function isStdReminderSchedulerReminderSchedulerOrbitalParams(p: object): p is StdReminderSchedulerReminderSchedulerOrbitalParams {
+  type _OverrideRecord = NonNullable<StdReminderSchedulerReminderSchedulerOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdReminderSchedulerReminderSchedulerOrbitalManifest.traitNames,
+      ...StdReminderSchedulerReminderSchedulerOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

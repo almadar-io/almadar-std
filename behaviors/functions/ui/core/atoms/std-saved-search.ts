@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -183,4 +183,1060 @@ export function stdSavedSearch(params: StdSavedSearchParams): OrbitalDefinition 
       stdSavedSearchPage(params),
     ],
   });
+}
+
+type _StdSavedSearchEntityName = 'SavedSearch';
+type _StdSavedSearchListenTraitName = 'SavedSearchManage';
+
+/**
+ * Tunable params for the SavedSearchOrbital orbital.
+ *
+ * Canonical entity: SavedSearch — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdSavedSearchSavedSearchOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SavedSearchManage',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait SavedSearchOrbital's `uses[]` exports. */
+type _StdSavedSearchSavedSearchOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the SavedSearchOrbital orbital with consumer params. */
+export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSearchOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'savedsearches');
+  const built = makeOrbitalWithUses({
+    name: 'SavedSearchOrbital',
+    uses: [],
+    entity: {
+      name: 'SavedSearch',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'A user-defined label for the saved search.',
+            'name': 'name',
+            'required': true,
+            'synonyms': 'title, label, search name',
+            'type': 'string',
+          },
+          {
+            'description': 'The text of the search query.',
+            'name': 'query',
+            'synonyms': 'search, expression, criteria',
+            'type': 'string',
+          },
+          {
+            'description': 'Criteria used to define the search.',
+            'name': 'filters',
+            'synonyms': 'criteria, conditions, constraints',
+            'type': 'object',
+          },
+          {
+            'default': false,
+            'description': 'Indicates whether alerts are enabled for this saved search.',
+            'name': 'alertEnabled',
+            'synonyms': 'enabled, active, notification status',
+            'type': 'boolean',
+          },
+          {
+            'default': 'daily',
+            'description': 'How often alerts are triggered.',
+            'name': 'alertFrequency',
+            'synonyms': 'frequency, interval, recurrence',
+            'type': 'string',
+            'values': [
+              'instant',
+              'daily',
+              'weekly',
+            ],
+          },
+          {
+            'description': 'Identifier of the user who created the saved search.',
+            'name': 'userId',
+            'synonyms': 'creator, owner, user_id',
+            'type': 'string',
+          },
+          {
+            'description': 'Timestamp of the last notification sent.',
+            'name': 'lastNotifiedAt',
+            'synonyms': 'last_notification, notified_at, last_alert',
+            'type': 'datetime',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'title': {
+            'default': 'Saved Searches',
+            'description': 'Heading shown above the saved-search list',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates the alert subscription status has been changed.',
+            'event': 'TOGGLE_ALERT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'enabled',
+                'required': true,
+                'type': 'boolean',
+              },
+            ],
+            'synonyms': 'subscribe, unsubscribe, notify, alert-state',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a saved search has been removed.',
+            'event': 'DELETE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'remove, discard, clear',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a saved search is being modified.',
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'modify, update, change',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a saved search has been renamed.',
+            'event': 'RENAME',
+            'payloadSchema': [
+              {
+                'name': 'value',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'update, modify, change name',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a change in the alert frequency setting.',
+            'event': 'CHANGE_FREQUENCY',
+            'payloadSchema': [
+              {
+                'name': 'value',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'update, modify, adjust, refresh',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a saved search has been persisted.',
+            'event': 'SAVE',
+            'synonyms': 'persist, store, update',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Aborts the current operation.',
+            'event': 'CANCEL',
+            'synonyms': 'abort, dismiss, undo',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals that a saved search has been successfully retrieved.',
+            'event': 'SavedSearchLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[SavedSearch]',
+              },
+            ],
+            'synonyms': 'loaded, retrieved, fetched',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load saved search data.',
+            'event': 'SavedSearchLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, load error',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates a saved search has been modified and persisted.',
+            'event': 'SavedSearchUpdated',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'query',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'filters',
+                    'type': 'object',
+                  },
+                  {
+                    'name': 'alertEnabled',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'alertFrequency',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'userId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'lastNotifiedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'modified, changed, updated, persisted',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a saved search has been removed.',
+            'event': 'SavedSearchDeleted',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'removed, purged, discarded',
+            'tier': 'presentation',
+          },
+        ],
+        'linkedEntity': 'SavedSearch',
+        'name': 'SavedSearchManage',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals that a saved search has been successfully retrieved.',
+              'key': 'SavedSearchLoaded',
+              'name': 'SavedSearch loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[SavedSearch]',
+                },
+              ],
+              'synonyms': 'loaded, retrieved, fetched',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load saved search data.',
+              'key': 'SavedSearchLoadFailed',
+              'name': 'SavedSearch load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, load error',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates the alert subscription status has been changed.',
+              'key': 'TOGGLE_ALERT',
+              'name': 'Toggle Alert',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'enabled',
+                  'required': true,
+                  'type': 'boolean',
+                },
+              ],
+              'synonyms': 'subscribe, unsubscribe, notify, alert-state',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals a saved search has been removed.',
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'remove, discard, clear',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a saved search is being modified.',
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'modify, update, change',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a saved search has been modified and persisted.',
+              'key': 'SavedSearchUpdated',
+              'name': 'SavedSearch updated',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'SavedSearch',
+                },
+              ],
+              'synonyms': 'modified, changed, updated, persisted',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a saved search has been removed.',
+              'key': 'SavedSearchDeleted',
+              'name': 'SavedSearch deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'removed, purged, discarded',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a saved search has been renamed.',
+              'key': 'RENAME',
+              'name': 'Rename',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'update, modify, change name',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a change in the alert frequency setting.',
+              'key': 'CHANGE_FREQUENCY',
+              'name': 'Change Frequency',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'update, modify, adjust, refresh',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates a saved search has been persisted.',
+              'key': 'SAVE',
+              'name': 'Save',
+              'synonyms': 'persist, store, update',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Aborts the current operation.',
+              'key': 'CANCEL',
+              'name': 'Cancel',
+              'synonyms': 'abort, dismiss, undo',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'editing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading saved searches…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'bookmark',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cols': 1,
+                        'entity': '@payload.data',
+                        'fields': [
+                          {
+                            'label': 'Name',
+                            'name': 'name',
+                            'variant': 'h4',
+                          },
+                          {
+                            'label': 'Query',
+                            'name': 'query',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Frequency',
+                            'name': 'alertFrequency',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Alerts',
+                            'name': 'alertEnabled',
+                            'variant': 'badge',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'itemActions': [
+                          {
+                            'event': 'TOGGLE_ALERT',
+                            'icon': 'bell',
+                            'label': 'Toggle alert',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'event': 'EDIT',
+                            'icon': 'pencil',
+                            'label': 'Edit',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'event': 'DELETE',
+                            'icon': 'trash-2',
+                            'label': 'Delete',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'look': '@config.tableLook',
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SavedSearchLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'SavedSearchLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading saved searches…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'set',
+                  '@entity.alertEnabled',
+                  '@payload.enabled',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchUpdated',
+                    },
+                  },
+                ],
+              ],
+              'event': 'TOGGLE_ALERT',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'persist',
+                  'delete',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchDeleted',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DELETE',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'pencil',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Edit saved search',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'action': 'RENAME',
+                        'placeholder': 'Name',
+                        'type': 'input',
+                        'value': '@entity.name',
+                      },
+                      {
+                        'action': 'CHANGE_FREQUENCY',
+                        'options': [
+                          {
+                            'label': 'Instant',
+                            'value': 'instant',
+                          },
+                          {
+                            'label': 'Daily',
+                            'value': 'daily',
+                          },
+                          {
+                            'label': 'Weekly',
+                            'value': 'weekly',
+                          },
+                        ],
+                        'placeholder': 'Alert frequency',
+                        'type': 'select',
+                        'value': '@entity.alertFrequency',
+                      },
+                      {
+                        'checked': '@entity.alertEnabled',
+                        'label': 'Alerts enabled',
+                        'type': 'switch',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'SAVE',
+                            'icon': 'check',
+                            'label': 'Save',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                          {
+                            'action': 'CANCEL',
+                            'icon': 'x',
+                            'label': 'Cancel',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'EDIT',
+              'from': 'browsing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'SavedSearchUpdated',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'SavedSearchDeleted',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'SavedSearchLoadFailed',
+              'from': 'browsing',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.name',
+                  '@payload.value',
+                ],
+              ],
+              'event': 'RENAME',
+              'from': 'editing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.alertFrequency',
+                  '@payload.value',
+                ],
+              ],
+              'event': 'CHANGE_FREQUENCY',
+              'from': 'editing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchUpdated',
+                    },
+                  },
+                ],
+              ],
+              'event': 'SAVE',
+              'from': 'editing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'CANCEL',
+              'from': 'editing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'SavedSearchManagePage',
+        'path': '/savedsearches',
+        'traits': [
+          {
+            'ref': 'SavedSearchManage',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdSavedSearchSavedSearchOrbital. */
+export const StdSavedSearchSavedSearchOrbitalManifest = {
+  organism: 'std-saved-search',
+  orbitalName: 'SavedSearchOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'SavedSearchManage',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdSavedSearchSavedSearchOrbitalParams keys. */
+export function isStdSavedSearchSavedSearchOrbitalParams(p: object): p is StdSavedSearchSavedSearchOrbitalParams {
+  type _OverrideRecord = NonNullable<StdSavedSearchSavedSearchOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdSavedSearchSavedSearchOrbitalManifest.traitNames,
+      ...StdSavedSearchSavedSearchOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

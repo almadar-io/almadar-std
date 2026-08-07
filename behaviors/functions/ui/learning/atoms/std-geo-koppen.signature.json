@@ -1,0 +1,523 @@
+[
+  {
+    "organism": "std-geo-koppen",
+    "orbital": "GeoKoppenOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-geo-koppen.ts",
+    "entities": [
+      {
+        "name": "GeoKoppenScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "tempSummer",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tempWinter",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "precip",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "coldestMonthTemp",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "warmestMonthTemp",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "annualPrecipTotal",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "climateClassCode",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "climateClassName",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "climateClassReadout",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "climateCurves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "climateShapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GeoKoppenSim",
+        "emittedEvents": [
+          "KOPPEN_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "KOPPEN_UPDATED",
+            "direction": "emit",
+            "description": "The Köppen classification state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "climate update, Köppen classification, climograph, coldest month, warmest month, annual precipitation",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_TEMP_SUMMER",
+            "direction": "listen",
+            "description": "Learner dragged the summer-high temperature dial.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_TEMP_WINTER",
+            "direction": "listen",
+            "description": "Learner dragged the winter-low temperature dial.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_PRECIP",
+            "direction": "listen",
+            "description": "Learner dragged the average-monthly-precipitation dial.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "axisColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Axis Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "climateClasses",
+            "type": "[GeoKoppenClimateClass]",
+            "default": [
+              {
+                "code": "B",
+                "comparator": "lt",
+                "metric": "annualPrecip",
+                "name": "Arid",
+                "ruleText": "annual precipitation < 500 mm",
+                "threshold": 500
+              },
+              {
+                "code": "A",
+                "comparator": "gte",
+                "metric": "coldestMonthTemp",
+                "name": "Tropical",
+                "ruleText": "coldest month >= 18°C",
+                "threshold": 18
+              },
+              {
+                "code": "E",
+                "comparator": "lt",
+                "metric": "warmestMonthTemp",
+                "name": "Polar",
+                "ruleText": "warmest month < 10°C",
+                "threshold": 10
+              },
+              {
+                "code": "D",
+                "comparator": "lt",
+                "metric": "coldestMonthTemp",
+                "name": "Continental",
+                "ruleText": "coldest month < -3°C",
+                "threshold": -3
+              },
+              {
+                "code": "C",
+                "comparator": "gte",
+                "metric": "coldestMonthTemp",
+                "name": "Temperate",
+                "ruleText": "coldest month >= -3°C (mild-winter, sufficient precipitation, warm-enough summer)",
+                "threshold": -3
+              }
+            ],
+            "label": "Köppen Classification Rules",
+            "description": "Ordered simplified-Köppen decision roster; each rule declares which computed metric (coldest/warmest month temperature or annual precipitation), comparator, and threshold it tests, plus the rule text shown in the readout. The first rule whose test passes wins.",
+            "synonyms": "Köppen, Koppen, climate classification, tropical, arid, temperate, continental, polar, climate class, climate zone",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": true,
+                  "type": "string"
+                },
+                "comparator": {
+                  "name": "comparator",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "gte",
+                    "lt"
+                  ]
+                },
+                "metric": {
+                  "name": "metric",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "coldestMonthTemp",
+                    "warmestMonthTemp",
+                    "annualPrecip"
+                  ]
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "ruleText": {
+                  "name": "ruleText",
+                  "required": true,
+                  "type": "string"
+                },
+                "threshold": {
+                  "name": "threshold",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 460,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "months",
+            "type": "[GeoKoppenClimateMonth]",
+            "default": [
+              {
+                "id": "jan",
+                "label": "Jan",
+                "order": 0,
+                "precipWeight": 0.6,
+                "tempWeight": 0.05
+              },
+              {
+                "id": "feb",
+                "label": "Feb",
+                "order": 1,
+                "precipWeight": 0.6,
+                "tempWeight": 0.05
+              },
+              {
+                "id": "mar",
+                "label": "Mar",
+                "order": 2,
+                "precipWeight": 0.7,
+                "tempWeight": 0.25
+              },
+              {
+                "id": "apr",
+                "label": "Apr",
+                "order": 3,
+                "precipWeight": 0.8,
+                "tempWeight": 0.45
+              },
+              {
+                "id": "may",
+                "label": "May",
+                "order": 4,
+                "precipWeight": 1,
+                "tempWeight": 0.7
+              },
+              {
+                "id": "jun",
+                "label": "Jun",
+                "order": 5,
+                "precipWeight": 1.3,
+                "tempWeight": 0.9
+              },
+              {
+                "id": "jul",
+                "label": "Jul",
+                "order": 6,
+                "precipWeight": 1.5,
+                "tempWeight": 1
+              },
+              {
+                "id": "aug",
+                "label": "Aug",
+                "order": 7,
+                "precipWeight": 1.4,
+                "tempWeight": 0.95
+              },
+              {
+                "id": "sep",
+                "label": "Sep",
+                "order": 8,
+                "precipWeight": 1.1,
+                "tempWeight": 0.75
+              },
+              {
+                "id": "oct",
+                "label": "Oct",
+                "order": 9,
+                "precipWeight": 0.8,
+                "tempWeight": 0.5
+              },
+              {
+                "id": "nov",
+                "label": "Nov",
+                "order": 10,
+                "precipWeight": 0.6,
+                "tempWeight": 0.25
+              },
+              {
+                "id": "dec",
+                "label": "Dec",
+                "order": 11,
+                "precipWeight": 0.6,
+                "tempWeight": 0.1
+              }
+            ],
+            "label": "Climate Months",
+            "description": "Ordered 12-month roster; each month declares a 0-1 temperature interpolation weight between the winter-low and summer-high dials, and a precipitation seasonality multiplier applied to the average-monthly-precipitation dial.",
+            "synonyms": "climograph, climatograph, month, seasonality, temperature weight, precipitation seasonality",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "order": {
+                  "name": "order",
+                  "required": true,
+                  "type": "number"
+                },
+                "precipWeight": {
+                  "name": "precipWeight",
+                  "required": true,
+                  "type": "number"
+                },
+                "tempWeight": {
+                  "name": "tempWeight",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "precip",
+            "type": "number",
+            "default": 80,
+            "label": "Starting Average Monthly Precipitation",
+            "description": "Starting average-monthly-precipitation dial, in mm, scaled per month by the months roster's precipitation seasonality.",
+            "synonyms": "precipitation, rainfall, monthly precipitation, annual precipitation",
+            "tier": "domain"
+          },
+          {
+            "key": "precipAxisMax",
+            "type": "number",
+            "default": 400,
+            "label": "Precipitation Axis Max",
+            "description": "Upper bound of the precipitation dial range and the climograph's precipitation-bar scale, in mm.",
+            "tier": "presentation"
+          },
+          {
+            "key": "precipColor",
+            "type": "string",
+            "default": "#38bdf8",
+            "label": "Precipitation Bar Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "tempAxisMax",
+            "type": "number",
+            "default": 40,
+            "label": "Temperature Axis Max",
+            "description": "Upper bound of the temperature dial range and climograph vertical axis, in °C.",
+            "tier": "presentation"
+          },
+          {
+            "key": "tempAxisMin",
+            "type": "number",
+            "default": -30,
+            "label": "Temperature Axis Min",
+            "description": "Lower bound of the temperature dial range and climograph vertical axis, in °C.",
+            "tier": "presentation"
+          },
+          {
+            "key": "tempCurveColor",
+            "type": "string",
+            "default": "#f97316",
+            "label": "Temperature Curve Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "tempSummer",
+            "type": "number",
+            "default": 24,
+            "label": "Starting Summer High",
+            "description": "Starting summer-high temperature dial, in °C.",
+            "synonyms": "summer temperature, summer high, warmest month temperature",
+            "tier": "domain"
+          },
+          {
+            "key": "tempWinter",
+            "type": "number",
+            "default": 4,
+            "label": "Starting Winter Low",
+            "description": "Starting winter-low temperature dial, in °C.",
+            "synonyms": "winter temperature, winter low, coldest month temperature",
+            "tier": "domain"
+          },
+          {
+            "key": "textColor",
+            "type": "string",
+            "default": "#1e293b",
+            "label": "Text Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Geography Lab",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GeoKoppenScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "SET_PRECIP",
+          "SET_TEMP_SUMMER",
+          "SET_TEMP_WINTER"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "annualPrecipTotal",
+            "climateClassCode",
+            "climateClassName",
+            "climateClassReadout",
+            "climateCurves",
+            "climateShapes",
+            "coldestMonthTemp",
+            "precip",
+            "tempSummer",
+            "tempWinter",
+            "title",
+            "warmestMonthTemp"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GeoKoppenPage",
+        "defaultPath": "/geo-koppen",
+        "primaryEntity": "GeoKoppenScene"
+      }
+    ],
+    "emittedEvents": [
+      "KOPPEN_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

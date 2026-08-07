@@ -1,0 +1,431 @@
+app std-civics-checks "1.0.0"
+"Checks-and-balances matrix — the learner names which branch of government can check a given governmental action, drawing the check arrow actor -> checker on a three-branch diagram, on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital CivicsChecksOrbital {
+  type CivicsChecksShapePoint = {
+    x : number!
+    y : number!
+  }
+  type CivicsChecksShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [CivicsChecksShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type CivicsChecksBranch = {
+    key : "legislative" | "executive" | "judicial"!
+    label : string
+    color : string
+  }
+  type CivicsChecksCheck = {
+    by : "legislative" | "executive" | "judicial"!
+    label : string!
+  }
+  type CivicsChecksAction = {
+    actor : "legislative" | "executive" | "judicial"!
+    action : string!
+    checks : [CivicsChecksCheck]!
+    hint : string!
+  }
+
+  entity CivicsChecksScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    actionIndex : number
+    actorBranch : string
+    actionText : string
+    hintText : string
+    resultState : string
+    feedback : string
+    checkedBranch : string
+    checkLabel : string
+    score : number
+    attempts : number
+    renderChildren : [json]
+  }
+
+  trait CivicsChecksSim -> @rebindable CivicsChecksScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.actionIndex 0)
+        (set @entity.resultState "")
+        (set @entity.checkedBranch "")
+        (set @entity.checkLabel "")
+        (set @entity.score 0)
+        (set @entity.attempts 0)
+        (set @entity.feedback "")
+        (let (
+            (act (array/nth @config.actions @entity.actionIndex))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (checksShapes @branchShapes)
+            (checksChildren [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get @act action) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @checksShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: "Which branch can check this action?" },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "legislative" }, label: "Legislative", variant: (if (== @entity.checkedBranch "legislative") "success" "secondary"), disabled: (if (== @entity.resultState "") false true) },
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "executive" }, label: "Executive", variant: (if (== @entity.checkedBranch "executive") "success" "secondary"), disabled: (if (== @entity.resultState "") false true) },
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "judicial" }, label: "Judicial", variant: (if (== @entity.checkedBranch "judicial") "success" "secondary"), disabled: (if (== @entity.resultState "") false true) }
+                  ] },
+                { type: typography, variant: body, content: "" },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (str/concat "Score: " @entity.score " / " @entity.attempts), variant: info },
+                    { type: button, action: NEXT_ACTION, label: "Next Action", variant: primary, disabled: (if (and (!= @entity.resultState "") (< @entity.actionIndex (- (array/len @config.actions) 1))) false true) }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.actorBranch (object/get @act actor))
+            (set @entity.actionText (object/get @act action))
+            (set @entity.hintText (object/get @act hint))
+            (set @entity.renderChildren @checksChildren)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.actionIndex 0)
+        (set @entity.resultState "")
+        (set @entity.checkedBranch "")
+        (set @entity.checkLabel "")
+        (set @entity.score 0)
+        (set @entity.attempts 0)
+        (set @entity.feedback "")
+        (let (
+            (act (array/nth @config.actions @entity.actionIndex))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (checksShapes @branchShapes)
+            (checksChildren [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get @act action) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @checksShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: "Which branch can check this action?" },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "legislative" }, label: "Legislative", variant: (if (== @entity.checkedBranch "legislative") "success" "secondary"), disabled: (if (== @entity.resultState "") false true) },
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "executive" }, label: "Executive", variant: (if (== @entity.checkedBranch "executive") "success" "secondary"), disabled: (if (== @entity.resultState "") false true) },
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "judicial" }, label: "Judicial", variant: (if (== @entity.checkedBranch "judicial") "success" "secondary"), disabled: (if (== @entity.resultState "") false true) }
+                  ] },
+                { type: typography, variant: body, content: "" },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (str/concat "Score: " @entity.score " / " @entity.attempts), variant: info },
+                    { type: button, action: NEXT_ACTION, label: "Next Action", variant: primary, disabled: (if (and (!= @entity.resultState "") (< @entity.actionIndex (- (array/len @config.actions) 1))) false true) }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.actorBranch (object/get @act actor))
+            (set @entity.actionText (object/get @act action))
+            (set @entity.hintText (object/get @act hint))
+            (set @entity.renderChildren @checksChildren)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      CHECK_BY -> idle when (== @entity.active true)
+        (let (
+            (act (array/nth @config.actions @entity.actionIndex))
+            (checks (object/get @act checks))
+            (match (array/first (array/filter @checks (fn c (== (object/get @c by) ?branch)))))
+            (isCorrect (!= @match null))
+            (matchLabel (if @isCorrect (object/get @match label) ""))
+            (feedback (if @isCorrect (str/concat "Correct — " @matchLabel) (object/get @act hint)))
+            (resultState (if @isCorrect "correct" "incorrect"))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (actorCx (if (== @entity.actorBranch "legislative") @legCx (if (== @entity.actorBranch "executive") @execCx @judCx)))
+            (checkerCx (if (== ?branch "legislative") @legCx (if (== ?branch "executive") @execCx @judCx)))
+            (arrowY (+ @boxY (* @boxH 0.85)))
+            (arrowShapes (if @isCorrect [
+                { type: arrow, id: "check-arrow", x1: @actorCx, y1: @arrowY, x2: @checkerCx, y2: @arrowY, color: @config.arrowColor, lineWidth: 3 },
+                { type: text, id: "check-arrow-label", x: (/ (+ @actorCx @checkerCx) 2), y: (+ @arrowY 20), text: @matchLabel, fontSize: 12, align: "center", color: @config.arrowColor }
+              ] []))
+            (checksShapes (array/concat @branchShapes @arrowShapes))
+            (children [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.actionText },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @checksShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: "Which branch can check this action?" },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "legislative" }, label: "Legislative", variant: (if (and @isCorrect (== ?branch "legislative")) "success" "secondary"), disabled: true },
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "executive" }, label: "Executive", variant: (if (and @isCorrect (== ?branch "executive")) "success" "secondary"), disabled: true },
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "judicial" }, label: "Judicial", variant: (if (and @isCorrect (== ?branch "judicial")) "success" "secondary"), disabled: true }
+                  ] },
+                { type: typography, variant: body, content: @feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (str/concat "Score: " (if @isCorrect (+ @entity.score 1) @entity.score) " / " (+ @entity.attempts 1)), variant: info },
+                    { type: button, action: NEXT_ACTION, label: "Next Action", variant: primary, disabled: (if (< @entity.actionIndex (- (array/len @config.actions) 1)) false true) }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.resultState @resultState)
+            (set @entity.feedback @feedback)
+            (set @entity.checkedBranch (if @isCorrect ?branch ""))
+            (set @entity.checkLabel @matchLabel)
+            (set @entity.score (if @isCorrect (+ @entity.score 1) @entity.score))
+            (set @entity.attempts (+ @entity.attempts 1))
+            (set @entity.renderChildren @children)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit CIVICS_CHECK_UPDATED { resultState: @entity.resultState, score: @entity.score, attempts: @entity.attempts, checkedBranch: @entity.checkedBranch })
+
+      NEXT_ACTION -> idle when (== @entity.active true)
+        (let (
+            (nextIndex (math/min (+ @entity.actionIndex 1) (- (array/len @config.actions) 1)))
+            (act (array/nth @config.actions @nextIndex))
+            (legB (array/nth @config.branches 0))
+            (execB (array/nth @config.branches 1))
+            (judB (array/nth @config.branches 2))
+            (width @config.width)
+            (height @config.height)
+            (boxW (* @width 0.26))
+            (boxH (* @height 0.2))
+            (boxY (* @height 0.08))
+            (legCx (* @width 0.17))
+            (execCx (* @width 0.5))
+            (judCx (* @width 0.83))
+            (legX (- @legCx (/ @boxW 2)))
+            (execX (- @execCx (/ @boxW 2)))
+            (judX (- @judCx (/ @boxW 2)))
+            (branchShapes [
+                { type: rect, id: "leg-box", x: @legX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @legB color), fill: (object/get @legB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "leg-label", x: @legCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @legB label), fontSize: 14, align: "center", color: (object/get @legB color) },
+                { type: rect, id: "exec-box", x: @execX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @execB color), fill: (object/get @execB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "exec-label", x: @execCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @execB label), fontSize: 14, align: "center", color: (object/get @execB color) },
+                { type: rect, id: "jud-box", x: @judX, y: @boxY, width: @boxW, height: @boxH, color: (object/get @judB color), fill: (object/get @judB color), opacity: 0.18, lineWidth: 2 },
+                { type: text, id: "jud-label", x: @judCx, y: (+ @boxY (/ @boxH 2)), text: (object/get @judB label), fontSize: 14, align: "center", color: (object/get @judB color) }
+              ])
+            (children [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get @act action) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @branchShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: "Which branch can check this action?" },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "legislative" }, label: "Legislative", variant: secondary, disabled: false },
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "executive" }, label: "Executive", variant: secondary, disabled: false },
+                    { type: button, action: CHECK_BY, actionPayload: { branch: "judicial" }, label: "Judicial", variant: secondary, disabled: false }
+                  ] },
+                { type: typography, variant: body, content: "" },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (str/concat "Score: " @entity.score " / " @entity.attempts), variant: info },
+                    { type: button, action: NEXT_ACTION, label: "Next Action", variant: primary, disabled: (if (< @nextIndex (- (array/len @config.actions) 1)) false true) }
+                  ] }
+              ])
+          )
+          (do
+            (set @entity.actionIndex @nextIndex)
+            (set @entity.actorBranch (object/get @act actor))
+            (set @entity.actionText (object/get @act action))
+            (set @entity.hintText (object/get @act hint))
+            (set @entity.resultState "")
+            (set @entity.feedback "")
+            (set @entity.checkedBranch "")
+            (set @entity.checkLabel "")
+            (set @entity.renderChildren @children)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit CIVICS_CHECK_UPDATED { resultState: @entity.resultState, score: @entity.score, attempts: @entity.attempts, checkedBranch: @entity.checkedBranch })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      CHECK_BY {
+        branch : string
+      }
+        @description "Learner picked which branch (legislative, executive, or judicial) can check the currently displayed action."
+        @tier "domain"
+      NEXT_ACTION {
+      }
+        @description "Learner advances to the next action in the roster."
+        @tier "domain"
+    }
+
+    emits {
+      CIVICS_CHECK_UPDATED -> external {
+        resultState : string
+        score : number
+        attempts : number
+        checkedBranch : string
+      }
+        @description "The quiz state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "check result, score update, verdict, feedback"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Civics Lab"
+        @label "Title"
+        @description "Title shown above the lab."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 460
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      branches : [CivicsChecksBranch] = [
+        { key: legislative, label: "Legislative — Congress", color: "#2563eb" },
+        { key: executive, label: "Executive — President", color: "#dc2626" },
+        { key: judicial, label: "Judicial — Courts", color: "#7c3aed" }
+      ]
+        @label "Branches"
+        @description "The three branches of government drawn as labelled boxes, in fixed left-to-right order: Legislative (index 0), Executive (index 1), Judicial (index 2). Label and color are re-themeable; the key and order are fixed."
+        @tier "domain"
+      arrowColor : string = "#166534"
+        @label "Check Arrow Color"
+        @description "Color of the check arrow drawn on a correct answer."
+        @tier "presentation"
+      actions : [CivicsChecksAction] = [
+        { actor: legislative, action: "Congress passes a law.", checks: [ { by: judicial, label: "Judicial review — Marbury v. Madison" }, { by: executive, label: "Presidential veto" } ], hint: "Two branches can check a new law: the President can refuse to sign it, and the courts can later strike it down as unconstitutional." },
+        { actor: executive, action: "The President vetoes a bill.", checks: [ { by: legislative, label: "Congress overrides the veto with a two-thirds vote" } ], hint: "Only Congress can override a presidential veto, and only with a two-thirds supermajority in both chambers." },
+        { actor: judicial, action: "The Supreme Court strikes down a law as unconstitutional.", checks: [ { by: legislative, label: "Congress proposes a constitutional amendment" }, { by: executive, label: "The President appoints new justices over time (with Senate confirmation)" } ], hint: "A constitutional ruling is checked over time by amending the Constitution or by future appointments — not by ordinary legislation." },
+        { actor: executive, action: "The President appoints a federal judge.", checks: [ { by: legislative, label: "Senate confirmation (advice and consent)" } ], hint: "The Senate must confirm judicial nominees — the President cannot seat a federal judge alone." },
+        { actor: legislative, action: "Congress declares war and funds the military.", checks: [ { by: executive, label: "The President, as Commander-in-Chief, directs how forces are used" } ], hint: "Congress controls the power to declare war and fund the military, but command of the forces belongs to the President." },
+        { actor: executive, action: "The President negotiates a treaty.", checks: [ { by: legislative, label: "Senate ratification (two-thirds vote)" } ], hint: "A treaty only binds the nation once two-thirds of the Senate ratifies it — the President cannot commit the nation alone." }
+      ]
+        @label "Actions & Checks"
+        @description "Roster of governmental actions. Each action names the acting branch (actor) and the text shown; checks lists every branch that can legitimately check that action (any one is accepted); hint is the feedback text shown on an incorrect guess."
+        @synonyms "checks and balances matrix, power and counter-power, constitutional check, judicial review, veto override, advice and consent, treaty ratification"
+        @tier "domain"
+    }
+  }
+
+  page "/civics-checks" as CivicsChecksPage -> CivicsChecksSim
+}

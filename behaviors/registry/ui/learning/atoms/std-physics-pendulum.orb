@@ -1,5 +1,5 @@
 {
-  "description": "Pendulum engine — swings a bob about a fixed pivot via rigid-length projection; renders physics-canvas via uses.",
+  "description": "Pendulum engine — swings a bob about a fixed pivot via rigid-length projection, with Start/Pause/Reset controls; renders physics-canvas via uses. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
   "ledger": {
     "entries": {
       "ent_01KXG052EME7855KKMFJ39YG6P": {
@@ -23,6 +23,42 @@
         "bakedName": "BODIES_UPDATED",
         "curName": "BODIES_UPDATED",
         "id": "evt_01KXG052ETYYPJWWNEYR5FHXCJ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG052EMCCGT79HNQNBCXTME",
+        "renames": []
+      },
+      "evt_01KZEKWF9BC3MMKKBXEMEJEGNN": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEKWF9BC3MMKKBXEMEJEGNN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG052EMCCGT79HNQNBCXTME",
+        "renames": []
+      },
+      "evt_01KZEKWF9CCK0WKC316Y9HY1CP": {
+        "bakedName": "PAUSE",
+        "curName": "PAUSE",
+        "id": "evt_01KZEKWF9CCK0WKC316Y9HY1CP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG052EMCCGT79HNQNBCXTME",
+        "renames": []
+      },
+      "evt_01KZEKWF9CGB5CPACD0QYV4HTN": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01KZEKWF9CGB5CPACD0QYV4HTN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG052EMCCGT79HNQNBCXTME",
+        "renames": []
+      },
+      "evt_01KZEKWF9CS56952AZEMHYWQJQ": {
+        "bakedName": "START",
+        "curName": "START",
+        "id": "evt_01KZEKWF9CS56952AZEMHYWQJQ",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG052EMCCGT79HNQNBCXTME",
@@ -63,6 +99,15 @@
           {
             "name": "id",
             "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
             "type": "string"
           },
           {
@@ -122,6 +167,30 @@
               "type": "object"
             },
             "name": "bodies",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "constraints",
             "type": "array"
           },
           {
@@ -308,6 +377,13 @@
               "tier": "domain",
               "type": "number"
             },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
             "pivotX": {
               "default": 300.0,
               "description": "X coordinate of the fixed pivot the bob swings about.",
@@ -335,6 +411,13 @@
               "label": "Show Velocity",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "title": {
+              "default": "Pendulum",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
             },
             "velocityScale": {
               "default": 5.0,
@@ -369,8 +452,11 @@
           ],
           "entityContract": {
             "provides": [
+              "active",
               "bodies",
-              "running"
+              "constraints",
+              "running",
+              "title"
             ],
             "requires": []
           },
@@ -389,6 +475,34 @@
                 "id": "evt_01KXG052EMEJFP75ADK9QQM2JS",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZEKWF9BC3MMKKBXEMEJEGNN",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01KZEKWF9CS56952AZEMHYWQJQ",
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "id": "evt_01KZEKWF9CCK0WKC316Y9HY1CP",
+                "key": "PAUSE",
+                "name": "Pause"
+              },
+              {
+                "id": "evt_01KZEKWF9CGB5CPACD0QYV4HTN",
+                "key": "RESET",
+                "name": "Reset"
               },
               {
                 "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
@@ -416,8 +530,23 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
                     "@entity.bodies",
                     "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.constraints",
+                    "@config.constraints"
                   ],
                   [
                     "set",
@@ -428,15 +557,58 @@
                     "render-ui",
                     "main",
                     {
-                      "backgroundColor": "@config.backgroundColor",
-                      "bodies": "@entity.bodies",
-                      "constraints": "@config.constraints",
-                      "height": "@config.height",
-                      "showForces": false,
-                      "showVelocity": "@config.showVelocity",
-                      "type": "physics-canvas",
-                      "velocityScale": "@config.velocityScale",
-                      "width": "@config.width"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "constraints": "@entity.constraints",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
                     }
                   ],
                   [
@@ -450,6 +622,368 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG052EMEJFP75ADK9QQM2JS",
                 "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.constraints",
+                    "@config.constraints"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "constraints": "@entity.constraints",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEKWF9BC3MMKKBXEMEJEGNN",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    true
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "constraints": "@entity.constraints",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "eventId": "evt_01KZEKWF9CS56952AZEMHYWQJQ",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "constraints": "@entity.constraints",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "PAUSE",
+                "eventId": "evt_01KZEKWF9CCK0WKC316Y9HY1CP",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "constraints": "@entity.constraints",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01KZEKWF9CGB5CPACD0QYV4HTN",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
                 "to": "idle"
               }
             ]
@@ -661,15 +1195,58 @@
                   "render-ui",
                   "main",
                   {
-                    "backgroundColor": "@config.backgroundColor",
-                    "bodies": "@entity.bodies",
-                    "constraints": "@config.constraints",
-                    "height": "@config.height",
-                    "showForces": false,
-                    "showVelocity": "@config.showVelocity",
-                    "type": "physics-canvas",
-                    "velocityScale": "@config.velocityScale",
-                    "width": "@config.width"
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "content": "@entity.title",
+                            "type": "typography",
+                            "variant": "h4"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START",
+                                "label": "Start",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PAUSE",
+                                "label": "Pause",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
+                              {
+                                "action": "RESET",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "backgroundColor": "@config.backgroundColor",
+                            "bodies": "@entity.bodies",
+                            "constraints": "@entity.constraints",
+                            "height": "@config.height",
+                            "showForces": false,
+                            "showVelocity": "@config.showVelocity",
+                            "type": "physics-canvas",
+                            "velocityScale": "@config.velocityScale",
+                            "width": "@config.width"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
+                      }
+                    ],
+                    "padding": "md",
+                    "type": "box"
                   }
                 ],
                 [

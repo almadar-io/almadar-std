@@ -1,10 +1,12 @@
 app std-prob-walk "1.0.0"
-"Random-walk engine — a cloud of walkers starts at the origin and random-steps each tick into a widening Gaussian on math-canvas."
+"Random-walk engine — a cloud of walkers starts at the origin and random-steps each tick into a widening Gaussian on math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 orbital WalkEngineOrbital {
   type WalkPoint = { x:number! y:number! label:string color:string radius:number }
 
   entity WalkState [runtime] {
     id : string!
+    active : boolean = false
+    title : string
     points : [WalkPoint]
     running : boolean = false
   }
@@ -13,14 +15,37 @@ orbital WalkEngineOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
         (set @entity.points @config.points)
         (set @entity.running @config.running)
         (render-ui main {
-          type: math-canvas
-          width: @config.width
-          height: @config.height
-          points: @entity.points
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, points: @entity.points }
+              ] }
+          ]
+        })
+        (emit POINTS_UPDATED { points: @entity.points })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.points @config.points)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, points: @entity.points }
+              ] }
+          ]
         })
         (emit POINTS_UPDATED { points: @entity.points })
     }
@@ -36,12 +61,24 @@ orbital WalkEngineOrbital {
             )
             (object/merge @p { x: @nx, y: @ny })))))
           (render-ui main {
-            type: math-canvas
-            width: @config.width
-            height: @config.height
-            points: @entity.points
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: math-canvas, width: @config.width, height: @config.height, points: @entity.points }
+                ] }
+            ]
           })
           (emit POINTS_UPDATED { points: @entity.points }))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
     }
 
     emits {
@@ -54,6 +91,14 @@ orbital WalkEngineOrbital {
     }
 
     config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Random Walk"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
       step : number = 0.35
         @label "Step"
         @description "Half-width of each per-tick random displacement in data units; larger diffuses faster."

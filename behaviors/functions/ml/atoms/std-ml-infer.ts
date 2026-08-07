@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -150,4 +150,765 @@ export function stdMlInfer(params: StdMlInferParams): OrbitalDefinition {
       stdMlInferPage(params),
     ],
   });
+}
+
+type _StdMlInferEntityName = 'Inference';
+type _StdMlInferListenTraitName = 'InferenceRun';
+
+/**
+ * Tunable params for the MlInferOrbital orbital.
+ *
+ * Canonical entity: Inference — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdMlInferMlInferOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'InferenceRun',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlInferOrbital's `uses[]` exports. */
+type _StdMlInferMlInferOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlInferOrbital orbital with consumer params. */
+export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'MlInferOrbital',
+    uses: [],
+    entity: {
+      name: 'Inference',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': {},
+            'name': 'input',
+            'type': 'object',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'number',
+            },
+            'name': 'output',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'name': 'confidence',
+            'type': 'number',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'object',
+            },
+            'name': 'violations',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'name': 'reason',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'name': 'request',
+            'type': 'object',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'inferring',
+              'resolved',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'confidenceFloor': {
+            'default': 0.7,
+            'description': 'Minimum service-reported confidence required to answer; below this the atom abstains with reason low confidence',
+            'label': 'Confidence floor',
+            'tier': 'policy',
+            'type': 'float',
+          },
+          'model': {
+            'default': '',
+            'description': 'hf:<id> for off-the-shelf weights, or a masar checkpoint id, forwarded to the ml service infer action',
+            'label': 'Model reference',
+            'tier': 'infra',
+            'type': 'string',
+          },
+          'outputContract': {
+            'default': {
+              'ranges': {},
+            },
+            'description': 'Declared shape and per-dimension ranges the model output must satisfy; a failing check abstains with reason contract violation. Omit shape to assert ranges only — an empty shape [] asserts a SCALAR output, it does not mean unconstrained',
+            'label': 'Output contract',
+            'properties': {
+              'ranges': {
+                'items': {
+                  'properties': {
+                    'max': {
+                      'name': 'max',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'min': {
+                      'name': 'min',
+                      'required': true,
+                      'type': 'number',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'ranges',
+                'required': false,
+                'type': 'object',
+              },
+              'shape': {
+                'items': {
+                  'type': 'number',
+                },
+                'name': 'shape',
+                'required': false,
+                'type': 'array',
+              },
+            },
+            'tier': 'domain',
+            'type': 'OutputContract',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Raw ml.infer service result, flattened onto the payload by the call-service effect executor',
+            'event': 'INFERRED_RAW',
+            'payloadSchema': [
+              {
+                'name': 'output',
+                'required': true,
+                'type': '[float]',
+              },
+              {
+                'name': 'confidence',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error',
+            'event': 'INFER_CALL_FAILED',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped',
+            'event': 'INFERRED',
+            'payloadSchema': [
+              {
+                'name': 'output',
+                'required': true,
+                'type': '[float]',
+              },
+              {
+                'name': 'confidence',
+                'required': true,
+                'type': 'float',
+              },
+              {
+                'name': 'violations',
+                'required': true,
+                'type': '[object]',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'event': 'INFER_ABSTAINED',
+            'payloadSchema': [
+              {
+                'name': 'reason',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'violations',
+                'required': true,
+                'type': '[object]',
+              },
+              {
+                'name': 'request',
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'linkedEntity': 'Inference',
+        'name': 'InferenceRun',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'INFER',
+              'name': 'Infer',
+              'payloadSchema': [
+                {
+                  'name': 'input',
+                  'required': true,
+                  'type': 'object',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'description': 'Raw ml.infer service result, flattened onto the payload by the call-service effect executor',
+              'key': 'INFERRED_RAW',
+              'name': 'Inferred Raw',
+              'payloadSchema': [
+                {
+                  'name': 'output',
+                  'required': true,
+                  'type': '[float]',
+                },
+                {
+                  'name': 'confidence',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'description': 'call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error',
+              'key': 'INFER_CALL_FAILED',
+              'name': 'Infer Call Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped',
+              'key': 'INFERRED',
+              'name': 'Inferred',
+              'payloadSchema': [
+                {
+                  'name': 'output',
+                  'required': true,
+                  'type': '[float]',
+                },
+                {
+                  'name': 'confidence',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'violations',
+                  'required': true,
+                  'type': '[object]',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'key': 'INFER_ABSTAINED',
+              'name': 'Infer Abstained',
+              'payloadSchema': [
+                {
+                  'name': 'reason',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'violations',
+                  'required': true,
+                  'type': '[object]',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'inferring',
+            },
+            {
+              'name': 'resolved',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.input',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.output',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.violations',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.input',
+                  '@payload.input',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  '@payload.request',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'inferring',
+                ],
+                [
+                  'call-service',
+                  'ml',
+                  'infer',
+                  {
+                    'input': '@entity.input',
+                    'model': '@config.model',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'INFER_CALL_FAILED',
+                      'success': 'INFERRED_RAW',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INFER',
+              'from': 'idle',
+              'to': 'inferring',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.output',
+                  '@payload.output',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  '@payload.confidence',
+                ],
+                [
+                  'let',
+                  [
+                    [
+                      'validation',
+                      [
+                        'contract/validate-output',
+                        '@entity.output',
+                        '@config.outputContract',
+                      ],
+                    ],
+                  ],
+                  [
+                    'if',
+                    [
+                      'object/get',
+                      '@validation',
+                      'valid',
+                    ],
+                    [
+                      'if',
+                      [
+                        '>=',
+                        '@entity.confidence',
+                        '@config.confidenceFloor',
+                      ],
+                      [
+                        'do',
+                        [
+                          'set',
+                          '@entity.output',
+                          [
+                            'contract/clamp-output',
+                            '@entity.output',
+                            '@config.outputContract',
+                          ],
+                        ],
+                        [
+                          'set',
+                          '@entity.violations',
+                          [],
+                        ],
+                        [
+                          'set',
+                          '@entity.reason',
+                          '',
+                        ],
+                        [
+                          'set',
+                          '@entity.status',
+                          'resolved',
+                        ],
+                        [
+                          'emit',
+                          'INFERRED',
+                          {
+                            'confidence': '@entity.confidence',
+                            'output': '@entity.output',
+                            'violations': '@entity.violations',
+                          },
+                        ],
+                      ],
+                      [
+                        'do',
+                        [
+                          'set',
+                          '@entity.violations',
+                          [],
+                        ],
+                        [
+                          'set',
+                          '@entity.reason',
+                          'low confidence',
+                        ],
+                        [
+                          'set',
+                          '@entity.status',
+                          'resolved',
+                        ],
+                        [
+                          'emit',
+                          'INFER_ABSTAINED',
+                          {
+                            'reason': 'low confidence',
+                            'request': '@entity.request',
+                            'violations': '@entity.violations',
+                          },
+                        ],
+                      ],
+                    ],
+                    [
+                      'do',
+                      [
+                        'set',
+                        '@entity.violations',
+                        [
+                          'contract/violations',
+                          '@entity.output',
+                          '@config.outputContract',
+                        ],
+                      ],
+                      [
+                        'set',
+                        '@entity.reason',
+                        'contract violation',
+                      ],
+                      [
+                        'set',
+                        '@entity.status',
+                        'resolved',
+                      ],
+                      [
+                        'emit',
+                        'INFER_ABSTAINED',
+                        {
+                          'reason': 'contract violation',
+                          'request': '@entity.request',
+                          'violations': '@entity.violations',
+                        },
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'INFERRED_RAW',
+              'from': 'inferring',
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.output',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.violations',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  'unavailable',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'resolved',
+                ],
+                [
+                  'emit',
+                  'INFER_ABSTAINED',
+                  {
+                    'reason': 'unavailable',
+                    'request': '@entity.request',
+                    'violations': '@entity.violations',
+                  },
+                ],
+              ],
+              'event': 'INFER_CALL_FAILED',
+              'from': 'inferring',
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'resolved',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'resolved',
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.input',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.output',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.violations',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'resolved',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlInferPage',
+        'path': '/ml-infer',
+        'traits': [
+          {
+            'ref': 'InferenceRun',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMlInferMlInferOrbital. */
+export const StdMlInferMlInferOrbitalManifest = {
+  organism: 'std-ml-infer',
+  orbitalName: 'MlInferOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'InferenceRun',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMlInferMlInferOrbitalParams keys. */
+export function isStdMlInferMlInferOrbitalParams(p: object): p is StdMlInferMlInferOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMlInferMlInferOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdMlInferMlInferOrbitalManifest.traitNames,
+      ...StdMlInferMlInferOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

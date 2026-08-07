@@ -1,5 +1,5 @@
 {
-  "description": "Wave engine — coupled oscillators; each interior point accelerates toward its neighbors' average height.",
+  "description": "Wave engine — coupled oscillators where each interior point accelerates toward its neighbors' average height, with Start/Pause/Reset controls. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
   "ledger": {
     "entries": {
       "ent_01KXG052N8NK9W2QWNHRNHZ466": {
@@ -23,6 +23,42 @@
         "bakedName": "BODIES_UPDATED",
         "curName": "BODIES_UPDATED",
         "id": "evt_01KXG052NBDQD6C181WWT2K8AK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG052N86BG5TJA20HFFR6WW",
+        "renames": []
+      },
+      "evt_01KZEKWFDD8F1KAZG0S1AXN4H7": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01KZEKWFDD8F1KAZG0S1AXN4H7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG052N86BG5TJA20HFFR6WW",
+        "renames": []
+      },
+      "evt_01KZEKWFDDAMEYGDPZQ04F2XJM": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEKWFDDAMEYGDPZQ04F2XJM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG052N86BG5TJA20HFFR6WW",
+        "renames": []
+      },
+      "evt_01KZEKWFDDC942QXX467CSY5RB": {
+        "bakedName": "START",
+        "curName": "START",
+        "id": "evt_01KZEKWFDDC942QXX467CSY5RB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG052N86BG5TJA20HFFR6WW",
+        "renames": []
+      },
+      "evt_01KZEKWFDDVBTKYHQ36C6H3GPP": {
+        "bakedName": "PAUSE",
+        "curName": "PAUSE",
+        "id": "evt_01KZEKWFDDVBTKYHQ36C6H3GPP",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG052N86BG5TJA20HFFR6WW",
@@ -63,6 +99,15 @@
           {
             "name": "id",
             "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
             "type": "string"
           },
           {
@@ -489,6 +534,13 @@
               "tier": "presentation",
               "type": "number"
             },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
             "running": {
               "default": true,
               "description": "When true the tick integrates; toggle to start/pause the sim.",
@@ -516,6 +568,13 @@
               "label": "Tension",
               "tier": "domain",
               "type": "number"
+            },
+            "title": {
+              "default": "Wave",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
             },
             "velocityScale": {
               "default": 6.0,
@@ -557,8 +616,10 @@
           ],
           "entityContract": {
             "provides": [
+              "active",
               "bodies",
-              "running"
+              "running",
+              "title"
             ],
             "requires": []
           },
@@ -577,6 +638,34 @@
                 "id": "evt_01KXG052N81ACYT25WHXWGBK36",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZEKWFDDAMEYGDPZQ04F2XJM",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01KZEKWFDDC942QXX467CSY5RB",
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "id": "evt_01KZEKWFDDVBTKYHQ36C6H3GPP",
+                "key": "PAUSE",
+                "name": "Pause"
+              },
+              {
+                "id": "evt_01KZEKWFDD8F1KAZG0S1AXN4H7",
+                "key": "RESET",
+                "name": "Reset"
               },
               {
                 "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
@@ -604,6 +693,16 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
                     "@entity.bodies",
                     "@config.bodies"
                   ],
@@ -616,14 +715,57 @@
                     "render-ui",
                     "main",
                     {
-                      "backgroundColor": "@config.backgroundColor",
-                      "bodies": "@entity.bodies",
-                      "height": "@config.height",
-                      "showForces": false,
-                      "showVelocity": "@config.showVelocity",
-                      "type": "physics-canvas",
-                      "velocityScale": "@config.velocityScale",
-                      "width": "@config.width"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
                     }
                   ],
                   [
@@ -637,6 +779,359 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG052N81ACYT25WHXWGBK36",
                 "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEKWFDDAMEYGDPZQ04F2XJM",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    true
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "eventId": "evt_01KZEKWFDDC942QXX467CSY5RB",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "PAUSE",
+                "eventId": "evt_01KZEKWFDDVBTKYHQ36C6H3GPP",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "height": "@config.height",
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01KZEKWFDD8F1KAZG0S1AXN4H7",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
                 "to": "idle"
               }
             ]
@@ -828,14 +1323,57 @@
                   "render-ui",
                   "main",
                   {
-                    "backgroundColor": "@config.backgroundColor",
-                    "bodies": "@entity.bodies",
-                    "height": "@config.height",
-                    "showForces": false,
-                    "showVelocity": "@config.showVelocity",
-                    "type": "physics-canvas",
-                    "velocityScale": "@config.velocityScale",
-                    "width": "@config.width"
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "content": "@entity.title",
+                            "type": "typography",
+                            "variant": "h4"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START",
+                                "label": "Start",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PAUSE",
+                                "label": "Pause",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
+                              {
+                                "action": "RESET",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "backgroundColor": "@config.backgroundColor",
+                            "bodies": "@entity.bodies",
+                            "height": "@config.height",
+                            "showForces": false,
+                            "showVelocity": "@config.showVelocity",
+                            "type": "physics-canvas",
+                            "velocityScale": "@config.velocityScale",
+                            "width": "@config.width"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
+                      }
+                    ],
+                    "padding": "md",
+                    "type": "box"
                   }
                 ],
                 [

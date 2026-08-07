@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -171,4 +171,587 @@ export function stdAppLayout(params: StdAppLayoutParams): OrbitalDefinition {
       stdAppLayoutPage(params),
     ],
   });
+}
+
+type _StdAppLayoutEntityName = 'AppLayoutData';
+type _StdAppLayoutListenTraitName = 'AppLayout';
+
+/**
+ * Tunable params for the AppLayoutOrbital orbital.
+ *
+ * Canonical entity: AppLayoutData — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAppLayoutAppLayoutOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'AppLayout',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AppLayoutOrbital's `uses[]` exports. */
+type _StdAppLayoutAppLayoutOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AppLayoutOrbital orbital with consumer params. */
+export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AppLayoutOrbital',
+    uses: [],
+    entity: {
+      name: 'AppLayoutData',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'appName': {
+            'default': 'App',
+            'description': 'Name shown in the top-left of the chrome header.',
+            'label': 'What should this app be called?',
+            'synonyms': 'app title, product name, brand name, application name, site name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'contentClassName': {
+            'default': 'max-w-5xl mx-auto w-full',
+            'description': 'CSS class applied to the content area wrapper.',
+            'label': 'Content wrapper class',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'contentTrait': {
+            'description': 'Trait rendered inside the app layout content area',
+            'label': 'Content trait',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
+          'currentPath': {
+            'default': '',
+            'description': 'Nav-highlight ONLY: which nav item to mark active. This is NOT the page route — it does not change what page loads or where the orbital lives. To set the landing route or a page path, use the orbital\'s pagePath / page path, not this knob. When omitted, the layout reads the current route.',
+            'label': 'Current path',
+            'synonyms': 'active nav item, highlighted nav link, which menu item is selected, nav highlight',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'detailSlot': {
+            'default': 'modal',
+            'description': 'Slot where detail/edit views render',
+            'label': 'Detail slot',
+            'tier': 'internal',
+            'type': 'slot',
+          },
+          'layoutMode': {
+            'default': 'sidebar',
+            'description': 'sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav.',
+            'label': 'Where should navigation be placed?',
+            'synonyms': 'nav position, navigation style, menu placement, layout style',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'sidebar',
+              'topnav',
+              'bottomnav',
+              'minimal',
+            ],
+          },
+          'layoutPattern': {
+            'default': 'dashboard-layout',
+            'description': 'UI pattern used to render the application chrome',
+            'label': 'Layout pattern',
+            'tier': 'internal',
+            'type': 'pattern',
+          },
+          'navItems': {
+            'default': '@pages',
+            'description': 'Top-level navigation links shown on the left rail.',
+            'items': {
+              'properties': {
+                'badge': {
+                  'name': 'badge',
+                  'required': false,
+                  'type': 'string',
+                },
+                'children': {
+                  'items': {
+                    'type': 'object',
+                  },
+                  'name': 'children',
+                  'required': false,
+                  'type': 'array',
+                },
+                'href': {
+                  'name': 'href',
+                  'required': true,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which sections appear in the sidebar?',
+            'synonyms': 'nav links, menu items, sidebar sections, navigation entries, pages',
+            'tier': 'presentation',
+            'type': '[NavItem]',
+          },
+          'notificationClickEvent': {
+            'default': 'NOTIFY_CLICK',
+            'description': 'Event emitted when the user picks a notification',
+            'label': 'Notification click event',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'notifications': {
+            'default': [],
+            'description': 'Items shown in the notifications dropdown.',
+            'items': {
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'message': {
+                  'name': 'message',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'What notifications should appear?',
+            'synonyms': 'alerts, messages, notices, notification items, bell items',
+            'tier': 'presentation',
+            'type': '[NotificationSpec]',
+          },
+          'searchEvent': {
+            'default': 'SEARCH',
+            'description': 'Event emitted when the user runs a global search',
+            'label': 'Search event',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'theme': {
+            'default': '@currentTheme',
+            'description': 'Data-theme attribute applied to the layout root (e.g. almadar-website-dark).',
+            'label': 'Theme',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'topBarActions': {
+            'default': [],
+            'description': 'Icon buttons shown on the right side of the top bar (e.g. cart, help, profile).',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'What shortcuts go in the top bar?',
+            'synonyms': 'toolbar buttons, header actions, shortcut icons, quick actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'viewerAvatar': {
+            'default': '',
+            'description': 'Avatar image URL for the account menu.',
+            'label': 'Signed-in avatar',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerEmail': {
+            'default': '',
+            'description': 'Email shown under the name in the account menu — typically @user.email.',
+            'label': 'Signed-in email',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerName': {
+            'default': '',
+            'description': 'Display name of the signed-in viewer, shown in the app bar\'s account menu — typically @user.name. Blank renders no account menu, so people can see which account (and which persona) they are viewing the app as only when it is actually known.',
+            'label': 'Who is signed in',
+            'synonyms': 'signed in user, current user, account, profile, persona, who am i',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates a search query has been submitted.',
+            'event': 'SEARCH',
+            'payloadSchema': [
+              {
+                'name': 'value',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'query, find, lookup',
+            'tier': 'domain',
+          },
+          {
+            'description': 'A user interacted with a notification.',
+            'event': 'NOTIFY_CLICK',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'click, tap, select',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals the layout has finished loading and is ready.',
+            'event': 'AppLayoutStateLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[AppLayoutData]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'ready, initialized, loaded',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates failure to load the layout state.',
+            'event': 'AppLayoutStateLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failure, load failed',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'AppLayoutData',
+        'name': 'AppLayout',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals the layout has finished loading and is ready.',
+              'key': 'AppLayoutStateLoaded',
+              'name': 'App layout state loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[AppLayoutData]',
+                },
+              ],
+              'synonyms': 'ready, initialized, loaded',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates failure to load the layout state.',
+              'key': 'AppLayoutStateLoadFailed',
+              'name': 'App layout state load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, load failed',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a search query has been submitted.',
+              'key': 'SEARCH',
+              'name': 'Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'query, find, lookup',
+              'tier': 'domain',
+            },
+            {
+              'description': 'A user interacted with a notification.',
+              'key': 'NOTIFY_CLICK',
+              'name': 'Notify Click',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'click, tap, select',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('AppLayoutData' satisfies _StdAppLayoutEntityName),
+                  {
+                    'emit': {
+                      'failure': 'AppLayoutStateLoadFailed',
+                      'success': 'AppLayoutStateLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'appName': '@config.appName',
+                        'children': [
+                          {
+                            'children': [
+                              '@config.contentTrait',
+                            ],
+                            'className': '@config.contentClassName',
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'currentPath': '@config.currentPath',
+                        'layoutMode': '@config.layoutMode',
+                        'navItems': '@config.navItems',
+                        'notificationClickEvent': '@config.notificationClickEvent',
+                        'notifications': '@config.notifications',
+                        'searchEvent': '@config.searchEvent',
+                        'topBarActions': '@config.topBarActions',
+                        'type': '@config.layoutPattern',
+                        'user': [
+                          'if',
+                          '@config.viewerName',
+                          {
+                            'avatar': '@config.viewerAvatar',
+                            'email': '@config.viewerEmail',
+                            'name': '@config.viewerName',
+                          },
+                          null,
+                        ],
+                      },
+                    ],
+                    'className': 'min-h-screen w-full',
+                    'data-theme': '@config.theme',
+                    'fullHeight': true,
+                    'type': 'box',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'composing',
+              'to': 'composing',
+            },
+            {
+              'event': 'AppLayoutStateLoaded',
+              'from': 'composing',
+              'to': 'composing',
+            },
+            {
+              'event': 'AppLayoutStateLoadFailed',
+              'from': 'composing',
+              'to': 'composing',
+            },
+            {
+              'event': 'SEARCH',
+              'from': 'composing',
+              'to': 'composing',
+            },
+            {
+              'event': 'NOTIFY_CLICK',
+              'from': 'composing',
+              'to': 'composing',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AppLayoutPage',
+        'path': '/app-layout',
+        'traits': [
+          {
+            'ref': 'AppLayout',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAppLayoutAppLayoutOrbital. */
+export const StdAppLayoutAppLayoutOrbitalManifest = {
+  organism: 'std-app-layout',
+  orbitalName: 'AppLayoutOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'AppLayout',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAppLayoutAppLayoutOrbitalParams keys. */
+export function isStdAppLayoutAppLayoutOrbitalParams(p: object): p is StdAppLayoutAppLayoutOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAppLayoutAppLayoutOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAppLayoutAppLayoutOrbitalManifest.traitNames,
+      ...StdAppLayoutAppLayoutOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

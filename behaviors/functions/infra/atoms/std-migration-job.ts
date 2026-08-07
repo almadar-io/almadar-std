@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -182,4 +182,1184 @@ export function stdMigrationJob(params: StdMigrationJobParams): OrbitalDefinitio
       stdMigrationJobPage(params),
     ],
   });
+}
+
+type _StdMigrationJobEntityName = 'MigrationJob';
+type _StdMigrationJobListenTraitName = 'MigrationJobLifecycle';
+
+/**
+ * Tunable params for the MigrationJobOrbital orbital.
+ *
+ * Canonical entity: MigrationJob — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdMigrationJobMigrationJobOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'MigrationJobLifecycle',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MigrationJobOrbital's `uses[]` exports. */
+type _StdMigrationJobMigrationJobOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MigrationJobOrbital orbital with consumer params. */
+export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrationJobOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'migration_jobs');
+  const built = makeOrbitalWithUses({
+    name: 'MigrationJobOrbital',
+    uses: [],
+    entity: {
+      name: 'MigrationJob',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'description': 'ImportSource descriptor of the run (kind + options), supplied by the host.',
+            'name': 'source',
+            'type': 'object',
+          },
+          {
+            'default': [],
+            'description': 'Client-side file metadata for upload sources (name/size/type/lastModified).',
+            'items': {
+              'type': 'object',
+            },
+            'name': 'files',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'description': 'Name of the host entity this import writes into.',
+            'name': 'target',
+            'type': 'string',
+          },
+          {
+            'default': 'idle',
+            'description': 'Lifecycle position of the run.',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'fetching',
+              'mapping',
+              'reviewing',
+              'committing',
+              'done',
+              'failed',
+            ],
+          },
+          {
+            'default': [],
+            'description': 'Document metadata listed from the source.',
+            'items': {
+              'type': 'object',
+            },
+            'name': 'documents',
+            'type': 'array',
+          },
+          {
+            'default': {},
+            'description': 'Most recently fetched document content.',
+            'name': 'document',
+            'type': 'object',
+          },
+          {
+            'default': {},
+            'description': 'Staged/committed/failed/skipped counts.',
+            'name': 'stats',
+            'type': 'object',
+          },
+          {
+            'default': '',
+            'description': 'Failure detail when status is failed.',
+            'name': 'error',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'Run start timestamp.',
+            'name': 'createdAt',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'connectionRef': {
+            'default': '',
+            'description': 'Secret-store / environment KEY holding the source credentials. The reference is stored; the secret itself never enters config, traces, or snapshots — the migration service resolves it at run time. (Typed `string` until the `secret` config-field type lands in the lolo language — tracked gap.)',
+            'label': 'Connection reference',
+            'synonyms': 'credential key, connection string reference, secret name',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'target': {
+            'default': '',
+            'description': 'Name of the host entity this import writes into (e.g. the organism\'s own entity). The migration service derives the full target descriptor from the running app\'s schema.',
+            'label': 'Target entity',
+            'synonyms': 'destination, import into, target type',
+            'tier': 'domain',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'migration.listDocuments service result, flattened onto the payload by the call-service effect executor',
+            'event': 'DOCUMENTS_LISTED',
+            'payloadSchema': [
+              {
+                'name': 'documents',
+                'required': true,
+                'type': '[object]',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'migration.fetchDocument service result, flattened onto the payload by the call-service effect executor',
+            'event': 'DOCUMENT_FETCHED',
+            'payloadSchema': [
+              {
+                'name': 'document',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'migration.commit service result — committed count plus per-unit failures',
+            'event': 'COMMITTED',
+            'payloadSchema': [
+              {
+                'name': 'committed',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'failed',
+                'required': true,
+                'type': '[object]',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'migration service call failure signal — lands the run in failed, never a silent swallow',
+            'event': 'MIGRATION_CALL_FAILED',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'Source documents are listed and the run is ready for staging (deterministic pipeline or agent)',
+            'event': 'MIGRATION_FETCHED',
+            'payloadSchema': [
+              {
+                'name': 'documents',
+                'required': true,
+                'type': '[object]',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'import fetched, source listed, documents ready',
+            'tier': 'domain',
+          },
+          {
+            'description': 'A single fetched document\'s content, for the host staging layer to map into target units',
+            'event': 'MIGRATION_DOCUMENT',
+            'payloadSchema': [
+              {
+                'name': 'document',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'document loaded, content fetched',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Staging is complete; the preview is ready for the approval gate',
+            'event': 'MIGRATION_REVIEW_READY',
+            'payloadSchema': [
+              {
+                'name': 'stats',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'preview ready, staging complete, review import',
+            'tier': 'domain',
+          },
+          {
+            'description': 'The commit drained through the host sink; stats carry committed and per-unit failed counts',
+            'event': 'MIGRATION_COMPLETED',
+            'payloadSchema': [
+              {
+                'name': 'stats',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'import done, migration complete, data imported',
+            'tier': 'domain',
+          },
+          {
+            'description': 'The run failed; error carries the service-reported detail and the terminal job row was persisted',
+            'event': 'MIGRATION_FAILED',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'import failed, migration error',
+            'tier': 'domain',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'document',
+            'documents',
+            'error',
+            'files',
+            'source',
+            'stats',
+            'status',
+            'target',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'MigrationJob',
+        'name': 'MigrationJobLifecycle',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Starts an import run. source is the ImportSource descriptor; files carries client file metadata for upload sources. Also reached via a sibling std-import\'s IMPORT_REQUESTED.',
+              'key': 'MIGRATION_START',
+              'name': 'Migration Start',
+              'payloadSchema': [
+                {
+                  'name': 'source',
+                  'required': true,
+                  'type': 'object',
+                },
+                {
+                  'name': 'files',
+                  'type': '[object]',
+                },
+              ],
+              'synonyms': 'start import, run migration, import data',
+              'tier': 'domain',
+            },
+            {
+              'description': 'migration.listDocuments service result, flattened onto the payload by the call-service effect executor',
+              'key': 'DOCUMENTS_LISTED',
+              'name': 'Documents Listed',
+              'payloadSchema': [
+                {
+                  'name': 'documents',
+                  'required': true,
+                  'type': '[object]',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'description': 'Source documents are listed and the run is ready for staging (deterministic pipeline or agent)',
+              'key': 'MIGRATION_FETCHED',
+              'name': 'Migration Fetched',
+              'payloadSchema': [
+                {
+                  'name': 'documents',
+                  'required': true,
+                  'type': '[object]',
+                },
+              ],
+              'synonyms': 'import fetched, source listed, documents ready',
+              'tier': 'domain',
+            },
+            {
+              'description': 'A single fetched document\'s content, for the host staging layer to map into target units',
+              'key': 'MIGRATION_DOCUMENT',
+              'name': 'Migration Document',
+              'payloadSchema': [
+                {
+                  'name': 'document',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'document loaded, content fetched',
+              'tier': 'domain',
+            },
+            {
+              'description': 'migration service call failure signal — lands the run in failed, never a silent swallow',
+              'key': 'MIGRATION_CALL_FAILED',
+              'name': 'Migration Call Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'description': 'Fetch one document\'s full content from the source during staging',
+              'key': 'FETCH_DOCUMENT',
+              'name': 'Fetch Document',
+              'payloadSchema': [
+                {
+                  'name': 'documentId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'internal',
+            },
+            {
+              'description': 'migration.fetchDocument service result, flattened onto the payload by the call-service effect executor',
+              'key': 'DOCUMENT_FETCHED',
+              'name': 'Document Fetched',
+              'payloadSchema': [
+                {
+                  'name': 'document',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'description': 'Host staging finished — units are staged and validated; stats summarize staged/skipped counts for the preview',
+              'key': 'MIGRATION_STAGED',
+              'name': 'Migration Staged',
+              'payloadSchema': [
+                {
+                  'name': 'stats',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'tier': 'internal',
+            },
+            {
+              'description': 'The run was discarded before commit',
+              'key': 'MIGRATION_DISCARDED',
+              'name': 'Migration Discarded',
+              'tier': 'internal',
+            },
+            {
+              'description': 'The user approved the preview; units are the staged ImportUnits to commit through the host sink',
+              'key': 'MIGRATION_APPROVED',
+              'name': 'Migration Approved',
+              'payloadSchema': [
+                {
+                  'name': 'units',
+                  'required': true,
+                  'type': '[object]',
+                },
+              ],
+              'synonyms': 'approve import, confirm migration',
+              'tier': 'domain',
+            },
+            {
+              'description': 'The user sent the preview back for more staging',
+              'key': 'MIGRATION_REJECTED',
+              'name': 'Migration Rejected',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Staging is complete; the preview is ready for the approval gate',
+              'key': 'MIGRATION_REVIEW_READY',
+              'name': 'Migration Review Ready',
+              'payloadSchema': [
+                {
+                  'name': 'stats',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'preview ready, staging complete, review import',
+              'tier': 'domain',
+            },
+            {
+              'description': 'migration.commit service result — committed count plus per-unit failures',
+              'key': 'COMMITTED',
+              'name': 'Committed',
+              'payloadSchema': [
+                {
+                  'name': 'committed',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'failed',
+                  'required': true,
+                  'type': '[object]',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'description': 'Returns the job to idle from a terminal state',
+              'key': 'RESET',
+              'name': 'Reset',
+              'tier': 'internal',
+            },
+            {
+              'description': 'The commit drained through the host sink; stats carry committed and per-unit failed counts',
+              'key': 'MIGRATION_COMPLETED',
+              'name': 'Migration Completed',
+              'payloadSchema': [
+                {
+                  'name': 'stats',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'import done, migration complete, data imported',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Re-runs the fetch after a failure, with the same source',
+              'key': 'MIGRATION_RETRY',
+              'name': 'Migration Retry',
+              'tier': 'internal',
+            },
+            {
+              'description': 'The run failed; error carries the service-reported detail and the terminal job row was persisted',
+              'key': 'MIGRATION_FAILED',
+              'name': 'Migration Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'import failed, migration error',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'fetching',
+            },
+            {
+              'name': 'mapping',
+            },
+            {
+              'name': 'reviewing',
+            },
+            {
+              'name': 'committing',
+            },
+            {
+              'name': 'done',
+            },
+            {
+              'name': 'failed',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.documents',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.document',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.stats',
+                  {},
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.source',
+                  '@payload.source',
+                ],
+                [
+                  'set',
+                  '@entity.files',
+                  '@payload.files',
+                ],
+                [
+                  'set',
+                  '@entity.target',
+                  '@config.target',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'fetching',
+                ],
+                [
+                  'set',
+                  '@entity.createdAt',
+                  [
+                    'time/now',
+                  ],
+                ],
+                [
+                  'call-service',
+                  'migration',
+                  'listDocuments',
+                  {
+                    'connectionRef': '@config.connectionRef',
+                    'files': '@entity.files',
+                    'source': '@entity.source',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'MIGRATION_CALL_FAILED',
+                      'success': 'DOCUMENTS_LISTED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'MIGRATION_START',
+              'from': 'idle',
+              'to': 'fetching',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.documents',
+                  '@payload.documents',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'mapping',
+                ],
+                [
+                  'emit',
+                  'MIGRATION_FETCHED',
+                  {
+                    'documents': '@entity.documents',
+                  },
+                ],
+              ],
+              'event': 'DOCUMENTS_LISTED',
+              'from': 'fetching',
+              'to': 'mapping',
+            },
+            {
+              'event': 'MIGRATION_FETCHED',
+              'from': 'fetching',
+              'to': 'mapping',
+            },
+            {
+              'event': 'MIGRATION_DOCUMENT',
+              'from': 'fetching',
+              'to': 'mapping',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'failed',
+                ],
+                [
+                  'persist',
+                  'create',
+                  ('MigrationJob' satisfies _StdMigrationJobEntityName),
+                  {
+                    'createdAt': '@entity.createdAt',
+                    'error': '@entity.error',
+                    'source': '@entity.source',
+                    'stats': '@entity.stats',
+                    'status': '@entity.status',
+                    'target': '@entity.target',
+                  },
+                ],
+                [
+                  'emit',
+                  'MIGRATION_FAILED',
+                  {
+                    'error': '@entity.error',
+                  },
+                ],
+              ],
+              'event': 'MIGRATION_CALL_FAILED',
+              'from': 'fetching',
+              'to': 'failed',
+            },
+            {
+              'effects': [
+                [
+                  'call-service',
+                  'migration',
+                  'fetchDocument',
+                  {
+                    'connectionRef': '@config.connectionRef',
+                    'documentId': '@payload.documentId',
+                    'source': '@entity.source',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'MIGRATION_CALL_FAILED',
+                      'success': 'DOCUMENT_FETCHED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'FETCH_DOCUMENT',
+              'from': 'mapping',
+              'to': 'mapping',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.document',
+                  '@payload.document',
+                ],
+                [
+                  'emit',
+                  'MIGRATION_DOCUMENT',
+                  {
+                    'document': '@entity.document',
+                  },
+                ],
+              ],
+              'event': 'DOCUMENT_FETCHED',
+              'from': 'mapping',
+              'to': 'mapping',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.stats',
+                  '@payload.stats',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'reviewing',
+                ],
+                [
+                  'emit',
+                  'MIGRATION_REVIEW_READY',
+                  {
+                    'stats': '@entity.stats',
+                  },
+                ],
+              ],
+              'event': 'MIGRATION_STAGED',
+              'from': 'mapping',
+              'to': 'reviewing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.documents',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.document',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.stats',
+                  {},
+                ],
+              ],
+              'event': 'MIGRATION_DISCARDED',
+              'from': 'mapping',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'failed',
+                ],
+                [
+                  'persist',
+                  'create',
+                  ('MigrationJob' satisfies _StdMigrationJobEntityName),
+                  {
+                    'createdAt': '@entity.createdAt',
+                    'error': '@entity.error',
+                    'source': '@entity.source',
+                    'stats': '@entity.stats',
+                    'status': '@entity.status',
+                    'target': '@entity.target',
+                  },
+                ],
+                [
+                  'emit',
+                  'MIGRATION_FAILED',
+                  {
+                    'error': '@entity.error',
+                  },
+                ],
+              ],
+              'event': 'MIGRATION_CALL_FAILED',
+              'from': 'mapping',
+              'to': 'failed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'committing',
+                ],
+                [
+                  'call-service',
+                  'migration',
+                  'commit',
+                  {
+                    'jobId': '@entity.id',
+                    'units': '@payload.units',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'MIGRATION_CALL_FAILED',
+                      'success': 'COMMITTED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'MIGRATION_APPROVED',
+              'from': 'reviewing',
+              'to': 'committing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'mapping',
+                ],
+              ],
+              'event': 'MIGRATION_REJECTED',
+              'from': 'reviewing',
+              'to': 'mapping',
+            },
+            {
+              'event': 'MIGRATION_REVIEW_READY',
+              'from': 'reviewing',
+              'to': 'reviewing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.documents',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.document',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.stats',
+                  {},
+                ],
+              ],
+              'event': 'MIGRATION_DISCARDED',
+              'from': 'reviewing',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.stats',
+                  [
+                    'object/merge',
+                    '@entity.stats',
+                    {
+                      'committed': '@payload.committed',
+                      'failed': '@payload.failed',
+                    },
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+                [
+                  'persist',
+                  'create',
+                  ('MigrationJob' satisfies _StdMigrationJobEntityName),
+                  {
+                    'createdAt': '@entity.createdAt',
+                    'error': '',
+                    'source': '@entity.source',
+                    'stats': '@entity.stats',
+                    'status': '@entity.status',
+                    'target': '@entity.target',
+                  },
+                ],
+                [
+                  'emit',
+                  'MIGRATION_COMPLETED',
+                  {
+                    'stats': '@entity.stats',
+                  },
+                ],
+              ],
+              'event': 'COMMITTED',
+              'from': 'committing',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'failed',
+                ],
+                [
+                  'persist',
+                  'create',
+                  ('MigrationJob' satisfies _StdMigrationJobEntityName),
+                  {
+                    'createdAt': '@entity.createdAt',
+                    'error': '@entity.error',
+                    'source': '@entity.source',
+                    'stats': '@entity.stats',
+                    'status': '@entity.status',
+                    'target': '@entity.target',
+                  },
+                ],
+                [
+                  'emit',
+                  'MIGRATION_FAILED',
+                  {
+                    'error': '@entity.error',
+                  },
+                ],
+              ],
+              'event': 'MIGRATION_CALL_FAILED',
+              'from': 'committing',
+              'to': 'failed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.documents',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.document',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.stats',
+                  {},
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'done',
+              'to': 'idle',
+            },
+            {
+              'event': 'MIGRATION_COMPLETED',
+              'from': 'done',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'fetching',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'call-service',
+                  'migration',
+                  'listDocuments',
+                  {
+                    'connectionRef': '@config.connectionRef',
+                    'files': '@entity.files',
+                    'source': '@entity.source',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'MIGRATION_CALL_FAILED',
+                      'success': 'DOCUMENTS_LISTED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'MIGRATION_RETRY',
+              'from': 'failed',
+              'to': 'fetching',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.documents',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.document',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.stats',
+                  {},
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'failed',
+              'to': 'idle',
+            },
+            {
+              'event': 'MIGRATION_FAILED',
+              'from': 'failed',
+              'to': 'failed',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MigrationJobPage',
+        'path': '/migration-job',
+        'traits': [
+          {
+            'ref': 'MigrationJobLifecycle',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMigrationJobMigrationJobOrbital. */
+export const StdMigrationJobMigrationJobOrbitalManifest = {
+  organism: 'std-migration-job',
+  orbitalName: 'MigrationJobOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'MigrationJobLifecycle',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMigrationJobMigrationJobOrbitalParams keys. */
+export function isStdMigrationJobMigrationJobOrbitalParams(p: object): p is StdMigrationJobMigrationJobOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMigrationJobMigrationJobOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdMigrationJobMigrationJobOrbitalManifest.traitNames,
+      ...StdMigrationJobMigrationJobOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

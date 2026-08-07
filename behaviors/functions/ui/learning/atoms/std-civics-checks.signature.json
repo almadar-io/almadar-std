@@ -1,0 +1,410 @@
+[
+  {
+    "organism": "std-civics-checks",
+    "orbital": "CivicsChecksOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-civics-checks.ts",
+    "entities": [
+      {
+        "name": "CivicsChecksScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "actionIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "actorBranch",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "actionText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "hintText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "resultState",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "checkedBranch",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "checkLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "renderChildren",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CivicsChecksSim",
+        "emittedEvents": [
+          "CIVICS_CHECK_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CIVICS_CHECK_UPDATED",
+            "direction": "emit",
+            "description": "The quiz state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "check result, score update, verdict, feedback",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "CHECK_BY",
+            "direction": "listen",
+            "description": "Learner picked which branch (legislative, executive, or judicial) can check the currently displayed action.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT_ACTION",
+            "direction": "listen",
+            "description": "Learner advances to the next action in the roster.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "actions",
+            "type": "[CivicsChecksAction]",
+            "default": [
+              {
+                "action": "Congress passes a law.",
+                "actor": "legislative",
+                "checks": [
+                  {
+                    "by": "judicial",
+                    "label": "Judicial review — Marbury v. Madison"
+                  },
+                  {
+                    "by": "executive",
+                    "label": "Presidential veto"
+                  }
+                ],
+                "hint": "Two branches can check a new law: the President can refuse to sign it, and the courts can later strike it down as unconstitutional."
+              },
+              {
+                "action": "The President vetoes a bill.",
+                "actor": "executive",
+                "checks": [
+                  {
+                    "by": "legislative",
+                    "label": "Congress overrides the veto with a two-thirds vote"
+                  }
+                ],
+                "hint": "Only Congress can override a presidential veto, and only with a two-thirds supermajority in both chambers."
+              },
+              {
+                "action": "The Supreme Court strikes down a law as unconstitutional.",
+                "actor": "judicial",
+                "checks": [
+                  {
+                    "by": "legislative",
+                    "label": "Congress proposes a constitutional amendment"
+                  },
+                  {
+                    "by": "executive",
+                    "label": "The President appoints new justices over time (with Senate confirmation)"
+                  }
+                ],
+                "hint": "A constitutional ruling is checked over time by amending the Constitution or by future appointments — not by ordinary legislation."
+              },
+              {
+                "action": "The President appoints a federal judge.",
+                "actor": "executive",
+                "checks": [
+                  {
+                    "by": "legislative",
+                    "label": "Senate confirmation (advice and consent)"
+                  }
+                ],
+                "hint": "The Senate must confirm judicial nominees — the President cannot seat a federal judge alone."
+              },
+              {
+                "action": "Congress declares war and funds the military.",
+                "actor": "legislative",
+                "checks": [
+                  {
+                    "by": "executive",
+                    "label": "The President, as Commander-in-Chief, directs how forces are used"
+                  }
+                ],
+                "hint": "Congress controls the power to declare war and fund the military, but command of the forces belongs to the President."
+              },
+              {
+                "action": "The President negotiates a treaty.",
+                "actor": "executive",
+                "checks": [
+                  {
+                    "by": "legislative",
+                    "label": "Senate ratification (two-thirds vote)"
+                  }
+                ],
+                "hint": "A treaty only binds the nation once two-thirds of the Senate ratifies it — the President cannot commit the nation alone."
+              }
+            ],
+            "label": "Actions & Checks",
+            "description": "Roster of governmental actions. Each action names the acting branch (actor) and the text shown; checks lists every branch that can legitimately check that action (any one is accepted); hint is the feedback text shown on an incorrect guess.",
+            "synonyms": "checks and balances matrix, power and counter-power, constitutional check, judicial review, veto override, advice and consent, treaty ratification",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "action": {
+                  "name": "action",
+                  "required": true,
+                  "type": "string"
+                },
+                "actor": {
+                  "name": "actor",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "legislative",
+                    "executive",
+                    "judicial"
+                  ]
+                },
+                "checks": {
+                  "name": "checks",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "by": {
+                        "name": "by",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "legislative",
+                          "executive",
+                          "judicial"
+                        ]
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "arrowColor",
+            "type": "string",
+            "default": "#166534",
+            "label": "Check Arrow Color",
+            "description": "Color of the check arrow drawn on a correct answer.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "branches",
+            "type": "[CivicsChecksBranch]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "key": "legislative",
+                "label": "Legislative — Congress"
+              },
+              {
+                "color": "#dc2626",
+                "key": "executive",
+                "label": "Executive — President"
+              },
+              {
+                "color": "#7c3aed",
+                "key": "judicial",
+                "label": "Judicial — Courts"
+              }
+            ],
+            "label": "Branches",
+            "description": "The three branches of government drawn as labelled boxes, in fixed left-to-right order: Legislative (index 0), Executive (index 1), Judicial (index 2). Label and color are re-themeable; the key and order are fixed.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "legislative",
+                    "executive",
+                    "judicial"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 460,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Civics Lab",
+            "label": "Title",
+            "description": "Title shown above the lab.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CivicsChecksScene",
+        "transitionEvents": [
+          "CHECK_BY",
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT_ACTION"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "actionIndex",
+            "actionText",
+            "active",
+            "actorBranch",
+            "attempts",
+            "checkLabel",
+            "checkedBranch",
+            "feedback",
+            "hintText",
+            "renderChildren",
+            "resultState",
+            "score",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CivicsChecksPage",
+        "defaultPath": "/civics-checks",
+        "primaryEntity": "CivicsChecksScene"
+      }
+    ],
+    "emittedEvents": [
+      "CIVICS_CHECK_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

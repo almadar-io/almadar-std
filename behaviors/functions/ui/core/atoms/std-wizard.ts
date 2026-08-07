@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -161,4 +161,1752 @@ export function stdWizard(params: StdWizardParams): OrbitalDefinition {
       stdWizardPage(params),
     ],
   });
+}
+
+type _StdWizardEntityName = 'WizardView';
+type _StdWizardListenTraitName = 'WizardForm';
+
+/**
+ * Tunable params for the WizardOrbital orbital.
+ *
+ * Canonical entity: WizardView — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdWizardWizardOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'WizardForm',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait WizardOrbital's `uses[]` exports. */
+type _StdWizardWizardOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the WizardOrbital orbital with consumer params. */
+export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'WizardOrbital',
+    uses: [],
+    entity: {
+      name: 'WizardView',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The descriptive name for this wizard view.',
+            'name': 'title',
+            'required': true,
+            'synonyms': 'name, heading, label',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'A brief explanation of the step\'s purpose or content.',
+            'name': 'description',
+            'synonyms': 'explanation, details, summary, notes',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Indicates the field\'s intended audience or area of focus.',
+            'name': 'category',
+            'synonyms': 'type, area, discipline, group',
+            'type': 'string',
+            'values': [
+              'marketing',
+              'engineering',
+              'design',
+              'operations',
+              '',
+            ],
+          },
+          {
+            'default': '',
+            'description': 'Indicates the relative importance or urgency of the wizard.',
+            'name': 'priority',
+            'synonyms': 'level, importance, urgency',
+            'type': 'string',
+            'values': [
+              'low',
+              'medium',
+              'high',
+              'urgent',
+              '',
+            ],
+          },
+          {
+            'default': '',
+            'description': 'Free-form textual remarks or additional information.',
+            'name': 'notes',
+            'synonyms': 'comments, remarks, observations, details',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'description': 'An ordered list of steps within the wizard process.',
+            'items': {
+              'properties': {
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'title': {
+                  'name': 'title',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'wizardSteps',
+            'synonyms': 'steps, sequence, stages',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'description': 'The numerical index of the currently displayed step.',
+            'name': 'currentStepIndex',
+            'synonyms': 'step number, step position, index',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'The total number of steps in the wizard.',
+            'name': 'totalSteps',
+            'synonyms': 'count, steps, length',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'description': 'The text displayed for the currently active step.',
+            'name': 'currentStepLabel',
+            'synonyms': 'step title, step name, current step',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'A brief explanation of the current step\'s purpose.',
+            'name': 'currentStepDescription',
+            'synonyms': 'step description, step details, step explanation',
+            'type': 'string',
+          },
+          {
+            'default': 'circle',
+            'description': 'Icon representing the current step in the process.',
+            'name': 'currentStepIcon',
+            'synonyms': 'icon, image, visual',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'description': 'The data currently being displayed in the form.',
+            'items': {
+              'type': 'string',
+            },
+            'name': 'currentFields',
+            'synonyms': 'form data, input values, field values',
+            'type': 'array',
+          },
+          {
+            'default': true,
+            'description': 'Indicates if this is the initial step in the wizard.',
+            'name': 'isFirstStep',
+            'synonyms': 'first, initial, start',
+            'type': 'boolean',
+          },
+          {
+            'default': false,
+            'description': 'Indicates whether this is the final step in the wizard.',
+            'name': 'isLastStep',
+            'synonyms': 'last, end, final',
+            'type': 'boolean',
+          },
+          {
+            'default': 'Next',
+            'description': 'Text displayed for the primary action button.',
+            'name': 'primaryActionLabel',
+            'synonyms': 'button text, action label, primary button',
+            'type': 'string',
+          },
+          {
+            'default': 'chevron-right',
+            'description': 'Icon representing the primary action button.',
+            'name': 'primaryActionIcon',
+            'synonyms': 'icon, button-icon, action-icon',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Text displayed upon successful completion of the wizard.',
+            'name': 'completionMessage',
+            'synonyms': 'success message, confirmation text, final message',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The reason provided for cancelling the wizard process.',
+            'name': 'cancelReason',
+            'synonyms': 'cancellation reason, cancel explanation, dismissal reason',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Error message displayed when a process fails.',
+            'name': 'errorMessage',
+            'synonyms': 'error, fault, problem',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'cardLook': {
+            'default': 'elevated',
+            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
+            'label': 'Card look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'elevated',
+              'flat-bordered',
+              'borderless-divider',
+              'ticket',
+              'invoice',
+              'chip',
+              'tile-image-first',
+            ],
+          },
+          'steps': {
+            'default': [
+              {
+                'description': 'Basic information',
+                'fields': [
+                  'title',
+                  'description',
+                ],
+                'icon': 'file-text',
+                'key': 'details',
+                'label': 'Details',
+              },
+              {
+                'description': 'Configure preferences',
+                'fields': [
+                  'category',
+                  'priority',
+                ],
+                'icon': 'settings',
+                'key': 'options',
+                'label': 'Options',
+              },
+              {
+                'description': 'Confirm and submit',
+                'fields': [
+                  'notes',
+                ],
+                'icon': 'check-circle',
+                'key': 'review',
+                'label': 'Review',
+              },
+            ],
+            'description': 'Ordered steps with their label, icon, and form fields',
+            'items': {
+              'properties': {
+                'allowedRoles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'allowedRoles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fields': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'fields',
+                  'required': false,
+                  'type': 'array',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Steps',
+            'tier': 'domain',
+            'type': '[StepSpec]',
+          },
+          'title': {
+            'default': 'Wizard',
+            'description': 'Heading shown across all wizard steps',
+            'label': 'Wizard title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals progression to the next step in the wizard.',
+            'event': 'ADVANCE',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'next, proceed, continue',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Aborts the wizard process, discarding any unsaved data.',
+            'event': 'RETREAT',
+            'synonyms': 'cancel, abort, quit, exit, undo',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the user has abandoned the data collection process.',
+            'event': 'CANCEL',
+            'payloadSchema': [
+              {
+                'name': 'reason',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'close, dismiss, abort',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Initiates a reset of the wizard\'s state and data.',
+            'event': 'RESTART',
+            'synonyms': 'reset, refresh, reinitialize',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals the wizard has finished loading and is ready.',
+            'event': 'WizardLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ObjectSpec]',
+              },
+            ],
+            'synonyms': 'ready, initialized, available',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the wizard failed to load initial data.',
+            'event': 'WizardLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'load error, initialization failure',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates successful data submission within the wizard.',
+            'event': 'WizardSaved',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'saved, submitted, confirmed',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to save wizard data.',
+            'event': 'WizardSaveFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failed, save error',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'cancelReason',
+            'completionMessage',
+            'currentFields',
+            'currentStepDescription',
+            'currentStepIcon',
+            'currentStepIndex',
+            'currentStepLabel',
+            'errorMessage',
+            'isFirstStep',
+            'isLastStep',
+            'primaryActionIcon',
+            'primaryActionLabel',
+            'totalSteps',
+            'wizardSteps',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'WizardView',
+        'name': 'WizardForm',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals the wizard has finished loading and is ready.',
+              'key': 'WizardLoaded',
+              'name': 'Wizard loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ObjectSpec]',
+                },
+              ],
+              'synonyms': 'ready, initialized, available',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the wizard failed to load initial data.',
+              'key': 'WizardLoadFailed',
+              'name': 'Wizard load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, initialization failure',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates successful data submission within the wizard.',
+              'key': 'WizardSaved',
+              'name': 'Wizard saved',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'saved, submitted, confirmed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to save wizard data.',
+              'key': 'WizardSaveFailed',
+              'name': 'Wizard save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failed, save error',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals progression to the next step in the wizard.',
+              'key': 'ADVANCE',
+              'name': 'Advance',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'next, proceed, continue',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Aborts the wizard process, discarding any unsaved data.',
+              'key': 'RETREAT',
+              'name': 'Retreat',
+              'synonyms': 'cancel, abort, quit, exit, undo',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the user has abandoned the data collection process.',
+              'key': 'CANCEL',
+              'name': 'Cancel',
+              'payloadSchema': [
+                {
+                  'name': 'reason',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'close, dismiss, abort',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Initiates a reset of the wizard\'s state and data.',
+              'key': 'RESTART',
+              'name': 'Restart',
+              'synonyms': 'reset, refresh, reinitialize',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'running',
+            },
+            {
+              'name': 'completed',
+            },
+            {
+              'name': 'cancelled',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('WizardView' satisfies _StdWizardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'WizardLoadFailed',
+                      'success': 'WizardLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Loading wizard…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.totalSteps',
+                  [
+                    'array/len',
+                    '@config.steps',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.wizardSteps',
+                  [
+                    'array/map',
+                    '@config.steps',
+                    [
+                      'fn',
+                      'step',
+                      {
+                        'description': [
+                          'object/get',
+                          '@step',
+                          'description',
+                          '',
+                        ],
+                        'id': [
+                          'object/get',
+                          '@step',
+                          'key',
+                        ],
+                        'title': [
+                          'object/get',
+                          '@step',
+                          'label',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepLabel',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      0,
+                    ],
+                    'label',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepDescription',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      0,
+                    ],
+                    'description',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIcon',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      0,
+                    ],
+                    'icon',
+                    'circle',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentFields',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      0,
+                    ],
+                    'fields',
+                    [],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isFirstStep',
+                  true,
+                ],
+                [
+                  'set',
+                  '@entity.isLastStep',
+                  [
+                    '=',
+                    [
+                      'array/len',
+                      '@config.steps',
+                    ],
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionLabel',
+                  [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.steps',
+                      ],
+                      1,
+                    ],
+                    'Submit',
+                    'Next',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionIcon',
+                  [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.steps',
+                      ],
+                      1,
+                    ],
+                    'check-circle',
+                    'chevron-right',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'list-checks',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'allowNavigation': false,
+                        'currentStep': '@entity.currentStepIndex',
+                        'steps': '@entity.wizardSteps',
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'name': '@entity.currentStepIcon',
+                                    'size': 'lg',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@entity.currentStepLabel',
+                                        'type': 'typography',
+                                        'variant': 'h2',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '@entity.currentStepDescription',
+                                        'type': 'typography',
+                                        'variant': 'body',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'type': 'divider',
+                              },
+                              {
+                                'cancelEvent': 'CANCEL',
+                                'entity': '@entity',
+                                'fields': '@entity.currentFields',
+                                'mode': 'edit',
+                                'showCancel': false,
+                                'showSubmit': false,
+                                'submitEvent': 'ADVANCE',
+                                'type': 'form-section',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                        ],
+                        'look': '@config.cardLook',
+                        'type': 'card',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'RETREAT',
+                            'disabled': '@entity.isFirstStep',
+                            'icon': 'chevron-left',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'action': 'CANCEL',
+                            'icon': 'x',
+                            'label': 'Cancel wizard',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'action': 'ADVANCE',
+                            'icon': '@entity.primaryActionIcon',
+                            'label': '@entity.primaryActionLabel',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'WizardLoaded',
+              'from': 'loading',
+              'to': 'running',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@entity.errorMessage',
+                    'title': 'Failed to load',
+                    'type': 'error-state',
+                  },
+                ],
+              ],
+              'event': 'WizardLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('WizardView' satisfies _StdWizardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'WizardLoadFailed',
+                      'success': 'WizardLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Refreshing…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'WizardSaved',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@entity.errorMessage',
+                    'title': 'Save failed',
+                    'type': 'error-state',
+                  },
+                ],
+              ],
+              'event': 'WizardSaveFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  [
+                    '+',
+                    '@entity.currentStepIndex',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepLabel',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'label',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepDescription',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'description',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIcon',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'icon',
+                    'circle',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentFields',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'fields',
+                    [],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isFirstStep',
+                  [
+                    '=',
+                    '@entity.currentStepIndex',
+                    0,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isLastStep',
+                  [
+                    '=',
+                    '@entity.currentStepIndex',
+                    [
+                      '-',
+                      '@entity.totalSteps',
+                      1,
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionLabel',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'Submit',
+                    'Next',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionIcon',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'check-circle',
+                    'chevron-right',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'list-checks',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'allowNavigation': false,
+                        'currentStep': '@entity.currentStepIndex',
+                        'steps': '@entity.wizardSteps',
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'name': '@entity.currentStepIcon',
+                                    'size': 'lg',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@entity.currentStepLabel',
+                                        'type': 'typography',
+                                        'variant': 'h2',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '@entity.currentStepDescription',
+                                        'type': 'typography',
+                                        'variant': 'body',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'type': 'divider',
+                              },
+                              {
+                                'cancelEvent': 'CANCEL',
+                                'entity': '@entity',
+                                'fields': '@entity.currentFields',
+                                'mode': 'edit',
+                                'showCancel': false,
+                                'showSubmit': false,
+                                'submitEvent': 'ADVANCE',
+                                'type': 'form-section',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                        ],
+                        'look': '@config.cardLook',
+                        'type': 'card',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'RETREAT',
+                            'disabled': '@entity.isFirstStep',
+                            'icon': 'chevron-left',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'action': 'CANCEL',
+                            'icon': 'x',
+                            'label': 'Cancel wizard',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'action': 'ADVANCE',
+                            'icon': '@entity.primaryActionIcon',
+                            'label': '@entity.primaryActionLabel',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ADVANCE',
+              'from': 'running',
+              'guard': [
+                'not',
+                '@entity.isLastStep',
+              ],
+              'to': 'running',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.completionMessage',
+                  'All steps completed. Your submission has been recorded.',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('WizardView' satisfies _StdWizardEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'WizardSaveFailed',
+                      'success': 'WizardSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'check-circle',
+                        'size': 'lg',
+                        'type': 'icon',
+                      },
+                      {
+                        'align': 'center',
+                        'content': 'Complete',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'align': 'center',
+                        'color': 'muted',
+                        'content': '@entity.completionMessage',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'allowNavigation': false,
+                        'currentStep': '@entity.totalSteps',
+                        'steps': '@entity.wizardSteps',
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'action': 'RESTART',
+                        'icon': 'rotate-ccw',
+                        'label': 'Start a new wizard',
+                        'type': 'button',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ADVANCE',
+              'from': 'running',
+              'guard': '@entity.isLastStep',
+              'to': 'completed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  [
+                    '-',
+                    '@entity.currentStepIndex',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepLabel',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'label',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepDescription',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'description',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentStepIcon',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'icon',
+                    'circle',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentFields',
+                  [
+                    'object/get',
+                    [
+                      'array/nth',
+                      '@config.steps',
+                      '@entity.currentStepIndex',
+                    ],
+                    'fields',
+                    [],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isFirstStep',
+                  [
+                    '=',
+                    '@entity.currentStepIndex',
+                    0,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.isLastStep',
+                  [
+                    '=',
+                    '@entity.currentStepIndex',
+                    [
+                      '-',
+                      '@entity.totalSteps',
+                      1,
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionLabel',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'Submit',
+                    'Next',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.primaryActionIcon',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@entity.currentStepIndex',
+                      [
+                        '-',
+                        '@entity.totalSteps',
+                        1,
+                      ],
+                    ],
+                    'check-circle',
+                    'chevron-right',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'list-checks',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'allowNavigation': false,
+                        'currentStep': '@entity.currentStepIndex',
+                        'steps': '@entity.wizardSteps',
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'name': '@entity.currentStepIcon',
+                                    'size': 'lg',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@entity.currentStepLabel',
+                                        'type': 'typography',
+                                        'variant': 'h2',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '@entity.currentStepDescription',
+                                        'type': 'typography',
+                                        'variant': 'body',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'type': 'divider',
+                              },
+                              {
+                                'cancelEvent': 'CANCEL',
+                                'entity': '@entity',
+                                'fields': '@entity.currentFields',
+                                'mode': 'edit',
+                                'showCancel': false,
+                                'showSubmit': false,
+                                'submitEvent': 'ADVANCE',
+                                'type': 'form-section',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                        ],
+                        'look': '@config.cardLook',
+                        'type': 'card',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'RETREAT',
+                            'disabled': '@entity.isFirstStep',
+                            'icon': 'chevron-left',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'action': 'CANCEL',
+                            'icon': 'x',
+                            'label': 'Cancel wizard',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'action': 'ADVANCE',
+                            'icon': '@entity.primaryActionIcon',
+                            'label': '@entity.primaryActionLabel',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'RETREAT',
+              'from': 'running',
+              'to': 'running',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.cancelReason',
+                  '@payload.reason',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'x-circle',
+                        'size': 'lg',
+                        'type': 'icon',
+                      },
+                      {
+                        'align': 'center',
+                        'content': 'Cancelled',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'align': 'center',
+                        'color': 'muted',
+                        'content': 'The wizard was cancelled. No data was submitted.',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'action': 'RESTART',
+                        'icon': 'rotate-ccw',
+                        'label': 'Start a new wizard',
+                        'type': 'button',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CANCEL',
+              'from': 'running',
+              'to': 'cancelled',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.completionMessage',
+                  '',
+                ],
+                [
+                  'fetch',
+                  ('WizardView' satisfies _StdWizardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'WizardLoadFailed',
+                      'success': 'WizardLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Restarting…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'RESTART',
+              'from': 'completed',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.currentStepIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.cancelReason',
+                  '',
+                ],
+                [
+                  'fetch',
+                  ('WizardView' satisfies _StdWizardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'WizardLoadFailed',
+                      'success': 'WizardLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Restarting…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'RESTART',
+              'from': 'cancelled',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Retrying…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'WizardPage',
+        'path': '/wizard',
+        'traits': [
+          {
+            'ref': 'WizardForm',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdWizardWizardOrbital. */
+export const StdWizardWizardOrbitalManifest = {
+  organism: 'std-wizard',
+  orbitalName: 'WizardOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'WizardForm',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdWizardWizardOrbitalParams keys. */
+export function isStdWizardWizardOrbitalParams(p: object): p is StdWizardWizardOrbitalParams {
+  type _OverrideRecord = NonNullable<StdWizardWizardOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdWizardWizardOrbitalManifest.traitNames,
+      ...StdWizardWizardOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

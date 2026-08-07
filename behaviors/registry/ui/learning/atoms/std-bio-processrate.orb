@@ -1,0 +1,3179 @@
+{
+  "description": "Photosynthesis-style process-rate engine — the learner adjusts light, CO₂, and temperature sliders and watches the process rate and its limiting factor recompute live, with input-node radii/colors on a biology-canvas reflecting each factor's saturation. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01KZEJ4KE798SKNYZ9QPEGJAZE": {
+        "bakedName": "BioProcessRateScene",
+        "curName": "BioProcessRateScene",
+        "id": "ent_01KZEJ4KE798SKNYZ9QPEGJAZE",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KZEJ4KE7NSX5ZM5Z9W775F3P": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KZEJ4KE7NSX5ZM5Z9W775F3P",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5",
+        "renames": []
+      },
+      "evt_01KZEJ4KE828YF03D07F6MV231": {
+        "bakedName": "SET_TEMP",
+        "curName": "SET_TEMP",
+        "id": "evt_01KZEJ4KE828YF03D07F6MV231",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5",
+        "renames": []
+      },
+      "evt_01KZEJ4KE86Q9ZJ60JHV85R307": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEJ4KE86Q9ZJ60JHV85R307",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5",
+        "renames": []
+      },
+      "evt_01KZEJ4KE8XZMZPWY8A8G3X02E": {
+        "bakedName": "SET_CO2",
+        "curName": "SET_CO2",
+        "id": "evt_01KZEJ4KE8XZMZPWY8A8G3X02E",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5",
+        "renames": []
+      },
+      "evt_01KZEJ4KE8YATMTY8ZV8K8QVYM": {
+        "bakedName": "SET_LIGHT",
+        "curName": "SET_LIGHT",
+        "id": "evt_01KZEJ4KE8YATMTY8ZV8K8QVYM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5",
+        "renames": []
+      },
+      "evt_01KZEJ4KE8YT3KXZXTJ98ENTQX": {
+        "bakedName": "PROCESS_RATE_UPDATED",
+        "curName": "PROCESS_RATE_UPDATED",
+        "id": "evt_01KZEJ4KE8YT3KXZXTJ98ENTQX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5",
+        "renames": []
+      },
+      "orb_01KZEJ4KE7XW8EQS008C9DYVYB": {
+        "bakedName": "BioProcessRateOrbital",
+        "curName": "BioProcessRateOrbital",
+        "id": "orb_01KZEJ4KE7XW8EQS008C9DYVYB",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KZEJ4KE8D7NZKP2S94F8BDS0": {
+        "bakedName": "BioProcessRatePage",
+        "curName": "BioProcessRatePage",
+        "id": "pag_01KZEJ4KE8D7NZKP2S94F8BDS0",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZEJ4KE7EGDYKBC78WEZ86M5": {
+        "bakedName": "BioProcessRateSim",
+        "curName": "BioProcessRateSim",
+        "id": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-bio-processrate",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "edges",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "points",
+                  "required": false,
+                  "type": "array"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "shapes",
+            "type": "array"
+          },
+          {
+            "name": "light",
+            "type": "number"
+          },
+          {
+            "name": "co2",
+            "type": "number"
+          },
+          {
+            "name": "temperature",
+            "type": "number"
+          },
+          {
+            "name": "rate",
+            "type": "number"
+          },
+          {
+            "name": "limitingFactor",
+            "type": "string"
+          }
+        ],
+        "id": "ent_01KZEJ4KE798SKNYZ9QPEGJAZE",
+        "name": "BioProcessRateScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KZEJ4KE7XW8EQS008C9DYVYB",
+      "name": "BioProcessRateOrbital",
+      "pages": [
+        {
+          "id": "pag_01KZEJ4KE8D7NZKP2S94F8BDS0",
+          "name": "BioProcessRatePage",
+          "path": "/bio-processrate",
+          "traits": [
+            {
+              "ref": "BioProcessRateSim",
+              "refId": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "backgroundColor": {
+              "default": "#f0fdf4",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "co2": {
+              "default": 50.0,
+              "description": "Starting CO₂ concentration (0-100) for process-rate mode.",
+              "label": "CO₂ Concentration",
+              "tier": "domain",
+              "type": "number"
+            },
+            "co2Saturation": {
+              "default": 60.0,
+              "description": "CO₂ concentration beyond which more CO₂ stops raising the rate.",
+              "label": "CO₂ Saturation Point",
+              "tier": "domain",
+              "type": "number"
+            },
+            "edges": {
+              "default": [],
+              "description": "Optional extra relationship links drawn alongside the process nodes.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "tier": "presentation",
+              "type": "[BioProcessRateEdge]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "light": {
+              "default": 50.0,
+              "description": "Starting light intensity (0-100) for process-rate mode.",
+              "label": "Light Intensity",
+              "tier": "domain",
+              "type": "number"
+            },
+            "lightSaturation": {
+              "default": 70.0,
+              "description": "Light intensity beyond which more light stops raising the rate — the point light stops being the limiting factor.",
+              "label": "Light Saturation Point",
+              "tier": "domain",
+              "type": "number"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "maxRate": {
+              "default": 100.0,
+              "description": "The process rate, in percent, achieved when no factor is limiting.",
+              "label": "Maximum Rate",
+              "tier": "domain",
+              "type": "number"
+            },
+            "processLabel": {
+              "default": "O₂ output",
+              "description": "Name of the measured output shown on the rate readout — e.g. O₂ output for photosynthesis, CO₂ output for respiration.",
+              "label": "Process Output Label",
+              "tier": "domain",
+              "type": "string"
+            },
+            "processNodes": {
+              "default": [
+                {
+                  "color": "#16a34a",
+                  "id": "leaf",
+                  "kind": "organism",
+                  "label": "Leaf",
+                  "radius": 60.0,
+                  "x": 300.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#facc15",
+                  "id": "light-in",
+                  "kind": "molecule",
+                  "label": "Light",
+                  "radius": 12.0,
+                  "x": 300.0,
+                  "y": 70.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "co2-in",
+                  "kind": "molecule",
+                  "label": "CO₂",
+                  "radius": 12.0,
+                  "x": 140.0,
+                  "y": 280.0
+                },
+                {
+                  "color": "#dc2626",
+                  "id": "temp-in",
+                  "kind": "molecule",
+                  "label": "Temp",
+                  "radius": 12.0,
+                  "x": 460.0,
+                  "y": 280.0
+                },
+                {
+                  "color": "#0ea5e9",
+                  "id": "output",
+                  "kind": "molecule",
+                  "label": "O₂ Output",
+                  "radius": 10.0,
+                  "x": 300.0,
+                  "y": 330.0
+                }
+              ],
+              "description": "Seed nodes for process-rate mode: a central process node plus one node per input factor (ids light-in / co2-in / temp-in) and an output node (id output). Radii and colors are recomputed live from the current rate and limiting factor; provide alternate ids/positions to reskin for a different process.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "cell",
+                      "organelle",
+                      "molecule",
+                      "organism"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Process Nodes",
+              "tier": "presentation",
+              "type": "[BioProcessRateNode]"
+            },
+            "shapes": {
+              "default": [],
+              "description": "Optional extra declarative shapes drawn alongside the process nodes.",
+              "items": {
+                "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "axis": {
+                    "name": "axis",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "x",
+                      "y"
+                    ]
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fill": {
+                    "name": "fill",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fontSize": {
+                    "name": "fontSize",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "height": {
+                    "name": "height",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lineWidth": {
+                    "name": "lineWidth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "min": {
+                    "name": "min",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "points": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "points",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "step": {
+                    "name": "step",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "line",
+                      "arrow",
+                      "circle",
+                      "rect",
+                      "polygon",
+                      "path",
+                      "text",
+                      "axis",
+                      "grid"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x2": {
+                    "name": "x2",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y1": {
+                    "name": "y1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y2": {
+                    "name": "y2",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Shapes",
+              "tier": "presentation",
+              "type": "[BioProcessRateShape]"
+            },
+            "tempOptimum": {
+              "default": 25.0,
+              "description": "Temperature in °C at which the process runs fastest.",
+              "label": "Optimal Temperature",
+              "tier": "domain",
+              "type": "number"
+            },
+            "tempTolerance": {
+              "default": 15.0,
+              "description": "Degrees away from tempOptimum before temperature alone drives the rate to zero.",
+              "label": "Temperature Tolerance",
+              "tier": "domain",
+              "type": "number"
+            },
+            "temperature": {
+              "default": 25.0,
+              "description": "Starting temperature in °C for process-rate mode.",
+              "label": "Temperature",
+              "tier": "domain",
+              "type": "number"
+            },
+            "title": {
+              "default": "Photosynthesis Rate",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The process rate state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "PROCESS_RATE_UPDATED",
+              "eventId": "evt_01KZEJ4KE8YT3KXZXTJ98ENTQX",
+              "payloadSchema": [
+                {
+                  "name": "rate",
+                  "type": "number"
+                },
+                {
+                  "name": "limitingFactor",
+                  "type": "string"
+                },
+                {
+                  "name": "light",
+                  "type": "number"
+                },
+                {
+                  "name": "co2",
+                  "type": "number"
+                },
+                {
+                  "name": "temperature",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "process rate update, limiting factor, photosynthesis rate, reaction rate",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "co2",
+              "edges",
+              "light",
+              "limitingFactor",
+              "nodes",
+              "rate",
+              "shapes",
+              "temperature",
+              "title"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "BioProcessRateScene": "ent_01KZEJ4KE798SKNYZ9QPEGJAZE"
+          },
+          "id": "trt_01KZEJ4KE7EGDYKBC78WEZ86M5",
+          "linkedEntity": "BioProcessRateScene",
+          "linkedEntityId": "ent_01KZEJ4KE798SKNYZ9QPEGJAZE",
+          "name": "BioProcessRateSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KZEJ4KE7NSX5ZM5Z9W775F3P",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZEJ4KE86Q9ZJ60JHV85R307",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner adjusted the light-intensity slider.",
+                "id": "evt_01KZEJ4KE8YATMTY8ZV8K8QVYM",
+                "key": "SET_LIGHT",
+                "name": "Set Light",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner adjusted the CO₂-concentration slider.",
+                "id": "evt_01KZEJ4KE8XZMZPWY8A8G3X02E",
+                "key": "SET_CO2",
+                "name": "Set Co2",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner adjusted the temperature slider.",
+                "id": "evt_01KZEJ4KE828YF03D07F6MV231",
+                "key": "SET_TEMP",
+                "name": "Set Temp",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "The process rate state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01KZEJ4KE8YT3KXZXTJ98ENTQX",
+                "key": "PROCESS_RATE_UPDATED",
+                "name": "Process Rate Updated",
+                "payloadSchema": [
+                  {
+                    "name": "rate",
+                    "type": "number"
+                  },
+                  {
+                    "name": "limitingFactor",
+                    "type": "string"
+                  },
+                  {
+                    "name": "light",
+                    "type": "number"
+                  },
+                  {
+                    "name": "co2",
+                    "type": "number"
+                  },
+                  {
+                    "name": "temperature",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "process rate update, limiting factor, photosynthesis rate, reaction rate",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    "@config.edges"
+                  ],
+                  [
+                    "set",
+                    "@entity.shapes",
+                    "@config.shapes"
+                  ],
+                  [
+                    "set",
+                    "@entity.light",
+                    "@config.light"
+                  ],
+                  [
+                    "set",
+                    "@entity.co2",
+                    "@config.co2"
+                  ],
+                  [
+                    "set",
+                    "@entity.temperature",
+                    "@config.temperature"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "lightFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.light",
+                            "@config.lightSaturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "co2Factor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.co2",
+                            "@config.co2Saturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "tempFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "-",
+                            1.0,
+                            [
+                              "/",
+                              [
+                                "math/abs",
+                                [
+                                  "-",
+                                  "@entity.temperature",
+                                  "@config.tempOptimum"
+                                ]
+                              ],
+                              "@config.tempTolerance"
+                            ]
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "minFactor",
+                          [
+                            "math/min",
+                            "@lightFactor",
+                            "@co2Factor",
+                            "@tempFactor"
+                          ]
+                        ],
+                        [
+                          "limiting",
+                          [
+                            "if",
+                            [
+                              "<=",
+                              "@lightFactor",
+                              "@co2Factor"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@lightFactor",
+                                "@tempFactor"
+                              ],
+                              "light",
+                              "temperature"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@co2Factor",
+                                "@tempFactor"
+                              ],
+                              "co2",
+                              "temperature"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.rate",
+                          [
+                            "*",
+                            "@config.maxRate",
+                            "@minFactor"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.limitingFactor",
+                          "@limiting"
+                        ],
+                        [
+                          "set",
+                          "@entity.nodes",
+                          [
+                            "array/map",
+                            "@config.processNodes",
+                            [
+                              "fn",
+                              "n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nid",
+                                    [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@nid",
+                                    "light-in"
+                                  ],
+                                  [
+                                    "object/merge",
+                                    "@n",
+                                    {
+                                      "color": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@limiting",
+                                          "light"
+                                        ],
+                                        "#f59e0b",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "color"
+                                        ]
+                                      ],
+                                      "radius": [
+                                        "+",
+                                        8.0,
+                                        [
+                                          "*",
+                                          "@lightFactor",
+                                          16.0
+                                        ]
+                                      ]
+                                    }
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@nid",
+                                      "co2-in"
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@n",
+                                      {
+                                        "color": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@limiting",
+                                            "co2"
+                                          ],
+                                          "#f59e0b",
+                                          [
+                                            "object/get",
+                                            "@n",
+                                            "color"
+                                          ]
+                                        ],
+                                        "radius": [
+                                          "+",
+                                          8.0,
+                                          [
+                                            "*",
+                                            "@co2Factor",
+                                            16.0
+                                          ]
+                                        ]
+                                      }
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@nid",
+                                        "temp-in"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        "@n",
+                                        {
+                                          "color": [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@limiting",
+                                              "temperature"
+                                            ],
+                                            "#f59e0b",
+                                            [
+                                              "object/get",
+                                              "@n",
+                                              "color"
+                                            ]
+                                          ],
+                                          "radius": [
+                                            "+",
+                                            8.0,
+                                            [
+                                              "*",
+                                              "@tempFactor",
+                                              16.0
+                                            ]
+                                          ]
+                                        }
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@nid",
+                                          "output"
+                                        ],
+                                        [
+                                          "object/merge",
+                                          "@n",
+                                          {
+                                            "radius": [
+                                              "+",
+                                              6.0,
+                                              [
+                                                "*",
+                                                "@minFactor",
+                                                30.0
+                                              ]
+                                            ]
+                                          }
+                                        ],
+                                        "@n"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "@config.processLabel",
+                                    ": ",
+                                    [
+                                      "math/floor",
+                                      "@entity.rate"
+                                    ],
+                                    "%"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Limiting factor: ",
+                                    "@entity.limitingFactor"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Light intensity",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_LIGHT",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.light"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "CO₂ concentration",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_CO2",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.co2"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Temperature (°C)",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 45.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_TEMP",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.temperature"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KZEJ4KE7NSX5ZM5Z9W775F3P",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    "@config.edges"
+                  ],
+                  [
+                    "set",
+                    "@entity.shapes",
+                    "@config.shapes"
+                  ],
+                  [
+                    "set",
+                    "@entity.light",
+                    "@config.light"
+                  ],
+                  [
+                    "set",
+                    "@entity.co2",
+                    "@config.co2"
+                  ],
+                  [
+                    "set",
+                    "@entity.temperature",
+                    "@config.temperature"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "lightFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.light",
+                            "@config.lightSaturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "co2Factor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.co2",
+                            "@config.co2Saturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "tempFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "-",
+                            1.0,
+                            [
+                              "/",
+                              [
+                                "math/abs",
+                                [
+                                  "-",
+                                  "@entity.temperature",
+                                  "@config.tempOptimum"
+                                ]
+                              ],
+                              "@config.tempTolerance"
+                            ]
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "minFactor",
+                          [
+                            "math/min",
+                            "@lightFactor",
+                            "@co2Factor",
+                            "@tempFactor"
+                          ]
+                        ],
+                        [
+                          "limiting",
+                          [
+                            "if",
+                            [
+                              "<=",
+                              "@lightFactor",
+                              "@co2Factor"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@lightFactor",
+                                "@tempFactor"
+                              ],
+                              "light",
+                              "temperature"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@co2Factor",
+                                "@tempFactor"
+                              ],
+                              "co2",
+                              "temperature"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.rate",
+                          [
+                            "*",
+                            "@config.maxRate",
+                            "@minFactor"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.limitingFactor",
+                          "@limiting"
+                        ],
+                        [
+                          "set",
+                          "@entity.nodes",
+                          [
+                            "array/map",
+                            "@config.processNodes",
+                            [
+                              "fn",
+                              "n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nid",
+                                    [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@nid",
+                                    "light-in"
+                                  ],
+                                  [
+                                    "object/merge",
+                                    "@n",
+                                    {
+                                      "color": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@limiting",
+                                          "light"
+                                        ],
+                                        "#f59e0b",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "color"
+                                        ]
+                                      ],
+                                      "radius": [
+                                        "+",
+                                        8.0,
+                                        [
+                                          "*",
+                                          "@lightFactor",
+                                          16.0
+                                        ]
+                                      ]
+                                    }
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@nid",
+                                      "co2-in"
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@n",
+                                      {
+                                        "color": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@limiting",
+                                            "co2"
+                                          ],
+                                          "#f59e0b",
+                                          [
+                                            "object/get",
+                                            "@n",
+                                            "color"
+                                          ]
+                                        ],
+                                        "radius": [
+                                          "+",
+                                          8.0,
+                                          [
+                                            "*",
+                                            "@co2Factor",
+                                            16.0
+                                          ]
+                                        ]
+                                      }
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@nid",
+                                        "temp-in"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        "@n",
+                                        {
+                                          "color": [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@limiting",
+                                              "temperature"
+                                            ],
+                                            "#f59e0b",
+                                            [
+                                              "object/get",
+                                              "@n",
+                                              "color"
+                                            ]
+                                          ],
+                                          "radius": [
+                                            "+",
+                                            8.0,
+                                            [
+                                              "*",
+                                              "@tempFactor",
+                                              16.0
+                                            ]
+                                          ]
+                                        }
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@nid",
+                                          "output"
+                                        ],
+                                        [
+                                          "object/merge",
+                                          "@n",
+                                          {
+                                            "radius": [
+                                              "+",
+                                              6.0,
+                                              [
+                                                "*",
+                                                "@minFactor",
+                                                30.0
+                                              ]
+                                            ]
+                                          }
+                                        ],
+                                        "@n"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "@config.processLabel",
+                                    ": ",
+                                    [
+                                      "math/floor",
+                                      "@entity.rate"
+                                    ],
+                                    "%"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Limiting factor: ",
+                                    "@entity.limitingFactor"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Light intensity",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_LIGHT",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.light"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "CO₂ concentration",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_CO2",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.co2"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Temperature (°C)",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 45.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_TEMP",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.temperature"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEJ4KE86Q9ZJ60JHV85R307",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.light",
+                    "@payload.value"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "lightFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.light",
+                            "@config.lightSaturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "co2Factor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.co2",
+                            "@config.co2Saturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "tempFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "-",
+                            1.0,
+                            [
+                              "/",
+                              [
+                                "math/abs",
+                                [
+                                  "-",
+                                  "@entity.temperature",
+                                  "@config.tempOptimum"
+                                ]
+                              ],
+                              "@config.tempTolerance"
+                            ]
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "minFactor",
+                          [
+                            "math/min",
+                            "@lightFactor",
+                            "@co2Factor",
+                            "@tempFactor"
+                          ]
+                        ],
+                        [
+                          "limiting",
+                          [
+                            "if",
+                            [
+                              "<=",
+                              "@lightFactor",
+                              "@co2Factor"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@lightFactor",
+                                "@tempFactor"
+                              ],
+                              "light",
+                              "temperature"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@co2Factor",
+                                "@tempFactor"
+                              ],
+                              "co2",
+                              "temperature"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.rate",
+                          [
+                            "*",
+                            "@config.maxRate",
+                            "@minFactor"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.limitingFactor",
+                          "@limiting"
+                        ],
+                        [
+                          "set",
+                          "@entity.nodes",
+                          [
+                            "array/map",
+                            "@config.processNodes",
+                            [
+                              "fn",
+                              "n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nid",
+                                    [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@nid",
+                                    "light-in"
+                                  ],
+                                  [
+                                    "object/merge",
+                                    "@n",
+                                    {
+                                      "color": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@limiting",
+                                          "light"
+                                        ],
+                                        "#f59e0b",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "color"
+                                        ]
+                                      ],
+                                      "radius": [
+                                        "+",
+                                        8.0,
+                                        [
+                                          "*",
+                                          "@lightFactor",
+                                          16.0
+                                        ]
+                                      ]
+                                    }
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@nid",
+                                      "co2-in"
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@n",
+                                      {
+                                        "color": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@limiting",
+                                            "co2"
+                                          ],
+                                          "#f59e0b",
+                                          [
+                                            "object/get",
+                                            "@n",
+                                            "color"
+                                          ]
+                                        ],
+                                        "radius": [
+                                          "+",
+                                          8.0,
+                                          [
+                                            "*",
+                                            "@co2Factor",
+                                            16.0
+                                          ]
+                                        ]
+                                      }
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@nid",
+                                        "temp-in"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        "@n",
+                                        {
+                                          "color": [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@limiting",
+                                              "temperature"
+                                            ],
+                                            "#f59e0b",
+                                            [
+                                              "object/get",
+                                              "@n",
+                                              "color"
+                                            ]
+                                          ],
+                                          "radius": [
+                                            "+",
+                                            8.0,
+                                            [
+                                              "*",
+                                              "@tempFactor",
+                                              16.0
+                                            ]
+                                          ]
+                                        }
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@nid",
+                                          "output"
+                                        ],
+                                        [
+                                          "object/merge",
+                                          "@n",
+                                          {
+                                            "radius": [
+                                              "+",
+                                              6.0,
+                                              [
+                                                "*",
+                                                "@minFactor",
+                                                30.0
+                                              ]
+                                            ]
+                                          }
+                                        ],
+                                        "@n"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "@config.processLabel",
+                                    ": ",
+                                    [
+                                      "math/floor",
+                                      "@entity.rate"
+                                    ],
+                                    "%"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Limiting factor: ",
+                                    "@entity.limitingFactor"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Light intensity",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_LIGHT",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.light"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "CO₂ concentration",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_CO2",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.co2"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Temperature (°C)",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 45.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_TEMP",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.temperature"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "PROCESS_RATE_UPDATED",
+                    {
+                      "co2": "@entity.co2",
+                      "light": "@entity.light",
+                      "limitingFactor": "@entity.limitingFactor",
+                      "rate": "@entity.rate",
+                      "temperature": "@entity.temperature"
+                    }
+                  ]
+                ],
+                "event": "SET_LIGHT",
+                "eventId": "evt_01KZEJ4KE8YATMTY8ZV8K8QVYM",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.co2",
+                    "@payload.value"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "lightFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.light",
+                            "@config.lightSaturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "co2Factor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.co2",
+                            "@config.co2Saturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "tempFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "-",
+                            1.0,
+                            [
+                              "/",
+                              [
+                                "math/abs",
+                                [
+                                  "-",
+                                  "@entity.temperature",
+                                  "@config.tempOptimum"
+                                ]
+                              ],
+                              "@config.tempTolerance"
+                            ]
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "minFactor",
+                          [
+                            "math/min",
+                            "@lightFactor",
+                            "@co2Factor",
+                            "@tempFactor"
+                          ]
+                        ],
+                        [
+                          "limiting",
+                          [
+                            "if",
+                            [
+                              "<=",
+                              "@lightFactor",
+                              "@co2Factor"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@lightFactor",
+                                "@tempFactor"
+                              ],
+                              "light",
+                              "temperature"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@co2Factor",
+                                "@tempFactor"
+                              ],
+                              "co2",
+                              "temperature"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.rate",
+                          [
+                            "*",
+                            "@config.maxRate",
+                            "@minFactor"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.limitingFactor",
+                          "@limiting"
+                        ],
+                        [
+                          "set",
+                          "@entity.nodes",
+                          [
+                            "array/map",
+                            "@config.processNodes",
+                            [
+                              "fn",
+                              "n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nid",
+                                    [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@nid",
+                                    "light-in"
+                                  ],
+                                  [
+                                    "object/merge",
+                                    "@n",
+                                    {
+                                      "color": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@limiting",
+                                          "light"
+                                        ],
+                                        "#f59e0b",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "color"
+                                        ]
+                                      ],
+                                      "radius": [
+                                        "+",
+                                        8.0,
+                                        [
+                                          "*",
+                                          "@lightFactor",
+                                          16.0
+                                        ]
+                                      ]
+                                    }
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@nid",
+                                      "co2-in"
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@n",
+                                      {
+                                        "color": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@limiting",
+                                            "co2"
+                                          ],
+                                          "#f59e0b",
+                                          [
+                                            "object/get",
+                                            "@n",
+                                            "color"
+                                          ]
+                                        ],
+                                        "radius": [
+                                          "+",
+                                          8.0,
+                                          [
+                                            "*",
+                                            "@co2Factor",
+                                            16.0
+                                          ]
+                                        ]
+                                      }
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@nid",
+                                        "temp-in"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        "@n",
+                                        {
+                                          "color": [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@limiting",
+                                              "temperature"
+                                            ],
+                                            "#f59e0b",
+                                            [
+                                              "object/get",
+                                              "@n",
+                                              "color"
+                                            ]
+                                          ],
+                                          "radius": [
+                                            "+",
+                                            8.0,
+                                            [
+                                              "*",
+                                              "@tempFactor",
+                                              16.0
+                                            ]
+                                          ]
+                                        }
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@nid",
+                                          "output"
+                                        ],
+                                        [
+                                          "object/merge",
+                                          "@n",
+                                          {
+                                            "radius": [
+                                              "+",
+                                              6.0,
+                                              [
+                                                "*",
+                                                "@minFactor",
+                                                30.0
+                                              ]
+                                            ]
+                                          }
+                                        ],
+                                        "@n"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "@config.processLabel",
+                                    ": ",
+                                    [
+                                      "math/floor",
+                                      "@entity.rate"
+                                    ],
+                                    "%"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Limiting factor: ",
+                                    "@entity.limitingFactor"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Light intensity",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_LIGHT",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.light"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "CO₂ concentration",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_CO2",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.co2"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Temperature (°C)",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 45.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_TEMP",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.temperature"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "PROCESS_RATE_UPDATED",
+                    {
+                      "co2": "@entity.co2",
+                      "light": "@entity.light",
+                      "limitingFactor": "@entity.limitingFactor",
+                      "rate": "@entity.rate",
+                      "temperature": "@entity.temperature"
+                    }
+                  ]
+                ],
+                "event": "SET_CO2",
+                "eventId": "evt_01KZEJ4KE8XZMZPWY8A8G3X02E",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.temperature",
+                    "@payload.value"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "lightFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.light",
+                            "@config.lightSaturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "co2Factor",
+                        [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.co2",
+                            "@config.co2Saturation"
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ],
+                      [
+                        "tempFactor",
+                        [
+                          "math/clamp",
+                          [
+                            "-",
+                            1.0,
+                            [
+                              "/",
+                              [
+                                "math/abs",
+                                [
+                                  "-",
+                                  "@entity.temperature",
+                                  "@config.tempOptimum"
+                                ]
+                              ],
+                              "@config.tempTolerance"
+                            ]
+                          ],
+                          0.0,
+                          1.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "minFactor",
+                          [
+                            "math/min",
+                            "@lightFactor",
+                            "@co2Factor",
+                            "@tempFactor"
+                          ]
+                        ],
+                        [
+                          "limiting",
+                          [
+                            "if",
+                            [
+                              "<=",
+                              "@lightFactor",
+                              "@co2Factor"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@lightFactor",
+                                "@tempFactor"
+                              ],
+                              "light",
+                              "temperature"
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@co2Factor",
+                                "@tempFactor"
+                              ],
+                              "co2",
+                              "temperature"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.rate",
+                          [
+                            "*",
+                            "@config.maxRate",
+                            "@minFactor"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.limitingFactor",
+                          "@limiting"
+                        ],
+                        [
+                          "set",
+                          "@entity.nodes",
+                          [
+                            "array/map",
+                            "@config.processNodes",
+                            [
+                              "fn",
+                              "n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nid",
+                                    [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@nid",
+                                    "light-in"
+                                  ],
+                                  [
+                                    "object/merge",
+                                    "@n",
+                                    {
+                                      "color": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@limiting",
+                                          "light"
+                                        ],
+                                        "#f59e0b",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "color"
+                                        ]
+                                      ],
+                                      "radius": [
+                                        "+",
+                                        8.0,
+                                        [
+                                          "*",
+                                          "@lightFactor",
+                                          16.0
+                                        ]
+                                      ]
+                                    }
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@nid",
+                                      "co2-in"
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@n",
+                                      {
+                                        "color": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@limiting",
+                                            "co2"
+                                          ],
+                                          "#f59e0b",
+                                          [
+                                            "object/get",
+                                            "@n",
+                                            "color"
+                                          ]
+                                        ],
+                                        "radius": [
+                                          "+",
+                                          8.0,
+                                          [
+                                            "*",
+                                            "@co2Factor",
+                                            16.0
+                                          ]
+                                        ]
+                                      }
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@nid",
+                                        "temp-in"
+                                      ],
+                                      [
+                                        "object/merge",
+                                        "@n",
+                                        {
+                                          "color": [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@limiting",
+                                              "temperature"
+                                            ],
+                                            "#f59e0b",
+                                            [
+                                              "object/get",
+                                              "@n",
+                                              "color"
+                                            ]
+                                          ],
+                                          "radius": [
+                                            "+",
+                                            8.0,
+                                            [
+                                              "*",
+                                              "@tempFactor",
+                                              16.0
+                                            ]
+                                          ]
+                                        }
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@nid",
+                                          "output"
+                                        ],
+                                        [
+                                          "object/merge",
+                                          "@n",
+                                          {
+                                            "radius": [
+                                              "+",
+                                              6.0,
+                                              [
+                                                "*",
+                                                "@minFactor",
+                                                30.0
+                                              ]
+                                            ]
+                                          }
+                                        ],
+                                        "@n"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "@config.processLabel",
+                                    ": ",
+                                    [
+                                      "math/floor",
+                                      "@entity.rate"
+                                    ],
+                                    "%"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Limiting factor: ",
+                                    "@entity.limitingFactor"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Light intensity",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_LIGHT",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.light"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "CO₂ concentration",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 100.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_CO2",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.co2"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": "Temperature (°C)",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "max": 45.0,
+                                      "min": 0.0,
+                                      "onChange": "SET_TEMP",
+                                      "showTooltip": true,
+                                      "step": 1.0,
+                                      "type": "range-slider",
+                                      "value": "@entity.temperature"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "PROCESS_RATE_UPDATED",
+                    {
+                      "co2": "@entity.co2",
+                      "light": "@entity.light",
+                      "limitingFactor": "@entity.limitingFactor",
+                      "rate": "@entity.rate",
+                      "temperature": "@entity.temperature"
+                    }
+                  ]
+                ],
+                "event": "SET_TEMP",
+                "eventId": "evt_01KZEJ4KE828YF03D07F6MV231",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

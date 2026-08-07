@@ -1,5 +1,5 @@
 {
-  "description": "Chemistry lab organism — molecules, reactions, atoms, bonds, and arrows on a chemistry-canvas.",
+  "description": "Chemistry lab organism — a declarative molecule diagram (atoms, bonds, and arrows on a chemistry-canvas), an animated reversible-reaction bond form/break oscillator, and an interactive acid-base titration simulator (pH curve, equivalence point, indicator color), composed from the std-chem-molecule, std-chem-reaction, and std-chem-titration instrument atoms behind a mode router.",
   "ledger": {
     "entries": {
       "ent_01KXG0535TAM8TRQSQ6TZQD4FW": {
@@ -10,13 +10,46 @@
         "owner": "workspace",
         "renames": []
       },
-      "evt_01KXG0535TMRTYBK6RS93R5ZM8": {
-        "bakedName": "INIT",
-        "curName": "INIT",
-        "id": "evt_01KXG0535TMRTYBK6RS93R5ZM8",
+      "ent_01KZEGESC72BVJGNSFJXSBXDDN": {
+        "bakedName": "TitrationScene",
+        "curName": "TitrationScene",
+        "id": "ent_01KZEGESC72BVJGNSFJXSBXDDN",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01KZEGESC75MFZEYRY0XSQF5T2": {
+        "bakedName": "ReactionScene",
+        "curName": "ReactionScene",
+        "id": "ent_01KZEGESC75MFZEYRY0XSQF5T2",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01KZEGESC76WF1HGGYSVP4FZP6": {
+        "bakedName": "MoleculeScene",
+        "curName": "MoleculeScene",
+        "id": "ent_01KZEGESC76WF1HGGYSVP4FZP6",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KZEGESC75QH93WEXTRAS7CQD": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEGESC75QH93WEXTRAS7CQD",
         "kind": "event",
         "owner": "workspace",
-        "parent": "trt_01KXG0535TDZM2F0VH6M6T9ZFH",
+        "parent": "trt_01KZEGESC7BBC4R3MSSQ76MYSJ",
+        "renames": []
+      },
+      "evt_01KZEGESC7AAMM2WBKR9BHXJ6Q": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KZEGESC7AAMM2WBKR9BHXJ6Q",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEGESC7BBC4R3MSSQ76MYSJ",
         "renames": []
       },
       "orb_01KXG0535TBNZQPQ9XNPAFC8PR": {
@@ -35,10 +68,34 @@
         "owner": "workspace",
         "renames": []
       },
-      "trt_01KXG0535TDZM2F0VH6M6T9ZFH": {
-        "bakedName": "ChemistryLabRender",
-        "curName": "ChemistryLabRender",
-        "id": "trt_01KXG0535TDZM2F0VH6M6T9ZFH",
+      "trt_01KZEGESC7BBC4R3MSSQ76MYSJ": {
+        "bakedName": "ChemistryLabRouter",
+        "curName": "ChemistryLabRouter",
+        "id": "trt_01KZEGESC7BBC4R3MSSQ76MYSJ",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZEGESC7J1C7MYT3GCRN6WWE": {
+        "bakedName": "MoleculeSim",
+        "curName": "MoleculeSim",
+        "id": "trt_01KZEGESC7J1C7MYT3GCRN6WWE",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZEGESC7WCKRDMD4YJ1KEN7X": {
+        "bakedName": "TitrationSim",
+        "curName": "TitrationSim",
+        "id": "trt_01KZEGESC7WCKRDMD4YJ1KEN7X",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZEGESC7X7C9HGR07NQ9NZQ5": {
+        "bakedName": "ReactionSim",
+        "curName": "ReactionSim",
+        "id": "trt_01KZEGESC7X7C9HGR07NQ9NZQ5",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -49,415 +106,19 @@
   "name": "learning-chemistry-lab",
   "orbitals": [
     {
-      "entity": {
-        "fields": [
-          {
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "title",
-            "type": "string"
-          },
-          {
-            "items": {
-              "properties": {
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "element": {
-                  "name": "element",
-                  "required": false,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "radius": {
-                  "name": "radius",
-                  "required": false,
-                  "type": "number"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "atoms",
-            "type": "array"
-          },
-          {
-            "items": {
-              "properties": {
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "from": {
-                  "name": "from",
-                  "required": true,
-                  "type": "string"
-                },
-                "to": {
-                  "name": "to",
-                  "required": true,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "single",
-                    "double",
-                    "triple"
-                  ]
-                }
-              },
-              "type": "object"
-            },
-            "name": "bonds",
-            "type": "array"
-          },
-          {
-            "items": {
-              "properties": {
-                "angle": {
-                  "name": "angle",
-                  "required": false,
-                  "type": "number"
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "length": {
-                  "name": "length",
-                  "required": false,
-                  "type": "number"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "arrows",
-            "type": "array"
-          },
-          {
-            "items": {
-              "properties": {
-                "align": {
-                  "name": "align",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "left",
-                    "center",
-                    "right"
-                  ]
-                },
-                "axis": {
-                  "name": "axis",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "x",
-                    "y"
-                  ]
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "fill": {
-                  "name": "fill",
-                  "required": false,
-                  "type": "string"
-                },
-                "fontSize": {
-                  "name": "fontSize",
-                  "required": false,
-                  "type": "number"
-                },
-                "height": {
-                  "name": "height",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "lineWidth": {
-                  "name": "lineWidth",
-                  "required": false,
-                  "type": "number"
-                },
-                "max": {
-                  "name": "max",
-                  "required": false,
-                  "type": "number"
-                },
-                "min": {
-                  "name": "min",
-                  "required": false,
-                  "type": "number"
-                },
-                "opacity": {
-                  "name": "opacity",
-                  "required": false,
-                  "type": "number"
-                },
-                "path": {
-                  "name": "path",
-                  "required": false,
-                  "type": "string"
-                },
-                "points": {
-                  "items": {
-                    "properties": {
-                      "x": {
-                        "name": "x",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "y": {
-                        "name": "y",
-                        "required": true,
-                        "type": "number"
-                      }
-                    },
-                    "type": "object"
-                  },
-                  "name": "points",
-                  "required": false,
-                  "type": "array"
-                },
-                "radius": {
-                  "name": "radius",
-                  "required": false,
-                  "type": "number"
-                },
-                "step": {
-                  "name": "step",
-                  "required": false,
-                  "type": "number"
-                },
-                "text": {
-                  "name": "text",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string",
-                  "values": [
-                    "line",
-                    "arrow",
-                    "circle",
-                    "rect",
-                    "polygon",
-                    "path",
-                    "text",
-                    "axis",
-                    "grid"
-                  ]
-                },
-                "width": {
-                  "name": "width",
-                  "required": false,
-                  "type": "number"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "x1": {
-                  "name": "x1",
-                  "required": false,
-                  "type": "number"
-                },
-                "x2": {
-                  "name": "x2",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "y1": {
-                  "name": "y1",
-                  "required": false,
-                  "type": "number"
-                },
-                "y2": {
-                  "name": "y2",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "shapes",
-            "type": "array"
-          }
-        ],
-        "id": "ent_01KXG0535TAM8TRQSQ6TZQD4FW",
-        "name": "ChemistryLabItem",
-        "persistence": "runtime"
-      },
-      "id": "orb_01KXG0535TBNZQPQ9XNPAFC8PR",
-      "name": "ChemistryLabOrbital",
-      "pages": [
+      "auxiliaryEntities": [
         {
-          "id": "pag_01KXG0535XG5WE3RQSRHM2H7Z8",
-          "name": "ChemistryLabPage",
-          "path": "/learning/chemistry-lab",
-          "traits": [
+          "fields": [
             {
-              "ref": "ChemistryLabRender",
-              "refId": "trt_01KXG0535TDZM2F0VH6M6T9ZFH"
-            }
-          ]
-        }
-      ],
-      "traits": [
-        {
-          "category": "interaction",
-          "config": {
-            "animate": {
-              "default": false,
-              "description": "Enable continuous redraw loop.",
-              "label": "Animate",
-              "tier": "presentation",
-              "type": "boolean"
+              "name": "id",
+              "required": true,
+              "type": "string"
             },
-            "arrows": {
-              "default": [],
-              "description": "Reaction arrows or directional annotations.",
-              "items": {
-                "properties": {
-                  "angle": {
-                    "name": "angle",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "color": {
-                    "name": "color",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "length": {
-                    "name": "length",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "x": {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "y": {
-                    "name": "y",
-                    "required": true,
-                    "type": "number"
-                  }
-                },
-                "type": "object"
-              },
-              "label": "Arrows",
-              "tier": "domain",
-              "type": "[ChemistryLabArrow]"
+            {
+              "name": "title",
+              "type": "string"
             },
-            "atoms": {
-              "default": [
-                {
-                  "color": "#374151",
-                  "element": "C",
-                  "id": "C",
-                  "radius": 22.0,
-                  "x": 300.0,
-                  "y": 200.0
-                },
-                {
-                  "color": "#dc2626",
-                  "element": "O",
-                  "id": "O",
-                  "radius": 20.0,
-                  "x": 380.0,
-                  "y": 160.0
-                },
-                {
-                  "color": "#2563eb",
-                  "element": "H",
-                  "id": "H1",
-                  "radius": 14.0,
-                  "x": 240.0,
-                  "y": 160.0
-                },
-                {
-                  "color": "#2563eb",
-                  "element": "H",
-                  "id": "H2",
-                  "radius": 14.0,
-                  "x": 260.0,
-                  "y": 270.0
-                },
-                {
-                  "color": "#2563eb",
-                  "element": "H",
-                  "id": "H3",
-                  "radius": 14.0,
-                  "x": 340.0,
-                  "y": 270.0
-                }
-              ],
-              "description": "Atoms to render.",
+            {
               "items": {
                 "properties": {
                   "color": {
@@ -493,44 +154,10 @@
                 },
                 "type": "object"
               },
-              "label": "Atoms",
-              "tier": "domain",
-              "type": "[ChemistryLabAtom]"
+              "name": "atoms",
+              "type": "array"
             },
-            "backgroundColor": {
-              "default": "#fafafa",
-              "label": "Background Color",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "bonds": {
-              "default": [
-                {
-                  "color": "#374151",
-                  "from": "C",
-                  "to": "O",
-                  "type": "double"
-                },
-                {
-                  "color": "#374151",
-                  "from": "C",
-                  "to": "H1",
-                  "type": "single"
-                },
-                {
-                  "color": "#374151",
-                  "from": "C",
-                  "to": "H2",
-                  "type": "single"
-                },
-                {
-                  "color": "#374151",
-                  "from": "C",
-                  "to": "H3",
-                  "type": "single"
-                }
-              ],
-              "description": "Bonds between atoms.",
+            {
               "items": {
                 "properties": {
                   "color": {
@@ -561,39 +188,49 @@
                 },
                 "type": "object"
               },
-              "label": "Bonds",
-              "tier": "domain",
-              "type": "[ChemistryLabBond]"
+              "name": "bonds",
+              "type": "array"
             },
-            "height": {
-              "default": 400.0,
-              "description": "Canvas height in pixels.",
-              "label": "Height",
-              "tier": "presentation",
-              "type": "number"
+            {
+              "items": {
+                "properties": {
+                  "angle": {
+                    "name": "angle",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "length": {
+                    "name": "length",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "arrows",
+              "type": "array"
             },
-            "interactive": {
-              "default": false,
-              "description": "Enable pointer interaction on the canvas.",
-              "label": "Interactive",
-              "tier": "presentation",
-              "type": "boolean"
-            },
-            "mode": {
-              "default": "molecule",
-              "description": "What kind of chemistry visualization to render.",
-              "label": "Mode",
-              "synonyms": "molecule, atom, bond, ball and stick, formula, reaction, reactant, product, arrow, mechanism",
-              "tier": "domain",
-              "type": "string",
-              "values": [
-                "molecule",
-                "reaction"
-              ]
-            },
-            "shapes": {
-              "default": [],
-              "description": "Extra declarative shapes such as electron orbitals or brackets.",
+            {
               "items": {
                 "properties": {
                   "align": {
@@ -759,50 +396,586 @@
                 },
                 "type": "object"
               },
-              "label": "Shapes",
-              "tier": "presentation",
-              "type": "[ChemistryLabShape]"
-            },
-            "title": {
-              "default": "Chemistry Lab",
-              "description": "Title shown above the canvas.",
-              "label": "Title",
-              "tier": "presentation",
+              "name": "shapes",
+              "type": "array"
+            }
+          ],
+          "id": "ent_01KZEGESC76WF1HGGYSVP4FZP6",
+          "name": "MoleculeScene",
+          "persistence": "runtime"
+        },
+        {
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
               "type": "string"
             },
-            "width": {
-              "default": 600.0,
-              "description": "Canvas width in pixels.",
-              "label": "Width",
-              "tier": "presentation",
+            {
+              "default": false,
+              "name": "active",
+              "type": "boolean"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "default": 0.0,
+              "name": "phase",
               "type": "number"
+            },
+            {
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "element": {
+                    "name": "element",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "home": {
+                    "name": "home",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "atoms",
+              "type": "array"
+            },
+            {
+              "default": false,
+              "name": "running",
+              "type": "boolean"
+            }
+          ],
+          "id": "ent_01KZEGESC75MFZEYRY0XSQF5T2",
+          "name": "ReactionScene",
+          "persistence": "runtime"
+        },
+        {
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": false,
+              "name": "active",
+              "type": "boolean"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "element": {
+                    "name": "element",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "atoms",
+              "type": "array"
+            },
+            {
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "single",
+                      "double",
+                      "triple"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "name": "bonds",
+              "type": "array"
+            },
+            {
+              "items": {
+                "properties": {
+                  "angle": {
+                    "name": "angle",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "length": {
+                    "name": "length",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "arrows",
+              "type": "array"
+            },
+            {
+              "items": {
+                "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "axis": {
+                    "name": "axis",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "x",
+                      "y"
+                    ]
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fill": {
+                    "name": "fill",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fontSize": {
+                    "name": "fontSize",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "height": {
+                    "name": "height",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lineWidth": {
+                    "name": "lineWidth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "min": {
+                    "name": "min",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "points": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "points",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "step": {
+                    "name": "step",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "line",
+                      "arrow",
+                      "circle",
+                      "rect",
+                      "polygon",
+                      "path",
+                      "text",
+                      "axis",
+                      "grid"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x2": {
+                    "name": "x2",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y1": {
+                    "name": "y1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y2": {
+                    "name": "y2",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "shapes",
+              "type": "array"
+            },
+            {
+              "default": "strong",
+              "name": "titrationAcidStrength",
+              "type": "string"
+            },
+            {
+              "default": 0.000018,
+              "name": "titrationAcidKa",
+              "type": "number"
+            },
+            {
+              "default": 0.1,
+              "name": "titrationAcidConcentration",
+              "type": "number"
+            },
+            {
+              "default": 25.0,
+              "name": "titrationAcidVolume",
+              "type": "number"
+            },
+            {
+              "default": 0.1,
+              "name": "titrationBaseConcentration",
+              "type": "number"
+            },
+            {
+              "default": 8.2,
+              "name": "titrationIndicatorMidpoint",
+              "type": "number"
+            },
+            {
+              "default": "#fde68a",
+              "name": "titrationIndicatorAcidColor",
+              "type": "string"
+            },
+            {
+              "default": "#ec4899",
+              "name": "titrationIndicatorBaseColor",
+              "type": "string"
+            },
+            {
+              "default": 0.0,
+              "name": "titrantVolumeAdded",
+              "type": "number"
+            },
+            {
+              "default": 0.0,
+              "name": "ph",
+              "type": "number"
+            },
+            {
+              "default": 0.0,
+              "name": "equivalenceVolume",
+              "type": "number"
+            },
+            {
+              "default": false,
+              "name": "overshoot",
+              "type": "boolean"
+            },
+            {
+              "default": "#fde68a",
+              "name": "indicatorColor",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "name": "statusText",
+              "type": "string"
+            },
+            {
+              "default": [],
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "curvePoints",
+              "type": "array"
+            }
+          ],
+          "id": "ent_01KZEGESC72BVJGNSFJXSBXDDN",
+          "name": "TitrationScene",
+          "persistence": "runtime"
+        }
+      ],
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01KXG0535TAM8TRQSQ6TZQD4FW",
+        "name": "ChemistryLabItem",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KXG0535TBNZQPQ9XNPAFC8PR",
+      "name": "ChemistryLabOrbital",
+      "pages": [
+        {
+          "id": "pag_01KXG0535XG5WE3RQSRHM2H7Z8",
+          "name": "ChemistryLabPage",
+          "path": "/learning/chemistry-lab",
+          "traits": [
+            {
+              "ref": "ChemistryLabRouter",
+              "refId": "trt_01KZEGESC7BBC4R3MSSQ76MYSJ"
+            },
+            {
+              "ref": "MoleculeSim",
+              "refId": "trt_01KZEGESC7J1C7MYT3GCRN6WWE"
+            },
+            {
+              "ref": "ReactionSim",
+              "refId": "trt_01KZEGESC7X7C9HGR07NQ9NZQ5"
+            },
+            {
+              "ref": "TitrationSim",
+              "refId": "trt_01KZEGESC7WCKRDMD4YJ1KEN7X"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "mode": {
+              "default": "molecule",
+              "description": "What kind of chemistry visualization to render: a static molecule/reaction diagram, or an interactive acid-base titration.",
+              "label": "Mode",
+              "synonyms": "molecule, atom, bond, ball and stick, formula, reaction, reactant, product, arrow, mechanism, titration, acid-base titration, pH curve, equivalence point, indicator, neutralization, burette, analyte, titrant",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "molecule",
+                "reaction",
+                "titration"
+              ]
             }
           },
+          "emits": [
+            {
+              "description": "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null.",
+              "event": "MODE_SELECTED",
+              "eventId": "evt_01KZEGESC75QH93WEXTRAS7CQD",
+              "payloadSchema": [
+                {
+                  "name": "mode",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
           "entityContract": {
-            "provides": [
-              "arrows",
-              "atoms",
-              "bonds",
-              "shapes",
-              "title"
-            ],
+            "provides": [],
             "requires": []
           },
           "entityRebindable": true,
           "entityRefIds": {
             "ChemistryLabItem": "ent_01KXG0535TAM8TRQSQ6TZQD4FW"
           },
-          "id": "trt_01KXG0535TDZM2F0VH6M6T9ZFH",
+          "id": "trt_01KZEGESC7BBC4R3MSSQ76MYSJ",
           "linkedEntity": "ChemistryLabItem",
           "linkedEntityId": "ent_01KXG0535TAM8TRQSQ6TZQD4FW",
-          "name": "ChemistryLabRender",
+          "name": "ChemistryLabRouter",
           "scope": "instance",
           "stateMachine": {
             "events": [
               {
-                "id": "evt_01KXG0535TMRTYBK6RS93R5ZM8",
+                "id": "evt_01KZEGESC7AAMM2WBKR9BHXJ6Q",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null.",
+                "id": "evt_01KZEGESC75QH93WEXTRAS7CQD",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
               }
             ],
             "states": [
@@ -815,72 +988,115 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.title",
-                    "@config.title"
-                  ],
-                  [
-                    "set",
-                    "@entity.atoms",
-                    "@config.atoms"
-                  ],
-                  [
-                    "set",
-                    "@entity.bonds",
-                    "@config.bonds"
-                  ],
-                  [
-                    "set",
-                    "@entity.arrows",
-                    "@config.arrows"
-                  ],
-                  [
-                    "set",
-                    "@entity.shapes",
-                    "@config.shapes"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
+                    "emit",
+                    "MODE_SELECTED",
                     {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "animate": "@config.animate",
-                              "arrows": "@entity.arrows",
-                              "atoms": "@entity.atoms",
-                              "backgroundColor": "@config.backgroundColor",
-                              "bonds": "@entity.bonds",
-                              "height": "@config.height",
-                              "interactive": "@config.interactive",
-                              "shapes": "@entity.shapes",
-                              "type": "chemistry-canvas",
-                              "width": "@config.width"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
-                        }
-                      ],
-                      "padding": "md",
-                      "type": "box"
+                      "mode": "@config.mode"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "eventId": "evt_01KXG0535TMRTYBK6RS93R5ZM8",
+                "eventId": "evt_01KZEGESC7AAMM2WBKR9BHXJ6Q",
                 "from": "idle",
                 "to": "idle"
               }
             ]
           }
+        },
+        {
+          "config": {
+            "matchMode": {
+              "default": "molecule",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Chemistry Lab",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KZEGESC7J1C7MYT3GCRN6WWE",
+          "linkedEntity": "MoleculeScene",
+          "linkedEntityId": "ent_01KZEGESC76WF1HGGYSVP4FZP6",
+          "listens": [
+            {
+              "event": "MODE_SELECTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ChemistryLabRouter"
+              },
+              "triggers": "MODE_SELECTED"
+            }
+          ],
+          "name": "MoleculeSim",
+          "ref": "ChemMolecule.traits.ChemMoleculeSim"
+        },
+        {
+          "config": {
+            "matchMode": {
+              "default": "reaction",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Chemistry Lab",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KZEGESC7X7C9HGR07NQ9NZQ5",
+          "linkedEntity": "ReactionScene",
+          "linkedEntityId": "ent_01KZEGESC75MFZEYRY0XSQF5T2",
+          "listens": [
+            {
+              "event": "MODE_SELECTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ChemistryLabRouter"
+              },
+              "triggers": "MODE_SELECTED"
+            }
+          ],
+          "name": "ReactionSim",
+          "ref": "ChemReaction.traits.ChemReactionSim"
+        },
+        {
+          "config": {
+            "matchMode": {
+              "default": "titration",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Chemistry Lab",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KZEGESC7WCKRDMD4YJ1KEN7X",
+          "linkedEntity": "TitrationScene",
+          "linkedEntityId": "ent_01KZEGESC72BVJGNSFJXSBXDDN",
+          "listens": [
+            {
+              "event": "MODE_SELECTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ChemistryLabRouter"
+              },
+              "triggers": "MODE_SELECTED"
+            }
+          ],
+          "name": "TitrationSim",
+          "ref": "ChemTitration.traits.ChemTitrationSim"
+        }
+      ],
+      "uses": [
+        {
+          "as": "ChemMolecule",
+          "from": "std/behaviors/std-chem-molecule"
+        },
+        {
+          "as": "ChemReaction",
+          "from": "std/behaviors/std-chem-reaction"
+        },
+        {
+          "as": "ChemTitration",
+          "from": "std/behaviors/std-chem-titration"
         }
       ]
     }

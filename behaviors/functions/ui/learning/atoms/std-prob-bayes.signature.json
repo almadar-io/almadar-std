@@ -1,0 +1,341 @@
+[
+  {
+    "organism": "std-prob-bayes",
+    "orbital": "ProbBayesOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-prob-bayes.ts",
+    "entities": [
+      {
+        "name": "ProbBayesScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "priorH",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "likelihoodEGivenH",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "likelihoodEGivenNotH",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "countTP",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "countFN",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "countFP",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "countTN",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "posteriorH",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "trialsRun",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "trialsPositive",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "trialsTruePositive",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "empiricalPosterior",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lastTrialLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ProbBayesSim",
+        "emittedEvents": [
+          "BAYES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BAYES_UPDATED",
+            "direction": "emit",
+            "description": "The Bayes state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "bayes update, posterior update, trial run, evidence trial",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_PARAM",
+            "direction": "listen",
+            "description": "Learner dragged a prior/likelihood slider — param is one of prior, likelihoodH, likelihoodNotH.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN_TRIAL",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET_TRIALS",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "evidenceLabel",
+            "type": "string",
+            "default": "a positive test",
+            "label": "Evidence Label",
+            "description": "Human label for the evidence E, used in trial readouts.",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridColumns",
+            "type": "number",
+            "default": 10,
+            "label": "Grid Columns",
+            "description": "Number of columns in the population grid.",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "hypothesisLabel",
+            "type": "string",
+            "default": "the condition",
+            "label": "Hypothesis Label",
+            "description": "Human label for the hypothesis H, used in trial readouts.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "likelihoodEGivenH",
+            "type": "number",
+            "default": 0.9,
+            "label": "P(E|H)",
+            "description": "Likelihood of observing the evidence given the hypothesis is true, e.g. a test's sensitivity.",
+            "synonyms": "sensitivity, true positive rate",
+            "tier": "domain"
+          },
+          {
+            "key": "likelihoodEGivenNotH",
+            "type": "number",
+            "default": 0.08,
+            "label": "P(E|¬H)",
+            "description": "Likelihood of observing the evidence given the hypothesis is false, e.g. a test's false-positive rate.",
+            "synonyms": "false positive rate, false alarm rate",
+            "tier": "domain"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "populationSize",
+            "type": "number",
+            "default": 100,
+            "label": "Population Size",
+            "description": "Number of individuals in the population grid.",
+            "tier": "presentation"
+          },
+          {
+            "key": "priorH",
+            "type": "number",
+            "default": 0.01,
+            "label": "Prior P(H)",
+            "description": "Prior probability that the hypothesis is true before seeing evidence — the base rate.",
+            "synonyms": "base rate, prior probability",
+            "tier": "domain"
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Probability Lab",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 10,
+            "label": "X Max",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": 0,
+            "label": "X Min",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMax",
+            "type": "number",
+            "default": 1,
+            "label": "Y Max",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMin",
+            "type": "number",
+            "default": 0,
+            "label": "Y Min",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ProbBayesScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "RESET_TRIALS",
+          "RUN_TRIAL",
+          "SET_PARAM"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "countFN",
+            "countFP",
+            "countTN",
+            "countTP",
+            "empiricalPosterior",
+            "lastTrialLabel",
+            "likelihoodEGivenH",
+            "likelihoodEGivenNotH",
+            "posteriorH",
+            "priorH",
+            "shapes",
+            "title",
+            "trialsPositive",
+            "trialsRun",
+            "trialsTruePositive"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ProbBayesPage",
+        "defaultPath": "/prob-bayes",
+        "primaryEntity": "ProbBayesScene"
+      }
+    ],
+    "emittedEvents": [
+      "BAYES_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

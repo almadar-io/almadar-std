@@ -1,0 +1,480 @@
+app std-soc-stratification "1.0.0"
+"Social stratification & mobility engine — five class strata redistribute across generations as the learner drives an intergenerational mobility index, with a live Gini-index readout, on a biology-canvas stacked bar. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital SocStratOrbital {
+  type SocStratStratum = {
+    name : string!
+    share : number!
+    color : string
+  }
+  type SocStratShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    width : number
+    height : number
+    text : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    color : string
+    fill : string
+  }
+
+  entity SocStratScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    mobility : number
+    generation : number
+    stratumShares : [number]
+    giniIndex : number
+    shapes : [SocStratShape]
+  }
+
+  trait SocStratSim -> @rebindable SocStratScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.mobility @config.initialMobility)
+        (set @entity.generation 0)
+        (let (
+            (initShares (array/map @config.strata (fn s (object/get @s share))))
+            (p0 (array/nth @initShares 0))
+            (p1 (array/nth @initShares 1))
+            (p2 (array/nth @initShares 2))
+            (p3 (array/nth @initShares 3))
+            (p4 (array/nth @initShares 4))
+            (w0 (array/nth @config.incomeWeights 0))
+            (w1 (array/nth @config.incomeWeights 1))
+            (w2 (array/nth @config.incomeWeights 2))
+            (w3 (array/nth @config.incomeWeights 3))
+            (w4 (array/nth @config.incomeWeights 4))
+            (frac0 (/ @p0 100))
+            (frac1 (/ @p1 100))
+            (frac2 (/ @p2 100))
+            (frac3 (/ @p3 100))
+            (frac4 (/ @p4 100))
+            (inc0 (* @frac0 @w0))
+            (inc1 (* @frac1 @w1))
+            (inc2 (* @frac2 @w2))
+            (inc3 (* @frac3 @w3))
+            (inc4 (* @frac4 @w4))
+            (totalInc (+ (+ (+ (+ @inc0 @inc1) @inc2) @inc3) @inc4))
+            (y0 (/ @inc0 @totalInc))
+            (y1 (/ @inc1 @totalInc))
+            (y2 (/ @inc2 @totalInc))
+            (y3 (/ @inc3 @totalInc))
+            (y4 (/ @inc4 @totalInc))
+            (x1 @frac4)
+            (x2 (+ @x1 @frac3))
+            (x3 (+ @x2 @frac2))
+            (x4 (+ @x3 @frac1))
+            (x5 (+ @x4 @frac0))
+            (yy1 @y4)
+            (yy2 (+ @yy1 @y3))
+            (yy3 (+ @yy2 @y2))
+            (yy4 (+ @yy3 @y1))
+            (yy5 (+ @yy4 @y0))
+            (giniVal (- 1 (+ (+ (+ (+ (* @x1 @yy1) (* (- @x2 @x1) (+ @yy2 @yy1))) (* (- @x3 @x2) (+ @yy3 @yy2))) (* (- @x4 @x3) (+ @yy4 @yy3))) (* (- @x5 @x4) (+ @yy5 @yy4)))))
+            (barMargin @config.barMargin)
+            (barWidth (- @config.width (* 2 @barMargin)))
+            (barY (- (/ @config.height 2) (/ @config.barHeight 2)))
+            (seg0 (* (/ @p0 100) @barWidth))
+            (seg1 (* (/ @p1 100) @barWidth))
+            (seg2 (* (/ @p2 100) @barWidth))
+            (seg3 (* (/ @p3 100) @barWidth))
+            (seg4 (* (/ @p4 100) @barWidth))
+            (cum0 0)
+            (cum1 (+ @cum0 @seg0))
+            (cum2 (+ @cum1 @seg1))
+            (cum3 (+ @cum2 @seg2))
+            (cum4 (+ @cum3 @seg3))
+            (stratum0 (array/nth @config.strata 0))
+            (stratum1 (array/nth @config.strata 1))
+            (stratum2 (array/nth @config.strata 2))
+            (stratum3 (array/nth @config.strata 3))
+            (stratum4 (array/nth @config.strata 4))
+            (barShapesCalc [
+                { type: rect, id: "seg0", x: (+ @barMargin @cum0), y: @barY, width: @seg0, height: @config.barHeight, color: (object/get @stratum0 color), fill: (object/get @stratum0 color) },
+                { type: rect, id: "seg1", x: (+ @barMargin @cum1), y: @barY, width: @seg1, height: @config.barHeight, color: (object/get @stratum1 color), fill: (object/get @stratum1 color) },
+                { type: rect, id: "seg2", x: (+ @barMargin @cum2), y: @barY, width: @seg2, height: @config.barHeight, color: (object/get @stratum2 color), fill: (object/get @stratum2 color) },
+                { type: rect, id: "seg3", x: (+ @barMargin @cum3), y: @barY, width: @seg3, height: @config.barHeight, color: (object/get @stratum3 color), fill: (object/get @stratum3 color) },
+                { type: rect, id: "seg4", x: (+ @barMargin @cum4), y: @barY, width: @seg4, height: @config.barHeight, color: (object/get @stratum4 color), fill: (object/get @stratum4 color) },
+                { type: text, id: "pct0", x: (+ @barMargin (+ @cum0 (/ @seg0 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p0 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct1", x: (+ @barMargin (+ @cum1 (/ @seg1 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p1 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct2", x: (+ @barMargin (+ @cum2 (/ @seg2 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p2 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct3", x: (+ @barMargin (+ @cum3 (/ @seg3 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p3 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct4", x: (+ @barMargin (+ @cum4 (/ @seg4 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p4 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor }
+              ])
+          )
+          (do
+            (set @entity.stratumShares @initShares)
+            (set @entity.giniIndex @giniVal)
+            (set @entity.shapes @barShapesCalc)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Generation " @entity.generation " — Gini index: " (math/round @entity.giniIndex 3)) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 5) (fn i { type: typography, variant: caption, content: (str/concat (object/get (array/nth @config.strata @i) name) ": " (math/round (array/nth @entity.stratumShares @i) 1) "%") })) },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Mobility index: " @entity.mobility) },
+                    { type: range-slider, min: 0, max: 100, step: 1, value: @entity.mobility, showTooltip: true, onChange: SET_MOBILITY }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_GENERATION, label: "Step One Generation", variant: primary }
+                  ] }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.mobility @config.initialMobility)
+        (set @entity.generation 0)
+        (let (
+            (initShares (array/map @config.strata (fn s (object/get @s share))))
+            (p0 (array/nth @initShares 0))
+            (p1 (array/nth @initShares 1))
+            (p2 (array/nth @initShares 2))
+            (p3 (array/nth @initShares 3))
+            (p4 (array/nth @initShares 4))
+            (w0 (array/nth @config.incomeWeights 0))
+            (w1 (array/nth @config.incomeWeights 1))
+            (w2 (array/nth @config.incomeWeights 2))
+            (w3 (array/nth @config.incomeWeights 3))
+            (w4 (array/nth @config.incomeWeights 4))
+            (frac0 (/ @p0 100))
+            (frac1 (/ @p1 100))
+            (frac2 (/ @p2 100))
+            (frac3 (/ @p3 100))
+            (frac4 (/ @p4 100))
+            (inc0 (* @frac0 @w0))
+            (inc1 (* @frac1 @w1))
+            (inc2 (* @frac2 @w2))
+            (inc3 (* @frac3 @w3))
+            (inc4 (* @frac4 @w4))
+            (totalInc (+ (+ (+ (+ @inc0 @inc1) @inc2) @inc3) @inc4))
+            (y0 (/ @inc0 @totalInc))
+            (y1 (/ @inc1 @totalInc))
+            (y2 (/ @inc2 @totalInc))
+            (y3 (/ @inc3 @totalInc))
+            (y4 (/ @inc4 @totalInc))
+            (x1 @frac4)
+            (x2 (+ @x1 @frac3))
+            (x3 (+ @x2 @frac2))
+            (x4 (+ @x3 @frac1))
+            (x5 (+ @x4 @frac0))
+            (yy1 @y4)
+            (yy2 (+ @yy1 @y3))
+            (yy3 (+ @yy2 @y2))
+            (yy4 (+ @yy3 @y1))
+            (yy5 (+ @yy4 @y0))
+            (giniVal (- 1 (+ (+ (+ (+ (* @x1 @yy1) (* (- @x2 @x1) (+ @yy2 @yy1))) (* (- @x3 @x2) (+ @yy3 @yy2))) (* (- @x4 @x3) (+ @yy4 @yy3))) (* (- @x5 @x4) (+ @yy5 @yy4)))))
+            (barMargin @config.barMargin)
+            (barWidth (- @config.width (* 2 @barMargin)))
+            (barY (- (/ @config.height 2) (/ @config.barHeight 2)))
+            (seg0 (* (/ @p0 100) @barWidth))
+            (seg1 (* (/ @p1 100) @barWidth))
+            (seg2 (* (/ @p2 100) @barWidth))
+            (seg3 (* (/ @p3 100) @barWidth))
+            (seg4 (* (/ @p4 100) @barWidth))
+            (cum0 0)
+            (cum1 (+ @cum0 @seg0))
+            (cum2 (+ @cum1 @seg1))
+            (cum3 (+ @cum2 @seg2))
+            (cum4 (+ @cum3 @seg3))
+            (stratum0 (array/nth @config.strata 0))
+            (stratum1 (array/nth @config.strata 1))
+            (stratum2 (array/nth @config.strata 2))
+            (stratum3 (array/nth @config.strata 3))
+            (stratum4 (array/nth @config.strata 4))
+            (barShapesCalc [
+                { type: rect, id: "seg0", x: (+ @barMargin @cum0), y: @barY, width: @seg0, height: @config.barHeight, color: (object/get @stratum0 color), fill: (object/get @stratum0 color) },
+                { type: rect, id: "seg1", x: (+ @barMargin @cum1), y: @barY, width: @seg1, height: @config.barHeight, color: (object/get @stratum1 color), fill: (object/get @stratum1 color) },
+                { type: rect, id: "seg2", x: (+ @barMargin @cum2), y: @barY, width: @seg2, height: @config.barHeight, color: (object/get @stratum2 color), fill: (object/get @stratum2 color) },
+                { type: rect, id: "seg3", x: (+ @barMargin @cum3), y: @barY, width: @seg3, height: @config.barHeight, color: (object/get @stratum3 color), fill: (object/get @stratum3 color) },
+                { type: rect, id: "seg4", x: (+ @barMargin @cum4), y: @barY, width: @seg4, height: @config.barHeight, color: (object/get @stratum4 color), fill: (object/get @stratum4 color) },
+                { type: text, id: "pct0", x: (+ @barMargin (+ @cum0 (/ @seg0 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p0 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct1", x: (+ @barMargin (+ @cum1 (/ @seg1 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p1 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct2", x: (+ @barMargin (+ @cum2 (/ @seg2 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p2 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct3", x: (+ @barMargin (+ @cum3 (/ @seg3 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p3 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct4", x: (+ @barMargin (+ @cum4 (/ @seg4 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @p4 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor }
+              ])
+          )
+          (do
+            (set @entity.stratumShares @initShares)
+            (set @entity.giniIndex @giniVal)
+            (set @entity.shapes @barShapesCalc)
+          )
+        )
+        (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                  { type: typography, variant: body, content: (str/concat "Generation " @entity.generation " — Gini index: " (math/round @entity.giniIndex 3)) },
+                  { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 5) (fn i { type: typography, variant: caption, content: (str/concat (object/get (array/nth @config.strata @i) name) ": " (math/round (array/nth @entity.stratumShares @i) 1) "%") })) },
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat "Mobility index: " @entity.mobility) },
+                      { type: range-slider, min: 0, max: 100, step: 1, value: @entity.mobility, showTooltip: true, onChange: SET_MOBILITY }
+                    ] },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: button, action: STEP_GENERATION, label: "Step One Generation", variant: primary }
+                    ] }
+                ] }
+            ]
+        })
+
+      SET_MOBILITY -> idle when (== @entity.active true)
+        (set @entity.mobility ?value)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Generation " @entity.generation " — Gini index: " (math/round @entity.giniIndex 3)) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 5) (fn i { type: typography, variant: caption, content: (str/concat (object/get (array/nth @config.strata @i) name) ": " (math/round (array/nth @entity.stratumShares @i) 1) "%") })) },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Mobility index: " @entity.mobility) },
+                    { type: range-slider, min: 0, max: 100, step: 1, value: @entity.mobility, showTooltip: true, onChange: SET_MOBILITY }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_GENERATION, label: "Step One Generation", variant: primary }
+                  ] }
+              ] }
+          ]
+        })
+        (emit STRATIFICATION_UPDATED { mobility: @entity.mobility, generation: @entity.generation, giniIndex: @entity.giniIndex, stratumShares: @entity.stratumShares })
+
+      STEP_GENERATION -> idle when (== @entity.active true)
+        (set @entity.generation (+ @entity.generation 1))
+        (let (
+            (p0 (array/nth @entity.stratumShares 0))
+            (p1 (array/nth @entity.stratumShares 1))
+            (p2 (array/nth @entity.stratumShares 2))
+            (p3 (array/nth @entity.stratumShares 3))
+            (p4 (array/nth @entity.stratumShares 4))
+            (mobilityFrac (/ @entity.mobility 100))
+            (concentrationFrac (- 1 @mobilityFrac))
+            (xfer0 (* @p0 (* @mobilityFrac @config.mobilityRate)))
+            (xfer1 (* @p1 (* @mobilityFrac @config.mobilityRate)))
+            (xfer3 (* @p3 (* @mobilityFrac @config.mobilityRate)))
+            (xfer4 (* @p4 (* @mobilityFrac @config.mobilityRate)))
+            (pull0 (* @p1 (* @concentrationFrac @config.concentrationRate)))
+            (pull4 (* @p3 (* @concentrationFrac @config.concentrationRate)))
+            (newP0 (+ (- @p0 @xfer0) @pull0))
+            (newP1 (- (+ @p1 @xfer0) (+ @xfer1 @pull0)))
+            (newP2 (+ @p2 (+ @xfer1 @xfer3)))
+            (newP3 (- (+ @p3 @xfer4) (+ @xfer3 @pull4)))
+            (newP4 (+ (- @p4 @xfer4) @pull4))
+            (w0 (array/nth @config.incomeWeights 0))
+            (w1 (array/nth @config.incomeWeights 1))
+            (w2 (array/nth @config.incomeWeights 2))
+            (w3 (array/nth @config.incomeWeights 3))
+            (w4 (array/nth @config.incomeWeights 4))
+            (frac0 (/ @newP0 100))
+            (frac1 (/ @newP1 100))
+            (frac2 (/ @newP2 100))
+            (frac3 (/ @newP3 100))
+            (frac4 (/ @newP4 100))
+            (inc0 (* @frac0 @w0))
+            (inc1 (* @frac1 @w1))
+            (inc2 (* @frac2 @w2))
+            (inc3 (* @frac3 @w3))
+            (inc4 (* @frac4 @w4))
+            (totalInc (+ (+ (+ (+ @inc0 @inc1) @inc2) @inc3) @inc4))
+            (y0 (/ @inc0 @totalInc))
+            (y1 (/ @inc1 @totalInc))
+            (y2 (/ @inc2 @totalInc))
+            (y3 (/ @inc3 @totalInc))
+            (y4 (/ @inc4 @totalInc))
+            (x1 @frac4)
+            (x2 (+ @x1 @frac3))
+            (x3 (+ @x2 @frac2))
+            (x4 (+ @x3 @frac1))
+            (x5 (+ @x4 @frac0))
+            (yy1 @y4)
+            (yy2 (+ @yy1 @y3))
+            (yy3 (+ @yy2 @y2))
+            (yy4 (+ @yy3 @y1))
+            (yy5 (+ @yy4 @y0))
+            (giniVal (- 1 (+ (+ (+ (+ (* @x1 @yy1) (* (- @x2 @x1) (+ @yy2 @yy1))) (* (- @x3 @x2) (+ @yy3 @yy2))) (* (- @x4 @x3) (+ @yy4 @yy3))) (* (- @x5 @x4) (+ @yy5 @yy4)))))
+            (barMargin @config.barMargin)
+            (barWidth (- @config.width (* 2 @barMargin)))
+            (barY (- (/ @config.height 2) (/ @config.barHeight 2)))
+            (seg0 (* (/ @newP0 100) @barWidth))
+            (seg1 (* (/ @newP1 100) @barWidth))
+            (seg2 (* (/ @newP2 100) @barWidth))
+            (seg3 (* (/ @newP3 100) @barWidth))
+            (seg4 (* (/ @newP4 100) @barWidth))
+            (cum0 0)
+            (cum1 (+ @cum0 @seg0))
+            (cum2 (+ @cum1 @seg1))
+            (cum3 (+ @cum2 @seg2))
+            (cum4 (+ @cum3 @seg3))
+            (stratum0 (array/nth @config.strata 0))
+            (stratum1 (array/nth @config.strata 1))
+            (stratum2 (array/nth @config.strata 2))
+            (stratum3 (array/nth @config.strata 3))
+            (stratum4 (array/nth @config.strata 4))
+            (barShapesCalc [
+                { type: rect, id: "seg0", x: (+ @barMargin @cum0), y: @barY, width: @seg0, height: @config.barHeight, color: (object/get @stratum0 color), fill: (object/get @stratum0 color) },
+                { type: rect, id: "seg1", x: (+ @barMargin @cum1), y: @barY, width: @seg1, height: @config.barHeight, color: (object/get @stratum1 color), fill: (object/get @stratum1 color) },
+                { type: rect, id: "seg2", x: (+ @barMargin @cum2), y: @barY, width: @seg2, height: @config.barHeight, color: (object/get @stratum2 color), fill: (object/get @stratum2 color) },
+                { type: rect, id: "seg3", x: (+ @barMargin @cum3), y: @barY, width: @seg3, height: @config.barHeight, color: (object/get @stratum3 color), fill: (object/get @stratum3 color) },
+                { type: rect, id: "seg4", x: (+ @barMargin @cum4), y: @barY, width: @seg4, height: @config.barHeight, color: (object/get @stratum4 color), fill: (object/get @stratum4 color) },
+                { type: text, id: "pct0", x: (+ @barMargin (+ @cum0 (/ @seg0 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @newP0 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct1", x: (+ @barMargin (+ @cum1 (/ @seg1 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @newP1 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct2", x: (+ @barMargin (+ @cum2 (/ @seg2 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @newP2 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct3", x: (+ @barMargin (+ @cum3 (/ @seg3 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @newP3 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor },
+                { type: text, id: "pct4", x: (+ @barMargin (+ @cum4 (/ @seg4 2))), y: (+ @barY (/ @config.barHeight 2)), text: (str/concat (math/round @newP4 1) "%"), fontSize: 14, align: "center", color: @config.stratumTextColor }
+              ])
+            (newShares [@newP0, @newP1, @newP2, @newP3, @newP4])
+          )
+          (do
+            (set @entity.stratumShares @newShares)
+            (set @entity.giniIndex @giniVal)
+            (set @entity.shapes @barShapesCalc)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Generation " @entity.generation " — Gini index: " (math/round @entity.giniIndex 3)) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 5) (fn i { type: typography, variant: caption, content: (str/concat (object/get (array/nth @config.strata @i) name) ": " (math/round (array/nth @entity.stratumShares @i) 1) "%") })) },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Mobility index: " @entity.mobility) },
+                    { type: range-slider, min: 0, max: 100, step: 1, value: @entity.mobility, showTooltip: true, onChange: SET_MOBILITY }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_GENERATION, label: "Step One Generation", variant: primary }
+                  ] }
+              ] }
+          ]
+        })
+        (emit STRATIFICATION_UPDATED { mobility: @entity.mobility, generation: @entity.generation, giniIndex: @entity.giniIndex, stratumShares: @entity.stratumShares })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_MOBILITY {
+        value : number
+      }
+        @description "Learner dragged the mobility-index slider."
+        @tier "domain"
+      STEP_GENERATION {
+      }
+        @description "Learner pressed Step One Generation to advance the stratification simulation by one generation."
+        @tier "domain"
+    }
+
+    emits {
+      STRATIFICATION_UPDATED -> external {
+        mobility : number
+        generation : number
+        giniIndex : number
+        stratumShares : [number]
+      }
+        @description "The stratification state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "stratification update, generation step, mobility change, Gini index, class shares"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Social Stratification & Mobility"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      backgroundColor : string = "#f1f5f9"
+        @label "Background Color"
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 460
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      strata : [SocStratStratum] = [
+        { name: "Upper Class", share: 10, color: "#1e3a8a" },
+        { name: "Upper-Middle Class", share: 20, color: "#2563eb" },
+        { name: "Middle Class", share: 30, color: "#3b82f6" },
+        { name: "Working Class", share: 25, color: "#60a5fa" },
+        { name: "Lower Class", share: 15, color: "#93c5fd" }
+      ]
+        @label "Strata"
+        @description "The five class strata, richest to poorest, each with its starting population share (must sum to 100) and bar color. Drives the stacked bar; the mobility transition and Gini index are computed over these five shares in fixed order."
+        @synonyms "social class, class strata, class structure, upper class, upper-middle class, middle class, working class, lower class, socioeconomic status"
+        @tier "domain"
+      incomeWeights : [number] = [9, 3, 1.5, 0.7, 0.3]
+        @label "Income Weights"
+        @description "Relative income multiplier for each of the five strata, index-aligned with Strata (same order: richest to poorest). Used with the current shares to compute the Gini-style inequality index: income_i = share_i × weight_i, normalized into income shares, then the discrete Gini formula over cumulative population vs. cumulative income (poorest to richest)."
+        @synonyms "income distribution, income inequality, Gini index, Gini coefficient, wealth gap, economic inequality"
+        @tier "domain"
+      initialMobility : number = 50
+        @label "Initial Mobility Index"
+        @description "Starting value (0-100) of the mobility index."
+        @synonyms "social mobility, intergenerational mobility, mobility index, class mobility"
+        @tier "domain"
+      mobilityRate : number = 0.4
+        @label "Mobility Rate"
+        @description "Fraction of a non-middle stratum's share that migrates one step toward the middle class per generation, scaled by the mobility index (mobilityFrac = mobility/100). Keep this and Concentration Rate each ≤ 1.0 so shares always stay non-negative."
+        @synonyms "social mobility, intergenerational mobility, mobility index, class mobility"
+        @tier "domain"
+      concentrationRate : number = 0.4
+        @label "Concentration Rate"
+        @description "Fraction of an inner stratum's (upper-middle/working) share pulled outward to the adjacent extreme stratum per generation, scaled by (1 - mobility/100) — the low-mobility 'rich stay rich, poor stay poor' term. Keep this and Mobility Rate each ≤ 1.0 so shares always stay non-negative."
+        @synonyms "social mobility, intergenerational mobility, mobility index, class mobility, income inequality"
+        @tier "domain"
+      barMargin : number = 40
+        @label "Bar Margin"
+        @description "Horizontal margin, in pixels, on each side of the stacked bar."
+        @tier "presentation"
+      barHeight : number = 60
+        @label "Bar Height"
+        @description "Height of the stacked bar, in pixels."
+        @tier "presentation"
+      stratumTextColor : string = "#f8fafc"
+        @label "Stratum Text Color"
+        @description "Color of the percent labels drawn on top of each bar segment."
+        @tier "presentation"
+    }
+  }
+
+  page "/soc-stratification" as SocStratPage -> SocStratSim
+}

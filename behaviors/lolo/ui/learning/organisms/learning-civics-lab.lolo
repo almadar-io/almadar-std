@@ -1,0 +1,94 @@
+app learning-civics-lab "1.0.0"
+"Civics lab organism — how a bill becomes law (a bill token travels Introduced -> House vote -> Senate vote -> President, with veto and a two-thirds override) and a checks-and-balances matrix (learner names which branch can check a given action, drawing the check arrow on a three-branch diagram), composed from the std-civics-billprocess and std-civics-checks instrument atoms behind a mode router."
+orbital CivicsLabOrbital {
+  uses CivicsBillProcess from "std/behaviors/std-civics-billprocess"
+  uses CivicsChecks from "std/behaviors/std-civics-checks"
+
+  entity CivicsLabItem [runtime] {
+    id : string!
+  }
+
+  entity BillProcessScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    billIndex : number
+    billTitle : string
+    houseVotesLabel : string
+    senateVotesLabel : string
+    overrideVotesLabel : string
+    stationIndex : number
+    stationLabel : string
+    narration : string
+    vetoed : boolean
+    outcome : string
+    outcomeBadgeLabel : string
+    outcomeBadgeVariant : string
+    overrideReadout : string
+    renderChildren : [json]
+  }
+
+  entity ChecksScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    actionIndex : number
+    actorBranch : string
+    actionText : string
+    hintText : string
+    resultState : string
+    feedback : string
+    checkedBranch : string
+    checkLabel : string
+    score : number
+    attempts : number
+    renderChildren : [json]
+  }
+
+  trait CivicsLabRouter -> @rebindable CivicsLabItem [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (emit MODE_SELECTED { mode: @config.mode })
+    }
+
+    emits {
+      MODE_SELECTED -> external {
+        mode : string
+      }
+        @description "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null."
+        @tier "domain"
+    }
+
+    config {
+      mode : "process" | "checks-balances" = process
+        @label "Mode"
+        @description "Which civics simulation to render: how a bill becomes law (introduction, House and Senate votes, presidential signature or veto, and a two-thirds override), or a checks-and-balances matrix where the learner names which branch can check a given governmental action."
+        @synonyms "civics, government, how a bill becomes law, legislative process, separation of powers, checks and balances, branches of government, legislative branch, executive branch, judicial branch, Congress, House of Representatives, Senate, president, veto, veto override, two-thirds vote, supermajority, judicial review, Marbury v. Madison, unconstitutional, constitutional check, bill, law, enact a law, override a veto, advice and consent, treaty ratification"
+        @tier "domain"
+    }
+  }
+
+  trait BillProcessSim = CivicsBillProcess.traits.CivicsBillProcessSim -> BillProcessScene {
+    listens {
+      CivicsLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "process"
+      title: "Civics Lab"
+    }
+  }
+
+  trait ChecksSim = CivicsChecks.traits.CivicsChecksSim -> ChecksScene {
+    listens {
+      CivicsLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "checks-balances"
+      title: "Civics Lab"
+    }
+  }
+
+  page "/learning/civics-lab" as CivicsLabPage -> CivicsLabRouter, BillProcessSim, ChecksSim
+}

@@ -1,0 +1,122 @@
+app learning-astronomy-lab "1.0.0"
+"Astronomy lab organism — a Kepler orbit simulator (drag eccentricity/semi-major axis, step the planet, watch equal-area sweeps) and a star life-cycle stepper (pick a starting mass, step from nebula to white dwarf / neutron star / black hole), composed from the std-astro-orbit and std-astro-stellar instrument atoms behind a mode router."
+orbital AstronomyLabOrbital {
+  uses AstroOrbit from "std/behaviors/std-astro-orbit"
+  uses AstroStellar from "std/behaviors/std-astro-stellar"
+
+  type AstronomyLabShapePoint = {
+    x : number!
+    y : number!
+  }
+  type AstronomyLabShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [AstronomyLabShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type AstronomyLabStellarStage = {
+    label : string!
+    description : string
+    color : string
+    radius : number
+  }
+
+  entity AstronomyLabItem [runtime] {
+    id : string!
+  }
+
+  entity OrbitScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    eccentricity : number
+    semiMajorAxis : number
+    stepsPerOrbit : number
+    theta : number
+    stepIndex : number
+    currentR : number
+    sweptAreaPerStep : number
+    orbitShapes : [AstronomyLabShape]
+  }
+
+  entity StellarScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    initialMass : number
+    pathEndLabel : string
+    stages : [AstronomyLabStellarStage]
+    currentStageIndex : number
+    stageLabel : string
+    stageDescription : string
+    starShapes : [AstronomyLabShape]
+  }
+
+  trait AstronomyLabRouter -> @rebindable AstronomyLabItem [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (emit MODE_SELECTED { mode: @config.mode })
+    }
+
+    emits {
+      MODE_SELECTED -> external {
+        mode : string
+      }
+        @description "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null."
+        @tier "domain"
+    }
+
+    config {
+      mode : "orbit" | "stellar-evolution" = orbit
+        @label "Mode"
+        @description "Which astronomy simulation to render: a Kepler orbit or a star's life-cycle."
+        @synonyms "astronomy, orbit, orbital mechanics, ellipse, eccentricity, semi-major axis, perihelion, aphelion, periapsis, apoapsis, sun, planet, solar system, Kepler, Kepler's laws, equal areas, equal-area law, star, stellar, stellar evolution, life cycle of a star, nebula, protostar, main sequence, red giant, red supergiant, blue supergiant, supernova, white dwarf, neutron star, black hole, solar mass"
+        @tier "domain"
+    }
+  }
+
+  trait OrbitSim = AstroOrbit.traits.AstroOrbitSim -> OrbitScene {
+    listens {
+      AstronomyLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "orbit"
+      title: "Astronomy Lab"
+    }
+  }
+
+  trait StellarSim = AstroStellar.traits.AstroStellarSim -> StellarScene {
+    listens {
+      AstronomyLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "stellar-evolution"
+      title: "Astronomy Lab"
+    }
+  }
+
+  page "/learning/astronomy-lab" as AstronomyLabPage -> AstronomyLabRouter, OrbitSim, StellarSim
+}

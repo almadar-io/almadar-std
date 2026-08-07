@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -162,4 +162,859 @@ export function stdSignatureCapture(params: StdSignatureCaptureParams): OrbitalD
       stdSignatureCapturePage(params),
     ],
   });
+}
+
+type _StdSignatureCaptureEntityName = 'Signature';
+type _StdSignatureCaptureListenTraitName = 'SignatureCapture';
+
+/**
+ * Tunable params for the SignatureCaptureOrbital orbital.
+ *
+ * Canonical entity: Signature — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdSignatureCaptureSignatureCaptureOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SignatureCapture',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait SignatureCaptureOrbital's `uses[]` exports. */
+type _StdSignatureCaptureSignatureCaptureOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the SignatureCaptureOrbital orbital with consumer params. */
+export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureCaptureSignatureCaptureOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'signatures');
+  const built = makeOrbitalWithUses({
+    name: 'SignatureCaptureOrbital',
+    uses: [],
+    entity: {
+      name: 'Signature',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'Unique identifier for the target of the signature.',
+            'name': 'targetId',
+            'required': true,
+            'synonyms': 'referenceId, associatedId, target',
+            'type': 'string',
+          },
+          {
+            'description': 'Specifies the type of target associated with the signature.',
+            'name': 'targetType',
+            'required': true,
+            'synonyms': 'type, kind, category',
+            'type': 'string',
+          },
+          {
+            'description': 'The name of the person providing the signature.',
+            'name': 'signerName',
+            'required': true,
+            'synonyms': 'name, user, person',
+            'type': 'string',
+          },
+          {
+            'description': 'Encoded signature image data, typically a data URL.',
+            'name': 'signatureDataUrl',
+            'required': true,
+            'synonyms': 'signature image, image data, signature representation',
+            'type': 'string',
+          },
+          {
+            'description': 'Timestamp indicating when the signature was captured.',
+            'name': 'signedAt',
+            'synonyms': 'date, time, timestamp',
+            'type': 'datetime',
+          },
+          {
+            'description': 'The client\'s IP address during signature capture.',
+            'name': 'ipAddress',
+            'synonyms': 'client IP, source IP, originating IP',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'instructions': {
+            'default': 'Use your finger or stylus to sign below',
+            'description': 'Helper text shown to the signer above the pad',
+            'label': 'Instructions',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'title': {
+            'default': 'Sign here',
+            'description': 'Heading shown above the signature pad',
+            'label': 'Pad title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates a change in the signature drawing.',
+            'event': 'CHANGE',
+            'payloadSchema': [
+              {
+                'name': 'dataUrl',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'update, modify, alter',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals the signature capture process is complete.',
+            'event': 'SUBMIT',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'done, finalized, confirmed, saved',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals the signature pad has been cleared.',
+            'event': 'CLEAR',
+            'synonyms': 'reset, erase, remove',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the signature pad is ready for use.',
+            'event': 'SignatureLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Signature]',
+              },
+            ],
+            'synonyms': 'ready, initialized, available',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the signature data could not be loaded.',
+            'event': 'SignatureLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'load error, failed load, data error',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates a signature has been successfully captured and submitted.',
+            'event': 'SignatureSubmitted',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'targetId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'targetType',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'signerName',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'signatureDataUrl',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'signedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'ipAddress',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'signed, finalized, completed',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates signature submission failed.',
+            'event': 'SignatureSubmitFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, rejected',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'Signature',
+        'name': 'SignatureCapture',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates the signature pad is ready for use.',
+              'key': 'SignatureLoaded',
+              'name': 'Signature loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Signature]',
+                },
+              ],
+              'synonyms': 'ready, initialized, available',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the signature data could not be loaded.',
+              'key': 'SignatureLoadFailed',
+              'name': 'Signature load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, failed load, data error',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a change in the signature drawing.',
+              'key': 'CHANGE',
+              'name': 'Change',
+              'payloadSchema': [
+                {
+                  'name': 'dataUrl',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'update, modify, alter',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Signals the signature pad has been cleared.',
+              'key': 'CLEAR',
+              'name': 'Clear',
+              'synonyms': 'reset, erase, remove',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals the signature capture process is complete.',
+              'key': 'SUBMIT',
+              'name': 'Submit',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'done, finalized, confirmed, saved',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a signature has been successfully captured and submitted.',
+              'key': 'SignatureSubmitted',
+              'name': 'Signature submitted',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'Signature',
+                },
+              ],
+              'synonyms': 'signed, finalized, completed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates signature submission failed.',
+              'key': 'SignatureSubmitFailed',
+              'name': 'Signature submit failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, rejected',
+              'tier': 'internal',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'idle',
+            },
+            {
+              'name': 'submitting',
+            },
+            {
+              'name': 'submitted',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Signature' satisfies _StdSignatureCaptureEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureLoadFailed',
+                      'success': 'SignatureLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': '@config.title',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@config.instructions',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'onChange': 'CHANGE',
+                        'type': 'signature-pad',
+                        'value': '@entity.signatureDataUrl',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'CLEAR',
+                            'icon': 'trash',
+                            'label': 'Clear',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'action': 'SUBMIT',
+                            'icon': 'send',
+                            'label': 'Submit',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SignatureLoaded',
+              'from': 'loading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': '@config.title',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@config.instructions',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'onChange': 'CHANGE',
+                        'type': 'signature-pad',
+                        'value': '@entity.signatureDataUrl',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'CLEAR',
+                            'icon': 'trash',
+                            'label': 'Clear',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'action': 'SUBMIT',
+                            'icon': 'send',
+                            'label': 'Submit',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SignatureLoadFailed',
+              'from': 'loading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Signature' satisfies _StdSignatureCaptureEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureLoadFailed',
+                      'success': 'SignatureLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.signatureDataUrl',
+                  '@payload.dataUrl',
+                ],
+              ],
+              'event': 'CHANGE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.signatureDataUrl',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': '@config.title',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@config.instructions',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'onChange': 'CHANGE',
+                        'type': 'signature-pad',
+                        'value': '@entity.signatureDataUrl',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'CLEAR',
+                            'icon': 'trash',
+                            'label': 'Clear',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'action': 'SUBMIT',
+                            'icon': 'send',
+                            'label': 'Submit',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLEAR',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('Signature' satisfies _StdSignatureCaptureEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'SignatureSubmitFailed',
+                      'success': 'SignatureSubmitted',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Submitting your signature…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SUBMIT',
+              'from': 'idle',
+              'to': 'submitting',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'color': 'success',
+                        'name': 'check-circle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Signature recorded. Thank you.',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SignatureSubmitted',
+              'from': 'submitting',
+              'to': 'submitted',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'SignatureSubmitFailed',
+              'from': 'submitting',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.signatureDataUrl',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': '@config.title',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@config.instructions',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'onChange': 'CHANGE',
+                        'type': 'signature-pad',
+                        'value': '@entity.signatureDataUrl',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'CLEAR',
+                            'icon': 'trash',
+                            'label': 'Clear',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'action': 'SUBMIT',
+                            'icon': 'send',
+                            'label': 'Submit',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'submitted',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'SignatureCapturePage',
+        'path': '/signatures/capture',
+        'traits': [
+          {
+            'ref': 'SignatureCapture',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdSignatureCaptureSignatureCaptureOrbital. */
+export const StdSignatureCaptureSignatureCaptureOrbitalManifest = {
+  organism: 'std-signature-capture',
+  orbitalName: 'SignatureCaptureOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'SignatureCapture',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdSignatureCaptureSignatureCaptureOrbitalParams keys. */
+export function isStdSignatureCaptureSignatureCaptureOrbitalParams(p: object): p is StdSignatureCaptureSignatureCaptureOrbitalParams {
+  type _OverrideRecord = NonNullable<StdSignatureCaptureSignatureCaptureOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdSignatureCaptureSignatureCaptureOrbitalManifest.traitNames,
+      ...StdSignatureCaptureSignatureCaptureOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

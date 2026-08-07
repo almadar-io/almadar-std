@@ -1,0 +1,1217 @@
+{
+  "description": "Propositional inference engine — the learner applies inference rules (modus ponens, modus tollens) step by step to derive new propositions from premises, building a guided proof toward a goal. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01KZEFY7QSSHW2F1DR1NH0CN2F": {
+        "bakedName": "LogicInferenceScene",
+        "curName": "LogicInferenceScene",
+        "id": "ent_01KZEFY7QSSHW2F1DR1NH0CN2F",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KZEFY7QS7EFZGFEA6A1HJFKQ": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KZEFY7QS7EFZGFEA6A1HJFKQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFY7QSRMNY0MB0V5NKTR5Q",
+        "renames": []
+      },
+      "evt_01KZEFY7QT6TB9DZMB912PWT33": {
+        "bakedName": "INFERENCE_UPDATED",
+        "curName": "INFERENCE_UPDATED",
+        "id": "evt_01KZEFY7QT6TB9DZMB912PWT33",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFY7QSRMNY0MB0V5NKTR5Q",
+        "renames": []
+      },
+      "evt_01KZEFY7QTBBJMN29MY0QRZ7T5": {
+        "bakedName": "APPLY_RULE",
+        "curName": "APPLY_RULE",
+        "id": "evt_01KZEFY7QTBBJMN29MY0QRZ7T5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFY7QSRMNY0MB0V5NKTR5Q",
+        "renames": []
+      },
+      "evt_01KZEFY7QTDY9QHJ6S19N81FNN": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEFY7QTDY9QHJ6S19N81FNN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFY7QSRMNY0MB0V5NKTR5Q",
+        "renames": []
+      },
+      "orb_01KZEFY7QSKG23D425H9NCJGPP": {
+        "bakedName": "LogicInferenceOrbital",
+        "curName": "LogicInferenceOrbital",
+        "id": "orb_01KZEFY7QSKG23D425H9NCJGPP",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KZEFY7QT5M9Q4F68V0M2SR21": {
+        "bakedName": "LogicInferencePage",
+        "curName": "LogicInferencePage",
+        "id": "pag_01KZEFY7QT5M9Q4F68V0M2SR21",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZEFY7QSRMNY0MB0V5NKTR5Q": {
+        "bakedName": "LogicInferenceSim",
+        "curName": "LogicInferenceSim",
+        "id": "trt_01KZEFY7QSRMNY0MB0V5NKTR5Q",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-logic-inference",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "type": "object"
+            },
+            "name": "proofLines",
+            "type": "array"
+          },
+          {
+            "name": "feedback",
+            "type": "string"
+          },
+          {
+            "name": "goalReached",
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "type": "object"
+            },
+            "name": "renderChildren",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01KZEFY7QSSHW2F1DR1NH0CN2F",
+        "name": "LogicInferenceScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KZEFY7QSKG23D425H9NCJGPP",
+      "name": "LogicInferenceOrbital",
+      "pages": [
+        {
+          "id": "pag_01KZEFY7QT5M9Q4F68V0M2SR21",
+          "name": "LogicInferencePage",
+          "path": "/logic-inference",
+          "traits": [
+            {
+              "ref": "LogicInferenceSim",
+              "refId": "trt_01KZEFY7QSRMNY0MB0V5NKTR5Q"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "goalLabel": {
+              "default": "Q",
+              "description": "The proposition label the learner is trying to derive, e.g. \"Q\" or \"¬P\".",
+              "label": "Goal",
+              "synonyms": "proof goal, target proposition, conclusion",
+              "tier": "domain",
+              "type": "string"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Maximum height of the scrollable proof panel, in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "premises": {
+              "default": [
+                {
+                  "id": "premise-1",
+                  "kind": "fact",
+                  "label": "P",
+                  "negated": false,
+                  "subject": "P"
+                },
+                {
+                  "antecedent": "P",
+                  "antecedentNegated": false,
+                  "consequent": "Q",
+                  "consequentNegated": false,
+                  "id": "premise-2",
+                  "kind": "conditional",
+                  "label": "P → Q"
+                }
+              ],
+              "description": "The starting lines of the proof: plain facts (or their negations) and conditional (if-then) statements the learner combines with inference rules.",
+              "items": {
+                "properties": {
+                  "antecedent": {
+                    "name": "antecedent",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "antecedentNegated": {
+                    "name": "antecedentNegated",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "consequent": {
+                    "name": "consequent",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "consequentNegated": {
+                    "name": "consequentNegated",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "fact",
+                      "conditional"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "negated": {
+                    "name": "negated",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "subject": {
+                    "name": "subject",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Premises",
+              "synonyms": "premise, given, hypothesis, starting proposition, conditional statement, if-then statement",
+              "tier": "domain",
+              "type": "[LogicInferencePremise]"
+            },
+            "rules": {
+              "default": [
+                {
+                  "key": "MODUS_PONENS",
+                  "label": "Modus Ponens"
+                },
+                {
+                  "key": "MODUS_TOLLENS",
+                  "label": "Modus Tollens"
+                }
+              ],
+              "description": "Inference rules offered as buttons. Modus Ponens: from P and P→Q, derive Q. Modus Tollens: from ¬Q and P→Q, derive ¬P.",
+              "items": {
+                "properties": {
+                  "key": {
+                    "name": "key",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Rules",
+              "synonyms": "inference rule, modus ponens, modus tollens, rule of inference, deduction rule, logical deduction, logical proof, syllogism",
+              "tier": "domain",
+              "type": "[LogicInferenceRule]"
+            },
+            "title": {
+              "default": "Logical Inference",
+              "description": "Title shown above the lab.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Maximum width of the lab, in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The proof state after each learner rule application — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "INFERENCE_UPDATED",
+              "eventId": "evt_01KZEFY7QT6TB9DZMB912PWT33",
+              "payloadSchema": [
+                {
+                  "name": "feedback",
+                  "type": "string"
+                },
+                {
+                  "name": "goalReached",
+                  "type": "boolean"
+                },
+                {
+                  "name": "lineCount",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "inference update, proof step, derived line, modus ponens, modus tollens, goal reached",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "feedback",
+              "goalReached",
+              "proofLines",
+              "renderChildren",
+              "title"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "LogicInferenceScene": "ent_01KZEFY7QSSHW2F1DR1NH0CN2F"
+          },
+          "id": "trt_01KZEFY7QSRMNY0MB0V5NKTR5Q",
+          "linkedEntity": "LogicInferenceScene",
+          "linkedEntityId": "ent_01KZEFY7QSSHW2F1DR1NH0CN2F",
+          "name": "LogicInferenceSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KZEFY7QS7EFZGFEA6A1HJFKQ",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZEFY7QTDY9QHJ6S19N81FNN",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner clicked an inference-rule button to try to derive the next proof line.",
+                "id": "evt_01KZEFY7QTBBJMN29MY0QRZ7T5",
+                "key": "APPLY_RULE",
+                "name": "Apply Rule",
+                "payloadSchema": [
+                  {
+                    "name": "rule",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "The proof state after each learner rule application — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01KZEFY7QT6TB9DZMB912PWT33",
+                "key": "INFERENCE_UPDATED",
+                "name": "Inference Updated",
+                "payloadSchema": [
+                  {
+                    "name": "feedback",
+                    "type": "string"
+                  },
+                  {
+                    "name": "goalReached",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "lineCount",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "inference update, proof step, derived line, modus ponens, modus tollens, goal reached",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.feedback",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.goalReached",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.proofLines",
+                    "@config.premises"
+                  ],
+                  [
+                    "set",
+                    "@entity.renderChildren",
+                    [
+                      {
+                        "content": "@entity.title",
+                        "type": "typography",
+                        "variant": "h4"
+                      },
+                      {
+                        "content": [
+                          "str/concat",
+                          "Goal: derive ",
+                          "@config.goalLabel"
+                        ],
+                        "type": "typography",
+                        "variant": "body"
+                      },
+                      {
+                        "children": [
+                          "array/map",
+                          "@entity.proofLines",
+                          [
+                            "fn",
+                            "line",
+                            {
+                              "children": [
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@line.kind",
+                                      "conditional"
+                                    ],
+                                    "RULE",
+                                    "FACT"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@line.kind",
+                                      "conditional"
+                                    ],
+                                    "info",
+                                    "neutral"
+                                  ]
+                                },
+                                {
+                                  "content": "@line.label",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ]
+                        ],
+                        "direction": "vertical",
+                        "gap": "xs",
+                        "style": {
+                          "maxHeight": [
+                            "str/concat",
+                            "@config.height",
+                            "px"
+                          ],
+                          "overflowY": "auto"
+                        },
+                        "type": "stack"
+                      },
+                      {
+                        "children": [
+                          "array/map",
+                          "@config.rules",
+                          [
+                            "fn",
+                            "r",
+                            {
+                              "action": "APPLY_RULE",
+                              "actionPayload": {
+                                "rule": "@r.key"
+                              },
+                              "label": "@r.label",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ]
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      {
+                        "content": "@entity.feedback",
+                        "type": "typography",
+                        "variant": "caption"
+                      },
+                      {
+                        "content": [
+                          "if",
+                          "@entity.goalReached",
+                          "Goal reached.",
+                          ""
+                        ],
+                        "type": "typography",
+                        "variant": "caption"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": "@entity.renderChildren",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "maxWidth": [
+                        "str/concat",
+                        "@config.width",
+                        "px"
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KZEFY7QS7EFZGFEA6A1HJFKQ",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.feedback",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.goalReached",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.proofLines",
+                    "@config.premises"
+                  ],
+                  [
+                    "set",
+                    "@entity.renderChildren",
+                    [
+                      {
+                        "content": "@entity.title",
+                        "type": "typography",
+                        "variant": "h4"
+                      },
+                      {
+                        "content": [
+                          "str/concat",
+                          "Goal: derive ",
+                          "@config.goalLabel"
+                        ],
+                        "type": "typography",
+                        "variant": "body"
+                      },
+                      {
+                        "children": [
+                          "array/map",
+                          "@entity.proofLines",
+                          [
+                            "fn",
+                            "line",
+                            {
+                              "children": [
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@line.kind",
+                                      "conditional"
+                                    ],
+                                    "RULE",
+                                    "FACT"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@line.kind",
+                                      "conditional"
+                                    ],
+                                    "info",
+                                    "neutral"
+                                  ]
+                                },
+                                {
+                                  "content": "@line.label",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ]
+                        ],
+                        "direction": "vertical",
+                        "gap": "xs",
+                        "style": {
+                          "maxHeight": [
+                            "str/concat",
+                            "@config.height",
+                            "px"
+                          ],
+                          "overflowY": "auto"
+                        },
+                        "type": "stack"
+                      },
+                      {
+                        "children": [
+                          "array/map",
+                          "@config.rules",
+                          [
+                            "fn",
+                            "r",
+                            {
+                              "action": "APPLY_RULE",
+                              "actionPayload": {
+                                "rule": "@r.key"
+                              },
+                              "label": "@r.label",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ]
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      {
+                        "content": "@entity.feedback",
+                        "type": "typography",
+                        "variant": "caption"
+                      },
+                      {
+                        "content": [
+                          "if",
+                          "@entity.goalReached",
+                          "Goal reached.",
+                          ""
+                        ],
+                        "type": "typography",
+                        "variant": "caption"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": "@entity.renderChildren",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "maxWidth": [
+                        "str/concat",
+                        "@config.width",
+                        "px"
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEFY7QTDY9QHJ6S19N81FNN",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "conditionals",
+                        [
+                          "array/filter",
+                          "@entity.proofLines",
+                          [
+                            "fn",
+                            "l",
+                            [
+                              "==",
+                              "@l.kind",
+                              "conditional"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "facts",
+                        [
+                          "array/filter",
+                          "@entity.proofLines",
+                          [
+                            "fn",
+                            "l",
+                            [
+                              "==",
+                              "@l.kind",
+                              "fact"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "mpCond",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@conditionals",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "array/some",
+                                "@facts",
+                                [
+                                  "fn",
+                                  "f",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      "@f.subject",
+                                      "@c.antecedent"
+                                    ],
+                                    [
+                                      "==",
+                                      "@f.negated",
+                                      "@c.antecedentNegated"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "mtCond",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@conditionals",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "array/some",
+                                "@facts",
+                                [
+                                  "fn",
+                                  "f",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      "@f.subject",
+                                      "@c.consequent"
+                                    ],
+                                    [
+                                      "!=",
+                                      "@f.negated",
+                                      "@c.consequentNegated"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "activeCond",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@payload.rule",
+                            "MODUS_PONENS"
+                          ],
+                          "@mpCond",
+                          "@mtCond"
+                        ]
+                      ],
+                      [
+                        "ruleName",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@payload.rule",
+                            "MODUS_PONENS"
+                          ],
+                          "Modus Ponens",
+                          "Modus Tollens"
+                        ]
+                      ],
+                      [
+                        "derivedSubject",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@activeCond",
+                            null
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@payload.rule",
+                              "MODUS_PONENS"
+                            ],
+                            "@activeCond.consequent",
+                            "@activeCond.antecedent"
+                          ],
+                          ""
+                        ]
+                      ],
+                      [
+                        "derivedNegated",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@activeCond",
+                            null
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@payload.rule",
+                              "MODUS_PONENS"
+                            ],
+                            "@activeCond.consequentNegated",
+                            [
+                              "not",
+                              "@activeCond.antecedentNegated"
+                            ]
+                          ],
+                          false
+                        ]
+                      ],
+                      [
+                        "derivedLabel",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@activeCond",
+                            null
+                          ],
+                          [
+                            "if",
+                            "@derivedNegated",
+                            [
+                              "str/concat",
+                              "¬",
+                              "@derivedSubject"
+                            ],
+                            "@derivedSubject"
+                          ],
+                          ""
+                        ]
+                      ],
+                      [
+                        "alreadyPresent",
+                        [
+                          "array/some",
+                          "@entity.proofLines",
+                          [
+                            "fn",
+                            "l",
+                            [
+                              "==",
+                              "@l.label",
+                              "@derivedLabel"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "canDerive",
+                        [
+                          "and",
+                          [
+                            "!=",
+                            "@activeCond",
+                            null
+                          ],
+                          [
+                            "not",
+                            "@alreadyPresent"
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.proofLines",
+                        [
+                          "if",
+                          "@canDerive",
+                          [
+                            "array/concat",
+                            "@entity.proofLines",
+                            [
+                              {
+                                "id": [
+                                  "str/concat",
+                                  "line-",
+                                  [
+                                    "array/len",
+                                    "@entity.proofLines"
+                                  ]
+                                ],
+                                "kind": "fact",
+                                "label": "@derivedLabel",
+                                "negated": "@derivedNegated",
+                                "subject": "@derivedSubject"
+                              }
+                            ]
+                          ],
+                          "@entity.proofLines"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.feedback",
+                        [
+                          "if",
+                          "@canDerive",
+                          [
+                            "str/concat",
+                            "Derived ",
+                            "@derivedLabel",
+                            " via ",
+                            "@ruleName",
+                            "."
+                          ],
+                          [
+                            "if",
+                            "@alreadyPresent",
+                            [
+                              "str/concat",
+                              "@derivedLabel",
+                              " is already in the proof."
+                            ],
+                            [
+                              "str/concat",
+                              "No matching premises yet for ",
+                              "@ruleName",
+                              "."
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.goalReached",
+                        [
+                          "if",
+                          "@canDerive",
+                          [
+                            "==",
+                            "@derivedLabel",
+                            "@config.goalLabel"
+                          ],
+                          "@entity.goalReached"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.renderChildren",
+                    [
+                      {
+                        "content": "@entity.title",
+                        "type": "typography",
+                        "variant": "h4"
+                      },
+                      {
+                        "content": [
+                          "str/concat",
+                          "Goal: derive ",
+                          "@config.goalLabel"
+                        ],
+                        "type": "typography",
+                        "variant": "body"
+                      },
+                      {
+                        "children": [
+                          "array/map",
+                          "@entity.proofLines",
+                          [
+                            "fn",
+                            "line",
+                            {
+                              "children": [
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@line.kind",
+                                      "conditional"
+                                    ],
+                                    "RULE",
+                                    "FACT"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@line.kind",
+                                      "conditional"
+                                    ],
+                                    "info",
+                                    "neutral"
+                                  ]
+                                },
+                                {
+                                  "content": "@line.label",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ]
+                        ],
+                        "direction": "vertical",
+                        "gap": "xs",
+                        "style": {
+                          "maxHeight": [
+                            "str/concat",
+                            "@config.height",
+                            "px"
+                          ],
+                          "overflowY": "auto"
+                        },
+                        "type": "stack"
+                      },
+                      {
+                        "children": [
+                          "array/map",
+                          "@config.rules",
+                          [
+                            "fn",
+                            "r",
+                            {
+                              "action": "APPLY_RULE",
+                              "actionPayload": {
+                                "rule": "@r.key"
+                              },
+                              "label": "@r.label",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ]
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      {
+                        "content": "@entity.feedback",
+                        "type": "typography",
+                        "variant": "caption"
+                      },
+                      {
+                        "content": [
+                          "if",
+                          "@entity.goalReached",
+                          "Goal reached.",
+                          ""
+                        ],
+                        "type": "typography",
+                        "variant": "caption"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": "@entity.renderChildren",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "maxWidth": [
+                        "str/concat",
+                        "@config.width",
+                        "px"
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "INFERENCE_UPDATED",
+                    {
+                      "feedback": "@entity.feedback",
+                      "goalReached": "@entity.goalReached",
+                      "lineCount": [
+                        "array/len",
+                        "@entity.proofLines"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "APPLY_RULE",
+                "eventId": "evt_01KZEFY7QTBBJMN29MY0QRZ7T5",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

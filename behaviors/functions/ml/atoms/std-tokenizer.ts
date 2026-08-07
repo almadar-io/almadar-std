@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -134,4 +134,600 @@ export function stdTokenizer(params: StdTokenizerParams): OrbitalDefinition {
       stdTokenizerPage(params),
     ],
   });
+}
+
+type _StdTokenizerEntityName = 'TokenSequence';
+type _StdTokenizerListenTraitName = 'TokenizerRun';
+
+/**
+ * Tunable params for the MlTokenizerOrbital orbital.
+ *
+ * Canonical entity: TokenSequence — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdTokenizerMlTokenizerOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'TokenizerRun',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlTokenizerOrbital's `uses[]` exports. */
+type _StdTokenizerMlTokenizerOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlTokenizerOrbital orbital with consumer params. */
+export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'MlTokenizerOrbital',
+    uses: [],
+    entity: {
+      name: 'TokenSequence',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': '',
+            'name': 'text',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+            'name': 'tokens',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'number',
+            },
+            'name': 'tokenIds',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'name': 'tokenCount',
+            'type': 'number',
+          },
+          {
+            'default': {},
+            'name': 'request',
+            'type': 'object',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'checked',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'delimiter': {
+            'default': ',',
+            'description': 'Split delimiter used when method is delimiter; ignored otherwise',
+            'label': 'Delimiter',
+            'tier': 'domain',
+            'type': 'string',
+          },
+          'lowercase': {
+            'default': true,
+            'description': 'Lowercase every token before vocabulary lookup',
+            'label': 'Lowercase',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+          'maxLength': {
+            'default': 512,
+            'description': 'Truncate the token sequence to at most this many tokens',
+            'label': 'Max length',
+            'tier': 'policy',
+            'type': 'int',
+          },
+          'method': {
+            'default': 'whitespace',
+            'description': 'Whitespace splits on single spaces, character splits into individual characters, delimiter splits on config.delimiter',
+            'label': 'Method',
+            'tier': 'policy',
+            'type': 'string',
+            'values': [
+              'whitespace',
+              'character',
+              'delimiter',
+            ],
+          },
+          'trimWhitespace': {
+            'default': true,
+            'description': 'Trim each token and drop tokens that are empty afterward',
+            'label': 'Trim whitespace',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+          'unkId': {
+            'default': 0,
+            'description': 'Id assigned to a token that is not present in config.vocab',
+            'label': 'Unknown token id',
+            'tier': 'policy',
+            'type': 'int',
+          },
+          'vocab': {
+            'default': {},
+            'description': 'Token-to-id map; a token absent from this map resolves to unkId',
+            'items': {
+              'type': 'number',
+            },
+            'label': 'Vocabulary',
+            'tier': 'domain',
+            'type': 'Map<string,int>',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Text tokenized into a normalized, truncated token sequence with vocabulary ids',
+            'event': 'TOKENIZED',
+            'payloadSchema': [
+              {
+                'name': 'tokens',
+                'required': true,
+                'type': '[string]',
+              },
+              {
+                'name': 'tokenIds',
+                'required': true,
+                'type': '[int]',
+              },
+              {
+                'name': 'tokenCount',
+                'required': true,
+                'type': 'int',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'linkedEntity': 'TokenSequence',
+        'name': 'TokenizerRun',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'TOKENIZE',
+              'name': 'Tokenize',
+              'payloadSchema': [
+                {
+                  'name': 'text',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'Text tokenized into a normalized, truncated token sequence with vocabulary ids',
+              'key': 'TOKENIZED',
+              'name': 'Tokenized',
+              'payloadSchema': [
+                {
+                  'name': 'tokens',
+                  'required': true,
+                  'type': '[string]',
+                },
+                {
+                  'name': 'tokenIds',
+                  'required': true,
+                  'type': '[int]',
+                },
+                {
+                  'name': 'tokenCount',
+                  'required': true,
+                  'type': 'int',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'checked',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.text',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.tokens',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.tokenIds',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.tokenCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'let',
+                  [
+                    [
+                      'split',
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@config.method',
+                          'character',
+                        ],
+                        [
+                          'str/split',
+                          '@payload.text',
+                          '',
+                        ],
+                        [
+                          'str/split',
+                          '@payload.text',
+                          [
+                            'if',
+                            [
+                              '==',
+                              '@config.method',
+                              'delimiter',
+                            ],
+                            '@config.delimiter',
+                            ' ',
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'trimmed',
+                      [
+                        'if',
+                        '@config.trimWhitespace',
+                        [
+                          'array/map',
+                          '@split',
+                          [
+                            'fn',
+                            't',
+                            [
+                              'str/trim',
+                              '@t',
+                            ],
+                          ],
+                        ],
+                        '@split',
+                      ],
+                    ],
+                    [
+                      'normalized',
+                      [
+                        'if',
+                        '@config.lowercase',
+                        [
+                          'array/map',
+                          '@trimmed',
+                          [
+                            'fn',
+                            't',
+                            [
+                              'str/lower',
+                              '@t',
+                            ],
+                          ],
+                        ],
+                        '@trimmed',
+                      ],
+                    ],
+                    [
+                      'nonEmpty',
+                      [
+                        'array/filter',
+                        '@normalized',
+                        [
+                          'fn',
+                          't',
+                          [
+                            '>',
+                            [
+                              'str/len',
+                              '@t',
+                            ],
+                            0,
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'truncated',
+                      [
+                        'array/slice',
+                        '@nonEmpty',
+                        0,
+                        '@config.maxLength',
+                      ],
+                    ],
+                    [
+                      'ids',
+                      [
+                        'array/map',
+                        '@truncated',
+                        [
+                          'fn',
+                          't',
+                          [
+                            'object/get',
+                            '@config.vocab',
+                            '@t',
+                            '@config.unkId',
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                  [
+                    'do',
+                    [
+                      'set',
+                      '@entity.text',
+                      '@payload.text',
+                    ],
+                    [
+                      'set',
+                      '@entity.tokens',
+                      '@truncated',
+                    ],
+                    [
+                      'set',
+                      '@entity.tokenIds',
+                      '@ids',
+                    ],
+                    [
+                      'set',
+                      '@entity.tokenCount',
+                      [
+                        'array/len',
+                        '@truncated',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.request',
+                      '@payload.request',
+                    ],
+                    [
+                      'set',
+                      '@entity.status',
+                      'checked',
+                    ],
+                    [
+                      'emit',
+                      'TOKENIZED',
+                      {
+                        'tokenCount': '@entity.tokenCount',
+                        'tokenIds': '@entity.tokenIds',
+                        'tokens': '@entity.tokens',
+                      },
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'TOKENIZE',
+              'from': 'idle',
+              'to': 'checked',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'checked',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'checked',
+              'to': 'checked',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.text',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.tokens',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.tokenIds',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.tokenCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'checked',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlTokenizerPage',
+        'path': '/ml-tokenizer',
+        'traits': [
+          {
+            'ref': 'TokenizerRun',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTokenizerMlTokenizerOrbital. */
+export const StdTokenizerMlTokenizerOrbitalManifest = {
+  organism: 'std-tokenizer',
+  orbitalName: 'MlTokenizerOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'TokenizerRun',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTokenizerMlTokenizerOrbitalParams keys. */
+export function isStdTokenizerMlTokenizerOrbitalParams(p: object): p is StdTokenizerMlTokenizerOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTokenizerMlTokenizerOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdTokenizerMlTokenizerOrbitalManifest.traitNames,
+      ...StdTokenizerMlTokenizerOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

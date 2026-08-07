@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -142,4 +142,437 @@ export function stdStatusLifecycle(params: StdStatusLifecycleParams): OrbitalDef
       stdStatusLifecyclePage(params),
     ],
   });
+}
+
+type _StdStatusLifecycleEntityName = 'StatusRecord';
+type _StdStatusLifecycleListenTraitName = 'StatusMachine';
+
+/**
+ * Tunable params for the StatusLifecycleOrbital orbital.
+ *
+ * Canonical entity: StatusRecord — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdStatusLifecycleStatusLifecycleOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'StatusMachine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait StatusLifecycleOrbital's `uses[]` exports. */
+type _StdStatusLifecycleStatusLifecycleOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the StatusLifecycleOrbital orbital with consumer params. */
+export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecycleStatusLifecycleOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'status_records');
+  const built = makeOrbitalWithUses({
+    name: 'StatusLifecycleOrbital',
+    uses: [],
+    entity: {
+      name: 'StatusRecord',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Current lifecycle status of the record.',
+            'name': 'status',
+            'synonyms': 'state, stage, phase',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'enabled': {
+            'default': false,
+            'description': 'Validate and apply status transitions against the configured table. Off by default.',
+            'label': 'Enforce status lifecycle rules?',
+            'synonyms': 'lifecycle, statuses, states, stages, workflow, status transitions, enforce, enable, apply',
+            'tier': 'infra',
+            'type': 'boolean',
+          },
+          'initialStatus': {
+            'default': 'draft',
+            'description': 'The status assigned when a record is first created.',
+            'label': 'What status do new records start in?',
+            'synonyms': 'starting state, default status, first stage, initial state',
+            'tier': 'domain',
+            'type': 'string',
+          },
+          'states': {
+            'default': [
+              'draft',
+              'active',
+              'archived',
+            ],
+            'description': 'The complete set of statuses a record can hold.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'What are the possible statuses?',
+            'synonyms': 'states, stages, phases, statuses, lifecycle, workflow steps',
+            'tier': 'domain',
+            'type': '[string]',
+          },
+          'statusField': {
+            'default': 'status',
+            'description': 'Entity field this lifecycle drives (e.g. \'status\', \'state\', \'stage\', \'phase\').',
+            'label': 'Which field holds the status?',
+            'synonyms': 'state field, stage field, status column, lifecycle field',
+            'tier': 'infra',
+            'type': 'string',
+          },
+          'targetEntity': {
+            'default': 'StatusRecord',
+            'description': 'Entity name whose status field this lifecycle drives (e.g. \'Contract\'). Rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
+            'label': 'Target entity',
+            'tier': 'internal',
+            'type': 'entity',
+          },
+          'transitions': {
+            'default': [
+              {
+                'event': 'ACTIVATE',
+                'from': 'draft',
+                'label': 'Activate',
+                'to': 'active',
+              },
+              {
+                'event': 'ARCHIVE',
+                'from': 'active',
+                'label': 'Archive',
+                'to': 'archived',
+              },
+            ],
+            'description': 'Legal transitions as { from, to, event, label }. Only matching moves are applied.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'from': {
+                  'name': 'from',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'to': {
+                  'name': 'to',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which status moves are allowed?',
+            'synonyms': 'edges, allowed moves, status flow, workflow transitions',
+            'tier': 'domain',
+            'type': '[TransitionSpec]',
+          },
+        },
+        'emits': [
+          {
+            'event': 'StatusChanged',
+            'payloadSchema': [
+              {
+                'name': 'entityId',
+                'type': 'string',
+              },
+              {
+                'name': 'status',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+          },
+          {
+            'event': 'StatusChangeFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'StatusRecord',
+        'name': 'StatusMachine',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'ChangeStatusRequested',
+              'name': 'Change status requested',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'from',
+                  'type': 'string',
+                },
+                {
+                  'name': 'to',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'StatusChangeFailed',
+              'name': 'Status change failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'StatusChanged',
+              'name': 'Status changed',
+              'payloadSchema': [
+                {
+                  'name': 'entityId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'status',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  '@config.targetEntity',
+                  [
+                    'object/set',
+                    {
+                      'id': '@payload.id',
+                    },
+                    '@config.statusField',
+                    '@payload.to',
+                  ],
+                  {
+                    'emit': {
+                      'failure': 'StatusChangeFailed',
+                      'success': 'StatusChanged',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'StatusChanged',
+                  {
+                    'status': '@payload.to',
+                  },
+                ],
+              ],
+              'event': 'ChangeStatusRequested',
+              'from': 'idle',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  'array/some',
+                  '@config.transitions',
+                  [
+                    'fn',
+                    't',
+                    [
+                      'and',
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@t',
+                          'from',
+                        ],
+                        '@payload.from',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@t',
+                          'to',
+                        ],
+                        '@payload.to',
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'to': 'idle',
+            },
+            {
+              'event': 'StatusChangeFailed',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'StatusLifecyclePage',
+        'path': '/status-lifecycle',
+        'traits': [
+          {
+            'ref': 'StatusMachine',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdStatusLifecycleStatusLifecycleOrbital. */
+export const StdStatusLifecycleStatusLifecycleOrbitalManifest = {
+  organism: 'std-status-lifecycle',
+  orbitalName: 'StatusLifecycleOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'StatusMachine',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdStatusLifecycleStatusLifecycleOrbitalParams keys. */
+export function isStdStatusLifecycleStatusLifecycleOrbitalParams(p: object): p is StdStatusLifecycleStatusLifecycleOrbitalParams {
+  type _OverrideRecord = NonNullable<StdStatusLifecycleStatusLifecycleOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdStatusLifecycleStatusLifecycleOrbitalManifest.traitNames,
+      ...StdStatusLifecycleStatusLifecycleOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

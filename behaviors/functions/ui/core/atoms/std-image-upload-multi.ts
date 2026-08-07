@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -174,4 +174,895 @@ export function stdImageUploadMulti(params: StdImageUploadMultiParams): OrbitalD
       stdImageUploadMultiPage(params),
     ],
   });
+}
+
+type _StdImageUploadMultiEntityName = 'UploadedImage';
+type _StdImageUploadMultiListenTraitName = 'UploadedImageUpload';
+
+/**
+ * Tunable params for the UploadedImageOrbital orbital.
+ *
+ * Canonical entity: UploadedImage — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdImageUploadMultiUploadedImageOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'UploadedImageUpload',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait UploadedImageOrbital's `uses[]` exports. */
+type _StdImageUploadMultiUploadedImageOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the UploadedImageOrbital orbital with consumer params. */
+export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMultiUploadedImageOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'uploadedimages');
+  const built = makeOrbitalWithUses({
+    name: 'UploadedImageOrbital',
+    uses: [],
+    entity: {
+      name: 'UploadedImage',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The accessible address for retrieving the image data.',
+            'name': 'url',
+            'required': true,
+            'synonyms': 'link, path, address',
+            'type': 'url',
+          },
+          {
+            'description': 'The filename or identifier for the uploaded image.',
+            'name': 'name',
+            'synonyms': 'filename, originalName, identifier',
+            'type': 'string',
+          },
+          {
+            'description': 'The file size in bytes.',
+            'name': 'sizeBytes',
+            'synonyms': 'length, filesize, bytes',
+            'type': 'number',
+          },
+          {
+            'description': 'The file\'s internet media type.',
+            'name': 'mimeType',
+            'synonyms': 'type, format, media type',
+            'type': 'string',
+          },
+          {
+            'description': 'The image\'s width in pixels.',
+            'name': 'width',
+            'synonyms': 'imageWidth, pixelWidth',
+            'type': 'number',
+          },
+          {
+            'description': 'The vertical dimension of the image, in pixels.',
+            'name': 'height',
+            'synonyms': 'vertical, y, dimension',
+            'type': 'number',
+          },
+          {
+            'description': 'Identifier of the parent resource this image belongs to.',
+            'name': 'parentId',
+            'synonyms': 'parent, reference, source',
+            'type': 'string',
+          },
+          {
+            'description': 'Identifies the type of the parent entity.',
+            'name': 'parentType',
+            'synonyms': 'parent, type, category',
+            'type': 'string',
+          },
+          {
+            'description': 'Timestamp indicating when the image was uploaded.',
+            'name': 'uploadedAt',
+            'synonyms': 'date, timestamp, upload time',
+            'type': 'datetime',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'accept': {
+            'default': 'image/*',
+            'description': 'Browser accept filter for the file picker',
+            'label': 'MIME filter',
+            'tier': 'domain',
+            'type': 'string',
+          },
+          'maxBytesPerImage': {
+            'default': 10485760,
+            'description': 'Per-image upload size cap',
+            'label': 'Size limit (bytes)',
+            'tier': 'domain',
+            'type': 'number',
+          },
+          'maxImages': {
+            'default': 10,
+            'description': 'Maximum number of images accepted per upload batch',
+            'label': 'Max images',
+            'tier': 'domain',
+            'type': 'number',
+          },
+          'title': {
+            'default': 'Upload Images',
+            'description': 'Heading shown above the upload zone',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals that an image upload process has begun.',
+            'event': 'UPLOAD',
+            'payloadSchema': [
+              {
+                'name': 'files',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'start, initiate, begin',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a single image has finished loading.',
+            'event': 'UploadedImageLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[UploadedImage]',
+              },
+            ],
+            'synonyms': 'loaded, received, parsed',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates an image failed to load during the upload process.',
+            'event': 'UploadedImageLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+          {
+            'description': 'A new image has been successfully uploaded.',
+            'event': 'UploadedImageCreated',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'url',
+                    'required': true,
+                    'type': 'url',
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sizeBytes',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'mimeType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'width',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'height',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'uploadedAt',
+                    'type': 'datetime',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'added, new, received',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a single image upload encountered an error.',
+            'event': 'UploadedImageUploadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, problem, rejected',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Signals an image has been removed from the upload queue.',
+            'event': 'UploadedImageDeleted',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'removed, discarded, taken out',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates an image deletion operation failed.',
+            'event': 'UploadedImageDeleteFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'failed delete, deletion error',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'UploadedImage',
+        'name': 'UploadedImageUpload',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals a single image has finished loading.',
+              'key': 'UploadedImageLoaded',
+              'name': 'UploadedImage loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[UploadedImage]',
+                },
+              ],
+              'synonyms': 'loaded, received, parsed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates an image failed to load during the upload process.',
+              'key': 'UploadedImageLoadFailed',
+              'name': 'UploadedImage load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals that an image upload process has begun.',
+              'key': 'UPLOAD',
+              'name': 'Upload',
+              'payloadSchema': [
+                {
+                  'name': 'files',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'start, initiate, begin',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a selected image has been removed.',
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'remove, discard, clear',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Signals an image has been removed from the upload queue.',
+              'key': 'UploadedImageDeleted',
+              'name': 'UploadedImage deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'removed, discarded, taken out',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates an image deletion operation failed.',
+              'key': 'UploadedImageDeleteFailed',
+              'name': 'UploadedImage delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'failed delete, deletion error',
+              'tier': 'internal',
+            },
+            {
+              'description': 'A new image has been successfully uploaded.',
+              'key': 'UploadedImageCreated',
+              'name': 'UploadedImage created',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'UploadedImage',
+                },
+              ],
+              'synonyms': 'added, new, received',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a single image upload encountered an error.',
+              'key': 'UploadedImageUploadFailed',
+              'name': 'UploadedImage upload failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, rejected',
+              'tier': 'internal',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'uploading',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageLoadFailed',
+                      'success': 'UploadedImageLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading images…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'image-plus',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'accept': '@config.accept',
+                        'action': 'UPLOAD',
+                        'description': 'or click to browse',
+                        'icon': 'image-plus',
+                        'label': 'Drop images here',
+                        'maxFiles': '@config.maxImages',
+                        'maxSize': '@config.maxBytesPerImage',
+                        'type': 'upload-drop-zone',
+                      },
+                      {
+                        'entity': '@payload.data',
+                        'type': 'media-gallery',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'UploadedImageLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'UploadedImageLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageLoadFailed',
+                      'success': 'UploadedImageLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading images…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  '@payload.files',
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageUploadFailed',
+                      'success': 'UploadedImageCreated',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'content': 'Uploading images…',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'max': 100,
+                        'progressType': 'linear',
+                        'type': 'progress-bar',
+                        'value': 0,
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'UPLOAD',
+              'from': 'browsing',
+              'to': 'uploading',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageDeleteFailed',
+                      'success': 'UploadedImageDeleted',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DELETE',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageLoadFailed',
+                      'success': 'UploadedImageLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'UploadedImageDeleted',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'UploadedImageDeleteFailed',
+              'from': 'browsing',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageLoadFailed',
+                      'success': 'UploadedImageLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'color': 'success',
+                        'name': 'check-circle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Upload complete',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'UploadedImageCreated',
+              'from': 'uploading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'UploadedImageUploadFailed',
+              'from': 'uploading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'image-plus',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'accept': '@config.accept',
+                        'action': 'UPLOAD',
+                        'description': 'or click to browse',
+                        'icon': 'image-plus',
+                        'label': 'Drop images here',
+                        'maxFiles': '@config.maxImages',
+                        'maxSize': '@config.maxBytesPerImage',
+                        'type': 'upload-drop-zone',
+                      },
+                      {
+                        'entity': '@payload.data',
+                        'type': 'media-gallery',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'UploadedImageLoaded',
+              'from': 'error',
+              'to': 'browsing',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'UploadedImageUploadPage',
+        'path': '/uploadedimages/upload',
+        'traits': [
+          {
+            'ref': 'UploadedImageUpload',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdImageUploadMultiUploadedImageOrbital. */
+export const StdImageUploadMultiUploadedImageOrbitalManifest = {
+  organism: 'std-image-upload-multi',
+  orbitalName: 'UploadedImageOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'UploadedImageUpload',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdImageUploadMultiUploadedImageOrbitalParams keys. */
+export function isStdImageUploadMultiUploadedImageOrbitalParams(p: object): p is StdImageUploadMultiUploadedImageOrbitalParams {
+  type _OverrideRecord = NonNullable<StdImageUploadMultiUploadedImageOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdImageUploadMultiUploadedImageOrbitalManifest.traitNames,
+      ...StdImageUploadMultiUploadedImageOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

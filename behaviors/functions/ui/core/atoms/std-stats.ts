@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -131,4 +131,1411 @@ export function stdStats(params: StdStatsParams): OrbitalDefinition {
       stdStatsPage(params),
     ],
   });
+}
+
+type _StdStatsEntityName = 'StatsItem';
+type _StdStatsListenTraitName = 'StatsItemStats';
+
+/**
+ * Tunable params for the StatsItemOrbital orbital.
+ *
+ * Canonical entity: StatsItem — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdStatsStatsItemOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'StatsItemStats',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait StatsItemOrbital's `uses[]` exports. */
+type _StdStatsStatsItemOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the StatsItemOrbital orbital with consumer params. */
+export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'StatsItemOrbital',
+    uses: [],
+    entity: {
+      name: 'StatsItem',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'description': 'A collection of statistical cards to display.',
+            'items': {
+              'properties': {
+                'clickEvent': {
+                  'name': 'clickEvent',
+                  'required': false,
+                  'type': 'string',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'number',
+                    'currency',
+                    'percent',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'max': {
+                  'name': 'max',
+                  'required': false,
+                  'type': 'number',
+                },
+                'prefix': {
+                  'name': 'prefix',
+                  'required': false,
+                  'type': 'string',
+                },
+                'sparklineData': {
+                  'items': {
+                    'type': 'number',
+                  },
+                  'name': 'sparklineData',
+                  'required': false,
+                  'type': 'array',
+                },
+                'suffix': {
+                  'name': 'suffix',
+                  'required': false,
+                  'type': 'string',
+                },
+                'target': {
+                  'name': 'target',
+                  'required': false,
+                  'type': 'number',
+                },
+                'trend': {
+                  'name': 'trend',
+                  'required': false,
+                  'type': 'number',
+                },
+                'trendFormat': {
+                  'name': 'trendFormat',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'absolute',
+                    'percent',
+                  ],
+                },
+                'trendPolarity': {
+                  'name': 'trendPolarity',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'higher-is-better',
+                    'lower-is-better',
+                  ],
+                },
+                'value': {
+                  'name': 'value',
+                  'required': false,
+                  'type': 'number',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'default',
+                    'primary',
+                    'success',
+                    'warning',
+                    'error',
+                    'info',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'cards',
+            'synonyms': 'statistics, items, displays',
+            'type': 'array',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'bodyContent': {
+            'default': {
+              'children': [
+                {
+                  'entity': '@entity.cards',
+                  'fields': [],
+                  'renderItem': [
+                    'fn',
+                    'card',
+                    {
+                      'clickEvent': '@card.clickEvent',
+                      'format': '@card.format',
+                      'icon': '@card.icon',
+                      'label': '@card.label',
+                      'look': '@config.statLook',
+                      'max': '@card.max',
+                      'prefix': '@card.prefix',
+                      'sparklineData': '@card.sparklineData',
+                      'suffix': '@card.suffix',
+                      'target': '@card.target',
+                      'trend': '@card.trend',
+                      'trendFormat': '@card.trendFormat',
+                      'trendPolarity': '@card.trendPolarity',
+                      'type': 'stat-display',
+                      'value': '@card.value',
+                      'variant': '@card.variant',
+                    },
+                  ],
+                  'type': '@config.viewPattern',
+                },
+              ],
+              'data-theme': '@config.theme',
+              'type': 'box',
+            },
+            'description': 'Render-ui SExpr rendered after metrics aggregate for statsLook=\'cards\' — the canonical data-grid call mapping @entity.cards through stat-display. Other statsLook values render kpiTilesBodyContent / heroMetricBodyContent / sparklineRowBodyContent instead; all four share this trait\'s state machine, aggregation pipeline, and listens.',
+            'label': 'Body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'heroMetricBodyContent': {
+            'default': {
+              'children': [
+                {
+                  'entity': '@entity.cards',
+                  'fields': [],
+                  'gap': 'none',
+                  'renderItem': [
+                    'fn',
+                    'card',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'color': 'muted',
+                                      'name': '@card.icon',
+                                      'size': 'md',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'className': 'uppercase tracking-widest',
+                                      'color': 'muted',
+                                      'content': '@card.label',
+                                      'type': 'typography',
+                                      'variant': 'overline',
+                                      'weight': 'bold',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'justify': 'center',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'align': 'baseline',
+                                  'children': [
+                                    {
+                                      'color': 'muted',
+                                      'content': '@card.prefix',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'weight': 'normal',
+                                    },
+                                    {
+                                      'className': 'text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]',
+                                      'format': '@card.format',
+                                      'type': 'animated-counter',
+                                      'value': '@card.value',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'content': '@card.suffix',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'weight': 'normal',
+                                    },
+                                  ],
+                                  'className': 'py-section',
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'justify': 'center',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'showValue': true,
+                                  'size': 'md',
+                                  'type': 'trend-indicator',
+                                  'value': '@card.trend',
+                                },
+                              ],
+                              'className': 'relative z-10 w-full max-w-2xl mx-auto text-center',
+                              'direction': 'vertical',
+                              'gap': 'md',
+                              'type': 'stack',
+                            },
+                            {
+                              'className': 'absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none',
+                              'color': 'auto',
+                              'data': '@card.sparklineData',
+                              'fill': true,
+                              'height': 96,
+                              'strokeWidth': 1,
+                              'type': 'sparkline',
+                            },
+                          ],
+                          'look': 'elevated',
+                          'padding': 'lg',
+                          'type': 'card',
+                        },
+                      ],
+                      'className': 'relative w-full rounded-xl shadow-lg overflow-hidden',
+                      'direction': 'vertical',
+                      'gap': 'none',
+                      'type': 'stack',
+                    },
+                  ],
+                  'type': 'data-list',
+                },
+              ],
+              'data-theme': '@config.theme',
+              'type': 'box',
+            },
+            'description': 'Render-ui SExpr for statsLook=\'hero-metric\' — one elevated card, one oversize number, background sparkline.',
+            'label': 'Hero metric body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'kpiTilesBodyContent': {
+            'default': {
+              'children': [
+                {
+                  'className': 'w-full',
+                  'entity': '@entity.cards',
+                  'fields': [],
+                  'gap': 'lg',
+                  'minCardWidth': 220,
+                  'renderItem': [
+                    'fn',
+                    'card',
+                    {
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': 'uppercase tracking-wide',
+                              'color': 'muted',
+                              'content': '@card.label',
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'weight': 'medium',
+                            },
+                            {
+                              'color': 'muted',
+                              'name': '@card.icon',
+                              'size': 'sm',
+                              'type': 'icon',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'xs',
+                          'justify': 'between',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'baseline',
+                          'children': [
+                            {
+                              'color': 'muted',
+                              'content': '@card.prefix',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'className': 'text-4xl font-bold tracking-tight',
+                              'format': '@card.format',
+                              'type': 'animated-counter',
+                              'value': '@card.value',
+                            },
+                            {
+                              'color': 'muted',
+                              'content': '@card.suffix',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'xs',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'showValue': true,
+                              'size': 'sm',
+                              'type': 'trend-indicator',
+                              'value': '@card.trend',
+                            },
+                            {
+                              'className': 'flex-1',
+                              'color': 'auto',
+                              'data': '@card.sparklineData',
+                              'fill': true,
+                              'height': 24,
+                              'type': 'sparkline',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow',
+                      'direction': 'vertical',
+                      'gap': 'sm',
+                      'type': 'stack',
+                    },
+                  ],
+                  'type': 'data-grid',
+                },
+              ],
+              'data-theme': '@config.theme',
+              'type': 'box',
+            },
+            'description': 'Render-ui SExpr for statsLook=\'kpi-tiles\' — Stripe-dashboard style tile grid: huge typography number, label, trend indicator, sparkline hint.',
+            'label': 'KPI tiles body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'metrics': {
+            'default': [
+              {
+                'aggregation': 'count',
+                'format': 'number',
+                'icon': 'list',
+                'label': 'Total Items',
+                'sparklineData': [
+                  2,
+                  4,
+                  3,
+                  6,
+                  5,
+                  8,
+                  7,
+                ],
+                'variant': 'primary',
+              },
+              {
+                'aggregation': 'count',
+                'format': 'number',
+                'icon': 'check-circle',
+                'label': 'Active',
+                'sparklineData': [
+                  1,
+                  3,
+                  2,
+                  4,
+                  6,
+                  5,
+                  7,
+                ],
+                'variant': 'success',
+              },
+              {
+                'aggregation': 'avg',
+                'field': 'value',
+                'format': 'number',
+                'icon': 'trending-up',
+                'label': 'Avg Value',
+                'sparklineData': [
+                  5,
+                  4,
+                  6,
+                  3,
+                  5,
+                  7,
+                  6,
+                ],
+                'variant': 'info',
+              },
+            ],
+            'description': 'One stat card per entry; declares aggregation, format, and styling',
+            'items': {
+              'properties': {
+                'aggregation': {
+                  'name': 'aggregation',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'count',
+                    'sum',
+                    'avg',
+                    'min',
+                    'max',
+                    'variance',
+                  ],
+                },
+                'clickEvent': {
+                  'name': 'clickEvent',
+                  'required': false,
+                  'type': 'string',
+                },
+                'field': {
+                  'name': 'field',
+                  'required': false,
+                  'type': 'string',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'number',
+                    'currency',
+                    'percent',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'max': {
+                  'name': 'max',
+                  'required': false,
+                  'type': 'number',
+                },
+                'prefix': {
+                  'name': 'prefix',
+                  'required': false,
+                  'type': 'string',
+                },
+                'sparklineData': {
+                  'items': {
+                    'type': 'number',
+                  },
+                  'name': 'sparklineData',
+                  'required': false,
+                  'type': 'array',
+                },
+                'suffix': {
+                  'name': 'suffix',
+                  'required': false,
+                  'type': 'string',
+                },
+                'target': {
+                  'name': 'target',
+                  'required': false,
+                  'type': 'number',
+                },
+                'trend': {
+                  'name': 'trend',
+                  'required': false,
+                  'type': 'number',
+                },
+                'trendFormat': {
+                  'name': 'trendFormat',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'absolute',
+                    'percent',
+                  ],
+                },
+                'trendPolarity': {
+                  'name': 'trendPolarity',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'higher-is-better',
+                    'lower-is-better',
+                  ],
+                },
+                'value': {
+                  'name': 'value',
+                  'required': false,
+                  'type': 'number',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'default',
+                    'primary',
+                    'success',
+                    'warning',
+                    'error',
+                    'info',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Metrics',
+            'synonyms': 'list of KPI cards / stat tiles / metric cards. each entry has label / value / format / icon / variant / aggregation. user phrases: \'replace metrics with X, Y, Z\' -> rewrite array; \'add Revenue tile\' -> append entry; \'change KPIs to X\' -> rewrite array',
+            'tier': 'presentation',
+            'type': '[MetricSpec]',
+          },
+          'sparklineRowBodyContent': {
+            'default': {
+              'children': [
+                {
+                  'className': 'w-full',
+                  'entity': '@entity.cards',
+                  'fields': [],
+                  'gap': 'md',
+                  'minCardWidth': 260,
+                  'renderItem': [
+                    'fn',
+                    'card',
+                    {
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'color': 'muted',
+                              'name': '@card.icon',
+                              'size': 'xs',
+                              'type': 'icon',
+                            },
+                            {
+                              'className': 'uppercase tracking-wide truncate',
+                              'color': 'muted',
+                              'content': '@card.label',
+                              'type': 'typography',
+                              'variant': 'overline',
+                              'weight': 'semibold',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'xs',
+                          'type': 'stack',
+                        },
+                        {
+                          'className': 'w-full',
+                          'color': 'auto',
+                          'data': '@card.sparklineData',
+                          'fill': true,
+                          'height': 64,
+                          'strokeWidth': 2,
+                          'type': 'sparkline',
+                        },
+                        {
+                          'align': 'baseline',
+                          'children': [
+                            {
+                              'align': 'baseline',
+                              'children': [
+                                {
+                                  'color': 'muted',
+                                  'content': '@card.prefix',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                                {
+                                  'className': 'tabular-nums',
+                                  'content': '@card.value',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                  'weight': 'semibold',
+                                },
+                                {
+                                  'color': 'muted',
+                                  'content': '@card.suffix',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'xs',
+                              'type': 'stack',
+                            },
+                            {
+                              'showValue': true,
+                              'size': 'sm',
+                              'type': 'trend-indicator',
+                              'value': '@card.trend',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                        },
+                      ],
+                      'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]',
+                      'direction': 'vertical',
+                      'gap': 'sm',
+                      'type': 'stack',
+                    },
+                  ],
+                  'type': 'data-grid',
+                },
+              ],
+              'data-theme': '@config.theme',
+              'type': 'box',
+            },
+            'description': 'Render-ui SExpr for statsLook=\'sparkline-row\' — chart-first tiles where the mini trend line is the visual centerpiece, label above, value+delta footer.',
+            'label': 'Sparkline row body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'statLook': {
+            'default': 'elevated',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'label': 'Stat display look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+          'statsLook': {
+            'default': 'cards',
+            'description': 'Layer 3 body layout: default per-metric stat-card grid (\'cards\'), Stripe-dashboard KPI tile row (\'kpi-tiles\'), single oversize hero number (\'hero-metric\'), or chart-first sparkline tile grid (\'sparkline-row\').',
+            'label': 'Stats look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'cards',
+              'kpi-tiles',
+              'hero-metric',
+              'sparkline-row',
+            ],
+          },
+          'theme': {
+            'default': '',
+            'description': 'Data-theme skin applied to the stat body root — for chrome-less pages composed without an AppShell.',
+            'label': 'Theme',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'title': {
+            'default': 'Summary',
+            'description': 'Heading shown above the stat-card grid',
+            'label': 'Section title',
+            'synonyms': 'the section header text. user phrases: \'rename section to X\' / \'title the KPIs X\' / \'change section title to X\' -> X',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewPattern': {
+            'default': 'data-grid',
+            'description': 'UI pattern used to arrange the stat cards',
+            'label': 'Render pattern',
+            'synonyms': 'internal pattern selector. user prompts rarely target this directly',
+            'tier': 'internal',
+            'type': 'pattern',
+          },
+        },
+        'entityContract': {
+          'provides': [
+            'cards',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'StatsItem',
+        'name': 'StatsItemStats',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Data has been loaded and is ready for processing.',
+              'key': 'ITEMS_LOADED',
+              'name': 'Items Loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ObjectSpec]',
+                },
+                {
+                  'name': 'totalCount',
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'data ready, update, refresh, loaded',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.cards',
+                  [
+                    'array/map',
+                    '@config.metrics',
+                    [
+                      'fn',
+                      'metric',
+                      {
+                        'clickEvent': [
+                          'object/get',
+                          '@metric',
+                          'clickEvent',
+                          '',
+                        ],
+                        'format': [
+                          'object/get',
+                          '@metric',
+                          'format',
+                          'number',
+                        ],
+                        'icon': [
+                          'object/get',
+                          '@metric',
+                          'icon',
+                          '',
+                        ],
+                        'label': [
+                          'object/get',
+                          '@metric',
+                          'label',
+                        ],
+                        'max': [
+                          'object/get',
+                          '@metric',
+                          'max',
+                          0,
+                        ],
+                        'prefix': [
+                          'object/get',
+                          '@metric',
+                          'prefix',
+                          '',
+                        ],
+                        'sparklineData': [
+                          'object/get',
+                          '@metric',
+                          'sparklineData',
+                          [],
+                        ],
+                        'suffix': [
+                          'object/get',
+                          '@metric',
+                          'suffix',
+                          '',
+                        ],
+                        'target': [
+                          'object/get',
+                          '@metric',
+                          'target',
+                          0,
+                        ],
+                        'trend': [
+                          'object/get',
+                          '@metric',
+                          'trend',
+                        ],
+                        'trendFormat': [
+                          'object/get',
+                          '@metric',
+                          'trendFormat',
+                          'absolute',
+                        ],
+                        'trendPolarity': [
+                          'object/get',
+                          '@metric',
+                          'trendPolarity',
+                          'higher-is-better',
+                        ],
+                        'value': [
+                          'object/get',
+                          '@metric',
+                          'value',
+                          0,
+                        ],
+                        'variant': [
+                          'object/get',
+                          '@metric',
+                          'variant',
+                          'default',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.statsLook',
+                    'kpi-tiles',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    '@config.kpiTilesBodyContent',
+                  ],
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@config.statsLook',
+                      'hero-metric',
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      '@config.heroMetricBodyContent',
+                    ],
+                    [
+                      'if',
+                      [
+                        '=',
+                        '@config.statsLook',
+                        'sparkline-row',
+                      ],
+                      [
+                        'render-ui',
+                        'main',
+                        '@config.sparklineRowBodyContent',
+                      ],
+                      [
+                        'render-ui',
+                        'main',
+                        '@config.bodyContent',
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.cards',
+                  [
+                    'array/map',
+                    '@config.metrics',
+                    [
+                      'fn',
+                      'metric',
+                      {
+                        'clickEvent': [
+                          'object/get',
+                          '@metric',
+                          'clickEvent',
+                          '',
+                        ],
+                        'format': [
+                          'object/get',
+                          '@metric',
+                          'format',
+                          'number',
+                        ],
+                        'icon': [
+                          'object/get',
+                          '@metric',
+                          'icon',
+                          '',
+                        ],
+                        'label': [
+                          'object/get',
+                          '@metric',
+                          'label',
+                        ],
+                        'max': [
+                          'object/get',
+                          '@metric',
+                          'max',
+                          0,
+                        ],
+                        'prefix': [
+                          'object/get',
+                          '@metric',
+                          'prefix',
+                          '',
+                        ],
+                        'sparklineData': [
+                          'object/get',
+                          '@metric',
+                          'sparklineData',
+                          [],
+                        ],
+                        'suffix': [
+                          'object/get',
+                          '@metric',
+                          'suffix',
+                          '',
+                        ],
+                        'target': [
+                          'object/get',
+                          '@metric',
+                          'target',
+                          0,
+                        ],
+                        'trend': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'object/get',
+                              '@metric',
+                              'aggregation',
+                              'count',
+                            ],
+                            'variance',
+                          ],
+                          [
+                            '-',
+                            [
+                              'array/sum',
+                              [
+                                'array/filter',
+                                '@payload.data',
+                                [
+                                  'object/get',
+                                  '@metric',
+                                  'filter',
+                                  true,
+                                ],
+                              ],
+                              [
+                                'object/get',
+                                '@metric',
+                                'field',
+                                '',
+                              ],
+                            ],
+                            [
+                              'array/sum',
+                              [
+                                'array/filter',
+                                '@payload.data',
+                                [
+                                  'object/get',
+                                  '@metric',
+                                  'baselineFilter',
+                                  true,
+                                ],
+                              ],
+                              [
+                                'object/get',
+                                '@metric',
+                                'field',
+                                '',
+                              ],
+                            ],
+                          ],
+                          [
+                            'object/get',
+                            '@metric',
+                            'trend',
+                          ],
+                        ],
+                        'trendFormat': [
+                          'object/get',
+                          '@metric',
+                          'trendFormat',
+                          'absolute',
+                        ],
+                        'trendPolarity': [
+                          'object/get',
+                          '@metric',
+                          'trendPolarity',
+                          'higher-is-better',
+                        ],
+                        'value': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'object/get',
+                              '@metric',
+                              'aggregation',
+                              'count',
+                            ],
+                            'sum',
+                          ],
+                          [
+                            'array/sum',
+                            [
+                              'array/filter',
+                              '@payload.data',
+                              [
+                                'object/get',
+                                '@metric',
+                                'filter',
+                                true,
+                              ],
+                            ],
+                            [
+                              'object/get',
+                              '@metric',
+                              'field',
+                              '',
+                            ],
+                          ],
+                          [
+                            'if',
+                            [
+                              '=',
+                              [
+                                'object/get',
+                                '@metric',
+                                'aggregation',
+                                'count',
+                              ],
+                              'avg',
+                            ],
+                            [
+                              'array/avg',
+                              [
+                                'array/filter',
+                                '@payload.data',
+                                [
+                                  'object/get',
+                                  '@metric',
+                                  'filter',
+                                  true,
+                                ],
+                              ],
+                              [
+                                'object/get',
+                                '@metric',
+                                'field',
+                                '',
+                              ],
+                            ],
+                            [
+                              'if',
+                              [
+                                '=',
+                                [
+                                  'object/get',
+                                  '@metric',
+                                  'aggregation',
+                                  'count',
+                                ],
+                                'min',
+                              ],
+                              [
+                                'array/min',
+                                [
+                                  'array/filter',
+                                  '@payload.data',
+                                  [
+                                    'object/get',
+                                    '@metric',
+                                    'filter',
+                                    true,
+                                  ],
+                                ],
+                                [
+                                  'object/get',
+                                  '@metric',
+                                  'field',
+                                  '',
+                                ],
+                              ],
+                              [
+                                'if',
+                                [
+                                  '=',
+                                  [
+                                    'object/get',
+                                    '@metric',
+                                    'aggregation',
+                                    'count',
+                                  ],
+                                  'max',
+                                ],
+                                [
+                                  'array/max',
+                                  [
+                                    'array/filter',
+                                    '@payload.data',
+                                    [
+                                      'object/get',
+                                      '@metric',
+                                      'filter',
+                                      true,
+                                    ],
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@metric',
+                                    'field',
+                                    '',
+                                  ],
+                                ],
+                                [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'object/get',
+                                      '@metric',
+                                      'aggregation',
+                                      'count',
+                                    ],
+                                    'variance',
+                                  ],
+                                  [
+                                    'array/sum',
+                                    [
+                                      'array/filter',
+                                      '@payload.data',
+                                      [
+                                        'object/get',
+                                        '@metric',
+                                        'filter',
+                                        true,
+                                      ],
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@metric',
+                                      'field',
+                                      '',
+                                    ],
+                                  ],
+                                  [
+                                    'array/len',
+                                    [
+                                      'array/filter',
+                                      '@payload.data',
+                                      [
+                                        'object/get',
+                                        '@metric',
+                                        'filter',
+                                        true,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
+                        'variant': [
+                          'object/get',
+                          '@metric',
+                          'variant',
+                          'default',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.statsLook',
+                    'kpi-tiles',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    '@config.kpiTilesBodyContent',
+                  ],
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@config.statsLook',
+                      'hero-metric',
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      '@config.heroMetricBodyContent',
+                    ],
+                    [
+                      'if',
+                      [
+                        '=',
+                        '@config.statsLook',
+                        'sparkline-row',
+                      ],
+                      [
+                        'render-ui',
+                        'main',
+                        '@config.sparklineRowBodyContent',
+                      ],
+                      [
+                        'render-ui',
+                        'main',
+                        '@config.bodyContent',
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'ITEMS_LOADED',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'StatsItemStatsPage',
+        'path': '/statsitems',
+        'traits': [
+          {
+            'ref': 'StatsItemStats',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdStatsStatsItemOrbital. */
+export const StdStatsStatsItemOrbitalManifest = {
+  organism: 'std-stats',
+  orbitalName: 'StatsItemOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'StatsItemStats',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdStatsStatsItemOrbitalParams keys. */
+export function isStdStatsStatsItemOrbitalParams(p: object): p is StdStatsStatsItemOrbitalParams {
+  type _OverrideRecord = NonNullable<StdStatsStatsItemOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdStatsStatsItemOrbitalManifest.traitNames,
+      ...StdStatsStatsItemOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

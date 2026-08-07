@@ -1,0 +1,109 @@
+app learning-sociology-lab "1.0.0"
+"Sociology lab organism — a social-stratification & mobility simulator (5 class strata redistribute across generations as the learner drives a mobility index) and a Sociological Imagination exercise (Mills: link each personal trouble to the public issue behind it), composed from the std-soc-stratification and std-soc-imagination instrument atoms behind a mode router."
+orbital SociologyLabOrbital {
+  uses SocStratification from "std/behaviors/std-soc-stratification"
+  uses SocImagination from "std/behaviors/std-soc-imagination"
+
+  type SociologyLabShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    width : number
+    height : number
+    text : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    color : string
+    fill : string
+  }
+  type SociologyLabNode = {
+    id : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+  }
+  type SociologyLabEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity SociologyLabItem [runtime] {
+    id : string!
+  }
+
+  entity StratificationScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    mobility : number
+    generation : number
+    stratumShares : [number]
+    giniIndex : number
+    shapes : [SociologyLabShape]
+  }
+
+  entity ImaginationScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    nodes : [SociologyLabNode]
+    edges : [SociologyLabEdge]
+    currentTroubleIndex : number
+    score : number
+    answeredCorrectly : boolean
+    feedbackText : string
+    explanationText : string
+  }
+
+  trait SociologyLabRouter -> @rebindable SociologyLabItem [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (emit MODE_SELECTED { mode: @config.mode })
+    }
+
+    emits {
+      MODE_SELECTED -> external {
+        mode : string
+      }
+        @description "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null."
+        @tier "domain"
+    }
+
+    config {
+      mode : "stratification" | "imagination" = stratification
+        @label "Mode"
+        @description "Which sociology simulation to render: social stratification and mobility across generations, or the Sociological Imagination exercise linking personal troubles to public issues."
+        @synonyms "sociology, social stratification, class stratification, social class, class strata, class structure, upper class, middle class, working class, lower class, social mobility, intergenerational mobility, mobility index, income inequality, wealth inequality, Gini index, Gini coefficient, Lorenz curve, sociological imagination, C. Wright Mills, Mills, personal trouble, public issue, biography and history, structural unemployment, social structure"
+        @tier "domain"
+    }
+  }
+
+  trait StratificationSim = SocStratification.traits.SocStratSim -> StratificationScene {
+    listens {
+      SociologyLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "stratification"
+      title: "Sociology Lab"
+    }
+  }
+
+  trait ImaginationSim = SocImagination.traits.SocImaginationSim -> ImaginationScene {
+    listens {
+      SociologyLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "imagination"
+      title: "Sociology Lab"
+    }
+  }
+
+  page "/learning/sociology-lab" as SociologyLabPage -> SociologyLabRouter, StratificationSim, ImaginationSim
+}

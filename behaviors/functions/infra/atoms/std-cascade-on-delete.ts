@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -158,4 +158,542 @@ export function stdCascadeOnDelete(params: StdCascadeOnDeleteParams): OrbitalDef
       stdCascadeOnDeletePage(params),
     ],
   });
+}
+
+type _StdCascadeOnDeleteEntityName = 'CascadeLog';
+type _StdCascadeOnDeleteListenTraitName = 'CascadeOnDeleteGate';
+
+/**
+ * Tunable params for the CascadeOnDeleteOrbital orbital.
+ *
+ * Canonical entity: CascadeLog — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdCascadeOnDeleteCascadeOnDeleteOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'CascadeOnDeleteGate',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait CascadeOnDeleteOrbital's `uses[]` exports. */
+type _StdCascadeOnDeleteCascadeOnDeleteOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the CascadeOnDeleteOrbital orbital with consumer params. */
+export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDeleteCascadeOnDeleteOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'cascade_logs');
+  const built = makeOrbitalWithUses({
+    name: 'CascadeOnDeleteOrbital',
+    uses: [],
+    entity: {
+      name: 'CascadeLog',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Identifier of the deleted parent the cascade is clearing dependents for.',
+            'name': 'parentId',
+            'synonyms': 'parent, source, origin',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Identifies the parent entity of the cascade.',
+            'name': 'parentEntity',
+            'synonyms': 'related entity, source entity, parent',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'The number of rows deleted by the cascade.',
+            'name': 'rowCount',
+            'synonyms': 'count, size, quantity',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'description': 'Scratch: id of the dependent row the loop is currently deleting.',
+            'name': 'headId',
+            'synonyms': 'current id, cursor',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'capabilities': [
+          'cascade-delete',
+        ],
+        'category': 'lifecycle',
+        'config': {
+          'dependentEntity': {
+            'default': 'CascadeLog',
+            'description': 'Entity holding rows that point at the parent (compose one cascade trait per dependent type). Defaults to the atom\'s own log so the standalone validates; rebind per composition.',
+            'label': 'Dependent entity',
+            'tier': 'internal',
+            'type': 'entity',
+          },
+          'enabled': {
+            'default': false,
+            'description': 'When a record is deleted, also delete the records that belong to it. Off by default.',
+            'label': 'Delete related records too',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade',
+            'tier': 'infra',
+            'type': 'boolean',
+          },
+          'foreignKeyField': {
+            'default': 'parentId',
+            'description': 'Field on dependent rows that holds the parent\'s id.',
+            'label': 'Foreign-key field',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'parentEntity': {
+            'default': '',
+            'description': 'Entity whose deletion triggers the cascade.',
+            'label': 'Parent entity',
+            'tier': 'internal',
+            'type': 'entity',
+          },
+        },
+        'emits': [
+          {
+            'event': 'CascadeRowDeleted',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+          },
+          {
+            'event': 'CascadeCompleted',
+            'payloadSchema': [
+              {
+                'name': 'parentId',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+          },
+          {
+            'event': 'DepsLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+              },
+            ],
+          },
+          {
+            'event': 'CascadeStepped',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CascadeFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'CascadeLog',
+        'name': 'CascadeOnDeleteGate',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ParentDeleted',
+              'name': 'Parent deleted',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'DepsLoaded',
+              'name': 'Deps loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                },
+              ],
+            },
+            {
+              'key': 'CascadeStepped',
+              'name': 'Cascade stepped',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CascadeFailed',
+              'name': 'Cascade failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CascadeRowDeleted',
+              'name': 'Cascade row deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CascadeCompleted',
+              'name': 'Cascade completed',
+              'payloadSchema': [
+                {
+                  'name': 'parentId',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'scanning',
+            },
+          ],
+          'transitions': [
+            {
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.parentId',
+                  '@payload.data.id',
+                ],
+                [
+                  'set',
+                  '@entity.parentEntity',
+                  '@config.parentEntity',
+                ],
+                [
+                  'fetch',
+                  '@config.dependentEntity',
+                  {
+                    'emit': {
+                      'failure': 'CascadeFailed',
+                      'success': 'DepsLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'ParentDeleted',
+              'from': 'idle',
+              'guard': '@config.enabled',
+              'to': 'scanning',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.headId',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@payload.data',
+                        [
+                          'fn',
+                          'row',
+                          [
+                            '=',
+                            [
+                              'object/get',
+                              '@row',
+                              '@config.foreignKeyField',
+                            ],
+                            '@entity.parentId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'id',
+                  ],
+                ],
+                [
+                  'emit',
+                  'CascadeRowDeleted',
+                  {
+                    'id': '@entity.headId',
+                  },
+                ],
+                [
+                  'persist',
+                  'delete',
+                  '@config.dependentEntity',
+                  '@entity.headId',
+                  {
+                    'emit': {
+                      'failure': 'CascadeFailed',
+                      'success': 'CascadeStepped',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DepsLoaded',
+              'from': 'scanning',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  [
+                    'array/filter',
+                    '@payload.data',
+                    [
+                      'fn',
+                      'row',
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@row',
+                          '@config.foreignKeyField',
+                        ],
+                        '@entity.parentId',
+                      ],
+                    ],
+                  ],
+                ],
+                0,
+              ],
+              'to': 'scanning',
+            },
+            {
+              'effects': [
+                [
+                  'emit',
+                  'CascadeCompleted',
+                  {
+                    'parentId': '@entity.parentId',
+                  },
+                ],
+              ],
+              'event': 'DepsLoaded',
+              'from': 'scanning',
+              'guard': [
+                '=',
+                [
+                  'array/len',
+                  [
+                    'array/filter',
+                    '@payload.data',
+                    [
+                      'fn',
+                      'row',
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@row',
+                          '@config.foreignKeyField',
+                        ],
+                        '@entity.parentId',
+                      ],
+                    ],
+                  ],
+                ],
+                0,
+              ],
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  '@config.dependentEntity',
+                  {
+                    'emit': {
+                      'failure': 'CascadeFailed',
+                      'success': 'DepsLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'CascadeStepped',
+              'from': 'scanning',
+              'to': 'scanning',
+            },
+            {
+              'event': 'CascadeFailed',
+              'from': 'scanning',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'CascadeOnDeletePage',
+        'path': '/cascade-on-delete',
+        'traits': [
+          {
+            'ref': 'CascadeOnDeleteGate',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdCascadeOnDeleteCascadeOnDeleteOrbital. */
+export const StdCascadeOnDeleteCascadeOnDeleteOrbitalManifest = {
+  organism: 'std-cascade-on-delete',
+  orbitalName: 'CascadeOnDeleteOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'CascadeOnDeleteGate',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdCascadeOnDeleteCascadeOnDeleteOrbitalParams keys. */
+export function isStdCascadeOnDeleteCascadeOnDeleteOrbitalParams(p: object): p is StdCascadeOnDeleteCascadeOnDeleteOrbitalParams {
+  type _OverrideRecord = NonNullable<StdCascadeOnDeleteCascadeOnDeleteOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdCascadeOnDeleteCascadeOnDeleteOrbitalManifest.traitNames,
+      ...StdCascadeOnDeleteCascadeOnDeleteOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

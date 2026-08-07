@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -158,4 +158,612 @@ export function stdEsignRequest(params: StdEsignRequestParams): OrbitalDefinitio
       stdEsignRequestPage(params),
     ],
   });
+}
+
+type _StdEsignRequestEntityName = 'ESignRequest';
+type _StdEsignRequestListenTraitName = 'TitleHeading' | 'RequestDataGrid' | 'ErrorAlert' | 'ESignRequestSigning';
+
+/**
+ * Tunable params for the ESignRequestOrbital orbital.
+ *
+ * Canonical entity: ESignRequest — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdEsignRequestESignRequestOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'TitleHeading' | 'RequestDataGrid' | 'ErrorAlert' | 'ESignRequestSigning',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait ESignRequestOrbital's `uses[]` exports. */
+type _StdEsignRequestESignRequestOrbitalUsesRef = 'Typography.traits.TypographyRender' | 'DataGrid.traits.DataGridRender' | 'Alert.traits.AlertRender';
+
+/** Per-orbital factory: builds the ESignRequestOrbital orbital with consumer params. */
+export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignRequestOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'esignrequests');
+  const built = makeOrbitalWithUses({
+    name: 'ESignRequestOrbital',
+    uses: [
+      {
+        'as': 'Typography',
+        'from': 'std/behaviors/ui-typography',
+      },
+      {
+        'as': 'DataGrid',
+        'from': 'std/behaviors/ui-data-grid',
+      },
+      {
+        'as': 'Alert',
+        'from': 'std/behaviors/ui-alert',
+      },
+    ],
+    entity: {
+      name: 'ESignRequest',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'Unique identifier for the associated document.',
+            'name': 'documentId',
+            'required': true,
+            'synonyms': 'document reference, file ID',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The name of the document being requested for signature.',
+            'name': 'documentName',
+            'synonyms': 'filename, document title, file name',
+            'type': 'string',
+          },
+          {
+            'description': 'The name of the recipient for the e-signature request.',
+            'name': 'recipientName',
+            'required': true,
+            'synonyms': 'recipient, name, user',
+            'type': 'string',
+          },
+          {
+            'description': 'The email address of the recipient.',
+            'name': 'recipientEmail',
+            'required': true,
+            'synonyms': 'email, address, contact',
+            'type': 'email',
+          },
+          {
+            'default': 'draft',
+            'description': 'The current stage of the request lifecycle.',
+            'name': 'status',
+            'synonyms': 'state, condition, phase',
+            'type': 'string',
+            'values': [
+              'draft',
+              'sent',
+              'viewed',
+              'signed',
+              'declined',
+              'expired',
+            ],
+          },
+          {
+            'description': 'Timestamp indicating when the request was sent.',
+            'name': 'sentAt',
+            'synonyms': 'sent date, send time, dispatched at',
+            'type': 'datetime',
+          },
+          {
+            'description': 'Timestamp indicating when the request was signed.',
+            'name': 'signedAt',
+            'synonyms': 'signed date, signature date, completion date',
+            'type': 'datetime',
+          },
+          {
+            'description': 'The date and time when the request is no longer valid.',
+            'name': 'expiresAt',
+            'synonyms': 'expiration, expiry, due date',
+            'type': 'datetime',
+          },
+          {
+            'default': '',
+            'description': 'Free-text comments or additional information.',
+            'name': 'notes',
+            'synonyms': 'comment, remark, description, details',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': '@config.title',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h3',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ESignRequest',
+        'name': 'TitleHeading',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'fields': {
+            'default': [
+              {
+                'label': 'Document',
+                'name': 'documentName',
+                'variant': 'h4',
+              },
+              {
+                'label': 'Recipient',
+                'name': 'recipientName',
+                'variant': 'body',
+              },
+              {
+                'label': 'Email',
+                'name': 'recipientEmail',
+                'variant': 'caption',
+              },
+              {
+                'label': 'Status',
+                'name': 'status',
+                'variant': 'badge',
+              },
+              {
+                'label': 'Sent',
+                'name': 'sentAt',
+                'variant': 'caption',
+              },
+            ],
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.tableLook',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ESignRequest',
+        'name': 'RequestDataGrid',
+        'ref': ('DataGrid.traits.DataGridRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'message': {
+            'default': 'Failed to load signature requests',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Failed to load signature requests',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'error',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'ESignRequest',
+        'name': 'ErrorAlert',
+        'ref': ('Alert.traits.AlertRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
+      }),
+      {
+        'category': 'interaction',
+        'config': {
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'title': {
+            'default': 'Signature Requests',
+            'description': 'Heading shown above the signature-request list',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals a request has been sent for signature.',
+            'event': 'SEND_REQUEST',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'dispatch, submit, transmit',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a signature request has been cancelled.',
+            'event': 'REVOKE_REQUEST',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'cancel, void, retract',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals that the request list has been successfully populated.',
+            'event': 'ESignRequestLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ESignRequest]',
+              },
+            ],
+            'synonyms': 'loaded, refreshed, populated, initialized',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load e-signature request data.',
+            'event': 'ESignRequestLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, load error',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'ESignRequest',
+        'name': 'ESignRequestSigning',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals that the request list has been successfully populated.',
+              'key': 'ESignRequestLoaded',
+              'name': 'ESignRequest loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ESignRequest]',
+                },
+              ],
+              'synonyms': 'loaded, refreshed, populated, initialized',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load e-signature request data.',
+              'key': 'ESignRequestLoadFailed',
+              'name': 'ESignRequest load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, load error',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals a request has been sent for signature.',
+              'key': 'SEND_REQUEST',
+              'name': 'Send Request',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'dispatch, submit, transmit',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a signature request has been cancelled.',
+              'key': 'REVOKE_REQUEST',
+              'name': 'Revoke Request',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'cancel, void, retract',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ESignRequest' satisfies _StdEsignRequestEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ESignRequestLoadFailed',
+                      'success': 'ESignRequestLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'md',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.TitleHeading',
+                      '@trait.RequestDataGrid',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ESignRequestLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.ErrorAlert',
+                    ],
+                    'type': 'box',
+                  },
+                ],
+              ],
+              'event': 'ESignRequestLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'notify',
+                  'Signature request sent',
+                  'success',
+                ],
+              ],
+              'event': 'SEND_REQUEST',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'notify',
+                  'Signature request revoked',
+                  'info',
+                ],
+              ],
+              'event': 'REVOKE_REQUEST',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ESignRequest' satisfies _StdEsignRequestEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ESignRequestLoadFailed',
+                      'success': 'ESignRequestLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'md',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'ESignRequestPage',
+        'path': '/esign',
+        'traits': [
+          {
+            'ref': 'ESignRequestSigning',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdEsignRequestESignRequestOrbital. */
+export const StdEsignRequestESignRequestOrbitalManifest = {
+  organism: 'std-esign-request',
+  orbitalName: 'ESignRequestOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'TitleHeading',
+    'RequestDataGrid',
+    'ErrorAlert',
+  ] as const,
+  inlineTraitNames: [
+    'ESignRequestSigning',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdEsignRequestESignRequestOrbitalParams keys. */
+export function isStdEsignRequestESignRequestOrbitalParams(p: object): p is StdEsignRequestESignRequestOrbitalParams {
+  type _OverrideRecord = NonNullable<StdEsignRequestESignRequestOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdEsignRequestESignRequestOrbitalManifest.traitNames,
+      ...StdEsignRequestESignRequestOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

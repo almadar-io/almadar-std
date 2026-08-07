@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -123,4 +123,311 @@ export function stdGameClock(params: StdGameClockParams): OrbitalDefinition {
       stdGameClockPage(params),
     ],
   });
+}
+
+type _StdGameClockEntityName = 'GameClockRecord';
+type _StdGameClockListenTraitName = 'GameClock';
+
+/**
+ * Tunable params for the GameClockOrbital orbital.
+ *
+ * Canonical entity: GameClockRecord — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdGameClockGameClockOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'GameClock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait GameClockOrbital's `uses[]` exports. */
+type _StdGameClockGameClockOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the GameClockOrbital orbital with consumer params. */
+export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'game_clock_states');
+  const built = makeOrbitalWithUses({
+    name: 'GameClockOrbital',
+    uses: [],
+    entity: {
+      name: 'GameClockRecord',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'Total milliseconds elapsed since the clock started.',
+            'name': 'elapsedMs',
+            'synonyms': 'elapsed, time, ms, total time',
+            'type': 'number',
+          },
+          {
+            'default': true,
+            'description': 'Whether the clock is currently ticking.',
+            'name': 'running',
+            'synonyms': 'active, playing, started',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'game-core',
+        'config': {
+          'autoStart': {
+            'default': true,
+            'description': 'When true the clock begins ticking immediately on INIT without waiting for a RESUME event.',
+            'label': 'Auto-start clock',
+            'synonyms': 'start on init, auto-run, begin immediately',
+            'tier': 'domain',
+            'type': 'boolean',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic.',
+            'event': 'GameClockTicked',
+            'payloadSchema': [
+              {
+                'name': 'elapsedMs',
+                'type': 'number',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'clock-tick, time-advance, tick, frame, elapsed',
+            'tier': 'domain',
+          },
+        ],
+        'linkedEntity': 'GameClockRecord',
+        'name': 'GameClock',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'PAUSE',
+              'name': 'Pause',
+            },
+            {
+              'key': 'RESUME',
+              'name': 'Resume',
+            },
+            {
+              'description': 'Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic.',
+              'key': 'GameClockTicked',
+              'name': 'Game clock ticked',
+              'payloadSchema': [
+                {
+                  'name': 'elapsedMs',
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'clock-tick, time-advance, tick, frame, elapsed',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'running',
+            },
+            {
+              'name': 'paused',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  false,
+                ],
+              ],
+              'event': 'PAUSE',
+              'from': 'running',
+              'to': 'paused',
+            },
+            {
+              'event': 'RESUME',
+              'from': 'running',
+              'to': 'running',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  true,
+                ],
+              ],
+              'event': 'RESUME',
+              'from': 'paused',
+              'to': 'running',
+            },
+            {
+              'event': 'PAUSE',
+              'from': 'paused',
+              'to': 'paused',
+            },
+          ],
+        },
+        'ticks': [
+          {
+            'effects': [
+              [
+                'set',
+                '@entity.elapsedMs',
+                [
+                  '+',
+                  '@entity.elapsedMs',
+                  100,
+                ],
+              ],
+              [
+                'emit',
+                'GameClockTicked',
+                {
+                  'elapsedMs': '@entity.elapsedMs',
+                },
+              ],
+            ],
+            'guard': [
+              '==',
+              '@entity.running',
+              true,
+            ],
+            'interval': 100,
+            'name': 'clockTick',
+          },
+        ],
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'GameClockPage',
+        'path': '/game/clock',
+        'traits': [
+          {
+            'ref': 'GameClock',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdGameClockGameClockOrbital. */
+export const StdGameClockGameClockOrbitalManifest = {
+  organism: 'std-game-clock',
+  orbitalName: 'GameClockOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'GameClock',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdGameClockGameClockOrbitalParams keys. */
+export function isStdGameClockGameClockOrbitalParams(p: object): p is StdGameClockGameClockOrbitalParams {
+  type _OverrideRecord = NonNullable<StdGameClockGameClockOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdGameClockGameClockOrbitalManifest.traitNames,
+      ...StdGameClockGameClockOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

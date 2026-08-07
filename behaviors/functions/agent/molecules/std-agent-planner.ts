@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -140,4 +140,607 @@ export function stdAgentPlanner(params: StdAgentPlannerParams): OrbitalDefinitio
       stdAgentPlannerPage(params),
     ],
   });
+}
+
+type _StdAgentPlannerEntityName = 'PlannerPlan';
+type _StdAgentPlannerListenTraitName = 'PlannerExecution' | 'PlannerListener';
+
+/**
+ * Tunable params for the AgentPlannerOrbital orbital.
+ *
+ * Canonical entity: PlannerPlan — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAgentPlannerAgentPlannerOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'PlannerExecution' | 'PlannerListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AgentPlannerOrbital's `uses[]` exports. */
+type _StdAgentPlannerAgentPlannerOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AgentPlannerOrbital orbital with consumer params. */
+export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentPlannerOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AgentPlannerOrbital',
+    uses: [],
+    entity: {
+      name: 'PlannerPlan',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': '',
+            'name': 'prompt',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'category': {
+                  'name': 'category',
+                  'required': true,
+                  'type': 'string',
+                },
+                'content': {
+                  'name': 'content',
+                  'required': true,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'strength': {
+                  'name': 'strength',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'memories',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'name': 'plan',
+            'type': 'string',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'planning',
+              'planned',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'PLANNED',
+            'payloadSchema': [
+              {
+                'name': 'plan',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'memoryCount',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'MEMORIES_RECALLED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': '[MemoryRecord]',
+              },
+            ],
+          },
+          {
+            'event': 'PLAN_GENERATED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'PlannerPlan',
+        'name': 'PlannerExecution',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PLAN',
+              'name': 'Plan',
+              'payloadSchema': [
+                {
+                  'name': 'prompt',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'MEMORIES_RECALLED',
+              'name': 'Memories Recalled',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': '[MemoryRecord]',
+                },
+              ],
+            },
+            {
+              'key': 'RECALL_FAILED',
+              'name': 'Recall Failed',
+            },
+            {
+              'key': 'PLAN_GENERATED',
+              'name': 'Plan Generated',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PLAN_GENERATION_FAILED',
+              'name': 'Plan Generation Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'PLANNED',
+              'name': 'Planned',
+              'payloadSchema': [
+                {
+                  'name': 'plan',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'memoryCount',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'recalling',
+            },
+            {
+              'name': 'planning',
+            },
+            {
+              'name': 'planned',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.prompt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.memories',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.plan',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.prompt',
+                  '@payload.prompt',
+                ],
+                [
+                  'memory/recall',
+                  '@entity.prompt',
+                  {
+                    'emit': {
+                      'failure': 'RECALL_FAILED',
+                      'success': 'MEMORIES_RECALLED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'PLAN',
+              'from': 'idle',
+              'to': 'recalling',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.memories',
+                  '@payload.result',
+                ],
+                [
+                  'llm/generate',
+                  '@entity.prompt',
+                  {
+                    'emit': {
+                      'failure': 'PLAN_GENERATION_FAILED',
+                      'success': 'PLAN_GENERATED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'MEMORIES_RECALLED',
+              'from': 'recalling',
+              'to': 'planning',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.memories',
+                  [],
+                ],
+                [
+                  'llm/generate',
+                  '@entity.prompt',
+                  {
+                    'emit': {
+                      'failure': 'PLAN_GENERATION_FAILED',
+                      'success': 'PLAN_GENERATED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'RECALL_FAILED',
+              'from': 'recalling',
+              'to': 'planning',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.plan',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'planned',
+                ],
+                [
+                  'emit',
+                  'PLANNED',
+                  {
+                    'memoryCount': '@entity.memories',
+                    'plan': '@entity.plan',
+                  },
+                ],
+              ],
+              'event': 'PLAN_GENERATED',
+              'from': 'planning',
+              'to': 'planned',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.plan',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'planned',
+                ],
+                [
+                  'emit',
+                  'PLANNED',
+                  {
+                    'memoryCount': '@entity.memories',
+                    'plan': '@entity.plan',
+                  },
+                ],
+              ],
+              'event': 'PLAN_GENERATION_FAILED',
+              'from': 'planning',
+              'to': 'planned',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'planned',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'planned',
+              'to': 'planned',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.plan',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.memories',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.prompt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'planned',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'linkedEntity': 'PlannerPlan',
+        'listens': [
+          {
+            'event': 'PLANNED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('PlannerExecution' satisfies _StdAgentPlannerListenTraitName),
+            },
+            'triggers': 'PLANNED',
+          },
+        ],
+        'name': 'PlannerListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PLANNED',
+              'name': 'Planned',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'waiting',
+            },
+            {
+              'name': 'ready',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'waiting',
+              'to': 'waiting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'planned',
+                ],
+              ],
+              'event': 'PLANNED',
+              'from': 'waiting',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'planned',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'ready',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'ready',
+              'to': 'waiting',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AgentPlannerPage',
+        'path': '/agent-planner',
+        'traits': [
+          {
+            'ref': 'PlannerExecution',
+          },
+          {
+            'ref': 'PlannerListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAgentPlannerAgentPlannerOrbital. */
+export const StdAgentPlannerAgentPlannerOrbitalManifest = {
+  organism: 'std-agent-planner',
+  orbitalName: 'AgentPlannerOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'PlannerExecution',
+    'PlannerListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAgentPlannerAgentPlannerOrbitalParams keys. */
+export function isStdAgentPlannerAgentPlannerOrbitalParams(p: object): p is StdAgentPlannerAgentPlannerOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAgentPlannerAgentPlannerOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAgentPlannerAgentPlannerOrbitalManifest.traitNames,
+      ...StdAgentPlannerAgentPlannerOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

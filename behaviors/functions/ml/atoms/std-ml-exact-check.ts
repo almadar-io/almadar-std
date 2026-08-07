@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -134,4 +134,524 @@ export function stdMlExactCheck(params: StdMlExactCheckParams): OrbitalDefinitio
       stdMlExactCheckPage(params),
     ],
   });
+}
+
+type _StdMlExactCheckEntityName = 'ExactCheck';
+type _StdMlExactCheckListenTraitName = 'ExactCheckRun';
+
+/**
+ * Tunable params for the MlExactCheckOrbital orbital.
+ *
+ * Canonical entity: ExactCheck — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdMlExactCheckMlExactCheckOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ExactCheckRun',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlExactCheckOrbital's `uses[]` exports. */
+type _StdMlExactCheckMlExactCheckOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlExactCheckOrbital orbital with consumer params. */
+export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExactCheckOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'MlExactCheckOrbital',
+    uses: [],
+    entity: {
+      name: 'ExactCheck',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': false,
+            'name': 'matched',
+            'type': 'boolean',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'checked',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'caseSensitive': {
+            'default': false,
+            'description': 'Compare candidate and key with case sensitivity; off lowercases both sides before comparing',
+            'label': 'Case sensitive',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+          'numericTolerance': {
+            'default': 0,
+            'description': 'Absolute tolerance applied when both candidate and key are numbers; 0 requires an exact numeric match',
+            'label': 'Numeric tolerance',
+            'tier': 'policy',
+            'type': 'float',
+          },
+          'trimWhitespace': {
+            'default': true,
+            'description': 'Strip leading and trailing whitespace from both sides before comparing',
+            'label': 'Trim whitespace',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Fired when the candidate exactly equals the key under the configured normalization',
+            'event': 'EXACT_MATCHED',
+            'payloadSchema': [
+              {
+                'name': 'candidate',
+                'required': true,
+                'type': 'any',
+              },
+              {
+                'name': 'key',
+                'required': true,
+                'type': 'any',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'event': 'EXACT_UNMATCHED',
+            'payloadSchema': [
+              {
+                'name': 'candidate',
+                'required': true,
+                'type': 'any',
+              },
+              {
+                'name': 'key',
+                'required': true,
+                'type': 'any',
+              },
+              {
+                'name': 'request',
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'linkedEntity': 'ExactCheck',
+        'name': 'ExactCheckRun',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CHECK',
+              'name': 'Check',
+              'payloadSchema': [
+                {
+                  'name': 'candidate',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'Fired when the candidate exactly equals the key under the configured normalization',
+              'key': 'EXACT_MATCHED',
+              'name': 'Exact Matched',
+              'payloadSchema': [
+                {
+                  'name': 'candidate',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'any',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'key': 'EXACT_UNMATCHED',
+              'name': 'Exact Unmatched',
+              'payloadSchema': [
+                {
+                  'name': 'candidate',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'checked',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.matched',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'let',
+                  [
+                    [
+                      'bothNumeric',
+                      [
+                        'and',
+                        [
+                          'validate/number',
+                          '@payload.candidate',
+                        ],
+                        [
+                          'validate/number',
+                          '@payload.key',
+                        ],
+                      ],
+                    ],
+                    [
+                      'candStr',
+                      [
+                        'str/concat',
+                        '@payload.candidate',
+                      ],
+                    ],
+                    [
+                      'keyStr',
+                      [
+                        'str/concat',
+                        '@payload.key',
+                      ],
+                    ],
+                    [
+                      'candTrim',
+                      [
+                        'if',
+                        '@config.trimWhitespace',
+                        [
+                          'str/trim',
+                          '@candStr',
+                        ],
+                        '@candStr',
+                      ],
+                    ],
+                    [
+                      'keyTrim',
+                      [
+                        'if',
+                        '@config.trimWhitespace',
+                        [
+                          'str/trim',
+                          '@keyStr',
+                        ],
+                        '@keyStr',
+                      ],
+                    ],
+                    [
+                      'candNorm',
+                      [
+                        'if',
+                        '@config.caseSensitive',
+                        '@candTrim',
+                        [
+                          'str/lower',
+                          '@candTrim',
+                        ],
+                      ],
+                    ],
+                    [
+                      'keyNorm',
+                      [
+                        'if',
+                        '@config.caseSensitive',
+                        '@keyTrim',
+                        [
+                          'str/lower',
+                          '@keyTrim',
+                        ],
+                      ],
+                    ],
+                    [
+                      'isMatch',
+                      [
+                        'if',
+                        '@bothNumeric',
+                        [
+                          '<=',
+                          [
+                            'math/abs',
+                            [
+                              '-',
+                              '@payload.candidate',
+                              '@payload.key',
+                            ],
+                          ],
+                          '@config.numericTolerance',
+                        ],
+                        [
+                          '==',
+                          '@candNorm',
+                          '@keyNorm',
+                        ],
+                      ],
+                    ],
+                  ],
+                  [
+                    'if',
+                    '@isMatch',
+                    [
+                      'do',
+                      [
+                        'set',
+                        '@entity.matched',
+                        true,
+                      ],
+                      [
+                        'set',
+                        '@entity.status',
+                        'checked',
+                      ],
+                      [
+                        'emit',
+                        'EXACT_MATCHED',
+                        {
+                          'candidate': '@payload.candidate',
+                          'key': '@payload.key',
+                        },
+                      ],
+                    ],
+                    [
+                      'do',
+                      [
+                        'set',
+                        '@entity.matched',
+                        false,
+                      ],
+                      [
+                        'set',
+                        '@entity.status',
+                        'checked',
+                      ],
+                      [
+                        'emit',
+                        'EXACT_UNMATCHED',
+                        {
+                          'candidate': '@payload.candidate',
+                          'key': '@payload.key',
+                          'request': '@payload.request',
+                        },
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'CHECK',
+              'from': 'idle',
+              'to': 'checked',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'checked',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'checked',
+              'to': 'checked',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.matched',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'checked',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlExactCheckPage',
+        'path': '/ml-exact-check',
+        'traits': [
+          {
+            'ref': 'ExactCheckRun',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMlExactCheckMlExactCheckOrbital. */
+export const StdMlExactCheckMlExactCheckOrbitalManifest = {
+  organism: 'std-ml-exact-check',
+  orbitalName: 'MlExactCheckOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'ExactCheckRun',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMlExactCheckMlExactCheckOrbitalParams keys. */
+export function isStdMlExactCheckMlExactCheckOrbitalParams(p: object): p is StdMlExactCheckMlExactCheckOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMlExactCheckMlExactCheckOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdMlExactCheckMlExactCheckOrbitalManifest.traitNames,
+      ...StdMlExactCheckMlExactCheckOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

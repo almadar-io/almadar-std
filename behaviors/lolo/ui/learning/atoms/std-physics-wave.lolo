@@ -1,5 +1,5 @@
 app std-physics-wave "1.0.0"
-"Wave engine — coupled oscillators; each interior point accelerates toward its neighbors' average height."
+"Wave engine — coupled oscillators where each interior point accelerates toward its neighbors' average height, with Start/Pause/Reset controls. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 orbital WaveEngineOrbital {
   type WaveBody = {
     id : string
@@ -16,6 +16,8 @@ orbital WaveEngineOrbital {
 
   entity WaveState [runtime] {
     id : string!
+    active : boolean = false
+    title : string
     bodies : [WaveBody]
     running : boolean = false
   }
@@ -24,18 +26,105 @@ orbital WaveEngineOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
         (set @entity.bodies @config.bodies)
         (set @entity.running @config.running)
         (render-ui main {
-          type: physics-canvas
-          width: @config.width
-          height: @config.height
-          backgroundColor: @config.backgroundColor
-          bodies: @entity.bodies
-          showVelocity: @config.showVelocity
-          showForces: false
-          velocityScale: @config.velocityScale
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: START, label: "Start", variant: primary },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale }
+              ] }
+          ]
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.bodies @config.bodies)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: START, label: "Start", variant: primary },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale }
+              ] }
+          ]
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+
+      START -> idle when (== @entity.active true)
+        (set @entity.running true)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: START, label: "Start", variant: primary },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale }
+              ] }
+          ]
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+
+      PAUSE -> idle when (== @entity.active true)
+        (set @entity.running false)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: START, label: "Start", variant: primary },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale }
+              ] }
+          ]
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.bodies @config.bodies)
+        (set @entity.running false)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: START, label: "Start", variant: primary },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale }
+              ] }
+          ]
         })
         (emit BODIES_UPDATED { bodies: @entity.bodies })
     }
@@ -65,16 +154,29 @@ orbital WaveEngineOrbital {
             )
             (object/merge @b { y: @ny, vy: @nvy }))))))))))
         (render-ui main {
-          type: physics-canvas
-          width: @config.width
-          height: @config.height
-          backgroundColor: @config.backgroundColor
-          bodies: @entity.bodies
-          showVelocity: @config.showVelocity
-          showForces: false
-          velocityScale: @config.velocityScale
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: START, label: "Start", variant: primary },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale }
+              ] }
+          ]
         })
         (emit BODIES_UPDATED { bodies: @entity.bodies })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
     }
 
     emits {
@@ -87,6 +189,14 @@ orbital WaveEngineOrbital {
     }
 
     config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Wave"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
       tension : number = 0.3
         @label "Tension"
         @description "Coupling strength (k) pulling each point toward its neighbors' average height — the discrete wave equation's spring constant."

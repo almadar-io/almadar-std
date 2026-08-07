@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -133,4 +133,511 @@ export function stdAgentFixLoop(params: StdAgentFixLoopParams): OrbitalDefinitio
       stdAgentFixLoopPage(params),
     ],
   });
+}
+
+type _StdAgentFixLoopEntityName = 'FixLoop';
+type _StdAgentFixLoopListenTraitName = 'FixLoopExecution' | 'FixLoopListener';
+
+/**
+ * Tunable params for the AgentFixLoopOrbital orbital.
+ *
+ * Canonical entity: FixLoop — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAgentFixLoopAgentFixLoopOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'FixLoopExecution' | 'FixLoopListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AgentFixLoopOrbital's `uses[]` exports. */
+type _StdAgentFixLoopAgentFixLoopOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AgentFixLoopOrbital orbital with consumer params. */
+export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentFixLoopOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AgentFixLoopOrbital',
+    uses: [],
+    entity: {
+      name: 'FixLoop',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': '',
+            'name': 'orbitalName',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'code': {
+                  'name': 'code',
+                  'required': true,
+                  'type': 'string',
+                },
+                'message': {
+                  'name': 'message',
+                  'required': true,
+                  'type': 'string',
+                },
+                'orbitalName': {
+                  'name': 'orbitalName',
+                  'required': false,
+                  'type': 'string',
+                },
+                'severity': {
+                  'name': 'severity',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'errors',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'name': 'fixPrompt',
+            'type': 'string',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'validating',
+              'fixing',
+              'fixed',
+              'valid',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'FIX_APPLIED',
+            'payloadSchema': [
+              {
+                'name': 'orbitalName',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'fixPrompt',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'PROMPT_GENERATED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'FixLoop',
+        'name': 'FixLoopExecution',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VALIDATE_ORBITAL',
+              'name': 'Validate Orbital',
+              'payloadSchema': [
+                {
+                  'name': 'orbitalName',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PROMPT_GENERATED',
+              'name': 'Prompt Generated',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PROMPT_GENERATION_FAILED',
+              'name': 'Prompt Generation Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'FIX_APPLIED',
+              'name': 'Fix Applied',
+              'payloadSchema': [
+                {
+                  'name': 'orbitalName',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'fixPrompt',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'generating_prompt',
+            },
+            {
+              'name': 'fixed',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.orbitalName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.errors',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.fixPrompt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.orbitalName',
+                  '@payload.orbitalName',
+                ],
+                [
+                  'validate/validate',
+                  '@entity.orbitalName',
+                ],
+                [
+                  'llm/generate',
+                  '@entity.orbitalName',
+                  {
+                    'emit': {
+                      'failure': 'PROMPT_GENERATION_FAILED',
+                      'success': 'PROMPT_GENERATED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'VALIDATE_ORBITAL',
+              'from': 'idle',
+              'to': 'generating_prompt',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.fixPrompt',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'fixed',
+                ],
+                [
+                  'emit',
+                  'FIX_APPLIED',
+                  {
+                    'fixPrompt': '@entity.fixPrompt',
+                    'orbitalName': '@entity.orbitalName',
+                  },
+                ],
+              ],
+              'event': 'PROMPT_GENERATED',
+              'from': 'generating_prompt',
+              'to': 'fixed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.fixPrompt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'fixed',
+                ],
+              ],
+              'event': 'PROMPT_GENERATION_FAILED',
+              'from': 'generating_prompt',
+              'to': 'fixed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'fixed',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'fixed',
+              'to': 'fixed',
+            },
+            {
+              'event': 'RESET',
+              'from': 'fixed',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'linkedEntity': 'FixLoop',
+        'listens': [
+          {
+            'event': 'FIX_APPLIED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('FixLoopExecution' satisfies _StdAgentFixLoopListenTraitName),
+            },
+            'triggers': 'FIX_APPLIED',
+          },
+        ],
+        'name': 'FixLoopListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'FIX_APPLIED',
+              'name': 'Fix Applied',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'waiting',
+            },
+            {
+              'name': 'resolved',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'waiting',
+              'to': 'waiting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'fixed',
+                ],
+              ],
+              'event': 'FIX_APPLIED',
+              'from': 'waiting',
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'fixed',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'resolved',
+              'to': 'resolved',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'resolved',
+              'to': 'waiting',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AgentFixLoopPage',
+        'path': '/agent-fix-loop',
+        'traits': [
+          {
+            'ref': 'FixLoopExecution',
+          },
+          {
+            'ref': 'FixLoopListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAgentFixLoopAgentFixLoopOrbital. */
+export const StdAgentFixLoopAgentFixLoopOrbitalManifest = {
+  organism: 'std-agent-fix-loop',
+  orbitalName: 'AgentFixLoopOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'FixLoopExecution',
+    'FixLoopListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAgentFixLoopAgentFixLoopOrbitalParams keys. */
+export function isStdAgentFixLoopAgentFixLoopOrbitalParams(p: object): p is StdAgentFixLoopAgentFixLoopOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAgentFixLoopAgentFixLoopOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAgentFixLoopAgentFixLoopOrbitalManifest.traitNames,
+      ...StdAgentFixLoopAgentFixLoopOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

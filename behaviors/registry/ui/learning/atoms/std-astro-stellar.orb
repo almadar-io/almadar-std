@@ -1,0 +1,2265 @@
+{
+  "description": "Stellar life-cycle simulator — the learner picks a starting mass via slider or preset buttons and steps through the star's evolutionary stages from nebula to its predicted end state (white dwarf, neutron star, or black hole), on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01KZEFTKK6RDEQ4F4G1SNC7RG7": {
+        "bakedName": "AstroStellarScene",
+        "curName": "AstroStellarScene",
+        "id": "ent_01KZEFTKK6RDEQ4F4G1SNC7RG7",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KZEFTKK6QCPX13PDNYSTHJT6": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KZEFTKK6QCPX13PDNYSTHJT6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFTKK61G52AYPZ15RBQCB1",
+        "renames": []
+      },
+      "evt_01KZEFTKK74SH3K0C4E36AG7M9": {
+        "bakedName": "STELLAR_UPDATED",
+        "curName": "STELLAR_UPDATED",
+        "id": "evt_01KZEFTKK74SH3K0C4E36AG7M9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFTKK61G52AYPZ15RBQCB1",
+        "renames": []
+      },
+      "evt_01KZEFTKK754VRF5Y245MFNB0Z": {
+        "bakedName": "STEP_STAGE",
+        "curName": "STEP_STAGE",
+        "id": "evt_01KZEFTKK754VRF5Y245MFNB0Z",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFTKK61G52AYPZ15RBQCB1",
+        "renames": []
+      },
+      "evt_01KZEFTKK775AD2FG5W9C7JFHP": {
+        "bakedName": "SET_MASS",
+        "curName": "SET_MASS",
+        "id": "evt_01KZEFTKK775AD2FG5W9C7JFHP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFTKK61G52AYPZ15RBQCB1",
+        "renames": []
+      },
+      "evt_01KZEFTKK7NS3A522B7WER4Z81": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEFTKK7NS3A522B7WER4Z81",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFTKK61G52AYPZ15RBQCB1",
+        "renames": []
+      },
+      "evt_01KZEFTKK7Z6QH5Z1V4ZFRG02Z": {
+        "bakedName": "RESET_STAGE",
+        "curName": "RESET_STAGE",
+        "id": "evt_01KZEFTKK7Z6QH5Z1V4ZFRG02Z",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFTKK61G52AYPZ15RBQCB1",
+        "renames": []
+      },
+      "orb_01KZEFTKK6DF5PT32AXZ3R96RG": {
+        "bakedName": "AstroStellarOrbital",
+        "curName": "AstroStellarOrbital",
+        "id": "orb_01KZEFTKK6DF5PT32AXZ3R96RG",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KZEFTKK78BCKW3M39YQPMHZP": {
+        "bakedName": "AstroStellarPage",
+        "curName": "AstroStellarPage",
+        "id": "pag_01KZEFTKK78BCKW3M39YQPMHZP",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZEFTKK61G52AYPZ15RBQCB1": {
+        "bakedName": "AstroStellarSim",
+        "curName": "AstroStellarSim",
+        "id": "trt_01KZEFTKK61G52AYPZ15RBQCB1",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-astro-stellar",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "initialMass",
+            "type": "number"
+          },
+          {
+            "name": "pathEndLabel",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "stages",
+            "type": "array"
+          },
+          {
+            "name": "currentStageIndex",
+            "type": "number"
+          },
+          {
+            "name": "stageLabel",
+            "type": "string"
+          },
+          {
+            "name": "stageDescription",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "points",
+                  "required": false,
+                  "type": "array"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "starShapes",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01KZEFTKK6RDEQ4F4G1SNC7RG7",
+        "name": "AstroStellarScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KZEFTKK6DF5PT32AXZ3R96RG",
+      "name": "AstroStellarOrbital",
+      "pages": [
+        {
+          "id": "pag_01KZEFTKK78BCKW3M39YQPMHZP",
+          "name": "AstroStellarPage",
+          "path": "/astro-stellar",
+          "traits": [
+            {
+              "ref": "AstroStellarSim",
+              "refId": "trt_01KZEFTKK61G52AYPZ15RBQCB1"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#0f172a",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "height": {
+              "default": 460.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "initialMass": {
+              "default": 1.0,
+              "description": "Starting stellar mass in solar masses; determines which life-cycle path the star follows.",
+              "label": "Initial Stellar Mass",
+              "synonyms": "solar mass, star mass, initial mass",
+              "tier": "domain",
+              "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "massPresets": {
+              "default": [
+                0.5,
+                1.0,
+                8.0,
+                20.0
+              ],
+              "description": "Quick-pick starting masses, in solar masses, shown as preset buttons.",
+              "items": {
+                "type": "number"
+              },
+              "label": "Mass Presets",
+              "tier": "domain",
+              "type": "[number]"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "stellarPaths": {
+              "default": [
+                {
+                  "endLabel": "White Dwarf",
+                  "maxMass": 7.9,
+                  "stages": [
+                    {
+                      "color": "#94a3b8",
+                      "description": "A vast cloud of gas and dust collapses under its own gravity, and a protostar begins to glow at its center.",
+                      "label": "Nebula",
+                      "radius": 95.0
+                    },
+                    {
+                      "color": "#facc15",
+                      "description": "Hydrogen fuses into helium in the core, and the star shines steadily for billions of years — this is where our Sun is now.",
+                      "label": "Main Sequence",
+                      "radius": 42.0
+                    },
+                    {
+                      "color": "#f97316",
+                      "description": "The core runs out of hydrogen and contracts while the outer layers swell and cool into a huge red envelope.",
+                      "label": "Red Giant",
+                      "radius": 100.0
+                    },
+                    {
+                      "color": "#e0f2fe",
+                      "description": "The outer layers drift away as a planetary nebula, leaving behind a hot, dense stellar remnant that slowly cools and fades.",
+                      "label": "White Dwarf",
+                      "radius": 16.0
+                    }
+                  ]
+                },
+                {
+                  "endLabel": "Neutron Star",
+                  "maxMass": 19.9,
+                  "stages": [
+                    {
+                      "color": "#94a3b8",
+                      "description": "A vast cloud of gas and dust collapses under its own gravity, forming a protostar far more massive than the Sun.",
+                      "label": "Nebula",
+                      "radius": 110.0
+                    },
+                    {
+                      "color": "#93c5fd",
+                      "description": "The star burns through hydrogen far faster than a Sun-like star, shining bright blue-white.",
+                      "label": "Main Sequence",
+                      "radius": 55.0
+                    },
+                    {
+                      "color": "#dc2626",
+                      "description": "Heavier elements fuse in shells around an iron core, until fusion can no longer release energy.",
+                      "label": "Red Supergiant",
+                      "radius": 130.0
+                    },
+                    {
+                      "color": "#fef08a",
+                      "description": "The core collapses in an instant and rebounds, blasting the star's outer layers into space in a brilliant explosion.",
+                      "label": "Supernova",
+                      "radius": 150.0
+                    },
+                    {
+                      "color": "#a78bfa",
+                      "description": "The crushed core survives as an ultra-dense sphere of neutrons, often spinning rapidly as a pulsar.",
+                      "label": "Neutron Star",
+                      "radius": 10.0
+                    }
+                  ]
+                },
+                {
+                  "endLabel": "Black Hole",
+                  "maxMass": 999.0,
+                  "stages": [
+                    {
+                      "color": "#94a3b8",
+                      "description": "A vast cloud of gas and dust collapses under its own gravity, forming an extremely massive protostar.",
+                      "label": "Nebula",
+                      "radius": 130.0
+                    },
+                    {
+                      "color": "#60a5fa",
+                      "description": "The star burns its fuel at a furious rate, glowing intensely blue and living only a few million years.",
+                      "label": "Main Sequence",
+                      "radius": 65.0
+                    },
+                    {
+                      "color": "#3b82f6",
+                      "description": "The star swells into an enormous, luminous supergiant while fusing progressively heavier elements in its core.",
+                      "label": "Blue Supergiant",
+                      "radius": 150.0
+                    },
+                    {
+                      "color": "#fef08a",
+                      "description": "The iron core collapses catastrophically and the star detonates, briefly outshining an entire galaxy.",
+                      "label": "Supernova",
+                      "radius": 170.0
+                    },
+                    {
+                      "color": "#020617",
+                      "description": "Gravity overwhelms every other force, and the collapsed core forms a black hole from which not even light can escape.",
+                      "label": "Black Hole",
+                      "radius": 14.0
+                    }
+                  ]
+                }
+              ],
+              "description": "Mass-threshold roster of life-cycle paths; the path whose maxMass first covers the initial mass is used. Each path supplies its own ordered stage list (label/description/color/radius) so fill_params can re-theme or extend the life-cycle.",
+              "items": {
+                "properties": {
+                  "endLabel": {
+                    "name": "endLabel",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "maxMass": {
+                    "name": "maxMass",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "stages": {
+                    "items": {
+                      "properties": {
+                        "color": {
+                          "name": "color",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "description": {
+                          "name": "description",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "radius": {
+                          "name": "radius",
+                          "required": false,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "stages",
+                    "required": true,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Stellar Life-cycle Paths",
+              "tier": "domain",
+              "type": "[AstroStellarPath]"
+            },
+            "title": {
+              "default": "Star Life-Cycle Simulator",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "width": {
+              "default": 640.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The star's life-cycle state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "STELLAR_UPDATED",
+              "eventId": "evt_01KZEFTKK74SH3K0C4E36AG7M9",
+              "payloadSchema": [
+                {
+                  "name": "initialMass",
+                  "type": "number"
+                },
+                {
+                  "name": "currentStageIndex",
+                  "type": "number"
+                },
+                {
+                  "name": "stageLabel",
+                  "type": "string"
+                },
+                {
+                  "name": "pathEndLabel",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "stellar update, life-cycle stage, star mass change, stage advance",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "currentStageIndex",
+              "initialMass",
+              "pathEndLabel",
+              "stageDescription",
+              "stageLabel",
+              "stages",
+              "starShapes",
+              "title"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "AstroStellarScene": "ent_01KZEFTKK6RDEQ4F4G1SNC7RG7"
+          },
+          "id": "trt_01KZEFTKK61G52AYPZ15RBQCB1",
+          "linkedEntity": "AstroStellarScene",
+          "linkedEntityId": "ent_01KZEFTKK6RDEQ4F4G1SNC7RG7",
+          "name": "AstroStellarSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KZEFTKK6QCPX13PDNYSTHJT6",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZEFTKK7NS3A522B7WER4Z81",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner set the initial stellar mass, via slider or a preset button.",
+                "id": "evt_01KZEFTKK775AD2FG5W9C7JFHP",
+                "key": "SET_MASS",
+                "name": "Set Mass",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner pressed Next Stage to advance the star to its next life-cycle stage.",
+                "id": "evt_01KZEFTKK754VRF5Y245MFNB0Z",
+                "key": "STEP_STAGE",
+                "name": "Step Stage",
+                "tier": "domain"
+              },
+              {
+                "description": "Learner pressed Reset Lifecycle to return the star to its first stage.",
+                "id": "evt_01KZEFTKK7Z6QH5Z1V4ZFRG02Z",
+                "key": "RESET_STAGE",
+                "name": "Reset Stage",
+                "tier": "domain"
+              },
+              {
+                "description": "The star's life-cycle state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01KZEFTKK74SH3K0C4E36AG7M9",
+                "key": "STELLAR_UPDATED",
+                "name": "Stellar Updated",
+                "payloadSchema": [
+                  {
+                    "name": "initialMass",
+                    "type": "number"
+                  },
+                  {
+                    "name": "currentStageIndex",
+                    "type": "number"
+                  },
+                  {
+                    "name": "stageLabel",
+                    "type": "string"
+                  },
+                  {
+                    "name": "pathEndLabel",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "stellar update, life-cycle stage, star mass change, stage advance",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "mass",
+                        "@config.initialMass"
+                      ],
+                      [
+                        "matched",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@config.stellarPaths",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "<=",
+                                "@mass",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "maxMass"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "selectedPath",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@matched",
+                            null
+                          ],
+                          [
+                            "array/last",
+                            "@config.stellarPaths"
+                          ],
+                          "@matched"
+                        ]
+                      ],
+                      [
+                        "stage0",
+                        [
+                          "array/nth",
+                          [
+                            "object/get",
+                            "@selectedPath",
+                            "stages"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "cx",
+                        [
+                          "/",
+                          "@config.width",
+                          2.0
+                        ]
+                      ],
+                      [
+                        "cy",
+                        [
+                          "/",
+                          "@config.height",
+                          2.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.initialMass",
+                        "@mass"
+                      ],
+                      [
+                        "set",
+                        "@entity.pathEndLabel",
+                        [
+                          "object/get",
+                          "@selectedPath",
+                          "endLabel"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.stages",
+                        [
+                          "object/get",
+                          "@selectedPath",
+                          "stages"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.currentStageIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.stageLabel",
+                        [
+                          "object/get",
+                          "@stage0",
+                          "label"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.stageDescription",
+                        [
+                          "object/get",
+                          "@stage0",
+                          "description"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.starShapes",
+                        [
+                          {
+                            "color": [
+                              "object/get",
+                              "@stage0",
+                              "color"
+                            ],
+                            "fill": [
+                              "object/get",
+                              "@stage0",
+                              "color"
+                            ],
+                            "id": "star",
+                            "radius": [
+                              "object/get",
+                              "@stage0",
+                              "radius"
+                            ],
+                            "type": "circle",
+                            "x": "@cx",
+                            "y": "@cy"
+                          },
+                          {
+                            "align": "center",
+                            "color": "#f8fafc",
+                            "fontSize": 18.0,
+                            "id": "stageText",
+                            "text": "@entity.stageLabel",
+                            "type": "text",
+                            "x": "@cx",
+                            "y": [
+                              "+",
+                              "@cy",
+                              [
+                                "object/get",
+                                "@stage0",
+                                "radius"
+                              ],
+                              30.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.starShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Initial mass: ",
+                                    "@entity.initialMass",
+                                    " solar masses"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.massPresets",
+                                    [
+                                      "fn",
+                                      "m",
+                                      {
+                                        "action": "SET_MASS",
+                                        "actionPayload": {
+                                          "value": "@m"
+                                        },
+                                        "label": [
+                                          "str/concat",
+                                          "@m",
+                                          " M☉"
+                                        ],
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.initialMass",
+                                            "@m"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "max": 25.0,
+                                  "min": 0.1,
+                                  "onChange": "SET_MASS",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.initialMass"
+                                },
+                                {
+                                  "content": "@entity.stageLabel",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": "@entity.stageDescription",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Predicted end state: ",
+                                    "@entity.pathEndLabel"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "action": "STEP_STAGE",
+                                      "label": "Next Stage",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    },
+                                    {
+                                      "action": "RESET_STAGE",
+                                      "label": "Reset Lifecycle",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KZEFTKK6QCPX13PDNYSTHJT6",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "mass",
+                        "@config.initialMass"
+                      ],
+                      [
+                        "matched",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@config.stellarPaths",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "<=",
+                                "@mass",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "maxMass"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "selectedPath",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@matched",
+                            null
+                          ],
+                          [
+                            "array/last",
+                            "@config.stellarPaths"
+                          ],
+                          "@matched"
+                        ]
+                      ],
+                      [
+                        "stage0",
+                        [
+                          "array/nth",
+                          [
+                            "object/get",
+                            "@selectedPath",
+                            "stages"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "cx",
+                        [
+                          "/",
+                          "@config.width",
+                          2.0
+                        ]
+                      ],
+                      [
+                        "cy",
+                        [
+                          "/",
+                          "@config.height",
+                          2.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.initialMass",
+                        "@mass"
+                      ],
+                      [
+                        "set",
+                        "@entity.pathEndLabel",
+                        [
+                          "object/get",
+                          "@selectedPath",
+                          "endLabel"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.stages",
+                        [
+                          "object/get",
+                          "@selectedPath",
+                          "stages"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.currentStageIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.stageLabel",
+                        [
+                          "object/get",
+                          "@stage0",
+                          "label"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.stageDescription",
+                        [
+                          "object/get",
+                          "@stage0",
+                          "description"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.starShapes",
+                        [
+                          {
+                            "color": [
+                              "object/get",
+                              "@stage0",
+                              "color"
+                            ],
+                            "fill": [
+                              "object/get",
+                              "@stage0",
+                              "color"
+                            ],
+                            "id": "star",
+                            "radius": [
+                              "object/get",
+                              "@stage0",
+                              "radius"
+                            ],
+                            "type": "circle",
+                            "x": "@cx",
+                            "y": "@cy"
+                          },
+                          {
+                            "align": "center",
+                            "color": "#f8fafc",
+                            "fontSize": 18.0,
+                            "id": "stageText",
+                            "text": "@entity.stageLabel",
+                            "type": "text",
+                            "x": "@cx",
+                            "y": [
+                              "+",
+                              "@cy",
+                              [
+                                "object/get",
+                                "@stage0",
+                                "radius"
+                              ],
+                              30.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.starShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Initial mass: ",
+                                    "@entity.initialMass",
+                                    " solar masses"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.massPresets",
+                                    [
+                                      "fn",
+                                      "m",
+                                      {
+                                        "action": "SET_MASS",
+                                        "actionPayload": {
+                                          "value": "@m"
+                                        },
+                                        "label": [
+                                          "str/concat",
+                                          "@m",
+                                          " M☉"
+                                        ],
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.initialMass",
+                                            "@m"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "max": 25.0,
+                                  "min": 0.1,
+                                  "onChange": "SET_MASS",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.initialMass"
+                                },
+                                {
+                                  "content": "@entity.stageLabel",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": "@entity.stageDescription",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Predicted end state: ",
+                                    "@entity.pathEndLabel"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "action": "STEP_STAGE",
+                                      "label": "Next Stage",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    },
+                                    {
+                                      "action": "RESET_STAGE",
+                                      "label": "Reset Lifecycle",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEFTKK7NS3A522B7WER4Z81",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "matched",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@config.stellarPaths",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "<=",
+                                "@payload.value",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "maxMass"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "selectedPath",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@matched",
+                            null
+                          ],
+                          [
+                            "array/last",
+                            "@config.stellarPaths"
+                          ],
+                          "@matched"
+                        ]
+                      ],
+                      [
+                        "stage0",
+                        [
+                          "array/nth",
+                          [
+                            "object/get",
+                            "@selectedPath",
+                            "stages"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "cx",
+                        [
+                          "/",
+                          "@config.width",
+                          2.0
+                        ]
+                      ],
+                      [
+                        "cy",
+                        [
+                          "/",
+                          "@config.height",
+                          2.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.initialMass",
+                        "@payload.value"
+                      ],
+                      [
+                        "set",
+                        "@entity.pathEndLabel",
+                        [
+                          "object/get",
+                          "@selectedPath",
+                          "endLabel"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.stages",
+                        [
+                          "object/get",
+                          "@selectedPath",
+                          "stages"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.currentStageIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.stageLabel",
+                        [
+                          "object/get",
+                          "@stage0",
+                          "label"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.stageDescription",
+                        [
+                          "object/get",
+                          "@stage0",
+                          "description"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.starShapes",
+                        [
+                          {
+                            "color": [
+                              "object/get",
+                              "@stage0",
+                              "color"
+                            ],
+                            "fill": [
+                              "object/get",
+                              "@stage0",
+                              "color"
+                            ],
+                            "id": "star",
+                            "radius": [
+                              "object/get",
+                              "@stage0",
+                              "radius"
+                            ],
+                            "type": "circle",
+                            "x": "@cx",
+                            "y": "@cy"
+                          },
+                          {
+                            "align": "center",
+                            "color": "#f8fafc",
+                            "fontSize": 18.0,
+                            "id": "stageText",
+                            "text": "@entity.stageLabel",
+                            "type": "text",
+                            "x": "@cx",
+                            "y": [
+                              "+",
+                              "@cy",
+                              [
+                                "object/get",
+                                "@stage0",
+                                "radius"
+                              ],
+                              30.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.starShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Initial mass: ",
+                                    "@entity.initialMass",
+                                    " solar masses"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.massPresets",
+                                    [
+                                      "fn",
+                                      "m",
+                                      {
+                                        "action": "SET_MASS",
+                                        "actionPayload": {
+                                          "value": "@m"
+                                        },
+                                        "label": [
+                                          "str/concat",
+                                          "@m",
+                                          " M☉"
+                                        ],
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.initialMass",
+                                            "@m"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "max": 25.0,
+                                  "min": 0.1,
+                                  "onChange": "SET_MASS",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.initialMass"
+                                },
+                                {
+                                  "content": "@entity.stageLabel",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": "@entity.stageDescription",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Predicted end state: ",
+                                    "@entity.pathEndLabel"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "action": "STEP_STAGE",
+                                      "label": "Next Stage",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    },
+                                    {
+                                      "action": "RESET_STAGE",
+                                      "label": "Reset Lifecycle",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "STELLAR_UPDATED",
+                    {
+                      "currentStageIndex": "@entity.currentStageIndex",
+                      "initialMass": "@entity.initialMass",
+                      "pathEndLabel": "@entity.pathEndLabel",
+                      "stageLabel": "@entity.stageLabel"
+                    }
+                  ]
+                ],
+                "event": "SET_MASS",
+                "eventId": "evt_01KZEFTKK775AD2FG5W9C7JFHP",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "nextIndex",
+                        [
+                          "if",
+                          [
+                            "<",
+                            "@entity.currentStageIndex",
+                            [
+                              "-",
+                              [
+                                "array/len",
+                                "@entity.stages"
+                              ],
+                              1.0
+                            ]
+                          ],
+                          [
+                            "+",
+                            "@entity.currentStageIndex",
+                            1.0
+                          ],
+                          "@entity.currentStageIndex"
+                        ]
+                      ],
+                      [
+                        "stage",
+                        [
+                          "array/nth",
+                          "@entity.stages",
+                          "@nextIndex"
+                        ]
+                      ],
+                      [
+                        "cx",
+                        [
+                          "/",
+                          "@config.width",
+                          2.0
+                        ]
+                      ],
+                      [
+                        "cy",
+                        [
+                          "/",
+                          "@config.height",
+                          2.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.currentStageIndex",
+                        "@nextIndex"
+                      ],
+                      [
+                        "set",
+                        "@entity.stageLabel",
+                        [
+                          "object/get",
+                          "@stage",
+                          "label"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.stageDescription",
+                        [
+                          "object/get",
+                          "@stage",
+                          "description"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.starShapes",
+                        [
+                          {
+                            "color": [
+                              "object/get",
+                              "@stage",
+                              "color"
+                            ],
+                            "fill": [
+                              "object/get",
+                              "@stage",
+                              "color"
+                            ],
+                            "id": "star",
+                            "radius": [
+                              "object/get",
+                              "@stage",
+                              "radius"
+                            ],
+                            "type": "circle",
+                            "x": "@cx",
+                            "y": "@cy"
+                          },
+                          {
+                            "align": "center",
+                            "color": "#f8fafc",
+                            "fontSize": 18.0,
+                            "id": "stageText",
+                            "text": "@entity.stageLabel",
+                            "type": "text",
+                            "x": "@cx",
+                            "y": [
+                              "+",
+                              "@cy",
+                              [
+                                "object/get",
+                                "@stage",
+                                "radius"
+                              ],
+                              30.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.starShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Initial mass: ",
+                                    "@entity.initialMass",
+                                    " solar masses"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.massPresets",
+                                    [
+                                      "fn",
+                                      "m",
+                                      {
+                                        "action": "SET_MASS",
+                                        "actionPayload": {
+                                          "value": "@m"
+                                        },
+                                        "label": [
+                                          "str/concat",
+                                          "@m",
+                                          " M☉"
+                                        ],
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.initialMass",
+                                            "@m"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "max": 25.0,
+                                  "min": 0.1,
+                                  "onChange": "SET_MASS",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.initialMass"
+                                },
+                                {
+                                  "content": "@entity.stageLabel",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": "@entity.stageDescription",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Predicted end state: ",
+                                    "@entity.pathEndLabel"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "action": "STEP_STAGE",
+                                      "label": "Next Stage",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    },
+                                    {
+                                      "action": "RESET_STAGE",
+                                      "label": "Reset Lifecycle",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "STELLAR_UPDATED",
+                    {
+                      "currentStageIndex": "@entity.currentStageIndex",
+                      "initialMass": "@entity.initialMass",
+                      "pathEndLabel": "@entity.pathEndLabel",
+                      "stageLabel": "@entity.stageLabel"
+                    }
+                  ]
+                ],
+                "event": "STEP_STAGE",
+                "eventId": "evt_01KZEFTKK754VRF5Y245MFNB0Z",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "stage0",
+                        [
+                          "array/nth",
+                          "@entity.stages",
+                          0.0
+                        ]
+                      ],
+                      [
+                        "cx",
+                        [
+                          "/",
+                          "@config.width",
+                          2.0
+                        ]
+                      ],
+                      [
+                        "cy",
+                        [
+                          "/",
+                          "@config.height",
+                          2.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.currentStageIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.stageLabel",
+                        [
+                          "object/get",
+                          "@stage0",
+                          "label"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.stageDescription",
+                        [
+                          "object/get",
+                          "@stage0",
+                          "description"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.starShapes",
+                        [
+                          {
+                            "color": [
+                              "object/get",
+                              "@stage0",
+                              "color"
+                            ],
+                            "fill": [
+                              "object/get",
+                              "@stage0",
+                              "color"
+                            ],
+                            "id": "star",
+                            "radius": [
+                              "object/get",
+                              "@stage0",
+                              "radius"
+                            ],
+                            "type": "circle",
+                            "x": "@cx",
+                            "y": "@cy"
+                          },
+                          {
+                            "align": "center",
+                            "color": "#f8fafc",
+                            "fontSize": 18.0,
+                            "id": "stageText",
+                            "text": "@entity.stageLabel",
+                            "type": "text",
+                            "x": "@cx",
+                            "y": [
+                              "+",
+                              "@cy",
+                              [
+                                "object/get",
+                                "@stage0",
+                                "radius"
+                              ],
+                              30.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.starShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Initial mass: ",
+                                    "@entity.initialMass",
+                                    " solar masses"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.massPresets",
+                                    [
+                                      "fn",
+                                      "m",
+                                      {
+                                        "action": "SET_MASS",
+                                        "actionPayload": {
+                                          "value": "@m"
+                                        },
+                                        "label": [
+                                          "str/concat",
+                                          "@m",
+                                          " M☉"
+                                        ],
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.initialMass",
+                                            "@m"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "max": 25.0,
+                                  "min": 0.1,
+                                  "onChange": "SET_MASS",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.initialMass"
+                                },
+                                {
+                                  "content": "@entity.stageLabel",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "content": "@entity.stageDescription",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Predicted end state: ",
+                                    "@entity.pathEndLabel"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "action": "STEP_STAGE",
+                                      "label": "Next Stage",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    },
+                                    {
+                                      "action": "RESET_STAGE",
+                                      "label": "Reset Lifecycle",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "STELLAR_UPDATED",
+                    {
+                      "currentStageIndex": "@entity.currentStageIndex",
+                      "initialMass": "@entity.initialMass",
+                      "pathEndLabel": "@entity.pathEndLabel",
+                      "stageLabel": "@entity.stageLabel"
+                    }
+                  ]
+                ],
+                "event": "RESET_STAGE",
+                "eventId": "evt_01KZEFTKK7Z6QH5Z1V4ZFRG02Z",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

@@ -1,0 +1,78 @@
+app learning-logic-lab "1.0.0"
+"Propositional logic lab organism — toggle atomic proposition truth values and watch compound formulas evaluate live on a truth table, or apply inference rules (modus ponens, modus tollens) step by step to derive new propositions in a guided proof, composed from the std-logic-truthtable and std-logic-inference instrument atoms behind a mode router."
+orbital LogicLabOrbital {
+  uses LogicTruthtable from "std/behaviors/std-logic-truthtable"
+  uses LogicInference from "std/behaviors/std-logic-inference"
+
+  entity LogicLabItem [runtime] {
+    id : string!
+  }
+
+  entity TruthTableScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    valP : boolean
+    valQ : boolean
+    valR : boolean
+    tableRows : [json]
+    renderChildren : [json]
+  }
+
+  entity InferenceScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    proofLines : [json]
+    feedback : string
+    goalReached : boolean
+    renderChildren : [json]
+  }
+
+  trait LogicLabRouter -> @rebindable LogicLabItem [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (emit MODE_SELECTED { mode: @config.mode })
+    }
+
+    emits {
+      MODE_SELECTED -> external {
+        mode : string
+      }
+        @description "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null."
+        @tier "domain"
+    }
+
+    config {
+      mode : "truth-table" | "inference" = truth-table
+        @label "Mode"
+        @description "Whether the learner toggles proposition truth values against a live truth table, or applies inference rules to derive new lines in a proof."
+        @synonyms "logic, boolean logic, propositional logic, truth table, truth value, proposition, atomic proposition, logical connective, conjunction, disjunction, negation, material implication, logical implication, AND gate, OR gate, NOT gate, inference rule, modus ponens, modus tollens, syllogism, logical deduction, logical proof, premise, logical argument, tautology, contradiction, logical equivalence"
+        @tier "domain"
+    }
+  }
+
+  trait TruthTableSim = LogicTruthtable.traits.LogicTruthTableSim -> TruthTableScene {
+    listens {
+      LogicLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "truth-table"
+      title: "Logic Lab"
+    }
+  }
+
+  trait InferenceSim = LogicInference.traits.LogicInferenceSim -> InferenceScene {
+    listens {
+      LogicLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "inference"
+      title: "Logic Lab"
+    }
+  }
+
+  page "/learning/logic-lab" as LogicLabPage -> LogicLabRouter, TruthTableSim, InferenceSim
+}

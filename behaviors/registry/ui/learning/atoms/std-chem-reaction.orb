@@ -1,5 +1,5 @@
 {
-  "description": "Reversible reaction engine — four A+B pairs oscillate together and apart, forming and breaking a bond on chemistry-canvas.",
+  "description": "Reversible reaction engine — four A+B pairs oscillate together and apart, forming and breaking a bond on chemistry-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
   "ledger": {
     "entries": {
       "ent_01KXG051NF03X9CP268B009S5G": {
@@ -23,6 +23,15 @@
         "bakedName": "ATOMS_UPDATED",
         "curName": "ATOMS_UPDATED",
         "id": "evt_01KXG051NJV8C44VY7BBSYQXPG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051NFZY11R52FGK7V2ARR",
+        "renames": []
+      },
+      "evt_01KZEKSM2BTVSQ9SJ8ZFF3BEK8": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEKSM2BTVSQ9SJ8ZFF3BEK8",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG051NFZY11R52FGK7V2ARR",
@@ -63,6 +72,15 @@
           {
             "name": "id",
             "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
             "type": "string"
           },
           {
@@ -339,6 +357,13 @@
               "tier": "presentation",
               "type": "number"
             },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
             "period": {
               "default": 200.0,
               "description": "Phase units per full bond form-and-break cycle; larger is slower.",
@@ -352,6 +377,13 @@
               "label": "Running",
               "tier": "domain",
               "type": "boolean"
+            },
+            "title": {
+              "default": "Chemical Reaction",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
             },
             "width": {
               "default": 600.0,
@@ -379,9 +411,11 @@
           ],
           "entityContract": {
             "provides": [
+              "active",
               "atoms",
               "phase",
-              "running"
+              "running",
+              "title"
             ],
             "requires": []
           },
@@ -400,6 +434,19 @@
                 "id": "evt_01KXG051NFMKNVTZ8H9TKKMPK7",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZEKSM2BTVSQ9SJ8ZFF3BEK8",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
               },
               {
                 "description": "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
@@ -427,6 +474,16 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     0.0
                   ],
@@ -444,12 +501,30 @@
                     "render-ui",
                     "main",
                     {
-                      "atoms": "@entity.atoms",
-                      "backgroundColor": "@config.backgroundColor",
-                      "bonds": "@config.bonds",
-                      "height": "@config.height",
-                      "type": "chemistry-canvas",
-                      "width": "@config.width"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "atoms": "@entity.atoms",
+                              "backgroundColor": "@config.backgroundColor",
+                              "bonds": "@config.bonds",
+                              "height": "@config.height",
+                              "type": "chemistry-canvas",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
                     }
                   ],
                   [
@@ -463,6 +538,86 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG051NFMKNVTZ8H9TKKMPK7",
                 "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.atoms",
+                    "@config.atoms"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "atoms": "@entity.atoms",
+                              "backgroundColor": "@config.backgroundColor",
+                              "bonds": "@config.bonds",
+                              "height": "@config.height",
+                              "type": "chemistry-canvas",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "ATOMS_UPDATED",
+                    {
+                      "atoms": "@entity.atoms"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEKSM2BTVSQ9SJ8ZFF3BEK8",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
                 "to": "idle"
               }
             ]
@@ -567,12 +722,30 @@
                   "render-ui",
                   "main",
                   {
-                    "atoms": "@entity.atoms",
-                    "backgroundColor": "@config.backgroundColor",
-                    "bonds": "@config.bonds",
-                    "height": "@config.height",
-                    "type": "chemistry-canvas",
-                    "width": "@config.width"
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "content": "@entity.title",
+                            "type": "typography",
+                            "variant": "h4"
+                          },
+                          {
+                            "atoms": "@entity.atoms",
+                            "backgroundColor": "@config.backgroundColor",
+                            "bonds": "@config.bonds",
+                            "height": "@config.height",
+                            "type": "chemistry-canvas",
+                            "width": "@config.width"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
+                      }
+                    ],
+                    "padding": "md",
+                    "type": "box"
                   }
                 ],
                 [

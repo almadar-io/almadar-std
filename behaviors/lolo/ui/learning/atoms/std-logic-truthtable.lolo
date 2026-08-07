@@ -1,0 +1,473 @@
+app std-logic-truthtable "1.0.0"
+"Propositional truth-table engine — the learner toggles atomic proposition P/Q/R truth values and watches compound formulas (AND/OR/NOT/IMPLIES) re-evaluate live against every row of the truth table. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LogicTruthTableOrbital {
+  type LogicTruthTableProposition = {
+    key : string!
+    label : string
+  }
+  type LogicTruthTableFormula = {
+    label : string!
+    kind : "AND" | "OR" | "NOT" | "IMPLIES"!
+    left : string!
+    right : string
+  }
+
+  entity LogicTruthTableScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    valP : boolean
+    valQ : boolean
+    valR : boolean
+    tableRows : [json]
+    renderChildren : [json]
+  }
+
+  trait LogicTruthTableSim -> @rebindable LogicTruthTableScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.valP @config.initialP)
+        (set @entity.valQ @config.initialQ)
+        (set @entity.valR @config.initialR)
+        (let (
+            (combos [
+              { p: false, q: false, r: false },
+              { p: false, q: false, r: true },
+              { p: false, q: true, r: false },
+              { p: false, q: true, r: true },
+              { p: true, q: false, r: false },
+              { p: true, q: false, r: true },
+              { p: true, q: true, r: false },
+              { p: true, q: true, r: true }
+            ])
+          )
+          (do
+            (set @entity.tableRows (array/map @combos (fn row
+              {
+                p: @row.p,
+                q: @row.q,
+                r: @row.r,
+                isCurrent: (and (== @row.p @entity.valP) (== @row.q @entity.valQ) (== @row.r @entity.valR)),
+                cells: (array/map @config.formulas (fn f
+                  (let (
+                    (lv (if (== @f.left "P") @row.p (if (== @f.left "Q") @row.q @row.r)))
+                    (rv (if (== @f.kind "NOT") false (if (== @f.right "P") @row.p (if (== @f.right "Q") @row.q @row.r))))
+                    (val (if (== @f.kind "AND") (and @lv @rv)
+                          (if (== @f.kind "OR") (or @lv @rv)
+                          (if (== @f.kind "NOT") (not @lv)
+                          (or (not @lv) @rv)))))
+                  )
+                  { label: @f.label, value: @val })
+                ))
+              }
+            )))
+          )
+        )
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: "Toggle the propositions and watch the compound formulas evaluate live." },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_P, label: (str/concat (object/get (array/nth @config.propositions 0) label) " = " (if @entity.valP "T" "F")), variant: (if @entity.valP "success" "secondary") },
+              { type: button, action: TOGGLE_Q, label: (str/concat (object/get (array/nth @config.propositions 1) label) " = " (if @entity.valQ "T" "F")), variant: (if @entity.valQ "success" "secondary") },
+              { type: button, action: TOGGLE_R, label: (str/concat (object/get (array/nth @config.propositions 2) label) " = " (if @entity.valR "T" "F")), variant: (if @entity.valR "success" "secondary") }
+            ] },
+          { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 0) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 1) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 2) label) }
+            ] (array/map @config.formulas (fn f { type: typography, variant: caption, content: @f.label }))) },
+          { type: stack, direction: vertical, gap: (if @config.compact "xs" "sm"), style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.tableRows (fn row
+              { type: box, padding: sm, bg: (if @row.isCurrent "accent" "transparent"), border: @row.isCurrent, children: [
+                  { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+                      { type: badge, label: (if @row.p "T" "F"), variant: (if @row.p "success" "danger") },
+                      { type: badge, label: (if @row.q "T" "F"), variant: (if @row.q "success" "danger") },
+                      { type: badge, label: (if @row.r "T" "F"), variant: (if @row.r "success" "danger") }
+                    ] (array/map @row.cells (fn c { type: badge, label: (if @c.value "T" "F"), variant: (if @c.value "success" "danger") })))
+                  }
+                ] }
+            )) }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.valP @config.initialP)
+        (set @entity.valQ @config.initialQ)
+        (set @entity.valR @config.initialR)
+        (let (
+            (combos [
+              { p: false, q: false, r: false },
+              { p: false, q: false, r: true },
+              { p: false, q: true, r: false },
+              { p: false, q: true, r: true },
+              { p: true, q: false, r: false },
+              { p: true, q: false, r: true },
+              { p: true, q: true, r: false },
+              { p: true, q: true, r: true }
+            ])
+          )
+          (do
+            (set @entity.tableRows (array/map @combos (fn row
+              {
+                p: @row.p,
+                q: @row.q,
+                r: @row.r,
+                isCurrent: (and (== @row.p @entity.valP) (== @row.q @entity.valQ) (== @row.r @entity.valR)),
+                cells: (array/map @config.formulas (fn f
+                  (let (
+                    (lv (if (== @f.left "P") @row.p (if (== @f.left "Q") @row.q @row.r)))
+                    (rv (if (== @f.kind "NOT") false (if (== @f.right "P") @row.p (if (== @f.right "Q") @row.q @row.r))))
+                    (val (if (== @f.kind "AND") (and @lv @rv)
+                          (if (== @f.kind "OR") (or @lv @rv)
+                          (if (== @f.kind "NOT") (not @lv)
+                          (or (not @lv) @rv)))))
+                  )
+                  { label: @f.label, value: @val })
+                ))
+              }
+            )))
+          )
+        )
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: "Toggle the propositions and watch the compound formulas evaluate live." },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_P, label: (str/concat (object/get (array/nth @config.propositions 0) label) " = " (if @entity.valP "T" "F")), variant: (if @entity.valP "success" "secondary") },
+              { type: button, action: TOGGLE_Q, label: (str/concat (object/get (array/nth @config.propositions 1) label) " = " (if @entity.valQ "T" "F")), variant: (if @entity.valQ "success" "secondary") },
+              { type: button, action: TOGGLE_R, label: (str/concat (object/get (array/nth @config.propositions 2) label) " = " (if @entity.valR "T" "F")), variant: (if @entity.valR "success" "secondary") }
+            ] },
+          { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 0) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 1) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 2) label) }
+            ] (array/map @config.formulas (fn f { type: typography, variant: caption, content: @f.label }))) },
+          { type: stack, direction: vertical, gap: (if @config.compact "xs" "sm"), style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.tableRows (fn row
+              { type: box, padding: sm, bg: (if @row.isCurrent "accent" "transparent"), border: @row.isCurrent, children: [
+                  { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+                      { type: badge, label: (if @row.p "T" "F"), variant: (if @row.p "success" "danger") },
+                      { type: badge, label: (if @row.q "T" "F"), variant: (if @row.q "success" "danger") },
+                      { type: badge, label: (if @row.r "T" "F"), variant: (if @row.r "success" "danger") }
+                    ] (array/map @row.cells (fn c { type: badge, label: (if @c.value "T" "F"), variant: (if @c.value "success" "danger") })))
+                  }
+                ] }
+            )) }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      TOGGLE_P -> idle when (== @entity.active true)
+        (set @entity.valP (not @entity.valP))
+        (let (
+            (combos [
+              { p: false, q: false, r: false },
+              { p: false, q: false, r: true },
+              { p: false, q: true, r: false },
+              { p: false, q: true, r: true },
+              { p: true, q: false, r: false },
+              { p: true, q: false, r: true },
+              { p: true, q: true, r: false },
+              { p: true, q: true, r: true }
+            ])
+          )
+          (do
+            (set @entity.tableRows (array/map @combos (fn row
+              {
+                p: @row.p,
+                q: @row.q,
+                r: @row.r,
+                isCurrent: (and (== @row.p @entity.valP) (== @row.q @entity.valQ) (== @row.r @entity.valR)),
+                cells: (array/map @config.formulas (fn f
+                  (let (
+                    (lv (if (== @f.left "P") @row.p (if (== @f.left "Q") @row.q @row.r)))
+                    (rv (if (== @f.kind "NOT") false (if (== @f.right "P") @row.p (if (== @f.right "Q") @row.q @row.r))))
+                    (val (if (== @f.kind "AND") (and @lv @rv)
+                          (if (== @f.kind "OR") (or @lv @rv)
+                          (if (== @f.kind "NOT") (not @lv)
+                          (or (not @lv) @rv)))))
+                  )
+                  { label: @f.label, value: @val })
+                ))
+              }
+            )))
+          )
+        )
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: "Toggle the propositions and watch the compound formulas evaluate live." },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_P, label: (str/concat (object/get (array/nth @config.propositions 0) label) " = " (if @entity.valP "T" "F")), variant: (if @entity.valP "success" "secondary") },
+              { type: button, action: TOGGLE_Q, label: (str/concat (object/get (array/nth @config.propositions 1) label) " = " (if @entity.valQ "T" "F")), variant: (if @entity.valQ "success" "secondary") },
+              { type: button, action: TOGGLE_R, label: (str/concat (object/get (array/nth @config.propositions 2) label) " = " (if @entity.valR "T" "F")), variant: (if @entity.valR "success" "secondary") }
+            ] },
+          { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 0) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 1) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 2) label) }
+            ] (array/map @config.formulas (fn f { type: typography, variant: caption, content: @f.label }))) },
+          { type: stack, direction: vertical, gap: (if @config.compact "xs" "sm"), style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.tableRows (fn row
+              { type: box, padding: sm, bg: (if @row.isCurrent "accent" "transparent"), border: @row.isCurrent, children: [
+                  { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+                      { type: badge, label: (if @row.p "T" "F"), variant: (if @row.p "success" "danger") },
+                      { type: badge, label: (if @row.q "T" "F"), variant: (if @row.q "success" "danger") },
+                      { type: badge, label: (if @row.r "T" "F"), variant: (if @row.r "success" "danger") }
+                    ] (array/map @row.cells (fn c { type: badge, label: (if @c.value "T" "F"), variant: (if @c.value "success" "danger") })))
+                  }
+                ] }
+            )) }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit TRUTHTABLE_UPDATED { valP: @entity.valP, valQ: @entity.valQ, valR: @entity.valR })
+
+      TOGGLE_Q -> idle when (== @entity.active true)
+        (set @entity.valQ (not @entity.valQ))
+        (let (
+            (combos [
+              { p: false, q: false, r: false },
+              { p: false, q: false, r: true },
+              { p: false, q: true, r: false },
+              { p: false, q: true, r: true },
+              { p: true, q: false, r: false },
+              { p: true, q: false, r: true },
+              { p: true, q: true, r: false },
+              { p: true, q: true, r: true }
+            ])
+          )
+          (do
+            (set @entity.tableRows (array/map @combos (fn row
+              {
+                p: @row.p,
+                q: @row.q,
+                r: @row.r,
+                isCurrent: (and (== @row.p @entity.valP) (== @row.q @entity.valQ) (== @row.r @entity.valR)),
+                cells: (array/map @config.formulas (fn f
+                  (let (
+                    (lv (if (== @f.left "P") @row.p (if (== @f.left "Q") @row.q @row.r)))
+                    (rv (if (== @f.kind "NOT") false (if (== @f.right "P") @row.p (if (== @f.right "Q") @row.q @row.r))))
+                    (val (if (== @f.kind "AND") (and @lv @rv)
+                          (if (== @f.kind "OR") (or @lv @rv)
+                          (if (== @f.kind "NOT") (not @lv)
+                          (or (not @lv) @rv)))))
+                  )
+                  { label: @f.label, value: @val })
+                ))
+              }
+            )))
+          )
+        )
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: "Toggle the propositions and watch the compound formulas evaluate live." },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_P, label: (str/concat (object/get (array/nth @config.propositions 0) label) " = " (if @entity.valP "T" "F")), variant: (if @entity.valP "success" "secondary") },
+              { type: button, action: TOGGLE_Q, label: (str/concat (object/get (array/nth @config.propositions 1) label) " = " (if @entity.valQ "T" "F")), variant: (if @entity.valQ "success" "secondary") },
+              { type: button, action: TOGGLE_R, label: (str/concat (object/get (array/nth @config.propositions 2) label) " = " (if @entity.valR "T" "F")), variant: (if @entity.valR "success" "secondary") }
+            ] },
+          { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 0) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 1) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 2) label) }
+            ] (array/map @config.formulas (fn f { type: typography, variant: caption, content: @f.label }))) },
+          { type: stack, direction: vertical, gap: (if @config.compact "xs" "sm"), style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.tableRows (fn row
+              { type: box, padding: sm, bg: (if @row.isCurrent "accent" "transparent"), border: @row.isCurrent, children: [
+                  { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+                      { type: badge, label: (if @row.p "T" "F"), variant: (if @row.p "success" "danger") },
+                      { type: badge, label: (if @row.q "T" "F"), variant: (if @row.q "success" "danger") },
+                      { type: badge, label: (if @row.r "T" "F"), variant: (if @row.r "success" "danger") }
+                    ] (array/map @row.cells (fn c { type: badge, label: (if @c.value "T" "F"), variant: (if @c.value "success" "danger") })))
+                  }
+                ] }
+            )) }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit TRUTHTABLE_UPDATED { valP: @entity.valP, valQ: @entity.valQ, valR: @entity.valR })
+
+      TOGGLE_R -> idle when (== @entity.active true)
+        (set @entity.valR (not @entity.valR))
+        (let (
+            (combos [
+              { p: false, q: false, r: false },
+              { p: false, q: false, r: true },
+              { p: false, q: true, r: false },
+              { p: false, q: true, r: true },
+              { p: true, q: false, r: false },
+              { p: true, q: false, r: true },
+              { p: true, q: true, r: false },
+              { p: true, q: true, r: true }
+            ])
+          )
+          (do
+            (set @entity.tableRows (array/map @combos (fn row
+              {
+                p: @row.p,
+                q: @row.q,
+                r: @row.r,
+                isCurrent: (and (== @row.p @entity.valP) (== @row.q @entity.valQ) (== @row.r @entity.valR)),
+                cells: (array/map @config.formulas (fn f
+                  (let (
+                    (lv (if (== @f.left "P") @row.p (if (== @f.left "Q") @row.q @row.r)))
+                    (rv (if (== @f.kind "NOT") false (if (== @f.right "P") @row.p (if (== @f.right "Q") @row.q @row.r))))
+                    (val (if (== @f.kind "AND") (and @lv @rv)
+                          (if (== @f.kind "OR") (or @lv @rv)
+                          (if (== @f.kind "NOT") (not @lv)
+                          (or (not @lv) @rv)))))
+                  )
+                  { label: @f.label, value: @val })
+                ))
+              }
+            )))
+          )
+        )
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: "Toggle the propositions and watch the compound formulas evaluate live." },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_P, label: (str/concat (object/get (array/nth @config.propositions 0) label) " = " (if @entity.valP "T" "F")), variant: (if @entity.valP "success" "secondary") },
+              { type: button, action: TOGGLE_Q, label: (str/concat (object/get (array/nth @config.propositions 1) label) " = " (if @entity.valQ "T" "F")), variant: (if @entity.valQ "success" "secondary") },
+              { type: button, action: TOGGLE_R, label: (str/concat (object/get (array/nth @config.propositions 2) label) " = " (if @entity.valR "T" "F")), variant: (if @entity.valR "success" "secondary") }
+            ] },
+          { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 0) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 1) label) },
+              { type: typography, variant: caption, content: (object/get (array/nth @config.propositions 2) label) }
+            ] (array/map @config.formulas (fn f { type: typography, variant: caption, content: @f.label }))) },
+          { type: stack, direction: vertical, gap: (if @config.compact "xs" "sm"), style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.tableRows (fn row
+              { type: box, padding: sm, bg: (if @row.isCurrent "accent" "transparent"), border: @row.isCurrent, children: [
+                  { type: stack, direction: horizontal, gap: xs, children: (array/concat [
+                      { type: badge, label: (if @row.p "T" "F"), variant: (if @row.p "success" "danger") },
+                      { type: badge, label: (if @row.q "T" "F"), variant: (if @row.q "success" "danger") },
+                      { type: badge, label: (if @row.r "T" "F"), variant: (if @row.r "success" "danger") }
+                    ] (array/map @row.cells (fn c { type: badge, label: (if @c.value "T" "F"), variant: (if @c.value "success" "danger") })))
+                  }
+                ] }
+            )) }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit TRUTHTABLE_UPDATED { valP: @entity.valP, valQ: @entity.valQ, valR: @entity.valR })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      TOGGLE_P {
+      }
+        @description "Learner pressed the P toggle button to flip proposition P's truth value."
+        @tier "domain"
+      TOGGLE_Q {
+      }
+        @description "Learner pressed the Q toggle button to flip proposition Q's truth value."
+        @tier "domain"
+      TOGGLE_R {
+      }
+        @description "Learner pressed the R toggle button to flip proposition R's truth value."
+        @tier "domain"
+    }
+
+    emits {
+      TRUTHTABLE_UPDATED -> external {
+        valP : boolean
+        valQ : boolean
+        valR : boolean
+      }
+        @description "The proposition assignment after each learner toggle — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "truth table update, proposition toggle, truth value change"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Truth Table"
+        @label "Title"
+        @description "Title shown above the lab."
+        @tier "presentation"
+      propositions : [LogicTruthTableProposition] = [
+        { key: "P", label: "P" },
+        { key: "Q", label: "Q" },
+        { key: "R", label: "R" }
+      ]
+        @label "Propositions"
+        @description "Display labels for the three atomic propositions toggled on the truth table. Keys are fixed (P, Q, R); labels are what the learner sees on the toggle buttons and table header."
+        @tier "domain"
+      initialP : boolean = false
+        @label "Initial P"
+        @description "Starting truth value of proposition P."
+        @tier "domain"
+      initialQ : boolean = false
+        @label "Initial Q"
+        @description "Starting truth value of proposition Q."
+        @tier "domain"
+      initialR : boolean = false
+        @label "Initial R"
+        @description "Starting truth value of proposition R."
+        @tier "domain"
+      formulas : [LogicTruthTableFormula] = [
+        { label: "P AND Q", kind: AND, left: "P", right: "Q" },
+        { label: "P OR Q", kind: OR, left: "P", right: "Q" },
+        { label: "NOT P", kind: NOT, left: "P" },
+        { label: "P IMPLIES Q", kind: IMPLIES, left: "P", right: "Q" }
+      ]
+        @label "Formulas"
+        @description "Compound formulas evaluated live against every row of the truth table. Each formula is one of AND / OR / NOT / IMPLIES over the given left/right proposition keys (P, Q, or R)."
+        @synonyms "compound proposition, logical formula, conjunction, disjunction, negation, conditional statement, truth table, boolean logic, propositional logic, logical connective, AND gate, OR gate, NOT gate"
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Maximum width of the lab, in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Maximum height of the scrollable table, in pixels."
+        @tier "presentation"
+      compact : boolean = false
+        @label "Compact Rows"
+        @description "Use tighter row spacing in the truth table."
+        @tier "presentation"
+    }
+  }
+
+  page "/logic-truthtable" as LogicTruthTablePage -> LogicTruthTableSim
+}

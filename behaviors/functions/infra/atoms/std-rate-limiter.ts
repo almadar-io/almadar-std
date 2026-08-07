@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -329,4 +329,988 @@ export function stdRateLimiter(params: StdRateLimiterParams): OrbitalDefinition 
       stdRateLimiterPage(params),
     ],
   });
+}
+
+type _StdRateLimiterEntityName = 'RateBucket';
+type _StdRateLimiterListenTraitName = 'ShieldIcon' | 'RateBucketTitle' | 'OpenStatusDot' | 'ThrottledStatusDot' | 'RateLimitAlert' | 'RequestsStat' | 'WindowStat' | 'CountMeter' | 'CountProgressBar' | 'RequestButton' | 'ResetButton' | 'ResetPrimaryButton' | 'RateBucketDivider' | 'StatsGrid' | 'RateBucketRateLimiter';
+
+/**
+ * Tunable params for the RateBucketOrbital orbital.
+ *
+ * Canonical entity: RateBucket — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdRateLimiterRateBucketOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ShieldIcon' | 'RateBucketTitle' | 'OpenStatusDot' | 'ThrottledStatusDot' | 'RateLimitAlert' | 'RequestsStat' | 'WindowStat' | 'CountMeter' | 'CountProgressBar' | 'RequestButton' | 'ResetButton' | 'ResetPrimaryButton' | 'RateBucketDivider' | 'StatsGrid' | 'RateBucketRateLimiter',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait RateBucketOrbital's `uses[]` exports. */
+type _StdRateLimiterRateBucketOrbitalUsesRef = 'Icon.traits.IconRender' | 'Typography.traits.TypographyRender' | 'StatusDot.traits.StatusDotRender' | 'Alert.traits.AlertRender' | 'StatDisplay.traits.StatDisplayRender' | 'Meter.traits.MeterRender' | 'ProgressBar.traits.ProgressBarRender' | 'Button.traits.ButtonRender' | 'Divider.traits.DividerRender' | 'SimpleGrid.traits.SimpleGridRender';
+
+/** Per-orbital factory: builds the RateBucketOrbital orbital with consumer params. */
+export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucketOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'RateBucketOrbital',
+    uses: [
+      {
+        'as': 'Icon',
+        'from': 'std/behaviors/ui-icon',
+      },
+      {
+        'as': 'Typography',
+        'from': 'std/behaviors/ui-typography',
+      },
+      {
+        'as': 'StatusDot',
+        'from': 'std/behaviors/ui-status-dot',
+      },
+      {
+        'as': 'Alert',
+        'from': 'std/behaviors/ui-alert',
+      },
+      {
+        'as': 'StatDisplay',
+        'from': 'std/behaviors/ui-stat-display',
+      },
+      {
+        'as': 'Meter',
+        'from': 'std/behaviors/ui-meter',
+      },
+      {
+        'as': 'ProgressBar',
+        'from': 'std/behaviors/ui-progress-bar',
+      },
+      {
+        'as': 'Button',
+        'from': 'std/behaviors/ui-button',
+      },
+      {
+        'as': 'Divider',
+        'from': 'std/behaviors/ui-divider',
+      },
+      {
+        'as': 'SimpleGrid',
+        'from': 'std/behaviors/ui-simple-grid',
+      },
+    ],
+    entity: {
+      name: 'RateBucket',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+          },
+          {
+            'description': 'A user-defined identifier for the rate limiting bucket.',
+            'name': 'name',
+            'synonyms': 'label, identifier, alias',
+            'type': 'string',
+          },
+          {
+            'description': 'A textual explanation of the rate bucket\'s purpose.',
+            'name': 'description',
+            'synonyms': 'explanation, details, notes',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'Current operational state of the rate limiting bucket.',
+            'name': 'status',
+            'synonyms': 'state, condition, operationalStatus',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'The current value of a counter.',
+            'name': 'count',
+            'synonyms': 'value, amount, total',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'The duration of the rate limiting window, in seconds.',
+            'name': 'window',
+            'synonyms': 'duration, time, interval, period',
+            'type': 'number',
+          },
+          {
+            'default': 'open',
+            'description': 'Current operational state of the rate limiter.',
+            'name': 'limiterStatus',
+            'synonyms': 'state, condition, mode',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'shield',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'ShieldIcon',
+        'ref': ('Icon.traits.IconRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'RateBucket Rate Limiter',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h2',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'RateBucketTitle',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': 'Open',
+            'type': 'unknown',
+          },
+          'pulse': {
+            'default': false,
+            'type': 'unknown',
+          },
+          'status': {
+            'default': 'online',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'OpenStatusDot',
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': 'Throttled',
+            'type': 'unknown',
+          },
+          'pulse': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'status': {
+            'default': 'critical',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'ThrottledStatusDot',
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'message': {
+            'default': 'Rate limit exceeded. Requests are being throttled.',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'error',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'RateLimitAlert',
+        'ref': ('Alert.traits.AlertRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': 'Requests',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.statLook',
+            'type': 'unknown',
+          },
+          'value': {
+            'default': '@entity.count',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'RequestsStat',
+        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': 'Window',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.statLook',
+            'type': 'unknown',
+          },
+          'value': {
+            'default': '@entity.window',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'WindowStat',
+        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'max': {
+            'default': 100,
+            'type': 'unknown',
+          },
+          'min': {
+            'default': 0,
+            'type': 'unknown',
+          },
+          'value': {
+            'default': '@entity.count',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'CountMeter',
+        'ref': ('Meter.traits.MeterRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'max': {
+            'default': 100,
+            'type': 'unknown',
+          },
+          'showPercentage': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'value': {
+            'default': '@entity.count',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'CountProgressBar',
+        'ref': ('ProgressBar.traits.ProgressBarRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'REQUEST',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'send',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Request',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'primary',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'RequestButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'RESET',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'rotate-ccw',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Reset',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'ghost',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'ResetButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'RESET',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'rotate-ccw',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Reset',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'primary',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'ResetPrimaryButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'RateBucket',
+        'name': 'RateBucketDivider',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'children': {
+            'default': [
+              '@trait.RequestsStat',
+              '@trait.WindowStat',
+            ],
+            'type': 'unknown',
+          },
+          'cols': {
+            'default': 2,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'name': 'StatsGrid',
+        'ref': ('SimpleGrid.traits.SimpleGridRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+      }),
+      {
+        'capabilities': [
+          'rate-limit',
+        ],
+        'category': 'interaction',
+        'config': {
+          'burstSize': {
+            'default': 10,
+            'description': 'Requests allowed to burst above the per-minute rate before steady-state throttling kicks in. Lower burst = strict/no-spikes; higher burst = forgiving/allow-spikes.',
+            'label': 'Burst size',
+            'synonyms': 'burst capacity, allowance, spike allowance, no-spike (low) vs allow-bursts (high)',
+            'tier': 'domain',
+            'type': 'number',
+          },
+          'enabled': {
+            'default': false,
+            'description': 'Whether rate limiting is active for the host orbital. Off by default; turn on to throttle requests.',
+            'label': 'Enabled',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, rate limit, throttle, requests per minute, slow down, cap usage, request cap, limit traffic, prevent abuse',
+            'tier': 'domain',
+            'type': 'boolean',
+          },
+          'keyStrategy': {
+            'default': 'user',
+            'description': 'What identifier the per-bucket counter is keyed on: source IP, authenticated user, API key, or one global bucket.',
+            'label': 'Rate-limit key strategy',
+            'synonyms': 'limiter key, bucket key',
+            'tier': 'domain',
+            'type': 'string',
+            'values': [
+              'ip',
+              'user',
+              'api-key',
+              'global',
+            ],
+          },
+          'overrideRoles': {
+            'default': [],
+            'description': 'Roles exempt from rate limiting (e.g. internal services, admin override). Empty = no exemptions.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Override roles',
+            'synonyms': 'exempt roles, bypass list',
+            'tier': 'domain',
+            'type': '[string]',
+          },
+          'requestsPerMinute': {
+            'default': 60,
+            'description': 'Maximum number of requests allowed per minute before throttling begins.',
+            'label': 'Requests per minute',
+            'synonyms': 'rate limit, request cap, RPS, throttle threshold',
+            'tier': 'domain',
+            'type': 'number',
+          },
+          'statLook': {
+            'default': 'elevated',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'label': 'Stat display look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+        },
+        'linkedEntity': 'RateBucket',
+        'listens': [
+          {
+            'event': 'REQUEST',
+            'source': {
+              'kind': 'trait',
+              'trait': ('RequestButton' satisfies _StdRateLimiterListenTraitName),
+            },
+            'triggers': 'REQUEST',
+          },
+          {
+            'event': 'RESET',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ResetButton' satisfies _StdRateLimiterListenTraitName),
+            },
+            'triggers': 'RESET',
+          },
+          {
+            'event': 'RESET',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ResetPrimaryButton' satisfies _StdRateLimiterListenTraitName),
+            },
+            'triggers': 'RESET',
+          },
+        ],
+        'name': 'RateBucketRateLimiter',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'REQUEST',
+              'name': 'Request',
+            },
+            {
+              'key': 'THROTTLE',
+              'name': 'Throttle',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'open',
+            },
+            {
+              'name': 'throttled',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.count',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.window',
+                  60,
+                ],
+                [
+                  'set',
+                  '@entity.limiterStatus',
+                  'open',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.OpenStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      '@trait.CountProgressBar',
+                      {
+                        'children': [
+                          '@trait.RequestButton',
+                          '@trait.ResetButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'open',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.OpenStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      '@trait.CountProgressBar',
+                      {
+                        'children': [
+                          '@trait.RequestButton',
+                          '@trait.ResetButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'REQUEST',
+              'from': 'open',
+              'guard': '@config.enabled',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.limiterStatus',
+                  'throttled',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.ThrottledStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.RateLimitAlert',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      {
+                        'children': [
+                          '@trait.ResetPrimaryButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'THROTTLE',
+              'from': 'open',
+              'to': 'throttled',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.count',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.limiterStatus',
+                  'open',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.OpenStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      '@trait.CountProgressBar',
+                      {
+                        'children': [
+                          '@trait.RequestButton',
+                          '@trait.ResetButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'open',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.limiterStatus',
+                  'open',
+                ],
+                [
+                  'set',
+                  '@entity.count',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.OpenStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      '@trait.CountProgressBar',
+                      {
+                        'children': [
+                          '@trait.RequestButton',
+                          '@trait.ResetButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'throttled',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.ThrottledStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.RateLimitAlert',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      {
+                        'children': [
+                          '@trait.ResetPrimaryButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'throttled',
+              'to': 'throttled',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'RateBucketRateLimiterPage',
+        'path': '/ratebuckets/rate-limiter',
+        'traits': [
+          {
+            'ref': 'RateBucketRateLimiter',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdRateLimiterRateBucketOrbital. */
+export const StdRateLimiterRateBucketOrbitalManifest = {
+  organism: 'std-rate-limiter',
+  orbitalName: 'RateBucketOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ShieldIcon',
+    'RateBucketTitle',
+    'OpenStatusDot',
+    'ThrottledStatusDot',
+    'RateLimitAlert',
+    'RequestsStat',
+    'WindowStat',
+    'CountMeter',
+    'CountProgressBar',
+    'RequestButton',
+    'ResetButton',
+    'ResetPrimaryButton',
+    'RateBucketDivider',
+    'StatsGrid',
+  ] as const,
+  inlineTraitNames: [
+    'RateBucketRateLimiter',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdRateLimiterRateBucketOrbitalParams keys. */
+export function isStdRateLimiterRateBucketOrbitalParams(p: object): p is StdRateLimiterRateBucketOrbitalParams {
+  type _OverrideRecord = NonNullable<StdRateLimiterRateBucketOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdRateLimiterRateBucketOrbitalManifest.traitNames,
+      ...StdRateLimiterRateBucketOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

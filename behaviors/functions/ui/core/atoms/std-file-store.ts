@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -175,4 +175,1392 @@ export function stdFileStore(params: StdFileStoreParams): OrbitalDefinition {
       stdFileStorePage(params),
     ],
   });
+}
+
+type _StdFileStoreEntityName = 'StoredFile';
+type _StdFileStoreListenTraitName = 'StoredFileStore';
+
+/**
+ * Tunable params for the StoredFileOrbital orbital.
+ *
+ * Canonical entity: StoredFile — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdFileStoreStoredFileOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'StoredFileStore',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait StoredFileOrbital's `uses[]` exports. */
+type _StdFileStoreStoredFileOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the StoredFileOrbital orbital with consumer params. */
+export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'storedfiles');
+  const built = makeOrbitalWithUses({
+    name: 'StoredFileOrbital',
+    uses: [],
+    entity: {
+      name: 'StoredFile',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The file\'s display name or title.',
+            'name': 'name',
+            'required': true,
+            'synonyms': 'title, label, filename',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The location of the file within the storage system.',
+            'name': 'path',
+            'synonyms': 'location, filepath, address',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The file\'s content type, indicating its format.',
+            'name': 'mimeType',
+            'synonyms': 'type, format, media type',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'The file\'s size in bytes.',
+            'name': 'sizeBytes',
+            'synonyms': 'length, filesize, byteCount',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'description': 'Identifier of the user who uploaded the file.',
+            'name': 'uploaderId',
+            'synonyms': 'user, owner, creator',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The name of the user who uploaded the file.',
+            'name': 'uploaderName',
+            'synonyms': 'owner, user, author',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The path to the containing directory.',
+            'name': 'folder',
+            'synonyms': 'parent, directory, location',
+            'type': 'string',
+          },
+          {
+            'description': 'Timestamp indicating when the file was uploaded.',
+            'name': 'uploadedAt',
+            'synonyms': 'upload date, date uploaded, upload time',
+            'type': 'datetime',
+          },
+          {
+            'default': false,
+            'description': 'Indicates whether the file is archived.',
+            'name': 'isArchived',
+            'synonyms': 'archived, status, state',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'detailActions': {
+            'default': [
+              {
+                'event': 'DOWNLOAD_FILE',
+                'label': 'Download',
+                'variant': 'primary',
+              },
+              {
+                'event': 'ARCHIVE_FILE',
+                'label': 'Archive',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Buttons shown on the opened row\'s detail',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Detail actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'fields': {
+            'default': [
+              {
+                'label': 'Name',
+                'name': 'name',
+                'variant': 'caption',
+              },
+              {
+                'label': 'Folder',
+                'name': 'folder',
+                'variant': 'caption',
+              },
+              {
+                'label': 'Type',
+                'name': 'mimeType',
+                'variant': 'badge',
+              },
+              {
+                'label': 'Size',
+                'name': 'sizeBytes',
+                'variant': 'caption',
+              },
+              {
+                'label': 'Uploaded',
+                'name': 'uploadedAt',
+                'variant': 'caption',
+              },
+            ],
+            'description': 'Each column maps to one field on the linked entity',
+            'items': {
+              'properties': {
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Columns to show',
+            'tier': 'presentation',
+            'type': '[FieldSpec]',
+          },
+          'headerIcon': {
+            'default': 'folder',
+            'description': 'Icon shown beside the section title and in the detail header',
+            'label': 'Header icon',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'itemActions': {
+            'default': [
+              {
+                'event': 'OPEN_FILE',
+                'icon': 'arrow-right',
+                'label': 'Open',
+                'variant': 'primary',
+              },
+              {
+                'event': 'ARCHIVE_FILE',
+                'label': 'Archive',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Buttons on each row',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'reorderable': {
+            'default': false,
+            'description': 'Allow drag-reordering of rows (emits REORDER). On for ordered trees (e.g. wiki page nav).',
+            'label': 'Reorderable rows',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'title': {
+            'default': 'Files',
+            'description': 'Heading shown above the browser',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'tree': {
+            'default': [
+              {
+                'children': [
+                  {
+                    'name': 'Active.pdf',
+                    'path': 'Active.pdf',
+                    'type': 'file',
+                  },
+                  {
+                    'name': 'Archived.pdf',
+                    'path': 'Archived.pdf',
+                    'type': 'file',
+                  },
+                ],
+                'name': 'Contracts',
+                'path': 'Contracts',
+                'type': 'dir',
+              },
+              {
+                'children': [
+                  {
+                    'name': 'HR.docx',
+                    'path': 'Policies/HR.docx',
+                    'type': 'file',
+                  },
+                  {
+                    'name': 'Security.md',
+                    'path': 'Policies/Security.md',
+                    'type': 'file',
+                  },
+                ],
+                'name': 'Policies',
+                'path': 'Policies',
+                'type': 'dir',
+              },
+              {
+                'children': [
+                  {
+                    'name': 'Invoice.docx',
+                    'path': 'Templates/Invoice.docx',
+                    'type': 'file',
+                  },
+                  {
+                    'name': 'NDA.pdf',
+                    'path': 'Templates/NDA.pdf',
+                    'type': 'file',
+                  },
+                ],
+                'name': 'Templates',
+                'path': 'Templates',
+                'type': 'dir',
+              },
+            ],
+            'description': 'Hierarchical nav tree shown above the table',
+            'items': {
+              'properties': {
+                'children': {
+                  'items': {
+                    'type': 'object',
+                  },
+                  'name': 'children',
+                  'required': false,
+                  'type': 'array',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'path': {
+                  'name': 'path',
+                  'required': true,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                  'values': [
+                    'file',
+                    'dir',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Folder tree',
+            'tier': 'presentation',
+            'type': '[TreeNode]',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates a file has been selected for viewing.',
+            'event': 'OPEN_FILE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'path',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'mimeType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sizeBytes',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'uploaderId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'uploaderName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'folder',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'uploadedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'isArchived',
+                    'type': 'boolean',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'select, choose, activate',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals the view has been closed or dismissed.',
+            'event': 'CLOSE_VIEW',
+            'synonyms': 'dismiss, hide, close',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Initiates a file download process.',
+            'event': 'DOWNLOAD_FILE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'export, save, retrieve',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a file is being moved to archive storage.',
+            'event': 'ARCHIVE_FILE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'archive, move to archive, delete permanently',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates the order of items in the tree has changed.',
+            'event': 'REORDER',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'path',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'mimeType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sizeBytes',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'uploaderId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'uploaderName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'folder',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'uploadedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'isArchived',
+                    'type': 'boolean',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'sort, rearrange, move, change order',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a file has been successfully retrieved and is ready.',
+            'event': 'StoredFileLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[StoredFile]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved, ready',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load a stored file.',
+            'event': 'StoredFileLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failed, problem, unsuccessful',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'folder',
+            'name',
+            'path',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'StoredFile',
+        'name': 'StoredFileStore',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates a file has been successfully retrieved and is ready.',
+              'key': 'StoredFileLoaded',
+              'name': 'StoredFile loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[StoredFile]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved, ready',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load a stored file.',
+              'key': 'StoredFileLoadFailed',
+              'name': 'StoredFile load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failed, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a file has been selected for viewing.',
+              'key': 'OPEN_FILE',
+              'name': 'Open File',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'StoredFile',
+                },
+              ],
+              'synonyms': 'select, choose, activate',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the order of items in the tree has changed.',
+              'key': 'REORDER',
+              'name': 'Reorder',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'StoredFile',
+                },
+              ],
+              'synonyms': 'sort, rearrange, move, change order',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Signals a file is being moved to archive storage.',
+              'key': 'ARCHIVE_FILE',
+              'name': 'Archive File',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'archive, move to archive, delete permanently',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Signals the view has been closed or dismissed.',
+              'key': 'CLOSE_VIEW',
+              'name': 'Close View',
+              'synonyms': 'dismiss, hide, close',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Initiates a file download process.',
+              'key': 'DOWNLOAD_FILE',
+              'name': 'Download File',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'export, save, retrieve',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'viewing_single',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': '@config.headerIcon',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'label': '@payload.data.length',
+                            'size': 'sm',
+                            'type': 'badge',
+                            'variant': 'neutral',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'tree': '@config.tree',
+                        'type': 'file-tree',
+                      },
+                      {
+                        'entity': '@payload.data',
+                        'fields': '@config.fields',
+                        'gap': 'sm',
+                        'itemActions': '@config.itemActions',
+                        'look': '@config.tableLook',
+                        'reorderEvent': 'REORDER',
+                        'reorderable': '@config.reorderable',
+                        'type': 'data-list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'StoredFileLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'StoredFileLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.row.id',
+                ],
+                [
+                  'set',
+                  '@entity.name',
+                  '@payload.row.name',
+                ],
+                [
+                  'set',
+                  '@entity.path',
+                  '@payload.row.path',
+                ],
+                [
+                  'set',
+                  '@entity.folder',
+                  '@payload.row.folder',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'CLOSE_VIEW',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'name': '@config.headerIcon',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@entity.name',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Folder',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.folder',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Path',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.path',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'entity': '@config.detailActions',
+                        'fields': [],
+                        'gap': 'sm',
+                        'renderItem': [
+                          'fn',
+                          'a',
+                          {
+                            'action': '@a.event',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': '@a.label',
+                            'type': 'button',
+                            'variant': '@a.variant',
+                          },
+                        ],
+                        'type': 'data-list',
+                        'variant': 'default',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'OPEN_FILE',
+              'from': 'browsing',
+              'to': 'viewing_single',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.row.id',
+                ],
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Reordering…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'REORDER',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Archiving…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ARCHIVE_FILE',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLOSE_VIEW',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Preparing…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'DOWNLOAD_FILE',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Archiving…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ARCHIVE_FILE',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'StoredFilePage',
+        'path': '/files',
+        'traits': [
+          {
+            'ref': 'StoredFileStore',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdFileStoreStoredFileOrbital. */
+export const StdFileStoreStoredFileOrbitalManifest = {
+  organism: 'std-file-store',
+  orbitalName: 'StoredFileOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'StoredFileStore',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdFileStoreStoredFileOrbitalParams keys. */
+export function isStdFileStoreStoredFileOrbitalParams(p: object): p is StdFileStoreStoredFileOrbitalParams {
+  type _OverrideRecord = NonNullable<StdFileStoreStoredFileOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdFileStoreStoredFileOrbitalManifest.traitNames,
+      ...StdFileStoreStoredFileOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

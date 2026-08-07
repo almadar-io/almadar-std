@@ -1,17 +1,21 @@
 app learning-probability-lab "1.0.0"
-"Probability lab organism — dice, coins, random walks, and distributions on a math-canvas."
+"Probability lab organism — dice, coin-flip, and general distribution/histogram displays (all a declarative math-canvas plotter driven by config data), an animated random-walk display (converged onto the existing std-prob-walk tick-based integrator), and an interactive Bayes' theorem simulator with a population-grid visualization and evidence trials — composed from the std-prob-trials, std-prob-walk, and std-prob-bayes instrument atoms behind a mode router."
 orbital ProbabilityLabOrbital {
-  type ProbabilityLabCurve = {
-    label : string
-    color : string
-    samples : [ProbabilityLabPoint]
-  }
+  uses ProbTrials from "std/behaviors/std-prob-trials"
+  uses ProbWalk from "std/behaviors/std-prob-walk"
+  uses ProbBayes from "std/behaviors/std-prob-bayes"
+
   type ProbabilityLabPoint = {
     x : number!
     y : number!
     label : string
     color : string
     radius : number
+  }
+  type ProbabilityLabCurve = {
+    label : string
+    color : string
+    samples : [ProbabilityLabPoint]
   }
   type ProbabilityLabShape = {
     type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
@@ -47,124 +51,137 @@ orbital ProbabilityLabOrbital {
 
   entity ProbabilityLabItem [runtime] {
     id : string!
+  }
+
+  entity DiceScene [runtime] {
+    id : string!
+    active : boolean = false
     title : string
     curves : [ProbabilityLabCurve]
     points : [ProbabilityLabPoint]
     shapes : [ProbabilityLabShape]
   }
 
-  trait ProbabilityLabRender -> @rebindable ProbabilityLabItem [interaction, instance] {
+  entity CoinsScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    curves : [ProbabilityLabCurve]
+    points : [ProbabilityLabPoint]
+    shapes : [ProbabilityLabShape]
+  }
+
+  entity DistributionScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    curves : [ProbabilityLabCurve]
+    points : [ProbabilityLabPoint]
+    shapes : [ProbabilityLabShape]
+  }
+
+  entity RandomWalkScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    points : [ProbabilityLabPoint]
+    running : boolean = false
+  }
+
+  entity BayesScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    priorH : number
+    likelihoodEGivenH : number
+    likelihoodEGivenNotH : number
+    countTP : number
+    countFN : number
+    countFP : number
+    countTN : number
+    posteriorH : number
+    trialsRun : number
+    trialsPositive : number
+    trialsTruePositive : number
+    empiricalPosterior : number
+    lastTrialLabel : string
+    shapes : [ProbabilityLabShape]
+  }
+
+  trait ProbabilityLabRouter -> @rebindable ProbabilityLabItem [lifecycle, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
-        (set @entity.title @config.title)
-        (set @entity.curves @config.curves)
-        (set @entity.points @config.points)
-        (set @entity.shapes @config.shapes)
-        (render-ui main {
-          type: box
-          padding: md
-          children: [
-            {
-              type: stack
-              direction: vertical
-              gap: md
-              children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas,
-                  width: @config.width,
-                  height: @config.height,
-                  xMin: @config.xMin,
-                  xMax: @config.xMax,
-                  yMin: @config.yMin,
-                  yMax: @config.yMax,
-                  showAxes: @config.showAxes,
-                  showGrid: @config.showGrid,
-                  gridStep: @config.gridStep,
-                  curves: @entity.curves,
-                  points: @entity.points,
-                  vectors: [],
-                  shapes: @entity.shapes,
-                  interactive: @config.interactive,
-                  animate: @config.animate
-                }
-              ]
-            }
-          ]
-        })
+        (emit MODE_SELECTED { mode: @config.mode })
+    }
+
+    emits {
+      MODE_SELECTED -> external {
+        mode : string
+      }
+        @description "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null."
+        @tier "domain"
     }
 
     config {
-      mode : "dice" | "coins" | "random-walk" | "distribution" = distribution
+      mode : "dice" | "coins" | "random-walk" | "distribution" | "bayes" = distribution
         @label "Mode"
         @description "What kind of probability or statistics visualization to render."
-        @synonyms "chance, probability, statistics, dice, coin flip, random walk, sampling, distribution, histogram, law of large numbers, expected value"
+        @synonyms "chance, probability, statistics, dice, coin flip, random walk, sampling, distribution, histogram, law of large numbers, expected value, bayes theorem, bayesian, conditional probability, base rate, base rate fallacy, prior probability, posterior probability, likelihood ratio, positive predictive value, false positive paradox"
         @tier "domain"
-      title : string = "Probability Lab"
-        @label "Title"
-        @description "Title shown above the canvas."
-        @tier "presentation"
-      width : number = 600
-        @label "Width"
-        @description "Canvas width in pixels."
-        @tier "presentation"
-      height : number = 400
-        @label "Height"
-        @description "Canvas height in pixels."
-        @tier "presentation"
-      xMin : number = 0
-        @label "X Min"
-        @description "Minimum x value on the canvas."
-        @tier "presentation"
-      xMax : number = 10
-        @label "X Max"
-        @description "Maximum x value on the canvas."
-        @tier "presentation"
-      yMin : number = 0
-        @label "Y Min"
-        @description "Minimum y value on the canvas."
-        @tier "presentation"
-      yMax : number = 1
-        @label "Y Max"
-        @description "Maximum y value on the canvas."
-        @tier "presentation"
-      showAxes : boolean = true
-        @label "Show Axes"
-        @tier "presentation"
-      showGrid : boolean = true
-        @label "Show Grid"
-        @tier "presentation"
-      gridStep : number = 1
-        @label "Grid Step"
-        @tier "presentation"
-      curves : [ProbabilityLabCurve] = [
-        { label: "uniform", color: "#2563eb", samples: [
-          { x: 0, y: 0.1 }, { x: 1, y: 0.1 }, { x: 2, y: 0.1 }, { x: 3, y: 0.1 }, { x: 4, y: 0.1 },
-          { x: 5, y: 0.1 }, { x: 6, y: 0.1 }, { x: 7, y: 0.1 }, { x: 8, y: 0.1 }, { x: 9, y: 0.1 }, { x: 10, y: 0.1 }
-        ]}
-      ]
-        @label "Curves"
-        @description "Distribution curves or cumulative frequencies."
-        @tier "domain"
-      points : [ProbabilityLabPoint] = []
-        @label "Points"
-        @description "Sampled outcomes or scatter points."
-        @tier "presentation"
-      shapes : [ProbabilityLabShape] = []
-        @label "Shapes"
-        @description "Extra declarative shapes such as bars or outcome labels."
-        @tier "presentation"
-      interactive : boolean = false
-        @label "Interactive"
-        @description "Enable pointer interaction on the canvas."
-        @tier "presentation"
-      animate : boolean = false
-        @label "Animate"
-        @description "Enable continuous redraw loop."
-        @tier "presentation"
     }
   }
 
-  page "/learning/probability-lab" as ProbabilityLabPage -> ProbabilityLabRender
+  trait DiceSim = ProbTrials.traits.ProbTrialsSim -> DiceScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "dice"
+      title: "Probability Lab"
+    }
+  }
+
+  trait CoinsSim = ProbTrials.traits.ProbTrialsSim -> CoinsScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "coins"
+      title: "Probability Lab"
+    }
+  }
+
+  trait DistributionSim = ProbTrials.traits.ProbTrialsSim -> DistributionScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "distribution"
+      title: "Probability Lab"
+    }
+  }
+
+  trait RandomWalkSim = ProbWalk.traits.WalkSim -> RandomWalkScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "random-walk"
+      title: "Probability Lab"
+    }
+  }
+
+  trait BayesSim = ProbBayes.traits.ProbBayesSim -> BayesScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "bayes"
+      title: "Probability Lab"
+    }
+  }
+
+  page "/learning/probability-lab" as ProbabilityLabPage -> ProbabilityLabRouter, DiceSim, CoinsSim, DistributionSim, RandomWalkSim, BayesSim
 }

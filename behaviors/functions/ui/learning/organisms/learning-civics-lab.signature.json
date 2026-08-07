@@ -1,0 +1,121 @@
+[
+  {
+    "organism": "learning-civics-lab",
+    "orbital": "CivicsLabOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/learning/organisms/learning-civics-lab.ts",
+    "entities": [
+      {
+        "name": "CivicsLabItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CivicsLabRouter",
+        "emittedEvents": [
+          "MODE_SELECTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MODE_SELECTED",
+            "direction": "emit",
+            "description": "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "mode",
+            "type": "string",
+            "default": "process",
+            "label": "Mode",
+            "description": "Which civics simulation to render: how a bill becomes law (introduction, House and Senate votes, presidential signature or veto, and a two-thirds override), or a checks-and-balances matrix where the learner names which branch can check a given governmental action.",
+            "synonyms": "civics, government, how a bill becomes law, legislative process, separation of powers, checks and balances, branches of government, legislative branch, executive branch, judicial branch, Congress, House of Representatives, Senate, president, veto, veto override, two-thirds vote, supermajority, judicial review, Marbury v. Madison, unconstitutional, constitutional check, bill, law, enact a law, override a veto, advice and consent, treaty ratification",
+            "tier": "domain",
+            "enumValues": [
+              "process",
+              "checks-balances"
+            ]
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CivicsLabItem",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "BillProcessSim",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "MODE_SELECTED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "matchMode",
+            "type": "unknown",
+            "default": "process"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Civics Lab"
+          }
+        ],
+        "capabilities": [],
+        "ref": "CivicsBillProcess.traits.CivicsBillProcessSim",
+        "linkedEntity": "BillProcessScene"
+      },
+      {
+        "name": "ChecksSim",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "MODE_SELECTED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "matchMode",
+            "type": "unknown",
+            "default": "checks-balances"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Civics Lab"
+          }
+        ],
+        "capabilities": [],
+        "ref": "CivicsChecks.traits.CivicsChecksSim",
+        "linkedEntity": "ChecksScene"
+      }
+    ],
+    "pages": [
+      {
+        "name": "CivicsLabPage",
+        "defaultPath": "/learning/civics-lab",
+        "primaryEntity": "CivicsLabItem"
+      }
+    ],
+    "emittedEvents": [
+      "MODE_SELECTED"
+    ],
+    "listenedEvents": [
+      "MODE_SELECTED"
+    ],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

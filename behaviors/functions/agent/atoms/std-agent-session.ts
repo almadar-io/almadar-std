@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -156,4 +156,873 @@ export function stdAgentSession(params: StdAgentSessionParams): OrbitalDefinitio
       stdAgentSessionPage(params),
     ],
   });
+}
+
+type _StdAgentSessionEntityName = 'AgentSession';
+type _StdAgentSessionListenTraitName = 'SessionReader' | 'SessionWriter' | 'SessionListener';
+
+/**
+ * Tunable params for the AgentSessionOrbital orbital.
+ *
+ * Canonical entity: AgentSession — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAgentSessionAgentSessionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SessionReader' | 'SessionWriter' | 'SessionListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AgentSessionOrbital's `uses[]` exports. */
+type _StdAgentSessionAgentSessionOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AgentSessionOrbital orbital with consumer params. */
+export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentSessionOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AgentSessionOrbital',
+    uses: [],
+    entity: {
+      name: 'AgentSession',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': '',
+            'name': 'orbitalName',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'name': 'spec',
+            'properties': {
+              'deltaPrompt': {
+                'name': 'deltaPrompt',
+                'required': true,
+                'type': 'string',
+              },
+              'method': {
+                'name': 'method',
+                'required': true,
+                'type': 'string',
+              },
+              'orbitalName': {
+                'name': 'orbitalName',
+                'required': false,
+                'type': 'string',
+              },
+              'organism': {
+                'name': 'organism',
+                'required': true,
+                'type': 'string',
+              },
+            },
+            'type': 'object',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'required': true,
+                  'type': 'string',
+                },
+                'role': {
+                  'name': 'role',
+                  'required': true,
+                  'type': 'string',
+                },
+                'timestamp': {
+                  'name': 'timestamp',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'history',
+            'type': 'array',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'read',
+              'written',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'SPEC_READ',
+            'payloadSchema': [
+              {
+                'name': 'spec',
+                'properties': [
+                  {
+                    'name': 'orbitalName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'organism',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'method',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'deltaPrompt',
+                    'required': true,
+                    'type': 'string',
+                  },
+                ],
+                'required': true,
+                'type': 'object',
+              },
+              {
+                'name': 'history',
+                'required': true,
+                'type': '[HistoryEntry]',
+              },
+            ],
+          },
+          {
+            'event': 'SPEC_LOADED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'properties': [
+                  {
+                    'name': 'orbitalName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'organism',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'method',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'deltaPrompt',
+                    'required': true,
+                    'type': 'string',
+                  },
+                ],
+                'required': true,
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'HISTORY_LOADED',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': '[HistoryEntry]',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'AgentSession',
+        'name': 'SessionReader',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'READ_SPEC',
+              'name': 'Read Spec',
+              'payloadSchema': [
+                {
+                  'name': 'orbitalName',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'SPEC_LOADED',
+              'name': 'Spec Loaded',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'properties': [
+                    {
+                      'name': 'orbitalName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'organism',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'method',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'deltaPrompt',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'SPEC_LOAD_FAILED',
+              'name': 'Spec Load Failed',
+            },
+            {
+              'key': 'HISTORY_LOADED',
+              'name': 'History Loaded',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': '[HistoryEntry]',
+                },
+              ],
+            },
+            {
+              'key': 'HISTORY_LOAD_FAILED',
+              'name': 'History Load Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'SPEC_READ',
+              'name': 'Spec Read',
+              'payloadSchema': [
+                {
+                  'name': 'spec',
+                  'properties': [
+                    {
+                      'name': 'orbitalName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'organism',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'method',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'deltaPrompt',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
+                  'required': true,
+                  'type': 'object',
+                },
+                {
+                  'name': 'history',
+                  'required': true,
+                  'type': '[HistoryEntry]',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'reading',
+            },
+            {
+              'name': 'loadingHistory',
+            },
+            {
+              'name': 'read',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.orbitalName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.spec',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.history',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.orbitalName',
+                  '@payload.orbitalName',
+                ],
+                [
+                  'session/read-spec',
+                  '@entity.orbitalName',
+                  {
+                    'emit': {
+                      'failure': 'SPEC_LOAD_FAILED',
+                      'success': 'SPEC_LOADED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'READ_SPEC',
+              'from': 'idle',
+              'to': 'reading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.spec',
+                  '@payload.result',
+                ],
+                [
+                  'session/read-history',
+                  '@entity.orbitalName',
+                  {
+                    'emit': {
+                      'failure': 'HISTORY_LOAD_FAILED',
+                      'success': 'HISTORY_LOADED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'SPEC_LOADED',
+              'from': 'reading',
+              'to': 'loadingHistory',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'SPEC_LOAD_FAILED',
+              'from': 'reading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.history',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'read',
+                ],
+                [
+                  'emit',
+                  'SPEC_READ',
+                  {
+                    'history': '@entity.history',
+                    'spec': '@entity.spec',
+                  },
+                ],
+              ],
+              'event': 'HISTORY_LOADED',
+              'from': 'loadingHistory',
+              'to': 'read',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'HISTORY_LOAD_FAILED',
+              'from': 'loadingHistory',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'read',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'read',
+              'to': 'read',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.spec',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.history',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'read',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'SPEC_WRITTEN',
+            'payloadSchema': [
+              {
+                'name': 'orbitalName',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'AgentSession',
+        'name': 'SessionWriter',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'WRITE_SPEC',
+              'name': 'Write Spec',
+              'payloadSchema': [
+                {
+                  'name': 'orbitalName',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'spec',
+                  'required': true,
+                  'type': 'OrbitalSpec',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'SPEC_WRITTEN',
+              'name': 'Spec Written',
+              'payloadSchema': [
+                {
+                  'name': 'orbitalName',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'written',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.orbitalName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.spec',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.orbitalName',
+                  '@payload.orbitalName',
+                ],
+                [
+                  'set',
+                  '@entity.spec',
+                  '@payload.spec',
+                ],
+                [
+                  'session/write-spec',
+                  '@entity.orbitalName',
+                  '@entity.spec',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'written',
+                ],
+                [
+                  'emit',
+                  'SPEC_WRITTEN',
+                  {
+                    'orbitalName': '@entity.orbitalName',
+                  },
+                ],
+              ],
+              'event': 'WRITE_SPEC',
+              'from': 'idle',
+              'to': 'written',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'written',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'written',
+              'to': 'written',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.spec',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'written',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentSession',
+        'listens': [
+          {
+            'event': 'SPEC_READ',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SessionReader' satisfies _StdAgentSessionListenTraitName),
+            },
+            'triggers': 'SPEC_READ',
+          },
+          {
+            'event': 'SPEC_WRITTEN',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SessionWriter' satisfies _StdAgentSessionListenTraitName),
+            },
+            'triggers': 'SPEC_WRITTEN',
+          },
+        ],
+        'name': 'SessionListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SPEC_READ',
+              'name': 'Spec Read',
+            },
+            {
+              'key': 'SPEC_WRITTEN',
+              'name': 'Spec Written',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'waiting',
+            },
+            {
+              'name': 'active',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'waiting',
+              'to': 'waiting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'read',
+                ],
+              ],
+              'event': 'SPEC_READ',
+              'from': 'waiting',
+              'to': 'active',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'written',
+                ],
+              ],
+              'event': 'SPEC_WRITTEN',
+              'from': 'waiting',
+              'to': 'active',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'waiting',
+              'to': 'waiting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'active',
+              'to': 'active',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'active',
+              'to': 'waiting',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AgentSessionPage',
+        'path': '/agent-session',
+        'traits': [
+          {
+            'ref': 'SessionReader',
+          },
+          {
+            'ref': 'SessionWriter',
+          },
+          {
+            'ref': 'SessionListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAgentSessionAgentSessionOrbital. */
+export const StdAgentSessionAgentSessionOrbitalManifest = {
+  organism: 'std-agent-session',
+  orbitalName: 'AgentSessionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'SessionReader',
+    'SessionWriter',
+    'SessionListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAgentSessionAgentSessionOrbitalParams keys. */
+export function isStdAgentSessionAgentSessionOrbitalParams(p: object): p is StdAgentSessionAgentSessionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAgentSessionAgentSessionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAgentSessionAgentSessionOrbitalManifest.traitNames,
+      ...StdAgentSessionAgentSessionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

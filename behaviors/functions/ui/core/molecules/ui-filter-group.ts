@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -73,7 +73,7 @@ export interface StdUiFilterGroupConfig {
   clearEvent?: string;
   /** Default: `"EVENT"` */
   event?: string;
-  /** Default: `[{"field":"Field","label":"Label","options":["Item","Item 2"],"type":"checkbox"},{"field":"Field 2","label":"Label 2","options":["Item","Item 2"],"type":"select"}]` */
+  /** Default: `[{"field":"Field","filterType":"text","label":"Label","options":["Item","Item 2"],"type":"text"},{"field":"Field 2","filterType":"select","label":"Label 2","options":["Item","Item 2"],"type":"select"}]` */
   filters?: EntityRow[];
   isLoading?: boolean;
   /** Default: `"toolbar"` */

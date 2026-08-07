@@ -1,0 +1,353 @@
+[
+  {
+    "organism": "std-chem-titration",
+    "orbital": "ChemTitrationOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-chem-titration.ts",
+    "entities": [
+      {
+        "name": "ChemTitrationScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "atoms",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "bonds",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "arrows",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "titrationAcidStrength",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "titrationAcidKa",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "titrationAcidConcentration",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "titrationAcidVolume",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "titrationBaseConcentration",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "titrationIndicatorMidpoint",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "titrationIndicatorAcidColor",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "titrationIndicatorBaseColor",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "titrantVolumeAdded",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "ph",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "equivalenceVolume",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "overshoot",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "indicatorColor",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "statusText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curvePoints",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ChemTitrationSim",
+        "emittedEvents": [
+          "TITRATION_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TITRATION_UPDATED",
+            "direction": "emit",
+            "description": "The titration state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "titration update, pH change, equivalence point, overshoot, titrant added",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ADD_TITRANT_LARGE",
+            "direction": "listen"
+          },
+          {
+            "name": "ADD_TITRANT_SMALL",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET_TITRATION",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#fafafa",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Chemistry Lab",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "titrationAcidConcentration",
+            "type": "number",
+            "default": 0.1,
+            "label": "Acid Concentration (mol/L)",
+            "description": "Initial molar concentration of the acid analyte in the flask.",
+            "tier": "domain"
+          },
+          {
+            "key": "titrationAcidKa",
+            "type": "number",
+            "default": 0.000018,
+            "label": "Acid Ka",
+            "description": "Acid dissociation constant, used only when Acid Strength is weak (default 1.8e-5, acetic acid).",
+            "tier": "domain"
+          },
+          {
+            "key": "titrationAcidStrength",
+            "type": "string",
+            "default": "strong",
+            "label": "Acid Strength",
+            "description": "Strong acids (e.g. HCl) fully dissociate; weak acids (e.g. acetic acid) partially dissociate per their Ka. Shapes the curve (sharp strong-strong jump vs a buffered weak-strong region).",
+            "synonyms": "strong acid, weak acid, dissociation, Ka, acid dissociation constant, HCl, acetic acid",
+            "tier": "domain",
+            "enumValues": [
+              "strong",
+              "weak"
+            ]
+          },
+          {
+            "key": "titrationAcidVolume",
+            "type": "number",
+            "default": 25,
+            "label": "Acid Volume (mL)",
+            "description": "Initial volume of acid analyte in the flask, before any titrant is added.",
+            "tier": "domain"
+          },
+          {
+            "key": "titrationBaseConcentration",
+            "type": "number",
+            "default": 0.1,
+            "label": "Titrant (Base) Concentration (mol/L)",
+            "description": "Molar concentration of the base titrant in the burette.",
+            "tier": "domain"
+          },
+          {
+            "key": "titrationIncrementLarge",
+            "type": "number",
+            "default": 1,
+            "label": "Large Increment (mL)",
+            "description": "Titrant volume added per press of the coarse add button.",
+            "tier": "domain"
+          },
+          {
+            "key": "titrationIncrementSmall",
+            "type": "number",
+            "default": 0.1,
+            "label": "Small Increment (mL)",
+            "description": "Titrant volume added per press of the fine add button, for precise control near the equivalence point.",
+            "tier": "domain"
+          },
+          {
+            "key": "titrationIndicatorAcidColor",
+            "type": "string",
+            "default": "#fde68a",
+            "label": "Indicator Color (Acidic)",
+            "description": "Flask color below the indicator flip pH.",
+            "tier": "presentation"
+          },
+          {
+            "key": "titrationIndicatorBaseColor",
+            "type": "string",
+            "default": "#ec4899",
+            "label": "Indicator Color (Basic)",
+            "description": "Flask color at/above the indicator flip pH.",
+            "tier": "presentation"
+          },
+          {
+            "key": "titrationIndicatorMidpoint",
+            "type": "number",
+            "default": 8.2,
+            "label": "Indicator Flip pH",
+            "description": "pH at which the indicator color flips from acidic to basic (default 8.2, phenolphthalein).",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ChemTitrationScene",
+        "transitionEvents": [
+          "ADD_TITRANT_LARGE",
+          "ADD_TITRANT_SMALL",
+          "INIT",
+          "MODE_SELECTED",
+          "RESET_TITRATION"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "arrows",
+            "atoms",
+            "bonds",
+            "curvePoints",
+            "equivalenceVolume",
+            "indicatorColor",
+            "overshoot",
+            "ph",
+            "shapes",
+            "statusText",
+            "title",
+            "titrantVolumeAdded",
+            "titrationAcidConcentration",
+            "titrationAcidKa",
+            "titrationAcidStrength",
+            "titrationAcidVolume",
+            "titrationBaseConcentration",
+            "titrationIndicatorAcidColor",
+            "titrationIndicatorBaseColor",
+            "titrationIndicatorMidpoint"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ChemTitrationPage",
+        "defaultPath": "/chem-titration",
+        "primaryEntity": "ChemTitrationScene"
+      }
+    ],
+    "emittedEvents": [
+      "TITRATION_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

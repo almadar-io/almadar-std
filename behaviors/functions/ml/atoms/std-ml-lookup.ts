@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -131,4 +131,492 @@ export function stdMlLookup(params: StdMlLookupParams): OrbitalDefinition {
       stdMlLookupPage(params),
     ],
   });
+}
+
+type _StdMlLookupEntityName = 'KeyLookup';
+type _StdMlLookupListenTraitName = 'LookupRun';
+
+/**
+ * Tunable params for the MlLookupOrbital orbital.
+ *
+ * Canonical entity: KeyLookup — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdMlLookupMlLookupOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'LookupRun',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlLookupOrbital's `uses[]` exports. */
+type _StdMlLookupMlLookupOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlLookupOrbital orbital with consumer params. */
+export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'MlLookupOrbital',
+    uses: [],
+    entity: {
+      name: 'KeyLookup',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': false,
+            'name': 'matched',
+            'type': 'boolean',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'checked',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'matchField': {
+            'default': '',
+            'description': 'When the accepted list holds objects rather than scalars, the field to compare against the candidate; empty compares each element itself',
+            'label': 'Match field',
+            'tier': 'domain',
+            'type': 'string',
+          },
+          'normalize': {
+            'default': true,
+            'description': 'Trim and lowercase both sides before comparing',
+            'label': 'Normalize',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Fired when the candidate matches an entry in the accepted list',
+            'event': 'KEY_HIT',
+            'payloadSchema': [
+              {
+                'name': 'candidate',
+                'required': true,
+                'type': 'any',
+              },
+              {
+                'name': 'entry',
+                'required': true,
+                'type': 'any',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'Abstain — candidate matches nothing in the accepted list; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'event': 'KEY_MISS',
+            'payloadSchema': [
+              {
+                'name': 'candidate',
+                'required': true,
+                'type': 'any',
+              },
+              {
+                'name': 'request',
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'linkedEntity': 'KeyLookup',
+        'name': 'LookupRun',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'LOOKUP',
+              'name': 'Lookup',
+              'payloadSchema': [
+                {
+                  'name': 'candidate',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'accepted',
+                  'required': true,
+                  'type': '[any]',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'Fired when the candidate matches an entry in the accepted list',
+              'key': 'KEY_HIT',
+              'name': 'Key Hit',
+              'payloadSchema': [
+                {
+                  'name': 'candidate',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'entry',
+                  'required': true,
+                  'type': 'any',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'Abstain — candidate matches nothing in the accepted list; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'key': 'KEY_MISS',
+              'name': 'Key Miss',
+              'payloadSchema': [
+                {
+                  'name': 'candidate',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'checked',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.matched',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'let',
+                  [
+                    [
+                      'candStr',
+                      [
+                        'str/concat',
+                        '@payload.candidate',
+                      ],
+                    ],
+                    [
+                      'candNorm',
+                      [
+                        'if',
+                        '@config.normalize',
+                        [
+                          'str/lower',
+                          [
+                            'str/trim',
+                            '@candStr',
+                          ],
+                        ],
+                        '@candStr',
+                      ],
+                    ],
+                    [
+                      'found',
+                      [
+                        'array/find',
+                        '@payload.accepted',
+                        [
+                          'fn',
+                          'item',
+                          [
+                            'let',
+                            [
+                              [
+                                'raw',
+                                [
+                                  'if',
+                                  [
+                                    '==',
+                                    '@config.matchField',
+                                    '',
+                                  ],
+                                  '@item',
+                                  [
+                                    'object/get',
+                                    '@item',
+                                    '@config.matchField',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'rawStr',
+                                [
+                                  'str/concat',
+                                  '@raw',
+                                ],
+                              ],
+                              [
+                                'rawNorm',
+                                [
+                                  'if',
+                                  '@config.normalize',
+                                  [
+                                    'str/lower',
+                                    [
+                                      'str/trim',
+                                      '@rawStr',
+                                    ],
+                                  ],
+                                  '@rawStr',
+                                ],
+                              ],
+                            ],
+                            [
+                              '==',
+                              '@rawNorm',
+                              '@candNorm',
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                  [
+                    'if',
+                    [
+                      '!=',
+                      '@found',
+                      null,
+                    ],
+                    [
+                      'do',
+                      [
+                        'set',
+                        '@entity.matched',
+                        true,
+                      ],
+                      [
+                        'set',
+                        '@entity.status',
+                        'checked',
+                      ],
+                      [
+                        'emit',
+                        'KEY_HIT',
+                        {
+                          'candidate': '@payload.candidate',
+                          'entry': '@found',
+                        },
+                      ],
+                    ],
+                    [
+                      'do',
+                      [
+                        'set',
+                        '@entity.matched',
+                        false,
+                      ],
+                      [
+                        'set',
+                        '@entity.status',
+                        'checked',
+                      ],
+                      [
+                        'emit',
+                        'KEY_MISS',
+                        {
+                          'candidate': '@payload.candidate',
+                          'request': '@payload.request',
+                        },
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'LOOKUP',
+              'from': 'idle',
+              'to': 'checked',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'checked',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'checked',
+              'to': 'checked',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.matched',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'checked',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlLookupPage',
+        'path': '/ml-lookup',
+        'traits': [
+          {
+            'ref': 'LookupRun',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMlLookupMlLookupOrbital. */
+export const StdMlLookupMlLookupOrbitalManifest = {
+  organism: 'std-ml-lookup',
+  orbitalName: 'MlLookupOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'LookupRun',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMlLookupMlLookupOrbitalParams keys. */
+export function isStdMlLookupMlLookupOrbitalParams(p: object): p is StdMlLookupMlLookupOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMlLookupMlLookupOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdMlLookupMlLookupOrbitalManifest.traitNames,
+      ...StdMlLookupMlLookupOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

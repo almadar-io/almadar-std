@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -206,4 +206,1116 @@ export function stdList(params: StdListParams): OrbitalDefinition {
       stdListPage(params),
     ],
   });
+}
+
+type _StdListEntityName = 'ListItem';
+type _StdListListenTraitName = 'ListItemBrowse' | 'ListItemCreate' | 'ListItemEdit' | 'ListItemDelete' | 'ListItemPersistor';
+
+/**
+ * Tunable params for the ListItemOrbital orbital.
+ *
+ * Canonical entity: ListItem — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdListListItemOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ListItemCreate' | 'ListItemEdit' | 'ListItemDelete' | 'ListItemBrowse' | 'ListItemPersistor',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait ListItemOrbital's `uses[]` exports. */
+type _StdListListItemOrbitalUsesRef = 'Confirmation.traits.ConfirmActionConfirmation' | 'Modal.traits.ModalRecordModal';
+
+/** Per-orbital factory: builds the ListItemOrbital orbital with consumer params. */
+export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'listitems');
+  const built = makeOrbitalWithUses({
+    name: 'ListItemOrbital',
+    uses: [
+      {
+        'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
+      },
+      {
+        'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
+      },
+    ],
+    entity: {
+      name: 'ListItem',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The text displayed for this list item.',
+            'name': 'name',
+            'required': true,
+            'synonyms': 'label, text, display',
+            'type': 'string',
+          },
+          {
+            'description': 'A brief explanation of the list item\'s content.',
+            'name': 'description',
+            'synonyms': 'text, details, notes, explanation',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'Current operational state of the item.',
+            'name': 'status',
+            'synonyms': 'state, condition, flag',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Identifier for a related, pending item.',
+            'name': 'pendingId',
+            'synonyms': 'reference, relatedId, linkId',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'emits': [
+          {
+            'description': 'Signals a new item has been successfully created.',
+            'event': 'CREATE',
+            'synonyms': 'added, new, added, insert',
+            'tier': 'domain',
+          },
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'DELETE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'description': 'Signals a list item has been successfully loaded.',
+            'event': 'ListItemLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ListItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load a list item.',
+            'event': 'ListItemLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ListItem',
+        'listens': [
+          {
+            'event': 'ITEM_CREATED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ListItemPersistor' satisfies _StdListListenTraitName),
+            },
+            'triggers': 'INIT',
+          },
+          {
+            'event': 'ITEM_UPDATED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ListItemPersistor' satisfies _StdListListenTraitName),
+            },
+            'triggers': 'INIT',
+          },
+          {
+            'event': 'ITEM_DELETED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ListItemPersistor' satisfies _StdListListenTraitName),
+            },
+            'triggers': 'INIT',
+          },
+        ],
+        'name': 'ListItemBrowse',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals a list item has been successfully loaded.',
+              'key': 'ListItemLoaded',
+              'name': 'ListItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ListItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load a list item.',
+              'key': 'ListItemLoadFailed',
+              'name': 'ListItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'description': 'Signals a new item has been successfully created.',
+              'key': 'CREATE',
+              'name': 'Create',
+              'synonyms': 'added, new, added, insert',
+              'tier': 'domain',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ListItem' satisfies _StdListEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ListItemLoadFailed',
+                      'success': 'ListItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading list…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'name': 'list',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'ListItems',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'action': 'CREATE',
+                            'icon': 'plus',
+                            'label': 'Create',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'entity': '@payload.data',
+                        'fields': [
+                          {
+                            'icon': 'list',
+                            'label': 'Name',
+                            'name': 'name',
+                            'variant': 'h4',
+                          },
+                          {
+                            'label': 'Description',
+                            'name': 'description',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Status',
+                            'name': 'status',
+                            'variant': 'badge',
+                          },
+                        ],
+                        'itemActions': [
+                          {
+                            'event': 'EDIT',
+                            'label': 'Edit',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'event': 'DELETE',
+                            'label': 'Delete',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ListItemLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'color': 'error',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to load list',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@payload.error',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'action': 'RETRY',
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
+                        'type': 'button',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ListItemLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ListItem' satisfies _StdListEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ListItemLoadFailed',
+                      'success': 'ListItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ListItem' satisfies _StdListEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ListItemLoadFailed',
+                      'success': 'ListItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ListItem' satisfies _StdListEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ListItemLoadFailed',
+                      'success': 'ListItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'RETRY',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+      makeTraitRef({
+        'config': {
+          'fields': {
+            'default': [
+              'name',
+              'description',
+              'status',
+            ],
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'plus-circle',
+            'type': 'unknown',
+          },
+          'mode': {
+            'default': 'create',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Create ListItem',
+            'type': 'unknown',
+          },
+        },
+        'events': {
+          'OPEN': 'CREATE',
+          'SAVE': 'LIST_ITEM_CREATED',
+        },
+        'linkedEntity': 'ListItem',
+        'listens': [
+          {
+            'event': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ListItemBrowse',
+            },
+            'triggers': 'CREATE',
+          },
+        ],
+        'name': 'ListItemCreate',
+        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdListListItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'fields': {
+            'default': [
+              'name',
+              'description',
+              'status',
+            ],
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'edit',
+            'type': 'unknown',
+          },
+          'mode': {
+            'default': 'edit',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Edit ListItem',
+            'type': 'unknown',
+          },
+        },
+        'events': {
+          'OPEN': 'EDIT',
+          'SAVE': 'LIST_ITEM_UPDATED',
+        },
+        'linkedEntity': 'ListItem',
+        'listens': [
+          {
+            'event': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ListItemBrowse',
+            },
+            'triggers': 'EDIT',
+          },
+        ],
+        'name': 'ListItemEdit',
+        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdListListItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'alertMessage': {
+            'default': 'This action cannot be undone.',
+            'type': 'unknown',
+          },
+          'confirmLabel': {
+            'default': 'Delete',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'alert-triangle',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Delete ListItem',
+            'type': 'unknown',
+          },
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'linkedEntity': 'ListItem',
+        'listens': [
+          {
+            'event': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ListItemBrowse',
+            },
+            'triggers': 'DELETE',
+          },
+        ],
+        'name': 'ListItemDelete',
+        'ref': ('Confirmation.traits.ConfirmActionConfirmation' satisfies _StdListListItemOrbitalUsesRef),
+      }),
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'description': 'Signals a new item has been added to the list.',
+            'event': 'ITEM_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'added, new, appended',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a change in an item\'s data.',
+            'event': 'ITEM_UPDATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'modified, changed, refreshed',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals that a list item has been removed.',
+            'event': 'ITEM_DELETED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'removed, discarded, purged',
+            'tier': 'domain',
+          },
+        ],
+        'linkedEntity': 'ListItem',
+        'listens': [
+          {
+            'event': 'LIST_ITEM_CREATED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ListItemCreate' satisfies _StdListListenTraitName),
+            },
+            'triggers': 'DO_CREATE',
+          },
+          {
+            'event': 'LIST_ITEM_UPDATED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ListItemEdit' satisfies _StdListListenTraitName),
+            },
+            'triggers': 'DO_UPDATE',
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ListItemDelete' satisfies _StdListListenTraitName),
+            },
+            'triggers': 'DO_DELETE',
+          },
+        ],
+        'name': 'ListItemPersistor',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates a request to create a new item.',
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'ListItem',
+                },
+              ],
+              'synonyms': 'add, new, insert',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a data item has been modified.',
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'ListItem',
+                },
+              ],
+              'synonyms': 'modified, changed, refreshed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a request to remove an item from the list.',
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'remove, discard, erase',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals a new item has been added to the list.',
+              'key': 'ITEM_CREATED',
+              'name': 'Item Created',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'added, new, appended',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals a change in an item\'s data.',
+              'key': 'ITEM_UPDATED',
+              'name': 'Item Updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'modified, changed, refreshed',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Signals that a list item has been removed.',
+              'key': 'ITEM_DELETED',
+              'name': 'Item Deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'removed, discarded, purged',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('ListItem' satisfies _StdListEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ITEM_CREATED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DO_CREATE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  ('ListItem' satisfies _StdListEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ITEM_UPDATED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DO_UPDATE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  ('ListItem' satisfies _StdListEntityName),
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'ITEM_DELETED',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'ListItemPage',
+        'path': '/listitems',
+        'traits': [
+          {
+            'ref': 'ListItemBrowse',
+          },
+          {
+            'ref': 'ListItemCreate',
+          },
+          {
+            'ref': 'ListItemEdit',
+          },
+          {
+            'ref': 'ListItemDelete',
+          },
+          {
+            'ref': 'ListItemPersistor',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdListListItemOrbital. */
+export const StdListListItemOrbitalManifest = {
+  organism: 'std-list',
+  orbitalName: 'ListItemOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ListItemCreate',
+    'ListItemEdit',
+    'ListItemDelete',
+  ] as const,
+  inlineTraitNames: [
+    'ListItemBrowse',
+    'ListItemPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdListListItemOrbitalParams keys. */
+export function isStdListListItemOrbitalParams(p: object): p is StdListListItemOrbitalParams {
+  type _OverrideRecord = NonNullable<StdListListItemOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdListListItemOrbitalManifest.traitNames,
+      ...StdListListItemOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

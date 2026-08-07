@@ -1,0 +1,425 @@
+app std-learn-classify "1.0.0"
+"Generic classify-with-feedback instrument — items are presented one at a time, the learner picks a category from an ordered stacked-backdrop ladder, the pick is verdicted against the item's declared correct category with feedback and a running score, and the learner advances to the next item. Category and item vocabulary is entirely config-declared, so the same mechanism serves any classification domain (needs hierarchies, checks-and-balances, sociological imagination, and beyond) on a biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnClassifyOrbital {
+  type LearnClassifyShapePoint = {
+    x : number!
+    y : number!
+  }
+  type LearnClassifyShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [LearnClassifyShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type LearnClassifyItem = {
+    text : string!
+    category : string!
+  }
+  type LearnClassifyOption = {
+    value : string!
+    label : string!
+    color : string!
+  }
+
+  entity LearnClassifyScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    itemIndex : number
+    itemText : string
+    correctCategory : string
+    selectedCategory : string
+    feedback : string
+    correctCount : number
+    attemptedCount : number
+    backdropShapes : [LearnClassifyShape]
+  }
+
+  trait LearnClassifySim -> @rebindable LearnClassifyScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.itemIndex 0)
+        (set @entity.correctCount 0)
+        (set @entity.attemptedCount 0)
+        (set @entity.selectedCategory "")
+        (set @entity.feedback "")
+        (let (
+            (item (array/nth @config.items 0))
+          )
+          (do
+            (set @entity.itemText (object/get @item text))
+            (set @entity.correctCategory (object/get @item category))
+          )
+        )
+        (let (
+            (categoryCount (array/len @config.categories))
+            (marginX 30)
+            (marginY 20)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (tierHeight (/ @plotHeight @categoryCount))
+            (maxWidth (* @plotWidth 0.95))
+            (minWidth (* @plotWidth 0.3))
+            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (centerX (/ @config.width 2))
+            (revealed (!= @entity.selectedCategory ""))
+            (rects (array/map (array/range @categoryCount) (fn i (let (
+                  (category (array/nth @config.categories @i))
+                  (categoryValue (object/get @category value))
+                  (w (- @maxWidth (* @i @widthStep)))
+                  (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
+                  (x (- @centerX (/ @w 2)))
+                  (isCorrectCategory (== @categoryValue @entity.correctCategory))
+                  (isSelectedCategory (== @categoryValue @entity.selectedCategory))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                )
+                { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor }))))
+            (labels (array/map (array/range @categoryCount) (fn i (let (
+                  (category (array/nth @config.categories @i))
+                  (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
+                )
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+            (backdropShapes (array/concat @rects @labels))
+          )
+          (do
+            (set @entity.backdropShapes @backdropShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.itemText },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.backdropShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.itemIndex 0)
+        (set @entity.correctCount 0)
+        (set @entity.attemptedCount 0)
+        (set @entity.selectedCategory "")
+        (set @entity.feedback "")
+        (let (
+            (item (array/nth @config.items 0))
+          )
+          (do
+            (set @entity.itemText (object/get @item text))
+            (set @entity.correctCategory (object/get @item category))
+          )
+        )
+        (let (
+            (categoryCount (array/len @config.categories))
+            (marginX 30)
+            (marginY 20)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (tierHeight (/ @plotHeight @categoryCount))
+            (maxWidth (* @plotWidth 0.95))
+            (minWidth (* @plotWidth 0.3))
+            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (centerX (/ @config.width 2))
+            (revealed (!= @entity.selectedCategory ""))
+            (rects (array/map (array/range @categoryCount) (fn i (let (
+                  (category (array/nth @config.categories @i))
+                  (categoryValue (object/get @category value))
+                  (w (- @maxWidth (* @i @widthStep)))
+                  (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
+                  (x (- @centerX (/ @w 2)))
+                  (isCorrectCategory (== @categoryValue @entity.correctCategory))
+                  (isSelectedCategory (== @categoryValue @entity.selectedCategory))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                )
+                { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor }))))
+            (labels (array/map (array/range @categoryCount) (fn i (let (
+                  (category (array/nth @config.categories @i))
+                  (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
+                )
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+            (backdropShapes (array/concat @rects @labels))
+          )
+          (do
+            (set @entity.backdropShapes @backdropShapes)
+          )
+        )
+        (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: typography, variant: body, content: @entity.itemText },
+                  { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.backdropShapes, interactive: @config.interactive, animate: @config.animate },
+                  { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+                  { type: typography, variant: caption, content: @entity.feedback },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary }
+                    ] },
+                  { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount) }
+                ] }
+            ]
+        })
+
+      PICK -> idle when (== @entity.active true)
+        (set @entity.selectedCategory ?category)
+        (let (
+            (isCorrect (== ?category @entity.correctCategory))
+            (correctOption (array/first (array/filter @config.categories (fn c (== (object/get @c value) @entity.correctCategory)))))
+          )
+          (do
+            (set @entity.attemptedCount (+ @entity.attemptedCount 1))
+            (set @entity.correctCount (if @isCorrect (+ @entity.correctCount 1) @entity.correctCount))
+            (set @entity.feedback (if @isCorrect "Correct!" (str/concat "Not quite — the correct answer is " (object/get @correctOption label) ".")))
+          )
+        )
+        (let (
+            (categoryCount (array/len @config.categories))
+            (marginX 30)
+            (marginY 20)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (tierHeight (/ @plotHeight @categoryCount))
+            (maxWidth (* @plotWidth 0.95))
+            (minWidth (* @plotWidth 0.3))
+            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (centerX (/ @config.width 2))
+            (revealed (!= @entity.selectedCategory ""))
+            (rects (array/map (array/range @categoryCount) (fn i (let (
+                  (category (array/nth @config.categories @i))
+                  (categoryValue (object/get @category value))
+                  (w (- @maxWidth (* @i @widthStep)))
+                  (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
+                  (x (- @centerX (/ @w 2)))
+                  (isCorrectCategory (== @categoryValue @entity.correctCategory))
+                  (isSelectedCategory (== @categoryValue @entity.selectedCategory))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                )
+                { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor }))))
+            (labels (array/map (array/range @categoryCount) (fn i (let (
+                  (category (array/nth @config.categories @i))
+                  (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
+                )
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+            (backdropShapes (array/concat @rects @labels))
+          )
+          (do
+            (set @entity.backdropShapes @backdropShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.itemText },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.backdropShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount) }
+              ] }
+          ]
+        })
+        (emit CLASSIFY_UPDATED { itemIndex: @entity.itemIndex, correctCount: @entity.correctCount, attemptedCount: @entity.attemptedCount, selectedCategory: @entity.selectedCategory })
+
+      ADVANCE -> idle when (== @entity.active true)
+        (let (
+            (total (array/len @config.items))
+            (nextIndex (if (< @entity.itemIndex (- @total 1)) (+ @entity.itemIndex 1) 0))
+            (item (array/nth @config.items @nextIndex))
+          )
+          (do
+            (set @entity.itemIndex @nextIndex)
+            (set @entity.itemText (object/get @item text))
+            (set @entity.correctCategory (object/get @item category))
+            (set @entity.selectedCategory "")
+            (set @entity.feedback "")
+          )
+        )
+        (let (
+            (categoryCount (array/len @config.categories))
+            (marginX 30)
+            (marginY 20)
+            (plotWidth (- @config.width (* @marginX 2)))
+            (plotHeight (- @config.height (* @marginY 2)))
+            (plotBottom (- @config.height @marginY))
+            (tierHeight (/ @plotHeight @categoryCount))
+            (maxWidth (* @plotWidth 0.95))
+            (minWidth (* @plotWidth 0.3))
+            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (centerX (/ @config.width 2))
+            (revealed (!= @entity.selectedCategory ""))
+            (rects (array/map (array/range @categoryCount) (fn i (let (
+                  (category (array/nth @config.categories @i))
+                  (categoryValue (object/get @category value))
+                  (w (- @maxWidth (* @i @widthStep)))
+                  (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
+                  (x (- @centerX (/ @w 2)))
+                  (isCorrectCategory (== @categoryValue @entity.correctCategory))
+                  (isSelectedCategory (== @categoryValue @entity.selectedCategory))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                )
+                { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor }))))
+            (labels (array/map (array/range @categoryCount) (fn i (let (
+                  (category (array/nth @config.categories @i))
+                  (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
+                )
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+            (backdropShapes (array/concat @rects @labels))
+          )
+          (do
+            (set @entity.backdropShapes @backdropShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.itemText },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @entity.backdropShapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount) }
+              ] }
+          ]
+        })
+        (emit CLASSIFY_UPDATED { itemIndex: @entity.itemIndex, correctCount: @entity.correctCount, attemptedCount: @entity.attemptedCount, selectedCategory: @entity.selectedCategory })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      PICK {
+        category : string
+      }
+        @description "Learner picked a category for the current item; verdicted against the item's declared correct category."
+        @tier "domain"
+      ADVANCE {
+      }
+        @description "Learner advanced to the next item, clearing the pick and feedback for the new item."
+        @tier "domain"
+    }
+
+    emits {
+      CLASSIFY_UPDATED -> external {
+        itemIndex : number
+        correctCount : number
+        attemptedCount : number
+        selectedCategory : string
+      }
+        @description "The classification state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "classify update, pick result, score, running score, verdict"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Classify"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 420
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      items : [LearnClassifyItem] = [
+        { text: "Example item one.", category: "a" },
+        { text: "Example item two.", category: "b" }
+      ]
+        @label "Items"
+        @description "Roster of items the learner classifies; each carries its prompt text and the value of its correct category."
+        @synonyms "item, prompt, scenario, situation, case, example, question"
+        @tier "domain"
+      categories : [LearnClassifyOption] = [
+        { value: "a", label: "Category A", color: "#94a3b8" },
+        { value: "b", label: "Category B", color: "#64748b" }
+      ]
+        @label "Categories"
+        @description "Ordered bottom-to-top roster of category buckets (value/label/color) used to render the stacked backdrop and the pick buttons; order determines the backdrop's stacking, widest at the bottom to narrowest at the top."
+        @synonyms "category, bucket, class, tier, level, classification, roster"
+        @tier "domain"
+      correctColor : string = "#16a34a"
+        @label "Correct Highlight Color"
+        @description "Fill color for the correct category once the learner has picked."
+        @tier "presentation"
+      incorrectColor : string = "#dc2626"
+        @label "Incorrect Highlight Color"
+        @description "Fill color for the learner's picked category when it does not match the correct category."
+        @tier "presentation"
+      advanceLabel : string = "Next"
+        @label "Advance Button Label"
+        @description "Label text for the button that advances to the next item."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-classify" as LearnClassifyPage -> LearnClassifySim
+}

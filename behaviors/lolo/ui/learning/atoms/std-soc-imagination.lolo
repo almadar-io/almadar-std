@@ -1,0 +1,341 @@
+app std-soc-imagination "1.0.0"
+"Sociological Imagination engine — C. Wright Mills' exercise linking a personal trouble to the structural public issue behind it, with a drawn trouble→issue node map, per-link feedback and a running score, on a biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital SocImaginationOrbital {
+  type SocImaginationNode = {
+    id : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+  }
+  type SocImaginationEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+  type SocImaginationTroubleOption = {
+    id : string!
+    label : string!
+    correct : boolean!
+  }
+  type SocImaginationTrouble = {
+    id : string!
+    troubleText : string!
+    explanation : string!
+    options : [SocImaginationTroubleOption]!
+  }
+
+  entity SocImaginationScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    nodes : [SocImaginationNode]
+    edges : [SocImaginationEdge]
+    currentTroubleIndex : number
+    score : number
+    answeredCorrectly : boolean
+    feedbackText : string
+    explanationText : string
+  }
+
+  trait SocImaginationSim -> @rebindable SocImaginationScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.currentTroubleIndex 0)
+        (set @entity.score 0)
+        (set @entity.answeredCorrectly false)
+        (set @entity.feedbackText "")
+        (set @entity.explanationText "")
+        (let (
+            (currentTrouble (array/nth @config.troubles 0))
+            (options (object/get @currentTrouble options))
+            (opt0 (array/nth @options 0))
+            (opt1 (array/nth @options 1))
+            (opt2 (array/nth @options 2))
+            (imagNodesCalc [
+                { id: "trouble", x: (* @config.width 0.18), y: (/ @config.height 2), radius: @config.troubleNodeRadius, color: @config.troubleNodeColor, label: (object/get @currentTrouble troubleText) },
+                { id: (object/get @opt0 id), x: (* @config.width 0.75), y: (* @config.height 0.25), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt0 label) },
+                { id: (object/get @opt1 id), x: (* @config.width 0.75), y: (* @config.height 0.5), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt1 label) },
+                { id: (object/get @opt2 id), x: (* @config.width 0.75), y: (* @config.height 0.75), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt2 label) }
+              ])
+          )
+          (do
+            (set @entity.nodes @imagNodesCalc)
+            (set @entity.edges [])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: caption, content: (str/concat "Trouble " (+ @entity.currentTroubleIndex 1) " of " (array/len @config.troubles)) },
+                { type: typography, variant: body, content: (object/get (array/nth @config.troubles @entity.currentTroubleIndex) troubleText) },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: (array/map (object/get (array/nth @config.troubles @entity.currentTroubleIndex) options) (fn o { type: button, action: LINK_ISSUE, actionPayload: { issueId: (object/get @o id) }, label: (object/get @o label), variant: (if (and @entity.answeredCorrectly (object/get @o correct)) "success" "secondary") })) },
+                { type: typography, variant: caption, content: @entity.feedbackText },
+                { type: typography, variant: body, content: @entity.explanationText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_TROUBLE, label: "Next Trouble", variant: primary }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Score: " @entity.score " / " (array/len @config.troubles)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.currentTroubleIndex 0)
+        (set @entity.score 0)
+        (set @entity.answeredCorrectly false)
+        (set @entity.feedbackText "")
+        (set @entity.explanationText "")
+        (let (
+            (currentTrouble (array/nth @config.troubles 0))
+            (options (object/get @currentTrouble options))
+            (opt0 (array/nth @options 0))
+            (opt1 (array/nth @options 1))
+            (opt2 (array/nth @options 2))
+            (imagNodesCalc [
+                { id: "trouble", x: (* @config.width 0.18), y: (/ @config.height 2), radius: @config.troubleNodeRadius, color: @config.troubleNodeColor, label: (object/get @currentTrouble troubleText) },
+                { id: (object/get @opt0 id), x: (* @config.width 0.75), y: (* @config.height 0.25), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt0 label) },
+                { id: (object/get @opt1 id), x: (* @config.width 0.75), y: (* @config.height 0.5), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt1 label) },
+                { id: (object/get @opt2 id), x: (* @config.width 0.75), y: (* @config.height 0.75), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt2 label) }
+              ])
+          )
+          (do
+            (set @entity.nodes @imagNodesCalc)
+            (set @entity.edges [])
+          )
+        )
+        (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: typography, variant: caption, content: (str/concat "Trouble " (+ @entity.currentTroubleIndex 1) " of " (array/len @config.troubles)) },
+                  { type: typography, variant: body, content: (object/get (array/nth @config.troubles @entity.currentTroubleIndex) troubleText) },
+                  { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                  { type: stack, direction: vertical, gap: xs, children: (array/map (object/get (array/nth @config.troubles @entity.currentTroubleIndex) options) (fn o { type: button, action: LINK_ISSUE, actionPayload: { issueId: (object/get @o id) }, label: (object/get @o label), variant: (if (and @entity.answeredCorrectly (object/get @o correct)) "success" "secondary") })) },
+                  { type: typography, variant: caption, content: @entity.feedbackText },
+                  { type: typography, variant: body, content: @entity.explanationText },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: button, action: NEXT_TROUBLE, label: "Next Trouble", variant: primary }
+                    ] },
+                  { type: typography, variant: caption, content: (str/concat "Score: " @entity.score " / " (array/len @config.troubles)) }
+                ] }
+            ]
+        })
+
+      LINK_ISSUE -> idle when (== @entity.active true)
+        (let (
+            (currentTrouble (array/nth @config.troubles @entity.currentTroubleIndex))
+            (options (object/get @currentTrouble options))
+            (selectedOption (array/first (array/filter @options (fn o (== (object/get @o id) ?issueId)))))
+            (isCorrect (if (!= @selectedOption null) (object/get @selectedOption correct) false))
+            (opt0 (array/nth @options 0))
+            (opt1 (array/nth @options 1))
+            (opt2 (array/nth @options 2))
+            (correctOpt (array/first (array/filter @options (fn o (object/get @o correct)))))
+            (correctId (object/get @correctOpt id))
+            (newAnswered (or @entity.answeredCorrectly @isCorrect))
+            (newScore (if (and @isCorrect (not @entity.answeredCorrectly)) (+ @entity.score 1) @entity.score))
+            (newFeedback (if @isCorrect "Correct — that's the structural public issue behind this trouble." "Not quite — that's a distractor, not the structural issue. Try again."))
+            (newExplanation (if @newAnswered (object/get @currentTrouble explanation) ""))
+            (newEdges (if @newAnswered [ { from: "trouble", to: @correctId, color: @config.highlightColor, label: "" } ] []))
+            (newNodes [
+                { id: "trouble", x: (* @config.width 0.18), y: (/ @config.height 2), radius: @config.troubleNodeRadius, color: @config.troubleNodeColor, label: (object/get @currentTrouble troubleText) },
+                { id: (object/get @opt0 id), x: (* @config.width 0.75), y: (* @config.height 0.25), radius: @config.issueNodeRadius, color: (if (and @newAnswered (object/get @opt0 correct)) @config.highlightColor @config.issueNodeColor), label: (object/get @opt0 label) },
+                { id: (object/get @opt1 id), x: (* @config.width 0.75), y: (* @config.height 0.5), radius: @config.issueNodeRadius, color: (if (and @newAnswered (object/get @opt1 correct)) @config.highlightColor @config.issueNodeColor), label: (object/get @opt1 label) },
+                { id: (object/get @opt2 id), x: (* @config.width 0.75), y: (* @config.height 0.75), radius: @config.issueNodeRadius, color: (if (and @newAnswered (object/get @opt2 correct)) @config.highlightColor @config.issueNodeColor), label: (object/get @opt2 label) }
+              ])
+          )
+          (do
+            (set @entity.answeredCorrectly @newAnswered)
+            (set @entity.score @newScore)
+            (set @entity.feedbackText @newFeedback)
+            (set @entity.explanationText @newExplanation)
+            (set @entity.nodes @newNodes)
+            (set @entity.edges @newEdges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: caption, content: (str/concat "Trouble " (+ @entity.currentTroubleIndex 1) " of " (array/len @config.troubles)) },
+                { type: typography, variant: body, content: (object/get (array/nth @config.troubles @entity.currentTroubleIndex) troubleText) },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: (array/map (object/get (array/nth @config.troubles @entity.currentTroubleIndex) options) (fn o { type: button, action: LINK_ISSUE, actionPayload: { issueId: (object/get @o id) }, label: (object/get @o label), variant: (if (and @entity.answeredCorrectly (object/get @o correct)) "success" "secondary") })) },
+                { type: typography, variant: caption, content: @entity.feedbackText },
+                { type: typography, variant: body, content: @entity.explanationText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_TROUBLE, label: "Next Trouble", variant: primary }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Score: " @entity.score " / " (array/len @config.troubles)) }
+              ] }
+          ]
+        })
+        (emit IMAGINATION_UPDATED { troubleIndex: @entity.currentTroubleIndex, score: @entity.score, answeredCorrectly: @entity.answeredCorrectly, feedback: @entity.feedbackText })
+
+      NEXT_TROUBLE -> idle when (== @entity.active true)
+        (let (
+            (nextIndex (if (< (+ @entity.currentTroubleIndex 1) (array/len @config.troubles)) (+ @entity.currentTroubleIndex 1) 0))
+            (currentTrouble (array/nth @config.troubles @nextIndex))
+            (options (object/get @currentTrouble options))
+            (opt0 (array/nth @options 0))
+            (opt1 (array/nth @options 1))
+            (opt2 (array/nth @options 2))
+            (newNodes [
+                { id: "trouble", x: (* @config.width 0.18), y: (/ @config.height 2), radius: @config.troubleNodeRadius, color: @config.troubleNodeColor, label: (object/get @currentTrouble troubleText) },
+                { id: (object/get @opt0 id), x: (* @config.width 0.75), y: (* @config.height 0.25), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt0 label) },
+                { id: (object/get @opt1 id), x: (* @config.width 0.75), y: (* @config.height 0.5), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt1 label) },
+                { id: (object/get @opt2 id), x: (* @config.width 0.75), y: (* @config.height 0.75), radius: @config.issueNodeRadius, color: @config.issueNodeColor, label: (object/get @opt2 label) }
+              ])
+          )
+          (do
+            (set @entity.currentTroubleIndex @nextIndex)
+            (set @entity.answeredCorrectly false)
+            (set @entity.feedbackText "")
+            (set @entity.explanationText "")
+            (set @entity.nodes @newNodes)
+            (set @entity.edges [])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: caption, content: (str/concat "Trouble " (+ @entity.currentTroubleIndex 1) " of " (array/len @config.troubles)) },
+                { type: typography, variant: body, content: (object/get (array/nth @config.troubles @entity.currentTroubleIndex) troubleText) },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: (array/map (object/get (array/nth @config.troubles @entity.currentTroubleIndex) options) (fn o { type: button, action: LINK_ISSUE, actionPayload: { issueId: (object/get @o id) }, label: (object/get @o label), variant: (if (and @entity.answeredCorrectly (object/get @o correct)) "success" "secondary") })) },
+                { type: typography, variant: caption, content: @entity.feedbackText },
+                { type: typography, variant: body, content: @entity.explanationText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_TROUBLE, label: "Next Trouble", variant: primary }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Score: " @entity.score " / " (array/len @config.troubles)) }
+              ] }
+          ]
+        })
+        (emit IMAGINATION_UPDATED { troubleIndex: @entity.currentTroubleIndex, score: @entity.score, answeredCorrectly: @entity.answeredCorrectly, feedback: @entity.feedbackText })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      LINK_ISSUE {
+        issueId : string
+      }
+        @description "Learner clicked one of the three labelled issue buttons to link the current personal trouble to a public issue."
+        @tier "domain"
+      NEXT_TROUBLE {
+      }
+        @description "Learner pressed Next Trouble to advance to the next personal-trouble prompt."
+        @tier "domain"
+    }
+
+    emits {
+      IMAGINATION_UPDATED -> external {
+        troubleIndex : number
+        score : number
+        answeredCorrectly : boolean
+        feedback : string
+      }
+        @description "The imagination-exercise state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "imagination update, trouble linked, public issue, score change"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Sociological Imagination"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      backgroundColor : string = "#f1f5f9"
+        @label "Background Color"
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 460
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      troubleNodeColor : string = "#1e293b"
+        @label "Trouble Node Color"
+        @tier "presentation"
+      issueNodeColor : string = "#64748b"
+        @label "Issue Node Color"
+        @tier "presentation"
+      highlightColor : string = "#16a34a"
+        @label "Highlight Color"
+        @description "Color used for the correct issue node and the trouble-to-issue connecting edge once linked correctly."
+        @tier "presentation"
+      troubleNodeRadius : number = 48
+        @label "Trouble Node Radius"
+        @tier "presentation"
+      issueNodeRadius : number = 34
+        @label "Issue Node Radius"
+        @tier "presentation"
+      troubles : [SocImaginationTrouble] = [
+        { id: "unemployment", troubleText: "I can't find a job no matter how hard I try — it must be something wrong with me.", explanation: "C. Wright Mills: one person out of work is a personal trouble to be solved by that person's character and skills. When millions are out of work at once because factories close and whole job categories are automated away, the job market itself has broken down — that's a public issue rooted in economic structure, not individual failing.", options: [
+            { id: "unemployment-d1", label: "He just isn't trying hard enough to get hired.", correct: false },
+            { id: "unemployment-issue", label: "Structural unemployment — factories closing and jobs being automated away are eliminating entire categories of work across the economy.", correct: true },
+            { id: "unemployment-d2", label: "Employers today are only looking for young talent.", correct: false }
+          ] },
+        { id: "marriage", troubleText: "My marriage is falling apart, and it feels like it's entirely my fault.", explanation: "When only a few marriages fail, look to the couple. When divorce rates climb across an entire society within the same few years, the institution of marriage itself is under structural strain — a public issue, not a private failing.", options: [
+            { id: "marriage-issue", label: "A generation-wide collapse of the economic and social supports that used to hold marriages together.", correct: true },
+            { id: "marriage-d1", label: "She should have picked a better partner.", correct: false },
+            { id: "marriage-d2", label: "Marriage counseling just doesn't work anymore.", correct: false }
+          ] },
+        { id: "debt", troubleText: "I'm drowning in student debt and can't seem to get ahead, no matter what I do.", explanation: "One student in debt is a private trouble. A whole generation carrying record debt loads, at the same time public funding for education has been withdrawn, is a public issue built into how college gets paid for.", options: [
+            { id: "debt-d1", label: "He shouldn't have gone to such an expensive school.", correct: false },
+            { id: "debt-d2", label: "People today just don't budget carefully enough.", correct: false },
+            { id: "debt-issue", label: "A structural shift that moved the cost of higher education from public funding onto individual borrowers, across an entire generation.", correct: true }
+          ] },
+        { id: "burnout", troubleText: "I feel completely burned out and anxious all the time at work, and I don't know why I can't handle it like everyone else.", explanation: "A single burned-out worker is a personal trouble. When burnout tracks a structural shift toward insecure, boundary-less work across millions of workers at once, it's a public issue in how work itself has been reorganized.", options: [
+            { id: "burnout-d1", label: "She needs to manage her stress better.", correct: false },
+            { id: "burnout-issue", label: "An economy-wide shift toward precarious, always-on gig and contract work that has eroded job security for millions.", correct: true },
+            { id: "burnout-d2", label: "Some people just aren't cut out for a demanding career.", correct: false }
+          ] }
+      ]
+        @label "Troubles"
+        @description "Roster of personal troubles. Each item carries the trouble text shown to the learner, three labelled options (one correct public issue plus two distractors) rendered as buttons in this exact order, and the explanation text shown once the correct issue is linked."
+        @synonyms "sociological imagination, C. Wright Mills, Mills, personal trouble, public issue, biography and history, private trouble, structural issue"
+        @tier "domain"
+    }
+  }
+
+  page "/soc-imagination" as SocImaginationPage -> SocImaginationSim
+}

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -138,4 +138,1262 @@ export function stdBillableHour(params: StdBillableHourParams): OrbitalDefinitio
       stdBillableHourPage(params),
     ],
   });
+}
+
+type _StdBillableHourEntityName = 'BillableHour';
+type _StdBillableHourListenTraitName = 'DenseHoursTable' | 'BillableHourTimesheet';
+
+/**
+ * Tunable params for the BillableHourOrbital orbital.
+ *
+ * Canonical entity: BillableHour — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdBillableHourBillableHourOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'DenseHoursTable' | 'BillableHourTimesheet',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait BillableHourOrbital's `uses[]` exports. */
+type _StdBillableHourBillableHourOrbitalUsesRef = 'TableView.traits.TableViewRender';
+
+/** Per-orbital factory: builds the BillableHourOrbital orbital with consumer params. */
+export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillableHourOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'billablehours');
+  const built = makeOrbitalWithUses({
+    name: 'BillableHourOrbital',
+    uses: [
+      {
+        'as': 'TableView',
+        'from': 'std/behaviors/ui-table-view',
+      },
+    ],
+    entity: {
+      name: 'BillableHour',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'Unique identifier for the worker.',
+            'name': 'workerId',
+            'required': true,
+            'synonyms': 'employeeId, staffId, userId',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The name of the worker associated with the time entry.',
+            'name': 'workerName',
+            'synonyms': 'employee, staff, personnel',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Unique identifier for the associated case or project.',
+            'name': 'matterId',
+            'synonyms': 'caseId, projectID, reference',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Identifier for the project associated with the time entry.',
+            'name': 'projectId',
+            'synonyms': 'project, task, reference',
+            'type': 'string',
+          },
+          {
+            'description': 'The date on which the work was performed.',
+            'name': 'workDate',
+            'required': true,
+            'synonyms': 'date, transaction date, service date',
+            'type': 'date',
+          },
+          {
+            'default': 0,
+            'description': 'The quantity of time recorded.',
+            'name': 'hours',
+            'synonyms': 'duration, time, amount',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'The hourly charge for the work performed.',
+            'name': 'rate',
+            'synonyms': 'price, cost, amount',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'description': 'A textual explanation of the hour entry.',
+            'name': 'description',
+            'synonyms': 'explanation, notes, details, comment',
+            'type': 'string',
+          },
+          {
+            'default': true,
+            'description': 'Indicates whether the hour is eligible for billing.',
+            'name': 'isBillable',
+            'synonyms': 'billable flag, billing status, billable indicator',
+            'type': 'boolean',
+          },
+          {
+            'default': 'unbilled',
+            'description': 'The current billing status of the hour entry.',
+            'name': 'invoiceStatus',
+            'synonyms': 'status, billing status, payment status',
+            'type': 'string',
+            'values': [
+              'unbilled',
+              'invoiced',
+              'paid',
+              'written_off',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'columns': {
+            'default': '@config.columns',
+            'type': 'unknown',
+          },
+          'emptyMessage': {
+            'default': 'No time entries',
+            'type': 'unknown',
+          },
+          'itemActions': {
+            'default': '@config.itemActions',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.tableLook',
+            'type': 'unknown',
+          },
+          'maxInlineActions': {
+            'default': 2,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'BillableHour',
+        'listens': [
+          {
+            'event': 'BillableHourLoaded',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BillableHourTimesheet',
+            },
+            'triggers': 'TableViewLoaded',
+          },
+        ],
+        'name': 'DenseHoursTable',
+        'ref': ('TableView.traits.TableViewRender' satisfies _StdBillableHourBillableHourOrbitalUsesRef),
+      }),
+      {
+        'category': 'interaction',
+        'config': {
+          'columns': {
+            'default': [
+              {
+                'align': 'left',
+                'field': 'workerName',
+                'header': 'Worker',
+                'key': 'workerName',
+                'width': 'minmax(8rem, 1fr)',
+              },
+              {
+                'align': 'left',
+                'field': 'matterId',
+                'header': 'Matter',
+                'key': 'matterId',
+                'width': '8rem',
+              },
+              {
+                'align': 'left',
+                'field': 'workDate',
+                'format': 'date',
+                'header': 'Date',
+                'key': 'workDate',
+                'width': '8rem',
+              },
+              {
+                'align': 'right',
+                'field': 'hours',
+                'format': 'number',
+                'header': 'Hours',
+                'key': 'hours',
+                'width': '6rem',
+              },
+              {
+                'align': 'right',
+                'field': 'rate',
+                'format': 'currency',
+                'header': 'Rate',
+                'key': 'rate',
+                'width': '7rem',
+              },
+              {
+                'align': 'center',
+                'field': 'invoiceStatus',
+                'format': 'badge',
+                'header': 'Status',
+                'key': 'invoiceStatus',
+                'width': '8rem',
+              },
+            ],
+            'description': 'ColumnSpec list for the dense hours ledger table.',
+            'items': {
+              'properties': {
+                'align': {
+                  'name': 'align',
+                  'required': false,
+                  'type': 'string',
+                },
+                'className': {
+                  'name': 'className',
+                  'required': false,
+                  'type': 'string',
+                },
+                'field': {
+                  'name': 'field',
+                  'required': false,
+                  'type': 'string',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'string',
+                },
+                'weight': {
+                  'name': 'weight',
+                  'required': false,
+                  'type': 'string',
+                },
+                'width': {
+                  'name': 'width',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Table columns',
+            'tier': 'presentation',
+            'type': '[ColumnSpec]',
+          },
+          'itemActions': {
+            'default': [
+              {
+                'event': 'OPEN_HOURS',
+                'icon': 'arrow-right',
+                'label': 'Open',
+                'variant': 'ghost',
+              },
+              {
+                'event': 'WRITE_OFF_HOURS',
+                'label': 'Write Off',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Per-row actions rendered by the hours table.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'statLook': {
+            'default': 'elevated',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'label': 'Stat display look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'bordered',
+            ],
+          },
+          'title': {
+            'default': 'Time Entries',
+            'description': 'Heading shown above the time-entries list',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals the display of the hours list.',
+            'event': 'OPEN_HOURS',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'workerId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'workerName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'matterId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'projectId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'workDate',
+                    'required': true,
+                    'type': 'date',
+                  },
+                  {
+                    'name': 'hours',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'rate',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'isBillable',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'invoiceStatus',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'show, display, list',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the detail view has been dismissed.',
+            'event': 'CLOSE_VIEW',
+            'synonyms': 'dismiss, close, hide',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals that billable hours have been invoiced.',
+            'event': 'INVOICE_HOURS',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'invoice, charge, bill',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates billable hours have been written off.',
+            'event': 'WRITE_OFF_HOURS',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'deduct, remove, cancel',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals that a billable hour data set has been successfully retrieved.',
+            'event': 'BillableHourLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[BillableHour]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved, populated',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load billable hour data.',
+            'event': 'BillableHourLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failed, problem, unsuccessful',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'BillableHour',
+        'name': 'BillableHourTimesheet',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals that a billable hour data set has been successfully retrieved.',
+              'key': 'BillableHourLoaded',
+              'name': 'BillableHour loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BillableHour]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved, populated',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load billable hour data.',
+              'key': 'BillableHourLoadFailed',
+              'name': 'BillableHour load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failed, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals the display of the hours list.',
+              'key': 'OPEN_HOURS',
+              'name': 'Open Hours',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'BillableHour',
+                },
+              ],
+              'synonyms': 'show, display, list',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates billable hours have been written off.',
+              'key': 'WRITE_OFF_HOURS',
+              'name': 'Write Off Hours',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'deduct, remove, cancel',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates the detail view has been dismissed.',
+              'key': 'CLOSE_VIEW',
+              'name': 'Close View',
+              'synonyms': 'dismiss, close, hide',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals that billable hours have been invoiced.',
+              'key': 'INVOICE_HOURS',
+              'name': 'Invoice Hours',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'invoice, charge, bill',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'viewing_single',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BillableHour' satisfies _StdBillableHourEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BillableHourLoadFailed',
+                      'success': 'BillableHourLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading time entries…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'clock',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          '@trait.DenseHoursTable',
+                        ],
+                        'className': 'overflow-x-auto',
+                        'direction': 'vertical',
+                        'gap': 'none',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'BillableHourLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'BillableHourLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BillableHour' satisfies _StdBillableHourEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BillableHourLoadFailed',
+                      'success': 'BillableHourLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'rows': 4,
+                    'type': 'skeleton',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.row.id',
+                ],
+                [
+                  'set',
+                  '@entity.workerId',
+                  '@payload.row.workerId',
+                ],
+                [
+                  'set',
+                  '@entity.workerName',
+                  '@payload.row.workerName',
+                ],
+                [
+                  'set',
+                  '@entity.matterId',
+                  '@payload.row.matterId',
+                ],
+                [
+                  'set',
+                  '@entity.projectId',
+                  '@payload.row.projectId',
+                ],
+                [
+                  'set',
+                  '@entity.workDate',
+                  '@payload.row.workDate',
+                ],
+                [
+                  'set',
+                  '@entity.hours',
+                  '@payload.row.hours',
+                ],
+                [
+                  'set',
+                  '@entity.rate',
+                  '@payload.row.rate',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@payload.row.description',
+                ],
+                [
+                  'set',
+                  '@entity.isBillable',
+                  '@payload.row.isBillable',
+                ],
+                [
+                  'set',
+                  '@entity.invoiceStatus',
+                  '@payload.row.invoiceStatus',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'CLOSE_VIEW',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'name': 'clock',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@entity.workerName',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'label': '@entity.invoiceStatus',
+                            'type': 'badge',
+                            'variant': 'default',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Matter',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.matterId',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Project',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.projectId',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Description',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.description',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'icon': 'clock',
+                            'label': 'Hours',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.hours',
+                          },
+                          {
+                            'icon': 'dollar-sign',
+                            'label': 'Rate',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.rate',
+                          },
+                          {
+                            'icon': 'calendar',
+                            'label': 'Date',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.workDate',
+                          },
+                        ],
+                        'cols': 3,
+                        'type': 'simple-grid',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'INVOICE_HOURS',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': 'Invoice',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                          {
+                            'action': 'WRITE_OFF_HOURS',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': 'Write Off',
+                            'type': 'button',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'OPEN_HOURS',
+              'from': 'browsing',
+              'to': 'viewing_single',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('BillableHour' satisfies _StdBillableHourEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BillableHourLoadFailed',
+                      'success': 'BillableHourLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Writing off hours…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'WRITE_OFF_HOURS',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BillableHour' satisfies _StdBillableHourEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BillableHourLoadFailed',
+                      'success': 'BillableHourLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading time entries…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLOSE_VIEW',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('BillableHour' satisfies _StdBillableHourEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BillableHourLoadFailed',
+                      'success': 'BillableHourLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Invoicing hours…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INVOICE_HOURS',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('BillableHour' satisfies _StdBillableHourEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BillableHourLoadFailed',
+                      'success': 'BillableHourLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Writing off hours…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'WRITE_OFF_HOURS',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BillableHour' satisfies _StdBillableHourEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BillableHourLoadFailed',
+                      'success': 'BillableHourLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'BillableHourPage',
+        'path': '/timesheet',
+        'traits': [
+          {
+            'ref': 'BillableHourTimesheet',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdBillableHourBillableHourOrbital. */
+export const StdBillableHourBillableHourOrbitalManifest = {
+  organism: 'std-billable-hour',
+  orbitalName: 'BillableHourOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'DenseHoursTable',
+  ] as const,
+  inlineTraitNames: [
+    'BillableHourTimesheet',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdBillableHourBillableHourOrbitalParams keys. */
+export function isStdBillableHourBillableHourOrbitalParams(p: object): p is StdBillableHourBillableHourOrbitalParams {
+  type _OverrideRecord = NonNullable<StdBillableHourBillableHourOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdBillableHourBillableHourOrbitalManifest.traitNames,
+      ...StdBillableHourBillableHourOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

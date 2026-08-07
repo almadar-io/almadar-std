@@ -1,0 +1,176 @@
+app std-prob-trials "1.0.0"
+"Declarative probability plotter — renders a distribution curve, sampled points, and extra shapes from config onto a math-canvas; no interaction beyond the initial render (dice-roll, coin-flip, and general distribution/histogram displays all share this mechanism — only the config data differs per topic). Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital ProbTrialsOrbital {
+  type ProbTrialsPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  type ProbTrialsCurve = {
+    label : string
+    color : string
+    samples : [ProbTrialsPoint]
+  }
+  type ProbTrialsShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [ProbTrialsShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type ProbTrialsShapePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity ProbTrialsScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    curves : [ProbTrialsCurve]
+    points : [ProbTrialsPoint]
+    shapes : [ProbTrialsShape]
+  }
+
+  trait ProbTrialsSim -> @rebindable ProbTrialsScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.curves @config.curves)
+        (set @entity.points @config.points)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.curves @config.curves)
+        (set @entity.points @config.points)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate }
+              ] }
+          ]
+        })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Probability Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      xMin : number = 0
+        @label "X Min"
+        @description "Minimum x value on the canvas."
+        @tier "presentation"
+      xMax : number = 10
+        @label "X Max"
+        @description "Maximum x value on the canvas."
+        @tier "presentation"
+      yMin : number = 0
+        @label "Y Min"
+        @description "Minimum y value on the canvas."
+        @tier "presentation"
+      yMax : number = 1
+        @label "Y Max"
+        @description "Maximum y value on the canvas."
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      curves : [ProbTrialsCurve] = [
+        { label: "uniform", color: "#2563eb", samples: [
+          { x: 0, y: 0.1 }, { x: 1, y: 0.1 }, { x: 2, y: 0.1 }, { x: 3, y: 0.1 }, { x: 4, y: 0.1 },
+          { x: 5, y: 0.1 }, { x: 6, y: 0.1 }, { x: 7, y: 0.1 }, { x: 8, y: 0.1 }, { x: 9, y: 0.1 }, { x: 10, y: 0.1 }
+        ]}
+      ]
+        @label "Curves"
+        @description "Distribution curve or cumulative frequency — e.g. a dice-face histogram, a coin-flip bar, or a general distribution shape."
+        @synonyms "dice, coin flip, sampling, distribution, histogram, law of large numbers, expected value"
+        @tier "domain"
+      points : [ProbTrialsPoint] = []
+        @label "Points"
+        @description "Sampled outcomes or scatter points."
+        @tier "presentation"
+      shapes : [ProbTrialsShape] = []
+        @label "Shapes"
+        @description "Extra declarative shapes such as bars or outcome labels."
+        @tier "presentation"
+    }
+  }
+
+  page "/prob-trials" as ProbTrialsPage -> ProbTrialsSim
+}

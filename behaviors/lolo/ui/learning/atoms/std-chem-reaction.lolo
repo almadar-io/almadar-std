@@ -1,5 +1,5 @@
 app std-chem-reaction "1.0.0"
-"Reversible reaction engine — four A+B pairs oscillate together and apart, forming and breaking a bond on chemistry-canvas."
+"Reversible reaction engine — four A+B pairs oscillate together and apart, forming and breaking a bond on chemistry-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 orbital ChemReactionEngineOrbital {
   type ChemAtom = {
     id : string
@@ -20,6 +20,8 @@ orbital ChemReactionEngineOrbital {
 
   entity ChemReactionState [runtime] {
     id : string!
+    active : boolean = false
+    title : string
     phase : number = 0
     atoms : [ChemAtom]
     running : boolean = false
@@ -29,17 +31,39 @@ orbital ChemReactionEngineOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
         (set @entity.phase 0)
         (set @entity.atoms @config.atoms)
         (set @entity.running @config.running)
         (render-ui main {
-          type: chemistry-canvas
-          width: @config.width
-          height: @config.height
-          backgroundColor: @config.backgroundColor
-          atoms: @entity.atoms
-          bonds: @config.bonds
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, atoms: @entity.atoms, bonds: @config.bonds }
+              ] }
+          ]
+        })
+        (emit ATOMS_UPDATED { atoms: @entity.atoms })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.phase 0)
+        (set @entity.atoms @config.atoms)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, atoms: @entity.atoms, bonds: @config.bonds }
+              ] }
+          ]
         })
         (emit ATOMS_UPDATED { atoms: @entity.atoms })
     }
@@ -57,14 +81,24 @@ orbital ChemReactionEngineOrbital {
           )
           (object/merge @a { x: @nx }))))))
         (render-ui main {
-          type: chemistry-canvas
-          width: @config.width
-          height: @config.height
-          backgroundColor: @config.backgroundColor
-          atoms: @entity.atoms
-          bonds: @config.bonds
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, atoms: @entity.atoms, bonds: @config.bonds }
+              ] }
+          ]
         })
         (emit ATOMS_UPDATED { atoms: @entity.atoms })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
     }
 
     emits {
@@ -77,6 +111,14 @@ orbital ChemReactionEngineOrbital {
     }
 
     config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Chemical Reaction"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
       period : number = 200
         @label "Period"
         @description "Phase units per full bond form-and-break cycle; larger is slower."

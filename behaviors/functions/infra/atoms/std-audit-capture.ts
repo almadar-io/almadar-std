@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -137,4 +137,504 @@ export function stdAuditCapture(params: StdAuditCaptureParams): OrbitalDefinitio
       stdAuditCapturePage(params),
     ],
   });
+}
+
+type _StdAuditCaptureEntityName = 'AuditEntry';
+type _StdAuditCaptureListenTraitName = 'AuditCaptureListener';
+
+/**
+ * Tunable params for the AuditCaptureOrbital orbital.
+ *
+ * Canonical entity: AuditEntry — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAuditCaptureAuditCaptureOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'AuditCaptureListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AuditCaptureOrbital's `uses[]` exports. */
+type _StdAuditCaptureAuditCaptureOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AuditCaptureOrbital orbital with consumer params. */
+export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditCaptureOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'audit_entries');
+  const built = makeOrbitalWithUses({
+    name: 'AuditCaptureOrbital',
+    uses: [],
+    expects: [
+      {
+        'kind': 'identity',
+      },
+    ],
+    entity: {
+      name: 'AuditEntry',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The user or system performing the action.',
+            'name': 'actor',
+            'synonyms': 'user, source, originator',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The specific operation performed on the entity.',
+            'name': 'action',
+            'synonyms': 'operation, event, activity, change',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The type of entity that was modified.',
+            'name': 'entityType',
+            'synonyms': 'type, kind, class',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Unique identifier for the entity being audited.',
+            'name': 'entityId',
+            'synonyms': 'entity identifier, record id, item id',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'description': 'The state of the entity prior to the modification.',
+            'name': 'before',
+            'synonyms': 'previous, original, old value',
+            'type': 'object',
+          },
+          {
+            'default': {},
+            'description': 'The state of the entity after a modification.',
+            'name': 'after',
+            'synonyms': 'new, updated, post, subsequent',
+            'type': 'object',
+          },
+          {
+            'default': 0,
+            'description': 'Timestamp indicating when the audit event was recorded.',
+            'name': 'recordedAt',
+            'synonyms': 'timestamp, date, time',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'capabilities': [
+          'audit',
+          'compliance',
+        ],
+        'category': 'lifecycle',
+        'config': {
+          'captureBeforeAfter': {
+            'default': false,
+            'description': 'Store a full before-and-after snapshot of each change. More detail, but a larger audit log.',
+            'label': 'Store before-and-after snapshots?',
+            'synonyms': 'before after, snapshot, diff, change snapshot, field diff',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+          'captureEntity': {
+            'default': '',
+            'description': 'Type name of the entity whose mutations get logged',
+            'label': 'Entity to audit',
+            'tier': 'internal',
+            'type': 'entity',
+          },
+          'captureEventTypes': {
+            'default': [],
+            'description': 'When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Event-kind filter',
+            'tier': 'internal',
+            'type': '[string]',
+          },
+          'enabled': {
+            'default': false,
+            'description': 'Keep an audit trail of every change to records — who changed what, and when. Off by default.',
+            'label': 'Track every change',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+          'excludeFields': {
+            'default': [],
+            'description': 'Entity fields to omit from the before/after snapshots — e.g. passwords or other sensitive fields you do not want copied into the audit trail.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Skip fields',
+            'tier': 'internal',
+            'type': '[string]',
+          },
+          'retentionDays': {
+            'default': 2555,
+            'description': 'Number of days to retain audit entries. Default 2555 ≈ 7 years, typical for compliance.',
+            'label': 'How long should the audit log be kept (days)?',
+            'synonyms': 'log retention, keep for, audit expiry, retention period, log lifetime',
+            'tier': 'policy',
+            'type': 'number',
+          },
+        },
+        'emits': [
+          {
+            'event': 'AuditRecorded',
+            'payloadSchema': [
+              {
+                'name': 'actor',
+                'type': 'string',
+              },
+              {
+                'name': 'action',
+                'type': 'string',
+              },
+              {
+                'name': 'entityType',
+                'type': 'string',
+              },
+              {
+                'name': 'entityId',
+                'type': 'string',
+              },
+              {
+                'name': 'recordedAt',
+                'type': 'number',
+              },
+            ],
+            'scope': 'external',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'action',
+            'actor',
+            'after',
+            'before',
+            'entityId',
+            'entityType',
+            'recordedAt',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'AuditEntry',
+        'name': 'AuditCaptureListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'EntityMutated',
+              'name': 'Entity mutated',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'AuditRecorded',
+              'name': 'Audit recorded',
+              'payloadSchema': [
+                {
+                  'name': 'actor',
+                  'type': 'string',
+                },
+                {
+                  'name': 'action',
+                  'type': 'string',
+                },
+                {
+                  'name': 'entityType',
+                  'type': 'string',
+                },
+                {
+                  'name': 'entityId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'recordedAt',
+                  'type': 'number',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'when',
+                  [
+                    'or',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.captureEventTypes',
+                      ],
+                      0,
+                    ],
+                    [
+                      'array/includes',
+                      '@config.captureEventTypes',
+                      [
+                        'object/get',
+                        '@payload.data',
+                        'kind',
+                        '',
+                      ],
+                    ],
+                  ],
+                  [
+                    'do',
+                    [
+                      'set',
+                      '@entity.actor',
+                      '@user.id',
+                    ],
+                    [
+                      'set',
+                      '@entity.action',
+                      [
+                        'object/get',
+                        '@payload.data',
+                        'kind',
+                        'EntityMutated',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.entityType',
+                      '@config.captureEntity',
+                    ],
+                    [
+                      'set',
+                      '@entity.entityId',
+                      [
+                        'object/get',
+                        '@payload.data',
+                        'id',
+                        '',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.before',
+                      [
+                        'if',
+                        '@config.captureBeforeAfter',
+                        [
+                          'object/omit',
+                          [
+                            'object/get',
+                            '@payload.data',
+                            'before',
+                            {},
+                          ],
+                          '@config.excludeFields',
+                        ],
+                        {},
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.after',
+                      [
+                        'if',
+                        '@config.captureBeforeAfter',
+                        [
+                          'object/omit',
+                          [
+                            'object/get',
+                            '@payload.data',
+                            'after',
+                            {},
+                          ],
+                          '@config.excludeFields',
+                        ],
+                        {},
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.recordedAt',
+                      0,
+                    ],
+                    [
+                      'persist',
+                      'create',
+                      ('AuditEntry' satisfies _StdAuditCaptureEntityName),
+                      {
+                        'action': '@entity.action',
+                        'actor': '@user.id',
+                        'after': '@entity.after',
+                        'before': '@entity.before',
+                        'entityType': '@config.captureEntity',
+                        'recordedAt': 0,
+                      },
+                    ],
+                    [
+                      'emit',
+                      'AuditRecorded',
+                      {
+                        'action': '@entity.action',
+                        'actor': '@user.id',
+                        'entityType': '@config.captureEntity',
+                        'recordedAt': 0,
+                      },
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'EntityMutated',
+              'from': 'idle',
+              'guard': '@config.enabled',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AuditCapturePage',
+        'path': '/audit-capture',
+        'traits': [
+          {
+            'ref': 'AuditCaptureListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAuditCaptureAuditCaptureOrbital. */
+export const StdAuditCaptureAuditCaptureOrbitalManifest = {
+  organism: 'std-audit-capture',
+  orbitalName: 'AuditCaptureOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'AuditCaptureListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAuditCaptureAuditCaptureOrbitalParams keys. */
+export function isStdAuditCaptureAuditCaptureOrbitalParams(p: object): p is StdAuditCaptureAuditCaptureOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAuditCaptureAuditCaptureOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAuditCaptureAuditCaptureOrbitalManifest.traitNames,
+      ...StdAuditCaptureAuditCaptureOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

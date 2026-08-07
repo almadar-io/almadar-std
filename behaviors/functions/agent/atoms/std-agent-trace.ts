@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -118,4 +118,371 @@ export function stdAgentTrace(params: StdAgentTraceParams): OrbitalDefinition {
       stdAgentTracePage(params),
     ],
   });
+}
+
+type _StdAgentTraceEntityName = 'AgentTrace';
+type _StdAgentTraceListenTraitName = 'TraceEmitter' | 'TraceListener';
+
+/**
+ * Tunable params for the AgentTraceOrbital orbital.
+ *
+ * Canonical entity: AgentTrace — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAgentTraceAgentTraceOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'TraceEmitter' | 'TraceListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AgentTraceOrbital's `uses[]` exports. */
+type _StdAgentTraceAgentTraceOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AgentTraceOrbital orbital with consumer params. */
+export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AgentTraceOrbital',
+    uses: [],
+    entity: {
+      name: 'AgentTrace',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': '',
+            'name': 'event',
+            'type': 'string',
+          },
+          {
+            'default': 'info',
+            'name': 'level',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'message',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'TRACED',
+          },
+        ],
+        'linkedEntity': 'AgentTrace',
+        'name': 'TraceEmitter',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EMIT_TRACE',
+              'name': 'Emit Trace',
+              'payloadSchema': [
+                {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'LOG_TRACE',
+              'name': 'Log Trace',
+              'payloadSchema': [
+                {
+                  'name': 'level',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'message',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TRACED',
+              'name': 'Traced',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.event',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.level',
+                  'info',
+                ],
+                [
+                  'set',
+                  '@entity.message',
+                  '',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.event',
+                  '@payload.event',
+                ],
+                [
+                  'trace/emit',
+                  '@entity.event',
+                ],
+                [
+                  'emit',
+                  'TRACED',
+                ],
+              ],
+              'event': 'EMIT_TRACE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.level',
+                  '@payload.level',
+                ],
+                [
+                  'set',
+                  '@entity.message',
+                  '@payload.message',
+                ],
+                [
+                  'trace/log',
+                  '@entity.level',
+                  '@entity.message',
+                ],
+                [
+                  'emit',
+                  'TRACED',
+                ],
+              ],
+              'event': 'LOG_TRACE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentTrace',
+        'listens': [
+          {
+            'event': 'TRACED',
+            'source': {
+              'kind': 'trait',
+              'trait': ('TraceEmitter' satisfies _StdAgentTraceListenTraitName),
+            },
+            'triggers': 'TRACED',
+          },
+        ],
+        'name': 'TraceListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'TRACED',
+              'name': 'Traced',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'ready',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.event',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.level',
+                  'info',
+                ],
+                [
+                  'set',
+                  '@entity.message',
+                  '',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'ready',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.event',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.message',
+                  '',
+                ],
+              ],
+              'event': 'TRACED',
+              'from': 'ready',
+              'to': 'ready',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AgentTracePage',
+        'path': '/agent-trace',
+        'traits': [
+          {
+            'ref': 'TraceEmitter',
+          },
+          {
+            'ref': 'TraceListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAgentTraceAgentTraceOrbital. */
+export const StdAgentTraceAgentTraceOrbitalManifest = {
+  organism: 'std-agent-trace',
+  orbitalName: 'AgentTraceOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'TraceEmitter',
+    'TraceListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAgentTraceAgentTraceOrbitalParams keys. */
+export function isStdAgentTraceAgentTraceOrbitalParams(p: object): p is StdAgentTraceAgentTraceOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAgentTraceAgentTraceOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAgentTraceAgentTraceOrbitalManifest.traitNames,
+      ...StdAgentTraceAgentTraceOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -149,4 +149,617 @@ export function stdMlClassify(params: StdMlClassifyParams): OrbitalDefinition {
       stdMlClassifyPage(params),
     ],
   });
+}
+
+type _StdMlClassifyEntityName = 'ClassifierVerdict';
+type _StdMlClassifyListenTraitName = 'ClassifyRun';
+
+/**
+ * Tunable params for the MlClassifyOrbital orbital.
+ *
+ * Canonical entity: ClassifierVerdict — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdMlClassifyMlClassifyOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ClassifyRun',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait MlClassifyOrbital's `uses[]` exports. */
+type _StdMlClassifyMlClassifyOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the MlClassifyOrbital orbital with consumer params. */
+export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'MlClassifyOrbital',
+    uses: [],
+    entity: {
+      name: 'ClassifierVerdict',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': '',
+            'name': 'text',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'confidence',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'name': 'reasoning',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'errorMessage',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'name': 'request',
+            'type': 'object',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'classifying',
+              'done',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'categories': {
+            'default': [],
+            'description': 'Closed set of category labels the LLM must choose from',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Categories',
+            'tier': 'domain',
+            'type': '[string]',
+          },
+          'model': {
+            'default': '',
+            'description': 'Model override forwarded to the classify call',
+            'label': 'Model',
+            'tier': 'infra',
+            'type': 'string',
+          },
+          'provider': {
+            'default': '',
+            'description': 'Reserved for provider selection; LLMServiceActions.classify (packages/almadar-llm/src/contracts.ts) takes no provider param today, so this knob is not forwarded to the call',
+            'label': 'Provider',
+            'tier': 'infra',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Raw llm.classify service result, flattened onto the payload by the call-service effect executor',
+            'event': 'CLASSIFIED_RAW',
+            'payloadSchema': [
+              {
+                'name': 'category',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'confidence',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'reasoning',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'call-service classify failure signal',
+            'event': 'CLASSIFY_CALL_FAILED',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'tier': 'secondary',
+          },
+          {
+            'description': 'Structured LLM verdict — closed-set category with confidence and reasoning',
+            'event': 'CLASSIFIED',
+            'payloadSchema': [
+              {
+                'name': 'category',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'confidence',
+                'required': true,
+                'type': 'float',
+              },
+              {
+                'name': 'reasoning',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'The classify service call failed; this rung never abstains, only answers or fails',
+            'event': 'CLASSIFY_FAILED',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'linkedEntity': 'ClassifierVerdict',
+        'name': 'ClassifyRun',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CLASSIFY',
+              'name': 'Classify',
+              'payloadSchema': [
+                {
+                  'name': 'text',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'request',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'description': 'Raw llm.classify service result, flattened onto the payload by the call-service effect executor',
+              'key': 'CLASSIFIED_RAW',
+              'name': 'Classified Raw',
+              'payloadSchema': [
+                {
+                  'name': 'category',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'confidence',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'reasoning',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'description': 'call-service classify failure signal',
+              'key': 'CLASSIFY_CALL_FAILED',
+              'name': 'Classify Call Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'secondary',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'Structured LLM verdict — closed-set category with confidence and reasoning',
+              'key': 'CLASSIFIED',
+              'name': 'Classified',
+              'payloadSchema': [
+                {
+                  'name': 'category',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'confidence',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'reasoning',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'The classify service call failed; this rung never abstains, only answers or fails',
+              'key': 'CLASSIFY_FAILED',
+              'name': 'Classify Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'classifying',
+            },
+            {
+              'name': 'done',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.text',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.text',
+                  '@payload.text',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  '@payload.request',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'classifying',
+                ],
+                [
+                  'call-service',
+                  'llm',
+                  'classify',
+                  {
+                    'categories': '@config.categories',
+                    'model': '@config.model',
+                    'text': '@payload.text',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'CLASSIFY_CALL_FAILED',
+                      'success': 'CLASSIFIED_RAW',
+                    },
+                  },
+                ],
+              ],
+              'event': 'CLASSIFY',
+              'from': 'idle',
+              'to': 'classifying',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.category',
+                  '@payload.category',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  '@payload.confidence',
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '@payload.reasoning',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+                [
+                  'emit',
+                  'CLASSIFIED',
+                  {
+                    'category': '@entity.category',
+                    'confidence': '@entity.confidence',
+                    'reasoning': '@entity.reasoning',
+                  },
+                ],
+              ],
+              'event': 'CLASSIFIED_RAW',
+              'from': 'classifying',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+                [
+                  'emit',
+                  'CLASSIFY_FAILED',
+                  {
+                    'error': '@entity.errorMessage',
+                  },
+                ],
+              ],
+              'event': 'CLASSIFY_CALL_FAILED',
+              'from': 'classifying',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'done',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.text',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'done',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'MlClassifyPage',
+        'path': '/ml-classify',
+        'traits': [
+          {
+            'ref': 'ClassifyRun',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMlClassifyMlClassifyOrbital. */
+export const StdMlClassifyMlClassifyOrbitalManifest = {
+  organism: 'std-ml-classify',
+  orbitalName: 'MlClassifyOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'ClassifyRun',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMlClassifyMlClassifyOrbitalParams keys. */
+export function isStdMlClassifyMlClassifyOrbitalParams(p: object): p is StdMlClassifyMlClassifyOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMlClassifyMlClassifyOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdMlClassifyMlClassifyOrbitalManifest.traitNames,
+      ...StdMlClassifyMlClassifyOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

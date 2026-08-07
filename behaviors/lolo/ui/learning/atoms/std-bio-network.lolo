@@ -1,0 +1,173 @@
+app std-bio-network "1.0.0"
+"Generic declarative biology-network renderer — a fixed roster of nodes/edges/shapes (cells and organelles, food-web trophic links, or classification taxa) drawn once on a biology-canvas with no interaction or transitions. Node/edge/shape vocabulary is entirely config-declared, so the same mechanism serves any static biology diagram. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital BioNetworkOrbital {
+  type BioNetworkNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+  type BioNetworkEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+  type BioNetworkShapePoint = {
+    x : number!
+    y : number!
+  }
+  type BioNetworkShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [BioNetworkShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+
+  entity BioNetworkScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    nodes : [BioNetworkNode]
+    edges : [BioNetworkEdge]
+    shapes : [BioNetworkShape]
+  }
+
+  trait BioNetworkSim -> @rebindable BioNetworkScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.nodes @config.nodes)
+        (set @entity.edges @config.edges)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas,
+                  width: @config.width,
+                  height: @config.height,
+                  backgroundColor: @config.backgroundColor,
+                  nodes: @entity.nodes,
+                  edges: @entity.edges,
+                  shapes: @entity.shapes,
+                  interactive: @config.interactive,
+                  animate: @config.animate
+                }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.nodes @config.nodes)
+        (set @entity.edges @config.edges)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: biology-canvas,
+                    width: @config.width,
+                    height: @config.height,
+                    backgroundColor: @config.backgroundColor,
+                    nodes: @entity.nodes,
+                    edges: @entity.edges,
+                    shapes: @entity.shapes,
+                    interactive: @config.interactive,
+                    animate: @config.animate
+                  }
+                ] }
+            ]
+        })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Biology Network"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      backgroundColor : string = "#f0fdf4"
+        @label "Background Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      nodes : [BioNetworkNode] = [
+        { id: "cell", x: 300, y: 200, radius: 120, color: "#16a34a", label: "Cell", kind: cell },
+        { id: "nucleus", x: 300, y: 200, radius: 40, color: "#2563eb", label: "Nucleus", kind: organelle },
+        { id: "mitochondria", x: 230, y: 150, radius: 20, color: "#dc2626", label: "Mitochondrion", kind: organelle }
+      ]
+        @label "Nodes"
+        @description "Biological nodes such as cells, organelles, species, or taxa."
+        @tier "presentation"
+      edges : [BioNetworkEdge] = []
+        @label "Edges"
+        @description "Relationships such as energy flow or evolutionary distance."
+        @tier "presentation"
+      shapes : [BioNetworkShape] = []
+        @label "Shapes"
+        @description "Extra declarative shapes such as membranes or labels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+    }
+  }
+
+  page "/bio-network" as BioNetworkPage -> BioNetworkSim
+}

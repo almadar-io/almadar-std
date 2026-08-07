@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -142,4 +142,515 @@ export function stdNotifyOnEvent(params: StdNotifyOnEventParams): OrbitalDefinit
       stdNotifyOnEventPage(params),
     ],
   });
+}
+
+type _StdNotifyOnEventEntityName = 'NotificationRecord';
+type _StdNotifyOnEventListenTraitName = 'NotifyOnEventListener';
+
+/**
+ * Tunable params for the NotifyOnEventOrbital orbital.
+ *
+ * Canonical entity: NotificationRecord — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdNotifyOnEventNotifyOnEventOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'NotifyOnEventListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait NotifyOnEventOrbital's `uses[]` exports. */
+type _StdNotifyOnEventNotifyOnEventOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the NotifyOnEventOrbital orbital with consumer params. */
+export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNotifyOnEventOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'notifications');
+  const built = makeOrbitalWithUses({
+    name: 'NotifyOnEventOrbital',
+    uses: [],
+    expects: [
+      {
+        'kind': 'identity',
+      },
+    ],
+    entity: {
+      name: 'NotificationRecord',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The identifier of the entity receiving the notification.',
+            'name': 'recipient',
+            'synonyms': 'user, target, receiver, destination',
+            'type': 'string',
+          },
+          {
+            'default': 'in-app',
+            'description': 'The delivery method for the notification (e.g., email, SMS, in-app).',
+            'name': 'channel',
+            'synonyms': 'delivery, medium, type',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The content of the notification message.',
+            'name': 'message',
+            'synonyms': 'text, content, body',
+            'type': 'string',
+          },
+          {
+            'default': 'info',
+            'description': 'Indicates the importance or urgency level of the notification.',
+            'name': 'severity',
+            'synonyms': 'priority, level, importance',
+            'type': 'string',
+          },
+          {
+            'default': false,
+            'description': 'Indicates whether the notification has been successfully sent.',
+            'name': 'dispatched',
+            'synonyms': 'sent, delivered, status',
+            'type': 'boolean',
+          },
+          {
+            'default': 0,
+            'description': 'Timestamp indicating when the notification record was created.',
+            'name': 'recordedAt',
+            'synonyms': 'creation time, timestamp, date, when',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'config': {
+          'frequencyCapPerWeek': {
+            'default': 0,
+            'description': 'Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).',
+            'label': 'Frequency cap (per week)',
+            'tier': 'policy',
+            'type': 'number',
+          },
+          'listensFor': {
+            'default': [],
+            'description': 'Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Trigger events',
+            'synonyms': 'subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger',
+            'tier': 'internal',
+            'type': '[string]',
+          },
+          'notifyChannel': {
+            'default': 'in-app',
+            'description': 'Delivery channel: in-app, email, or sms',
+            'label': 'Channel',
+            'synonyms': 'delivery method, notification channel, send via, dispatch through',
+            'tier': 'policy',
+            'type': 'string',
+          },
+          'quietHours': {
+            'default': {
+              'end': '',
+              'start': '',
+            },
+            'description': 'Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md).',
+            'label': 'Quiet hours',
+            'properties': {
+              'end': {
+                'name': 'end',
+                'required': false,
+                'type': 'string',
+              },
+              'start': {
+                'name': 'start',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'policy',
+            'type': 'QuietHoursSpec',
+          },
+          'recipients': {
+            'default': [],
+            'description': 'Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Recipients',
+            'synonyms': 'targets, addressees, notify to',
+            'tier': 'policy',
+            'type': '[string]',
+          },
+          'severity': {
+            'default': 'info',
+            'description': 'info, success, warning, or error — controls styling',
+            'label': 'Severity',
+            'synonyms': 'alert level, priority, urgency',
+            'tier': 'policy',
+            'type': 'string',
+          },
+          'suppressionList': {
+            'default': [],
+            'description': 'Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Suppression list',
+            'synonyms': 'block list, unsubscribed, opt-out list',
+            'tier': 'policy',
+            'type': '[string]',
+          },
+          'template': {
+            'default': '',
+            'description': 'Text shown to the recipient; supports payload interpolation',
+            'label': 'Message template',
+            'synonyms': 'notification text, message body, alert text',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'triggerStatus': {
+            'default': '',
+            'description': 'When set, dispatch only when the upstream event\'s `status` field equals this value (e.g. fire only when a record becomes \'approved\'). Empty = fire on every subscribed event.',
+            'label': 'Trigger status',
+            'synonyms': 'on status, when status, status filter, only when, fire on, react on status',
+            'tier': 'policy',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'event': 'NotificationDispatched',
+            'payloadSchema': [
+              {
+                'name': 'recipient',
+                'type': 'string',
+              },
+              {
+                'name': 'channel',
+                'type': 'string',
+              },
+              {
+                'name': 'message',
+                'type': 'string',
+              },
+              {
+                'name': 'severity',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+          },
+        ],
+        'linkedEntity': 'NotificationRecord',
+        'name': 'NotifyOnEventListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'EventOccurred',
+              'name': 'Event occurred',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+                {
+                  'name': 'status',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'NotificationDispatched',
+              'name': 'Notification dispatched',
+              'payloadSchema': [
+                {
+                  'name': 'recipient',
+                  'type': 'string',
+                },
+                {
+                  'name': 'channel',
+                  'type': 'string',
+                },
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+                {
+                  'name': 'severity',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.recipient',
+                  [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.recipients',
+                      ],
+                      0,
+                    ],
+                    '@user.id',
+                    [
+                      'array/first',
+                      '@config.recipients',
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.channel',
+                  '@config.notifyChannel',
+                ],
+                [
+                  'set',
+                  '@entity.message',
+                  '@config.template',
+                ],
+                [
+                  'set',
+                  '@entity.severity',
+                  '@config.severity',
+                ],
+                [
+                  'set',
+                  '@entity.dispatched',
+                  [
+                    'and',
+                    [
+                      '=',
+                      '@config.notifyChannel',
+                      'in-app',
+                    ],
+                    [
+                      'not',
+                      [
+                        'array/includes',
+                        '@config.suppressionList',
+                        '@entity.recipient',
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.recordedAt',
+                  0,
+                ],
+                [
+                  'when',
+                  [
+                    'not',
+                    [
+                      'array/includes',
+                      '@config.suppressionList',
+                      '@entity.recipient',
+                    ],
+                  ],
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@config.notifyChannel',
+                      'in-app',
+                    ],
+                    [
+                      'notify',
+                      '@config.severity',
+                      '@config.template',
+                    ],
+                    [
+                      'persist',
+                      'create',
+                      ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
+                      {
+                        'channel': '@config.notifyChannel',
+                        'dispatched': false,
+                        'message': '@config.template',
+                        'recipient': '@entity.recipient',
+                        'recordedAt': 0,
+                        'severity': '@config.severity',
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'emit',
+                  'NotificationDispatched',
+                  {
+                    'channel': '@config.notifyChannel',
+                    'message': '@config.template',
+                    'recipient': '@entity.recipient',
+                    'severity': '@config.severity',
+                  },
+                ],
+              ],
+              'event': 'EventOccurred',
+              'from': 'idle',
+              'guard': [
+                'or',
+                [
+                  '=',
+                  '@config.triggerStatus',
+                  '',
+                ],
+                [
+                  '=',
+                  '@payload.status',
+                  '@config.triggerStatus',
+                ],
+              ],
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'NotifyOnEventPage',
+        'path': '/notify-on-event',
+        'traits': [
+          {
+            'ref': 'NotifyOnEventListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdNotifyOnEventNotifyOnEventOrbital. */
+export const StdNotifyOnEventNotifyOnEventOrbitalManifest = {
+  organism: 'std-notify-on-event',
+  orbitalName: 'NotifyOnEventOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'NotifyOnEventListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdNotifyOnEventNotifyOnEventOrbitalParams keys. */
+export function isStdNotifyOnEventNotifyOnEventOrbitalParams(p: object): p is StdNotifyOnEventNotifyOnEventOrbitalParams {
+  type _OverrideRecord = NonNullable<StdNotifyOnEventNotifyOnEventOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdNotifyOnEventNotifyOnEventOrbitalManifest.traitNames,
+      ...StdNotifyOnEventNotifyOnEventOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

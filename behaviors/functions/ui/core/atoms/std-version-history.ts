@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -175,4 +175,1365 @@ export function stdVersionHistory(params: StdVersionHistoryParams): OrbitalDefin
       stdVersionHistoryPage(params),
     ],
   });
+}
+
+type _StdVersionHistoryEntityName = 'Revision';
+type _StdVersionHistoryListenTraitName = 'RevisionManage';
+
+/**
+ * Tunable params for the RevisionOrbital orbital.
+ *
+ * Canonical entity: Revision — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdVersionHistoryRevisionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'RevisionManage',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait RevisionOrbital's `uses[]` exports. */
+type _StdVersionHistoryRevisionOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the RevisionOrbital orbital with consumer params. */
+export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisionOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'revisions');
+  const built = makeOrbitalWithUses({
+    name: 'RevisionOrbital',
+    uses: [],
+    entity: {
+      name: 'Revision',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'Unique identifier for the associated document.',
+            'name': 'documentId',
+            'required': true,
+            'synonyms': 'reference, identifier, source',
+            'type': 'string',
+          },
+          {
+            'description': 'Specifies the kind of document this revision belongs to.',
+            'name': 'documentType',
+            'required': true,
+            'synonyms': 'type, kind, category',
+            'type': 'string',
+          },
+          {
+            'description': 'A sequential identifier representing the revision\'s order.',
+            'name': 'versionNumber',
+            'required': true,
+            'synonyms': 'sequence, order, iteration',
+            'type': 'number',
+          },
+          {
+            'description': 'Unique identifier for the user who made the change.',
+            'name': 'authorId',
+            'synonyms': 'user identifier, creator, contributor',
+            'type': 'string',
+          },
+          {
+            'description': 'The name of the user who made the change.',
+            'name': 'authorName',
+            'synonyms': 'user, contributor, owner',
+            'type': 'string',
+          },
+          {
+            'description': 'The textual data of the revision.',
+            'name': 'content',
+            'synonyms': 'text, body, data, value',
+            'type': 'string',
+          },
+          {
+            'description': 'A brief explanation of the revision\'s changes.',
+            'name': 'summary',
+            'synonyms': 'description, note, comment, explanation',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The current search query the user submitted.',
+            'name': 'searchTerm',
+            'synonyms': 'query, term, q',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'statLook': {
+            'default': 'elevated',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'label': 'Stat display look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'title': {
+            'default': 'Version History',
+            'description': 'Heading shown above the revision list',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals a revision has been selected for viewing.',
+            'event': 'OPEN_REVISION',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentType',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'versionNumber',
+                    'required': true,
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'authorId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'summary',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'searchTerm',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'select, choose, display',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the view has been closed or dismissed.',
+            'event': 'CLOSE_VIEW',
+            'synonyms': 'dismiss, hide, close',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a request to compare two versions.',
+            'event': 'COMPARE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'beforeId',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'afterId',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'revisions',
+                'type': '[Revision]',
+              },
+            ],
+            'synonyms': 'compare, diff, contrast',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a revision has been successfully reverted.',
+            'event': 'ROLLBACK',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'reverted, undone, restored',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a revision has been successfully retrieved and is ready.',
+            'event': 'RevisionLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Revision]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved, available',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load revision data.',
+            'event': 'RevisionLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, fail, problem, unsuccessful',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates a revision has been successfully restored to a previous state.',
+            'event': 'RevisionRolledBack',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentType',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'versionNumber',
+                    'required': true,
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'authorId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'summary',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'searchTerm',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'restored, reverted, undone',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates that a revision rollback operation was unsuccessful.',
+            'event': 'RevisionRollbackFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'rollback failed, revert error, undo failure',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'Revision',
+        'name': 'RevisionManage',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals a revision has been successfully retrieved and is ready.',
+              'key': 'RevisionLoaded',
+              'name': 'Revision loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Revision]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved, available',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a revision has been successfully restored to a previous state.',
+              'key': 'RevisionRolledBack',
+              'name': 'Revision rolled back',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'Revision',
+                },
+              ],
+              'synonyms': 'restored, reverted, undone',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates that a revision rollback operation was unsuccessful.',
+              'key': 'RevisionRollbackFailed',
+              'name': 'Revision rollback failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'rollback failed, revert error, undo failure',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a failure to load revision data.',
+              'key': 'RevisionLoadFailed',
+              'name': 'Revision load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, fail, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals a revision has been selected for viewing.',
+              'key': 'OPEN_REVISION',
+              'name': 'Open Revision',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'Revision',
+                },
+              ],
+              'synonyms': 'select, choose, display',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a revision has been successfully reverted.',
+              'key': 'ROLLBACK',
+              'name': 'Rollback',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'reverted, undone, restored',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the view has been closed or dismissed.',
+              'key': 'CLOSE_VIEW',
+              'name': 'Close View',
+              'synonyms': 'dismiss, hide, close',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals a request to compare two versions.',
+              'key': 'COMPARE',
+              'name': 'Compare',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'beforeId',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'afterId',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'revisions',
+                  'type': '[Revision]',
+                },
+              ],
+              'synonyms': 'compare, diff, contrast',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'viewing_single',
+            },
+            {
+              'name': 'comparing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading version history…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'history',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'cols': 1,
+                        'entity': '@payload.data',
+                        'fields': [
+                          {
+                            'label': 'Version',
+                            'name': 'versionNumber',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Author',
+                            'name': 'authorName',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Summary',
+                            'name': 'summary',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Saved',
+                            'name': 'createdAt',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'itemActions': [
+                          {
+                            'event': 'OPEN_REVISION',
+                            'icon': 'arrow-right',
+                            'label': 'Open',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'event': 'ROLLBACK',
+                            'icon': 'rotate-ccw',
+                            'label': 'Rollback',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'look': '@config.tableLook',
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'RevisionLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'RevisionRolledBack',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'RevisionRollbackFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'RevisionLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading version history…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.row.id',
+                ],
+                [
+                  'set',
+                  '@entity.documentId',
+                  '@payload.row.documentId',
+                ],
+                [
+                  'set',
+                  '@entity.documentType',
+                  '@payload.row.documentType',
+                ],
+                [
+                  'set',
+                  '@entity.versionNumber',
+                  '@payload.row.versionNumber',
+                ],
+                [
+                  'set',
+                  '@entity.authorId',
+                  '@payload.row.authorId',
+                ],
+                [
+                  'set',
+                  '@entity.authorName',
+                  '@payload.row.authorName',
+                ],
+                [
+                  'set',
+                  '@entity.content',
+                  '@payload.row.content',
+                ],
+                [
+                  'set',
+                  '@entity.summary',
+                  '@payload.row.summary',
+                ],
+                [
+                  'set',
+                  '@entity.createdAt',
+                  '@payload.row.createdAt',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'CLOSE_VIEW',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'name': 'file-text',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@entity.summary',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'label': '@entity.versionNumber',
+                            'type': 'badge',
+                            'variant': 'default',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Author',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.authorName',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Saved',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.createdAt',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Content',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.content',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'icon': 'tag',
+                            'label': 'Version',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.versionNumber',
+                          },
+                          {
+                            'icon': 'file',
+                            'label': 'Document',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.documentId',
+                          },
+                          {
+                            'icon': 'layers',
+                            'label': 'Type',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.documentType',
+                          },
+                        ],
+                        'cols': 3,
+                        'type': 'simple-grid',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'COMPARE',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': 'Compare',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'action': 'ROLLBACK',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': 'Rollback',
+                            'type': 'button',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'OPEN_REVISION',
+              'from': 'browsing',
+              'to': 'viewing_single',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'RevisionRollbackFailed',
+                      'success': 'RevisionRolledBack',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Rolling back…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ROLLBACK',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading version history…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLOSE_VIEW',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'CLOSE_VIEW',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'name': 'git-compare',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Compare versions',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'afterId': '@payload.afterId',
+                        'beforeId': '@payload.beforeId',
+                        'onRevert': 'ROLLBACK',
+                        'revisions': '@payload.revisions',
+                        'type': 'version-diff',
+                        'view': 'side-by-side',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'ROLLBACK',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': 'Rollback',
+                            'type': 'button',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'COMPARE',
+              'from': 'viewing_single',
+              'to': 'comparing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'RevisionRollbackFailed',
+                      'success': 'RevisionRolledBack',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Rolling back…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ROLLBACK',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading version history…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLOSE_VIEW',
+              'from': 'comparing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'RevisionRollbackFailed',
+                      'success': 'RevisionRolledBack',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Rolling back…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ROLLBACK',
+              'from': 'comparing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'RevisionManagePage',
+        'path': '/revisions/manage',
+        'traits': [
+          {
+            'ref': 'RevisionManage',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdVersionHistoryRevisionOrbital. */
+export const StdVersionHistoryRevisionOrbitalManifest = {
+  organism: 'std-version-history',
+  orbitalName: 'RevisionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'RevisionManage',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdVersionHistoryRevisionOrbitalParams keys. */
+export function isStdVersionHistoryRevisionOrbitalParams(p: object): p is StdVersionHistoryRevisionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdVersionHistoryRevisionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdVersionHistoryRevisionOrbitalManifest.traitNames,
+      ...StdVersionHistoryRevisionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

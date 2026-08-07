@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -184,4 +184,1265 @@ export function stdRichEditor(params: StdRichEditorParams): OrbitalDefinition {
       stdRichEditorPage(params),
     ],
   });
+}
+
+type _StdRichEditorEntityName = 'Document';
+type _StdRichEditorListenTraitName = 'DocumentEdit';
+
+/**
+ * Tunable params for the DocumentOrbital orbital.
+ *
+ * Canonical entity: Document — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdRichEditorDocumentOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'DocumentEdit',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait DocumentOrbital's `uses[]` exports. */
+type _StdRichEditorDocumentOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the DocumentOrbital orbital with consumer params. */
+export function stdRichEditorDocumentOrbital(params: StdRichEditorDocumentOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'documents');
+  const built = makeOrbitalWithUses({
+    name: 'DocumentOrbital',
+    uses: [],
+    entity: {
+      name: 'Document',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'The human-readable name of the document.',
+            'name': 'title',
+            'required': true,
+            'synonyms': 'name, heading, label',
+            'type': 'string',
+          },
+          {
+            'description': 'Serialized representation of the document\'s content blocks.',
+            'items': {
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'blocksJson',
+            'synonyms': 'content, data, structure, blocks',
+            'type': 'array',
+          },
+          {
+            'description': 'Unique identifier of the user who created the document.',
+            'name': 'authorId',
+            'synonyms': 'creatorId, userId, ownerId',
+            'type': 'string',
+          },
+          {
+            'description': 'Reference to the parent document or container.',
+            'name': 'parentId',
+            'synonyms': 'parent, container, owner',
+            'type': 'string',
+          },
+          {
+            'default': 'page',
+            'description': 'Specifies the document type.',
+            'name': 'kind',
+            'synonyms': 'type, documentType, category',
+            'type': 'string',
+            'values': [
+              'page',
+              'doc',
+              'post',
+            ],
+          },
+          {
+            'default': 'draft',
+            'description': 'Indicates the current state of the document.',
+            'name': 'status',
+            'synonyms': 'state, condition, lifecycle',
+            'type': 'string',
+            'values': [
+              'draft',
+              'published',
+              'archived',
+            ],
+          },
+          {
+            'default': 1,
+            'description': 'Represents the version number of the document.',
+            'name': 'version',
+            'synonyms': 'revision, release, iteration',
+            'type': 'number',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'name': 'updatedAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'title': {
+            'default': 'Documents',
+            'description': 'Heading shown above the document list',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals the editor is being displayed.',
+            'event': 'OPEN',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'title',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'blocksJson',
+                    'type': '[BlockSpec]',
+                  },
+                  {
+                    'name': 'authorId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'kind',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'version',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'updatedAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'show, launch, reveal',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates the editor view is being closed.',
+            'event': 'CLOSE_VIEW',
+            'synonyms': 'dismiss, hide, exit',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals that the content of a block has been modified.',
+            'event': 'BLOCKS_CHANGE',
+            'payloadSchema': [
+              {
+                'name': 'blocks',
+                'type': '[ObjectSpec]',
+              },
+            ],
+            'synonyms': 'update, modify, changed, edit',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals that changes have been saved.',
+            'event': 'SAVE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'persist, update, commit',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals that content has been published.',
+            'event': 'PUBLISH',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'publish, release, finalize',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals that a document has been successfully loaded.',
+            'event': 'DocumentLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Document]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates that loading a document failed.',
+            'event': 'DocumentLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Signals that a document has been successfully saved.',
+            'event': 'DocumentSaved',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'title',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'blocksJson',
+                    'type': '[BlockSpec]',
+                  },
+                  {
+                    'name': 'authorId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'kind',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'version',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'updatedAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'saved, persisted, updated',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a document has been successfully published.',
+            'event': 'DocumentPublished',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'title',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'blocksJson',
+                    'type': '[BlockSpec]',
+                  },
+                  {
+                    'name': 'authorId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'kind',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'version',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'updatedAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'published, released, finalized',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates that saving the document failed.',
+            'event': 'DocumentSaveFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'Document',
+        'name': 'DocumentEdit',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals that a document has been successfully loaded.',
+              'key': 'DocumentLoaded',
+              'name': 'Document loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Document]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals that a document has been successfully saved.',
+              'key': 'DocumentSaved',
+              'name': 'Document saved',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'Document',
+                },
+              ],
+              'synonyms': 'saved, persisted, updated',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a document has been successfully published.',
+              'key': 'DocumentPublished',
+              'name': 'Document published',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'Document',
+                },
+              ],
+              'synonyms': 'published, released, finalized',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates that saving the document failed.',
+              'key': 'DocumentSaveFailed',
+              'name': 'Document save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates that loading a document failed.',
+              'key': 'DocumentLoadFailed',
+              'name': 'Document load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals the editor is being displayed.',
+              'key': 'OPEN',
+              'name': 'Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'Document',
+                },
+              ],
+              'synonyms': 'show, launch, reveal',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals that content has been published.',
+              'key': 'PUBLISH',
+              'name': 'Publish',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'publish, release, finalize',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals that the content of a block has been modified.',
+              'key': 'BLOCKS_CHANGE',
+              'name': 'Blocks Change',
+              'payloadSchema': [
+                {
+                  'name': 'blocks',
+                  'type': '[ObjectSpec]',
+                },
+              ],
+              'synonyms': 'update, modify, changed, edit',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the editor view is being closed.',
+              'key': 'CLOSE_VIEW',
+              'name': 'Close View',
+              'synonyms': 'dismiss, hide, exit',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals that changes have been saved.',
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'persist, update, commit',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'editing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  {
+                    'emit': {
+                      'failure': 'DocumentLoadFailed',
+                      'success': 'DocumentLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading documents…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'file-text',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cols': 1,
+                        'entity': '@payload.data',
+                        'fields': [
+                          {
+                            'label': 'Title',
+                            'name': 'title',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Kind',
+                            'name': 'kind',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Status',
+                            'name': 'status',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Version',
+                            'name': 'version',
+                            'variant': 'caption',
+                          },
+                          {
+                            'format': 'date',
+                            'label': 'Updated',
+                            'name': 'updatedAt',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'itemActions': [
+                          {
+                            'event': 'OPEN',
+                            'icon': 'edit',
+                            'label': 'Open',
+                            'variant': 'primary',
+                          },
+                          {
+                            'event': 'PUBLISH',
+                            'icon': 'send',
+                            'label': 'Publish',
+                            'variant': 'secondary',
+                          },
+                        ],
+                        'look': '@config.tableLook',
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'DocumentLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  {
+                    'emit': {
+                      'failure': 'DocumentLoadFailed',
+                      'success': 'DocumentLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DocumentSaved',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  {
+                    'emit': {
+                      'failure': 'DocumentLoadFailed',
+                      'success': 'DocumentLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'DocumentPublished',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'DocumentSaveFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'DocumentLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  {
+                    'emit': {
+                      'failure': 'DocumentLoadFailed',
+                      'success': 'DocumentLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.row.id',
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@payload.row.title',
+                ],
+                [
+                  'set',
+                  '@entity.blocksJson',
+                  '@payload.row.blocksJson',
+                ],
+                [
+                  'set',
+                  '@entity.authorId',
+                  '@payload.row.authorId',
+                ],
+                [
+                  'set',
+                  '@entity.parentId',
+                  '@payload.row.parentId',
+                ],
+                [
+                  'set',
+                  '@entity.kind',
+                  '@payload.row.kind',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  '@payload.row.status',
+                ],
+                [
+                  'set',
+                  '@entity.version',
+                  '@payload.row.version',
+                ],
+                [
+                  'set',
+                  '@entity.createdAt',
+                  '@payload.row.createdAt',
+                ],
+                [
+                  'set',
+                  '@entity.updatedAt',
+                  '@payload.row.updatedAt',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'CLOSE_VIEW',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'name': 'file-text',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'label': '@entity.status',
+                            'type': 'badge',
+                            'variant': 'secondary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'changeEvent': 'BLOCKS_CHANGE',
+                        'initialBlocks': '@entity.blocksJson',
+                        'placeholder': 'Start writing…',
+                        'showToolbar': true,
+                        'type': 'rich-block-editor',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'SAVE',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': 'Save',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                          {
+                            'action': 'PUBLISH',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': 'Publish',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'OPEN',
+              'from': 'browsing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  {
+                    'emit': {
+                      'failure': 'DocumentLoadFailed',
+                      'success': 'DocumentLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Publishing document…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'PUBLISH',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.blocksJson',
+                  '@payload.blocks',
+                ],
+              ],
+              'event': 'BLOCKS_CHANGE',
+              'from': 'editing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  {
+                    'emit': {
+                      'failure': 'DocumentLoadFailed',
+                      'success': 'DocumentLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading documents…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLOSE_VIEW',
+              'from': 'editing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'DocumentSaveFailed',
+                      'success': 'DocumentSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Saving document…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SAVE',
+              'from': 'editing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'published',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'DocumentSaveFailed',
+                      'success': 'DocumentPublished',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Publishing document…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'PUBLISH',
+              'from': 'editing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Document' satisfies _StdRichEditorEntityName),
+                  {
+                    'emit': {
+                      'failure': 'DocumentLoadFailed',
+                      'success': 'DocumentLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'DocumentEditPage',
+        'path': '/documents/edit',
+        'traits': [
+          {
+            'ref': 'DocumentEdit',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdRichEditorDocumentOrbital. */
+export const StdRichEditorDocumentOrbitalManifest = {
+  organism: 'std-rich-editor',
+  orbitalName: 'DocumentOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'DocumentEdit',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdRichEditorDocumentOrbitalParams keys. */
+export function isStdRichEditorDocumentOrbitalParams(p: object): p is StdRichEditorDocumentOrbitalParams {
+  type _OverrideRecord = NonNullable<StdRichEditorDocumentOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdRichEditorDocumentOrbitalManifest.traitNames,
+      ...StdRichEditorDocumentOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -150,4 +150,935 @@ export function stdBranchingLogic(params: StdBranchingLogicParams): OrbitalDefin
       stdBranchingLogicPage(params),
     ],
   });
+}
+
+type _StdBranchingLogicEntityName = 'BranchingRule';
+type _StdBranchingLogicListenTraitName = 'BranchingRuleManage';
+
+/**
+ * Tunable params for the BranchingLogicOrbital orbital.
+ *
+ * Canonical entity: BranchingRule — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdBranchingLogicBranchingLogicOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'BranchingRuleManage',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait BranchingLogicOrbital's `uses[]` exports. */
+type _StdBranchingLogicBranchingLogicOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the BranchingLogicOrbital orbital with consumer params. */
+export function stdBranchingLogicBranchingLogicOrbital(params: StdBranchingLogicBranchingLogicOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'branchingrules');
+  const built = makeOrbitalWithUses({
+    name: 'BranchingLogicOrbital',
+    uses: [],
+    entity: {
+      name: 'BranchingRule',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'Unique identifier for the survey this rule applies to.',
+            'name': 'surveyId',
+            'required': true,
+            'synonyms': 'survey, questionnaire, form',
+            'type': 'string',
+          },
+          {
+            'description': 'The ID of the question triggering the branching logic.',
+            'name': 'sourceQuestionId',
+            'required': true,
+            'synonyms': 'trigger, source, question_id',
+            'type': 'string',
+          },
+          {
+            'default': 'equals',
+            'description': 'Specifies the comparison method used in the rule.',
+            'name': 'operator',
+            'synonyms': 'comparison, method, type',
+            'type': 'string',
+            'values': [
+              'equals',
+              'not-equals',
+              'contains',
+              'in',
+            ],
+          },
+          {
+            'description': 'The data being compared against a condition.',
+            'name': 'value',
+            'synonyms': 'data, content, expression',
+            'type': 'string',
+          },
+          {
+            'description': 'The ID of the question to navigate to based on the rule.',
+            'name': 'targetQuestionId',
+            'required': true,
+            'synonyms': 'destination, nextQuestion, target',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'Specifies the order in which rules are evaluated.',
+            'name': 'priority',
+            'synonyms': 'order, sequence, precedence',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'statLook': {
+            'default': 'elevated',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'label': 'Stat display look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'title': {
+            'default': 'Branching Rules',
+            'description': 'Heading shown above the branching-rule list',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals a rule detail view should be opened.',
+            'event': 'OPEN_RULE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'surveyId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sourceQuestionId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'operator',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'value',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'targetQuestionId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'priority',
+                    'type': 'number',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'show, display, reveal, open',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates the detail view has been closed.',
+            'event': 'CLOSE_VIEW',
+            'synonyms': 'dismiss, hide, close',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals a branching rule has been removed.',
+            'event': 'DELETE_RULE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'remove, discard, delete',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Indicates a branching rule has been successfully retrieved.',
+            'event': 'BranchingRuleLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[BranchingRule]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates a failure to load a branching rule.',
+            'event': 'BranchingRuleLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+          },
+        ],
+        'linkedEntity': 'BranchingRule',
+        'name': 'BranchingRuleManage',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates a branching rule has been successfully retrieved.',
+              'key': 'BranchingRuleLoaded',
+              'name': 'BranchingRule loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BranchingRule]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a failure to load a branching rule.',
+              'key': 'BranchingRuleLoadFailed',
+              'name': 'BranchingRule load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals a rule detail view should be opened.',
+              'key': 'OPEN_RULE',
+              'name': 'Open Rule',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'BranchingRule',
+                },
+              ],
+              'synonyms': 'show, display, reveal, open',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Signals a branching rule has been removed.',
+              'key': 'DELETE_RULE',
+              'name': 'Delete Rule',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'remove, discard, delete',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates the detail view has been closed.',
+              'key': 'CLOSE_VIEW',
+              'name': 'Close View',
+              'synonyms': 'dismiss, hide, close',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'viewing_single',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BranchingRule' satisfies _StdBranchingLogicEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BranchingRuleLoadFailed',
+                      'success': 'BranchingRuleLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading branching rules…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'git-branch',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cols': 1,
+                        'entity': '@payload.data',
+                        'fields': [
+                          {
+                            'label': 'If question',
+                            'name': 'sourceQuestionId',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Op',
+                            'name': 'operator',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Value',
+                            'name': 'value',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Jump to',
+                            'name': 'targetQuestionId',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Priority',
+                            'name': 'priority',
+                            'variant': 'badge',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'itemActions': [
+                          {
+                            'event': 'OPEN_RULE',
+                            'icon': 'arrow-right',
+                            'label': 'Open',
+                            'variant': 'primary',
+                          },
+                          {
+                            'event': 'DELETE_RULE',
+                            'icon': 'trash-2',
+                            'label': 'Delete',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'look': '@config.tableLook',
+                        'type': 'data-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'BranchingRuleLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'BranchingRuleLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BranchingRule' satisfies _StdBranchingLogicEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BranchingRuleLoadFailed',
+                      'success': 'BranchingRuleLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.row.id',
+                ],
+                [
+                  'set',
+                  '@entity.surveyId',
+                  '@payload.row.surveyId',
+                ],
+                [
+                  'set',
+                  '@entity.sourceQuestionId',
+                  '@payload.row.sourceQuestionId',
+                ],
+                [
+                  'set',
+                  '@entity.operator',
+                  '@payload.row.operator',
+                ],
+                [
+                  'set',
+                  '@entity.value',
+                  '@payload.row.value',
+                ],
+                [
+                  'set',
+                  '@entity.targetQuestionId',
+                  '@payload.row.targetQuestionId',
+                ],
+                [
+                  'set',
+                  '@entity.priority',
+                  '@payload.row.priority',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'CLOSE_VIEW',
+                            'label': 'Back',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'name': 'git-branch',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@entity.sourceQuestionId',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'label': '@entity.operator',
+                            'type': 'badge',
+                            'variant': 'default',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Survey',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.surveyId',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'children': [
+                              {
+                                'color': 'muted',
+                                'content': 'Value',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.value',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'icon': 'help-circle',
+                            'label': 'Source',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.sourceQuestionId',
+                          },
+                          {
+                            'icon': 'arrow-right-circle',
+                            'label': 'Target',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.targetQuestionId',
+                          },
+                          {
+                            'icon': 'trending-up',
+                            'label': 'Priority',
+                            'look': '@config.statLook',
+                            'type': 'stat-display',
+                            'value': '@entity.priority',
+                          },
+                        ],
+                        'cols': 3,
+                        'type': 'simple-grid',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'action': 'DELETE_RULE',
+                            'actionPayload': {
+                              'id': '@entity.id',
+                            },
+                            'label': 'Delete',
+                            'type': 'button',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'OPEN_RULE',
+              'from': 'browsing',
+              'to': 'viewing_single',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('BranchingRule' satisfies _StdBranchingLogicEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BranchingRuleLoadFailed',
+                      'success': 'BranchingRuleLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Deleting rule…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'DELETE_RULE',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BranchingRule' satisfies _StdBranchingLogicEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BranchingRuleLoadFailed',
+                      'success': 'BranchingRuleLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading branching rules…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLOSE_VIEW',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  ('BranchingRule' satisfies _StdBranchingLogicEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BranchingRuleLoadFailed',
+                      'success': 'BranchingRuleLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Deleting rule…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'DELETE_RULE',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BranchingRule' satisfies _StdBranchingLogicEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BranchingRuleLoadFailed',
+                      'success': 'BranchingRuleLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'BranchingRuleManagePage',
+        'path': '/branching-rules',
+        'traits': [
+          {
+            'ref': 'BranchingRuleManage',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdBranchingLogicBranchingLogicOrbital. */
+export const StdBranchingLogicBranchingLogicOrbitalManifest = {
+  organism: 'std-branching-logic',
+  orbitalName: 'BranchingLogicOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'BranchingRuleManage',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdBranchingLogicBranchingLogicOrbitalParams keys. */
+export function isStdBranchingLogicBranchingLogicOrbitalParams(p: object): p is StdBranchingLogicBranchingLogicOrbitalParams {
+  type _OverrideRecord = NonNullable<StdBranchingLogicBranchingLogicOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdBranchingLogicBranchingLogicOrbitalManifest.traitNames,
+      ...StdBranchingLogicBranchingLogicOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

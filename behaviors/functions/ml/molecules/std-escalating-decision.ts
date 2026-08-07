@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -207,4 +207,1340 @@ export function stdEscalatingDecision(params: StdEscalatingDecisionParams): Orbi
       stdEscalatingDecisionPage(params),
     ],
   });
+}
+
+type _StdEscalatingDecisionEntityName = 'LadderRequest' | 'LadderVerdict' | 'ExactCheck' | 'KeyLookup' | 'SimilarityComparison' | 'Inference' | 'ClassifierVerdict';
+type _StdEscalatingDecisionListenTraitName = 'LadderEntry' | 'ExactRung' | 'LookupRung' | 'SimilarityRung' | 'InferRung' | 'ClassifyRung' | 'LadderVerdictSink';
+
+/**
+ * Tunable params for the EscalatingDecisionOrbital orbital.
+ *
+ * Canonical entity: LadderRequest — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdEscalatingDecisionEscalatingDecisionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ExactRung' | 'LookupRung' | 'SimilarityRung' | 'InferRung' | 'ClassifyRung' | 'LadderEntry' | 'LadderVerdictSink',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait EscalatingDecisionOrbital's `uses[]` exports. */
+type _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef = 'Rung0.traits.ExactCheckRun' | 'Rung1.traits.LookupRun' | 'Rung3.traits.SimilarityRun' | 'Rung4.traits.InferenceRun' | 'Rung5.traits.ClassifyRun';
+
+/** Per-orbital factory: builds the EscalatingDecisionOrbital orbital with consumer params. */
+export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscalatingDecisionEscalatingDecisionOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'EscalatingDecisionOrbital',
+    uses: [
+      {
+        'as': 'Rung0',
+        'from': 'std/behaviors/std-ml-exact-check',
+      },
+      {
+        'as': 'Rung1',
+        'from': 'std/behaviors/std-ml-lookup',
+      },
+      {
+        'as': 'Rung3',
+        'from': 'std/behaviors/std-ml-similarity',
+      },
+      {
+        'as': 'Rung4',
+        'from': 'std/behaviors/std-ml-infer',
+      },
+      {
+        'as': 'Rung5',
+        'from': 'std/behaviors/std-ml-classify',
+      },
+    ],
+    entity: {
+      name: 'LadderRequest',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'dispatched',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    auxiliaryEntities: [
+      {
+        'fields': [
+          {
+            'default': '',
+            'name': 'rung',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'confidence',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'name': 'reasoning',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'failReason',
+            'type': 'string',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'decided',
+              'failed',
+            ],
+          },
+        ],
+        'name': 'LadderVerdict',
+        'persistence': 'runtime',
+      },
+      {
+        'fields': [
+          {
+            'default': false,
+            'name': 'matched',
+            'type': 'boolean',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'checked',
+            ],
+          },
+        ],
+        'name': 'ExactCheck',
+        'persistence': 'runtime',
+      },
+      {
+        'fields': [
+          {
+            'default': false,
+            'name': 'matched',
+            'type': 'boolean',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'checked',
+            ],
+          },
+        ],
+        'name': 'KeyLookup',
+        'persistence': 'runtime',
+      },
+      {
+        'fields': [
+          {
+            'default': '',
+            'name': 'query',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+            'name': 'candidates',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'items': {
+                'type': 'number',
+              },
+              'type': 'array',
+            },
+            'name': 'embeddings',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'number',
+            },
+            'name': 'queryVector',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'items': {
+                'type': 'number',
+              },
+              'type': 'array',
+            },
+            'name': 'candidateVectors',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'name': 'matchIndex',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'name': 'matchScore',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'name': 'matchMargin',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'name': 'reason',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'name': 'request',
+            'type': 'object',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'embedding',
+              'resolved',
+            ],
+          },
+        ],
+        'name': 'SimilarityComparison',
+        'persistence': 'runtime',
+      },
+      {
+        'fields': [
+          {
+            'default': {},
+            'name': 'input',
+            'type': 'object',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'number',
+            },
+            'name': 'output',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'name': 'confidence',
+            'type': 'number',
+          },
+          {
+            'default': [],
+            'items': {
+              'type': 'object',
+            },
+            'name': 'violations',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'name': 'reason',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'name': 'request',
+            'type': 'object',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'inferring',
+              'resolved',
+            ],
+          },
+        ],
+        'name': 'Inference',
+        'persistence': 'runtime',
+      },
+      {
+        'fields': [
+          {
+            'default': '',
+            'name': 'text',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'confidence',
+            'type': 'number',
+          },
+          {
+            'default': '',
+            'name': 'reasoning',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'errorMessage',
+            'type': 'string',
+          },
+          {
+            'default': {},
+            'name': 'request',
+            'type': 'object',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'classifying',
+              'done',
+            ],
+          },
+        ],
+        'name': 'ClassifierVerdict',
+        'persistence': 'runtime',
+      },
+    ] as EntityRef[],
+    traits: [
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'description': 'Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs.',
+            'event': 'RUN_EXACT',
+            'payloadSchema': [
+              {
+                'name': 'candidate',
+                'required': true,
+                'type': 'any',
+              },
+              {
+                'name': 'key',
+                'required': true,
+                'type': 'any',
+              },
+              {
+                'name': 'request',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'tier': 'secondary',
+          },
+        ],
+        'linkedEntity': 'LadderRequest',
+        'name': 'LadderEntry',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Public entry point — decide the candidate, falling through the ladder until a rung can prove the answer. accepted is R1\'s table; categories is R3\'s comparison set (R5\'s closed label set is the ClassifyRung categories knob, a design-time decision rather than a per-request one).',
+              'key': 'DECIDE',
+              'name': 'Decide',
+              'payloadSchema': [
+                {
+                  'name': 'candidate',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'accepted',
+                  'required': true,
+                  'type': '[any]',
+                },
+                {
+                  'name': 'categories',
+                  'required': true,
+                  'type': '[string]',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs.',
+              'key': 'RUN_EXACT',
+              'name': 'Run Exact',
+              'payloadSchema': [
+                {
+                  'name': 'candidate',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'request',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'tier': 'secondary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'dispatched',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'dispatched',
+                ],
+                [
+                  'emit',
+                  'RUN_EXACT',
+                  {
+                    'candidate': '@payload.candidate',
+                    'key': '@payload.key',
+                    'request': '@payload',
+                  },
+                ],
+              ],
+              'event': 'DECIDE',
+              'from': 'idle',
+              'to': 'dispatched',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'dispatched',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'dispatched',
+              'to': 'dispatched',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'dispatched',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      makeTraitRef({
+        'linkedEntity': 'ExactCheck',
+        'listens': [
+          {
+            'event': 'RUN_EXACT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'LadderEntry',
+            },
+            'triggers': 'CHECK',
+          },
+        ],
+        'name': 'ExactRung',
+        'ref': ('Rung0.traits.ExactCheckRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'KeyLookup',
+        'listens': [
+          {
+            'event': 'EXACT_UNMATCHED',
+            'payloadMapping': {
+              'accepted': [
+                'object/get',
+                '@payload.request',
+                'accepted',
+              ],
+              'candidate': '@payload.candidate',
+              'request': '@payload.request',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': 'ExactRung',
+            },
+            'triggers': 'LOOKUP',
+          },
+        ],
+        'name': 'LookupRung',
+        'ref': ('Rung1.traits.LookupRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'SimilarityComparison',
+        'listens': [
+          {
+            'event': 'KEY_MISS',
+            'payloadMapping': {
+              'candidates': [
+                'object/get',
+                '@payload.request',
+                'categories',
+              ],
+              'query': [
+                'str/concat',
+                '@payload.candidate',
+              ],
+              'request': '@payload.request',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': 'LookupRung',
+            },
+            'triggers': 'COMPARE',
+          },
+        ],
+        'name': 'SimilarityRung',
+        'ref': ('Rung3.traits.SimilarityRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'Inference',
+        'listens': [
+          {
+            'event': 'SIMILARITY_ABSTAINED',
+            'payloadMapping': {
+              'input': '@payload.request',
+              'request': '@payload.request',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': 'SimilarityRung',
+            },
+            'triggers': 'INFER',
+          },
+        ],
+        'name': 'InferRung',
+        'ref': ('Rung4.traits.InferenceRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'ClassifierVerdict',
+        'listens': [
+          {
+            'event': 'INFER_ABSTAINED',
+            'payloadMapping': {
+              'request': '@payload.request',
+              'text': [
+                'str/concat',
+                [
+                  'object/get',
+                  '@payload.request',
+                  'candidate',
+                ],
+              ],
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': 'InferRung',
+            },
+            'triggers': 'CLASSIFY',
+          },
+        ],
+        'name': 'ClassifyRung',
+        'ref': ('Rung5.traits.ClassifyRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+      }),
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'description': 'The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative.',
+            'event': 'DECIDED',
+            'payloadSchema': [
+              {
+                'name': 'rung',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'confidence',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'matched',
+                'required': true,
+                'type': 'any',
+              },
+              {
+                'name': 'reasoning',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+          {
+            'description': 'Even the generative floor (R5) could not answer — the classify service call itself failed.',
+            'event': 'DECISION_FAILED',
+            'payloadSchema': [
+              {
+                'name': 'reason',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'primary',
+          },
+        ],
+        'linkedEntity': 'LadderVerdict',
+        'listens': [
+          {
+            'event': 'EXACT_MATCHED',
+            'payloadMapping': {
+              'key': '@payload.key',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': ('ExactRung' satisfies _StdEscalatingDecisionListenTraitName),
+            },
+            'triggers': 'FROM_EXACT',
+          },
+          {
+            'event': 'KEY_HIT',
+            'payloadMapping': {
+              'entry': '@payload.entry',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': ('LookupRung' satisfies _StdEscalatingDecisionListenTraitName),
+            },
+            'triggers': 'FROM_LOOKUP',
+          },
+          {
+            'event': 'SIMILARITY_MATCHED',
+            'payloadMapping': {
+              'index': '@payload.index',
+              'score': '@payload.score',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': ('SimilarityRung' satisfies _StdEscalatingDecisionListenTraitName),
+            },
+            'triggers': 'FROM_SIMILARITY',
+          },
+          {
+            'event': 'INFERRED',
+            'payloadMapping': {
+              'confidence': '@payload.confidence',
+              'output': '@payload.output',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': ('InferRung' satisfies _StdEscalatingDecisionListenTraitName),
+            },
+            'triggers': 'FROM_INFER',
+          },
+          {
+            'event': 'CLASSIFIED',
+            'payloadMapping': {
+              'category': '@payload.category',
+              'confidence': '@payload.confidence',
+              'reasoning': '@payload.reasoning',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': ('ClassifyRung' satisfies _StdEscalatingDecisionListenTraitName),
+            },
+            'triggers': 'FROM_CLASSIFY',
+          },
+          {
+            'event': 'CLASSIFY_FAILED',
+            'payloadMapping': {
+              'error': '@payload.error',
+            },
+            'source': {
+              'kind': 'trait',
+              'trait': ('ClassifyRung' satisfies _StdEscalatingDecisionListenTraitName),
+            },
+            'triggers': 'FROM_CLASSIFY_FAILURE',
+          },
+        ],
+        'name': 'LadderVerdictSink',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'FROM_EXACT',
+              'name': 'From Exact',
+              'payloadSchema': [
+                {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'any',
+                },
+              ],
+            },
+            {
+              'key': 'FROM_LOOKUP',
+              'name': 'From Lookup',
+              'payloadSchema': [
+                {
+                  'name': 'entry',
+                  'required': true,
+                  'type': 'any',
+                },
+              ],
+            },
+            {
+              'key': 'FROM_SIMILARITY',
+              'name': 'From Similarity',
+              'payloadSchema': [
+                {
+                  'name': 'index',
+                  'required': true,
+                  'type': 'int',
+                },
+                {
+                  'name': 'score',
+                  'required': true,
+                  'type': 'float',
+                },
+              ],
+            },
+            {
+              'key': 'FROM_INFER',
+              'name': 'From Infer',
+              'payloadSchema': [
+                {
+                  'name': 'output',
+                  'required': true,
+                  'type': '[float]',
+                },
+                {
+                  'name': 'confidence',
+                  'required': true,
+                  'type': 'float',
+                },
+              ],
+            },
+            {
+              'key': 'FROM_CLASSIFY',
+              'name': 'From Classify',
+              'payloadSchema': [
+                {
+                  'name': 'category',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'confidence',
+                  'required': true,
+                  'type': 'float',
+                },
+                {
+                  'name': 'reasoning',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FROM_CLASSIFY_FAILURE',
+              'name': 'From Classify Failure',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative.',
+              'key': 'DECIDED',
+              'name': 'Decided',
+              'payloadSchema': [
+                {
+                  'name': 'rung',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'confidence',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'matched',
+                  'required': true,
+                  'type': 'any',
+                },
+                {
+                  'name': 'reasoning',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'primary',
+            },
+            {
+              'description': 'Even the generative floor (R5) could not answer — the classify service call itself failed.',
+              'key': 'DECISION_FAILED',
+              'name': 'Decision Failed',
+              'payloadSchema': [
+                {
+                  'name': 'reason',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'primary',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'decided',
+            },
+            {
+              'name': 'failed',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.rung',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.failReason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.rung',
+                  'R0',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  1,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'decided',
+                ],
+                [
+                  'emit',
+                  'DECIDED',
+                  {
+                    'confidence': 1,
+                    'matched': '@payload.key',
+                    'reasoning': '',
+                    'rung': 'R0',
+                  },
+                ],
+              ],
+              'event': 'FROM_EXACT',
+              'from': 'idle',
+              'to': 'decided',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.rung',
+                  'R1',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  1,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'decided',
+                ],
+                [
+                  'emit',
+                  'DECIDED',
+                  {
+                    'confidence': 1,
+                    'matched': '@payload.entry',
+                    'reasoning': '',
+                    'rung': 'R1',
+                  },
+                ],
+              ],
+              'event': 'FROM_LOOKUP',
+              'from': 'idle',
+              'to': 'decided',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.rung',
+                  'R3',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  '@payload.score',
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'decided',
+                ],
+                [
+                  'emit',
+                  'DECIDED',
+                  {
+                    'confidence': '@payload.score',
+                    'matched': '@payload.index',
+                    'reasoning': '',
+                    'rung': 'R3',
+                  },
+                ],
+              ],
+              'event': 'FROM_SIMILARITY',
+              'from': 'idle',
+              'to': 'decided',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.rung',
+                  'R4',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  '@payload.confidence',
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'decided',
+                ],
+                [
+                  'emit',
+                  'DECIDED',
+                  {
+                    'confidence': '@payload.confidence',
+                    'matched': '@payload.output',
+                    'reasoning': '',
+                    'rung': 'R4',
+                  },
+                ],
+              ],
+              'event': 'FROM_INFER',
+              'from': 'idle',
+              'to': 'decided',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.rung',
+                  'R5',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  '@payload.confidence',
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '@payload.reasoning',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'decided',
+                ],
+                [
+                  'emit',
+                  'DECIDED',
+                  {
+                    'confidence': '@payload.confidence',
+                    'matched': '@payload.category',
+                    'reasoning': '@payload.reasoning',
+                    'rung': 'R5',
+                  },
+                ],
+              ],
+              'event': 'FROM_CLASSIFY',
+              'from': 'idle',
+              'to': 'decided',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.failReason',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'failed',
+                ],
+                [
+                  'emit',
+                  'DECISION_FAILED',
+                  {
+                    'reason': '@payload.error',
+                  },
+                ],
+              ],
+              'event': 'FROM_CLASSIFY_FAILURE',
+              'from': 'idle',
+              'to': 'failed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'decided',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'decided',
+              'to': 'decided',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.rung',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.failReason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'decided',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'failed',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'failed',
+              'to': 'failed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.rung',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.failReason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'failed',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'LadderDecidePage',
+        'path': '/ladder/decide',
+        'traits': [
+          {
+            'ref': 'LadderEntry',
+          },
+          {
+            'ref': 'ExactRung',
+          },
+          {
+            'ref': 'LookupRung',
+          },
+          {
+            'ref': 'SimilarityRung',
+          },
+          {
+            'ref': 'InferRung',
+          },
+          {
+            'ref': 'ClassifyRung',
+          },
+          {
+            'ref': 'LadderVerdictSink',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdEscalatingDecisionEscalatingDecisionOrbital. */
+export const StdEscalatingDecisionEscalatingDecisionOrbitalManifest = {
+  organism: 'std-escalating-decision',
+  orbitalName: 'EscalatingDecisionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ExactRung',
+    'LookupRung',
+    'SimilarityRung',
+    'InferRung',
+    'ClassifyRung',
+  ] as const,
+  inlineTraitNames: [
+    'LadderEntry',
+    'LadderVerdictSink',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdEscalatingDecisionEscalatingDecisionOrbitalParams keys. */
+export function isStdEscalatingDecisionEscalatingDecisionOrbitalParams(p: object): p is StdEscalatingDecisionEscalatingDecisionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdEscalatingDecisionEscalatingDecisionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdEscalatingDecisionEscalatingDecisionOrbitalManifest.traitNames,
+      ...StdEscalatingDecisionEscalatingDecisionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

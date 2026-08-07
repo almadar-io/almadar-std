@@ -1,0 +1,121 @@
+[
+  {
+    "organism": "learning-earth-lab",
+    "orbital": "EarthLabOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/learning/organisms/learning-earth-lab.ts",
+    "entities": [
+      {
+        "name": "EarthLabItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "EarthLabRouter",
+        "emittedEvents": [
+          "MODE_SELECTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MODE_SELECTED",
+            "direction": "emit",
+            "description": "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "mode",
+            "type": "string",
+            "default": "plates",
+            "label": "Mode",
+            "description": "Which earth-science simulation to render: plate boundary tectonics, or the water cycle.",
+            "synonyms": "earth science, geology, plate tectonics, tectonic plates, plate boundary, convergent boundary, divergent boundary, transform boundary, subduction, subduction zone, trench, volcanic arc, mid-ocean ridge, rift valley, seafloor spreading, continental drift, strike-slip fault, transform fault, earthquake, seismicity, Wadati-Benioff zone, water cycle, hydrologic cycle, evaporation, condensation, precipitation, runoff, reservoir, ocean, atmosphere, solar input, cloud formation, rainfall, infiltration",
+            "tier": "domain",
+            "enumValues": [
+              "plates",
+              "water-cycle"
+            ]
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "EarthLabItem",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "PlatesSim",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "MODE_SELECTED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "matchMode",
+            "type": "unknown",
+            "default": "plates"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Earth Lab"
+          }
+        ],
+        "capabilities": [],
+        "ref": "EarthPlates.traits.EarthPlatesSim",
+        "linkedEntity": "PlatesScene"
+      },
+      {
+        "name": "WatercycleSim",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "MODE_SELECTED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "matchMode",
+            "type": "unknown",
+            "default": "water-cycle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Earth Lab"
+          }
+        ],
+        "capabilities": [],
+        "ref": "EarthWatercycle.traits.EarthWatercycleSim",
+        "linkedEntity": "WatercycleScene"
+      }
+    ],
+    "pages": [
+      {
+        "name": "EarthLabPage",
+        "defaultPath": "/learning/earth-lab",
+        "primaryEntity": "EarthLabItem"
+      }
+    ],
+    "emittedEvents": [
+      "MODE_SELECTED"
+    ],
+    "listenedEvents": [
+      "MODE_SELECTED"
+    ],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

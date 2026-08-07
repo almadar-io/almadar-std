@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -154,4 +154,668 @@ export function stdVote(params: StdVoteParams): OrbitalDefinition {
       stdVotePage(params),
     ],
   });
+}
+
+type _StdVoteEntityName = 'Vote';
+type _StdVoteListenTraitName = 'VoteCast';
+
+/**
+ * Tunable params for the VoteOrbital orbital.
+ *
+ * Canonical entity: Vote — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdVoteVoteOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'VoteCast',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait VoteOrbital's `uses[]` exports. */
+type _StdVoteVoteOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the VoteOrbital orbital with consumer params. */
+export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'votes');
+  const built = makeOrbitalWithUses({
+    name: 'VoteOrbital',
+    uses: [],
+    entity: {
+      name: 'Vote',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'Identifier for the item being voted on.',
+            'name': 'targetId',
+            'required': true,
+            'synonyms': 'reference, item, subject',
+            'type': 'string',
+          },
+          {
+            'description': 'Unique identifier of the user casting the vote.',
+            'name': 'voterId',
+            'required': true,
+            'synonyms': 'user, author, participant',
+            'type': 'string',
+          },
+          {
+            'default': 'none',
+            'description': 'Indicates the vote\'s direction.',
+            'name': 'direction',
+            'synonyms': 'vote, sentiment, choice',
+            'type': 'string',
+            'values': [
+              'up',
+              'down',
+              'none',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'allowDown': {
+            'default': true,
+            'description': 'Show the downvote arrow alongside the upvote',
+            'label': 'Allow downvotes',
+            'tier': 'domain',
+            'type': 'boolean',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals a vote has been successfully recorded.',
+            'event': 'VOTE',
+            'payloadSchema': [
+              {
+                'name': 'next',
+                'type': 'string',
+              },
+              {
+                'name': 'data',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'voted, submitted, confirmed',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a vote has been successfully retrieved.',
+            'event': 'VoteLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Vote]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates that loading a vote failed.',
+            'event': 'VoteLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'load error, failed load, fetch failure',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates a vote has been successfully recorded.',
+            'event': 'VoteCasted',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'targetId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'voterId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'direction',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'voted, vote-submitted, vote-changed',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a vote submission failed, likely due to a constraint.',
+            'event': 'VoteCastFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'failed, rejected, error',
+            'tier': 'presentation',
+          },
+        ],
+        'linkedEntity': 'Vote',
+        'name': 'VoteCast',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates a vote has been successfully retrieved.',
+              'key': 'VoteLoaded',
+              'name': 'Vote loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Vote]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates that loading a vote failed.',
+              'key': 'VoteLoadFailed',
+              'name': 'Vote load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, failed load, fetch failure',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals a vote has been successfully recorded.',
+              'key': 'VOTE',
+              'name': 'Vote',
+              'payloadSchema': [
+                {
+                  'name': 'next',
+                  'type': 'string',
+                },
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'voted, submitted, confirmed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a vote has been successfully recorded.',
+              'key': 'VoteCasted',
+              'name': 'Vote casted',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'Vote',
+                },
+              ],
+              'synonyms': 'voted, vote-submitted, vote-changed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a vote submission failed, likely due to a constraint.',
+              'key': 'VoteCastFailed',
+              'name': 'Vote cast failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'failed, rejected, error',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'idle',
+            },
+            {
+              'name': 'voting',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Vote' satisfies _StdVoteEntityName),
+                  {
+                    'emit': {
+                      'failure': 'VoteLoadFailed',
+                      'success': 'VoteLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading votes…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'count': 0,
+                    'label': 'Vote',
+                    'onVote': 'VOTE',
+                    'type': 'vote-stack',
+                    'userVote': '@entity.direction',
+                    'variant': 'vertical',
+                  },
+                ],
+              ],
+              'event': 'VoteLoaded',
+              'from': 'loading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'VoteLoadFailed',
+              'from': 'loading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.direction',
+                  '@payload.next',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('Vote' satisfies _StdVoteEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'VoteCastFailed',
+                      'success': 'VoteCasted',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Recording your vote…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'VOTE',
+              'from': 'idle',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  '@payload.next',
+                  '@entity.direction',
+                ],
+              ],
+              'to': 'voting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.direction',
+                  'none',
+                ],
+                [
+                  'persist',
+                  'update',
+                  ('Vote' satisfies _StdVoteEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'VoteCastFailed',
+                      'success': 'VoteCasted',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Clearing your vote…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'VOTE',
+              'from': 'idle',
+              'guard': [
+                '=',
+                '@payload.next',
+                '@entity.direction',
+              ],
+              'to': 'voting',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'count': 0,
+                    'label': 'Vote',
+                    'onVote': 'VOTE',
+                    'type': 'vote-stack',
+                    'userVote': '@entity.direction',
+                    'variant': 'vertical',
+                  },
+                ],
+              ],
+              'event': 'VoteCasted',
+              'from': 'voting',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'VoteCastFailed',
+              'from': 'voting',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Vote' satisfies _StdVoteEntityName),
+                  {
+                    'emit': {
+                      'failure': 'VoteLoadFailed',
+                      'success': 'VoteLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading votes…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'VoteCastPage',
+        'path': '/votes/cast',
+        'traits': [
+          {
+            'ref': 'VoteCast',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdVoteVoteOrbital. */
+export const StdVoteVoteOrbitalManifest = {
+  organism: 'std-vote',
+  orbitalName: 'VoteOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'VoteCast',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdVoteVoteOrbitalParams keys. */
+export function isStdVoteVoteOrbitalParams(p: object): p is StdVoteVoteOrbitalParams {
+  type _OverrideRecord = NonNullable<StdVoteVoteOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdVoteVoteOrbitalManifest.traitNames,
+      ...StdVoteVoteOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -158,4 +158,900 @@ export function stdFormAdvanced(params: StdFormAdvancedParams): OrbitalDefinitio
       stdFormAdvancedPage(params),
     ],
   });
+}
+
+type _StdFormAdvancedEntityName = 'FormEntry';
+type _StdFormAdvancedListenTraitName = 'FormEntryFormAdvanced';
+
+/**
+ * Tunable params for the FormEntryOrbital orbital.
+ *
+ * Canonical entity: FormEntry — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdFormAdvancedFormEntryOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'FormEntryFormAdvanced',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait FormEntryOrbital's `uses[]` exports. */
+type _StdFormAdvancedFormEntryOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the FormEntryOrbital orbital with consumer params. */
+export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntryOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'FormEntryOrbital',
+    uses: [],
+    entity: {
+      name: 'FormEntry',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+          },
+          {
+            'description': 'The identifier or title for the form entry.',
+            'name': 'name',
+            'synonyms': 'title, label, identifier',
+            'type': 'string',
+          },
+          {
+            'description': 'A textual explanation or details about the entry.',
+            'name': 'description',
+            'synonyms': 'details, explanation, notes, summary',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'Indicates the current operational state of the entry.',
+            'name': 'status',
+            'synonyms': 'state, condition, mode',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'Free-text comments or additional information.',
+            'name': 'notes',
+            'synonyms': 'comment, remark, details, memo',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'Numerical value representing a person\'s age.',
+            'name': 'age',
+            'synonyms': 'years, age, period',
+            'type': 'number',
+          },
+          {
+            'default': false,
+            'description': 'Indicates whether the entry is currently active.',
+            'name': 'isActive',
+            'synonyms': 'active, enabled, status',
+            'type': 'boolean',
+          },
+          {
+            'default': '',
+            'description': 'Date of birth.',
+            'name': 'birthDate',
+            'synonyms': 'dob, date of birth, birthday',
+            'type': 'datetime',
+          },
+          {
+            'default': 'medium',
+            'description': 'Indicates the level of importance or urgency.',
+            'name': 'priority',
+            'synonyms': 'level, importance, urgency',
+            'type': 'string',
+            'values': [
+              'low',
+              'medium',
+              'high',
+              'critical',
+            ],
+          },
+          {
+            'default': '',
+            'description': 'Identifies the related category record.',
+            'name': 'categoryId',
+            'synonyms': 'category, type, group',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'fieldValidation': {
+            'default': [],
+            'description': 'Per-field rules (format, regex, length) shown inline on submit',
+            'items': {
+              'properties': {
+                'field': {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                'message': {
+                  'name': 'message',
+                  'required': false,
+                  'type': 'string',
+                },
+                'rule': {
+                  'name': 'rule',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Field validation',
+            'tier': 'domain',
+            'type': '[ValidationSpec]',
+          },
+          'fields': {
+            'default': [
+              {
+                'label': 'Name',
+                'name': 'name',
+              },
+              {
+                'label': 'Description',
+                'name': 'description',
+              },
+              {
+                'label': 'Status',
+                'name': 'status',
+                'type': 'enum',
+                'values': [
+                  'active',
+                  'inactive',
+                  'pending',
+                ],
+              },
+              {
+                'label': 'Notes',
+                'name': 'notes',
+                'type': 'textarea',
+              },
+              {
+                'label': 'Age',
+                'name': 'age',
+                'type': 'number',
+              },
+              {
+                'label': 'Is Active',
+                'name': 'isActive',
+                'type': 'boolean',
+              },
+              {
+                'label': 'Birth Date',
+                'name': 'birthDate',
+                'type': 'date',
+              },
+              {
+                'label': 'Priority',
+                'name': 'priority',
+                'type': 'enum',
+                'values': [
+                  'low',
+                  'medium',
+                  'high',
+                  'critical',
+                ],
+              },
+              {
+                'label': 'Category ID',
+                'name': 'categoryId',
+                'relation': {
+                  'cardinality': 'one',
+                  'entity': 'FormEntry',
+                },
+                'type': 'relation',
+              },
+            ],
+            'description': 'Inputs to render; each entry follows the form-section field schema',
+            'items': {
+              'properties': {
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Form fields',
+            'tier': 'presentation',
+            'type': '[FieldSpec]',
+          },
+          'icon': {
+            'default': 'file-text',
+            'description': 'Icon shown beside the form title',
+            'label': 'Header icon',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'title': {
+            'default': 'Form',
+            'description': 'Heading shown above the form',
+            'label': 'Form title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals successful loading of form entry data.',
+            'event': 'FormEntryLoaded',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'name',
+                'type': 'string',
+              },
+              {
+                'name': 'description',
+                'type': 'string',
+              },
+              {
+                'name': 'status',
+                'type': 'string',
+              },
+              {
+                'name': 'createdAt',
+                'type': 'string',
+              },
+              {
+                'name': 'notes',
+                'type': 'string',
+              },
+              {
+                'name': 'age',
+                'type': 'number',
+              },
+              {
+                'name': 'isActive',
+                'type': 'boolean',
+              },
+              {
+                'name': 'birthDate',
+                'type': 'datetime',
+              },
+              {
+                'name': 'priority',
+                'type': 'string',
+              },
+              {
+                'name': 'categoryId',
+                'type': 'relation',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, initialized, populated',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates failure to load form entry data.',
+            'event': 'FormEntryLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'load error, data fetch failed, failed to retrieve',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Signals successful saving of form entry data.',
+            'event': 'FormEntrySaved',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'saved, persisted, submitted, confirmed',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to save form entry data.',
+            'event': 'FormEntrySaveFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failure, rejected, invalid',
+            'tier': 'domain',
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'FormEntry',
+        'name': 'FormEntryFormAdvanced',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates the form\'s entries have been discarded and it should be reset.',
+              'key': 'CANCEL',
+              'name': 'Cancel',
+              'synonyms': 'cancel, discard, clear, start over',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the form has been submitted for processing.',
+              'key': 'SUBMIT',
+              'name': 'Submit',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'submit, send, post',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals successful loading of form entry data.',
+              'key': 'FormEntryLoaded',
+              'name': 'FormEntry loaded',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'createdAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'notes',
+                  'type': 'string',
+                },
+                {
+                  'name': 'age',
+                  'type': 'number',
+                },
+                {
+                  'name': 'isActive',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'birthDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'priority',
+                  'type': 'string',
+                },
+                {
+                  'name': 'categoryId',
+                  'type': 'relation',
+                },
+              ],
+              'synonyms': 'loaded, initialized, populated',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates failure to load form entry data.',
+              'key': 'FormEntryLoadFailed',
+              'name': 'FormEntry load failed',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, data fetch failed, failed to retrieve',
+              'tier': 'internal',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'description': 'Signals successful saving of form entry data.',
+              'key': 'FormEntrySaved',
+              'name': 'FormEntry saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'saved, persisted, submitted, confirmed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to save form entry data.',
+              'key': 'FormEntrySaveFailed',
+              'name': 'FormEntry save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, rejected, invalid',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'editing',
+            },
+            {
+              'name': 'submitted',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': '@config.icon',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CANCEL',
+                        'fields': '@config.fields',
+                        'mode': 'create',
+                        'submitEvent': 'SUBMIT',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'editing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': '@config.icon',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CANCEL',
+                        'fields': '@config.fields',
+                        'mode': 'create',
+                        'submitEvent': 'SUBMIT',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CANCEL',
+              'from': 'editing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'FormEntrySaveFailed',
+                      'success': 'FormEntrySaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'check-circle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Form Submitted',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'message': 'Your form has been submitted successfully.',
+                        'type': 'alert',
+                        'variant': 'success',
+                      },
+                      {
+                        'action': 'RESET',
+                        'icon': 'plus',
+                        'label': 'New Entry',
+                        'type': 'button',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SUBMIT',
+              'from': 'editing',
+              'to': 'submitted',
+            },
+            {
+              'event': 'FormEntryLoaded',
+              'from': 'editing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Failed to load form',
+                ],
+              ],
+              'event': 'FormEntryLoadFailed',
+              'from': 'editing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': '@config.icon',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CANCEL',
+                        'fields': '@config.fields',
+                        'mode': 'create',
+                        'submitEvent': 'SUBMIT',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'submitted',
+              'to': 'editing',
+            },
+            {
+              'event': 'FormEntrySaved',
+              'from': 'submitted',
+              'to': 'submitted',
+            },
+            {
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Failed to save form entry',
+                ],
+              ],
+              'event': 'FormEntrySaveFailed',
+              'from': 'submitted',
+              'to': 'submitted',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'FormEntryFormPage',
+        'path': '/formentrys/form',
+        'traits': [
+          {
+            'ref': 'FormEntryFormAdvanced',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdFormAdvancedFormEntryOrbital. */
+export const StdFormAdvancedFormEntryOrbitalManifest = {
+  organism: 'std-form-advanced',
+  orbitalName: 'FormEntryOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'FormEntryFormAdvanced',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdFormAdvancedFormEntryOrbitalParams keys. */
+export function isStdFormAdvancedFormEntryOrbitalParams(p: object): p is StdFormAdvancedFormEntryOrbitalParams {
+  type _OverrideRecord = NonNullable<StdFormAdvancedFormEntryOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdFormAdvancedFormEntryOrbitalManifest.traitNames,
+      ...StdFormAdvancedFormEntryOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

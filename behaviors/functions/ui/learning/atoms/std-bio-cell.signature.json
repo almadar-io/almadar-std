@@ -9,6 +9,16 @@
         "name": "BioCellState",
         "fields": [
           {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "phase",
             "type": "number",
             "required": false
@@ -45,6 +55,12 @@
           {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
           }
         ],
         "overridableConfigKeys": [
@@ -126,6 +142,14 @@
             "default": 400,
             "label": "Height",
             "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
             "tier": "presentation"
           },
           {
@@ -246,6 +270,14 @@
             "tier": "domain"
           },
           {
+            "key": "title",
+            "type": "string",
+            "default": "Cell Structure",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
             "key": "width",
             "type": "number",
             "default": 600,
@@ -257,15 +289,18 @@
         "capabilities": [],
         "linkedEntity": "BioCellState",
         "transitionEvents": [
-          "INIT"
+          "INIT",
+          "MODE_SELECTED"
         ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
           "provides": [
+            "active",
             "nodes",
             "phase",
-            "running"
+            "running",
+            "title"
           ]
         }
       }

@@ -1,0 +1,428 @@
+[
+  {
+    "organism": "std-learn-stepper",
+    "orbital": "LearnStepperOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-stepper.ts",
+    "entities": [
+      {
+        "name": "LearnStepperScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "cursorIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "activeFilter",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "categoryTally",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "visibleThreadNote",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "filterButtons",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnStepperSim",
+        "emittedEvents": [
+          "STEPPER_ADVANCED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "STEPPER_ADVANCED",
+            "direction": "emit",
+            "description": "The cursor/filter state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "stepper update, cursor advance, stage reveal, timeline step",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT",
+            "direction": "listen",
+            "description": "Learner advanced the cursor to the next stage in the ordered roster.",
+            "tier": "domain"
+          },
+          {
+            "name": "PREV",
+            "direction": "listen",
+            "description": "Learner moved the cursor back to the previous stage in the ordered roster.",
+            "tier": "domain"
+          },
+          {
+            "name": "FILTER_CATEGORY",
+            "direction": "listen",
+            "description": "Learner picked a category lens (or all) to filter which stage markers are visible on the axis.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET_STEPPER",
+            "direction": "listen",
+            "description": "Learner reset the cursor to before the first stage and cleared the category filter.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "allLabel",
+            "type": "string",
+            "default": "All",
+            "label": "All Filter Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "allSummary",
+            "type": "string",
+            "default": "Taken together, every stage contributes to the full sequence. No single category tells the whole story.",
+            "label": "All-Lens Summary",
+            "description": "Narrative summary shown when no category filter is applied — the full, multi-category picture.",
+            "synonyms": "multi-causal, full picture, no single lens",
+            "tier": "domain"
+          },
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "axisMarginLeft",
+            "type": "number",
+            "default": 60,
+            "label": "Axis Left Margin",
+            "tier": "presentation"
+          },
+          {
+            "key": "axisMarginRight",
+            "type": "number",
+            "default": 60,
+            "label": "Axis Right Margin",
+            "tier": "presentation"
+          },
+          {
+            "key": "axisY",
+            "type": "number",
+            "default": 220,
+            "label": "Axis Y",
+            "description": "Canvas y-position of the horizontal axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "categories",
+            "type": "[LearnStepperCategory]",
+            "default": [
+              {
+                "category": "a",
+                "color": "#7c3aed",
+                "label": "Category A"
+              },
+              {
+                "category": "b",
+                "color": "#15803d",
+                "label": "Category B"
+              }
+            ],
+            "label": "Categories",
+            "description": "Marker color and button label per stage category, used for both the axis dots and the FILTER_CATEGORY buttons, and for the running per-category tally.",
+            "synonyms": "category color, category legend, stage category, filter lens",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": true,
+                  "type": "string"
+                },
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "categorySummaries",
+            "type": "[LearnStepperCategorySummary]",
+            "default": [
+              {
+                "category": "a",
+                "summary": "Viewed through Category A alone, only the stages tagged A are highlighted."
+              },
+              {
+                "category": "b",
+                "summary": "Viewed through Category B alone, only the stages tagged B are highlighted."
+              }
+            ],
+            "label": "Category Summaries",
+            "description": "Narrative summary shown when the learner filters the sequence to a single category — how the sequence reads through that lens alone.",
+            "synonyms": "historiographical lens, primary source lens, single-cause narrative, category narrative, visible thread",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": true,
+                  "type": "string"
+                },
+                "summary": {
+                  "name": "summary",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 420,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "markerHighlightRadius",
+            "type": "number",
+            "default": 14,
+            "label": "Marker Highlight Radius",
+            "description": "Radius of the current step's marker, larger than an ordinary stage marker.",
+            "tier": "presentation"
+          },
+          {
+            "key": "markerRadius",
+            "type": "number",
+            "default": 8,
+            "label": "Marker Radius",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxPosition",
+            "type": "number",
+            "default": 4,
+            "label": "Max Position",
+            "description": "Latest position on the axis (after the last stage).",
+            "tier": "domain"
+          },
+          {
+            "key": "minPosition",
+            "type": "number",
+            "default": 0,
+            "label": "Min Position",
+            "description": "Earliest position on the axis (before the first stage).",
+            "tier": "domain"
+          },
+          {
+            "key": "stages",
+            "type": "[LearnStepperStage]",
+            "default": [
+              {
+                "category": "a",
+                "description": "First stage in the sequence.",
+                "id": "stage-1",
+                "label": "Stage One",
+                "position": 1
+              },
+              {
+                "category": "b",
+                "description": "Second stage in the sequence.",
+                "id": "stage-2",
+                "label": "Stage Two",
+                "position": 2
+              },
+              {
+                "category": "a",
+                "description": "Third stage in the sequence.",
+                "id": "stage-3",
+                "label": "Stage Three",
+                "position": 3
+              }
+            ],
+            "label": "Stages",
+            "description": "Ordered roster of stages (position, label, category, description) stepped through by NEXT/PREV and filtered by FILTER_CATEGORY. Sorted ascending by position.",
+            "synonyms": "stage roster, sequence, timeline, cycle, phase, event roster, ordered stages",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": true,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "startPrompt",
+            "type": "string",
+            "default": "Press Next to begin.",
+            "label": "Start Prompt",
+            "description": "Narration shown before the learner has advanced past the first stage.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Stepper",
+            "label": "Title",
+            "description": "Title shown above the instrument.",
+            "tier": "presentation"
+          },
+          {
+            "key": "unreachedColor",
+            "type": "string",
+            "default": "#d6d3d1",
+            "label": "Unreached Marker Color",
+            "description": "Color of stage markers the learner has not yet stepped to.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LearnStepperScene",
+        "transitionEvents": [
+          "FILTER_CATEGORY",
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT",
+          "PREV",
+          "RESET_STEPPER"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "activeFilter",
+            "categoryTally",
+            "cursorIndex",
+            "filterButtons",
+            "narration",
+            "shapes",
+            "title",
+            "visibleThreadNote"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnStepperPage",
+        "defaultPath": "/learn-stepper",
+        "primaryEntity": "LearnStepperScene"
+      }
+    ],
+    "emittedEvents": [
+      "STEPPER_ADVANCED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

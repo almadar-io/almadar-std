@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -161,4 +161,1205 @@ export function stdCalendar(params: StdCalendarParams): OrbitalDefinition {
       stdCalendarPage(params),
     ],
   });
+}
+
+type _StdCalendarEntityName = 'CalendarEvent';
+type _StdCalendarListenTraitName = 'CalendarEventCalendar';
+
+/**
+ * Tunable params for the CalendarEventOrbital orbital.
+ *
+ * Canonical entity: CalendarEvent — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdCalendarCalendarEventOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'CalendarEventCalendar',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait CalendarEventOrbital's `uses[]` exports. */
+type _StdCalendarCalendarEventOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the CalendarEventOrbital orbital with consumer params. */
+export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEventOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'CalendarEventOrbital',
+    uses: [],
+    entity: {
+      name: 'CalendarEvent',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'event title shown on the calendar',
+            'name': 'name',
+            'required': true,
+            'synonyms': 'title, label, summary, subject',
+            'type': 'string',
+          },
+          {
+            'description': 'event details or notes',
+            'name': 'description',
+            'synonyms': 'details, notes, body, summary',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'event lifecycle status',
+            'name': 'status',
+            'synonyms': 'state, stage, phase',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'name': 'date',
+            'type': 'datetime',
+          },
+          {
+            'default': '',
+            'description': 'event start time of day',
+            'name': 'time',
+            'synonyms': 'start, scheduled time, begins, when, start time',
+            'type': 'string',
+          },
+          {
+            'default': 60,
+            'description': 'event length in minutes',
+            'name': 'duration',
+            'synonyms': 'minutes, length, span, duration',
+            'type': 'number',
+          },
+          {
+            'default': 'month',
+            'intrinsic': true,
+            'name': 'selectedRange',
+            'type': 'string',
+          },
+          {
+            'intrinsic': true,
+            'name': 'weekAnchor',
+            'type': 'date',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'agendaGroupBy': {
+            'default': 'date',
+            'description': 'Row field the agenda list groups its day sections by. Rebound hosts point this at their own timestamp column (e.g. startTime, scheduledAt).',
+            'label': 'Agenda group-by field',
+            'synonyms': 'group field, section field, day field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'agendaItemActions': {
+            'default': [
+              {
+                'event': 'SELECT_DAY',
+                'icon': 'eye',
+                'label': 'View',
+              },
+            ],
+            'description': 'Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Agenda item actions',
+            'synonyms': 'agenda actions, row actions, event actions, list actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'agendaListBodyContent': {
+            'default': {
+              'children': [
+                {
+                  'align': 'center',
+                  'children': [
+                    {
+                      'align': 'center',
+                      'children': [
+                        {
+                          'name': 'list',
+                          'type': 'icon',
+                        },
+                        {
+                          'content': 'Agenda',
+                          'type': 'typography',
+                          'variant': 'h2',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'sm',
+                      'type': 'stack',
+                    },
+                    {
+                      'onSelect': 'SELECT_DAY',
+                      'selected': '@entity.selectedRange',
+                      'type': 'date-range-selector',
+                    },
+                  ],
+                  'direction': 'horizontal',
+                  'gap': 'md',
+                  'justify': 'between',
+                  'type': 'stack',
+                },
+                {
+                  'type': 'divider',
+                },
+                {
+                  'entity': '@payload.data',
+                  'fields': [],
+                  'gap': 'md',
+                  'groupBy': '@config.agendaGroupBy',
+                  'itemActions': '@config.agendaItemActions',
+                  'renderItem': [
+                    'fn',
+                    'item',
+                    {
+                      'children': [
+                        {
+                          'align': 'start',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'color': 'muted',
+                                  'content': '@config.timeBinding',
+                                  'format': 'time',
+                                  'type': 'typography',
+                                  'variant': 'overline',
+                                },
+                                {
+                                  'color': 'muted',
+                                  'name': 'clock',
+                                  'size': 'sm',
+                                  'type': 'icon',
+                                },
+                              ],
+                              'className': 'w-16 shrink-0',
+                              'direction': 'vertical',
+                              'gap': 'xs',
+                              'type': 'stack',
+                            },
+                            {
+                              'orientation': 'vertical',
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'className': 'truncate',
+                                      'content': '@config.titleBinding',
+                                      'type': 'typography',
+                                      'variant': 'h4',
+                                      'weight': 'medium',
+                                    },
+                                    {
+                                      'label': '@config.badgeBinding',
+                                      'size': 'sm',
+                                      'type': 'badge',
+                                      'variant': 'default',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'className': 'truncate',
+                                  'color': 'muted',
+                                  'content': '@config.descriptionBinding',
+                                  'type': 'typography',
+                                  'variant': 'body2',
+                                },
+                              ],
+                              'className': 'flex-1 min-w-0',
+                              'direction': 'vertical',
+                              'gap': 'xs',
+                              'type': 'stack',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                      ],
+                      'look': 'flat-bordered',
+                      'padding': 'md',
+                      'type': 'card',
+                    },
+                  ],
+                  'type': 'data-list',
+                  'variant': 'default',
+                },
+              ],
+              'className': 'w-full p-card-md',
+              'direction': 'vertical',
+              'gap': 'lg',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr for calendarLook=\'agenda-list\' — events grouped by day with overline day headers (Today, Tomorrow, …) and a time marker per event.',
+            'label': 'Agenda list body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'badgeBinding': {
+            'default': '@item.status',
+            'description': 'Per-row binding for the event status/badge slot.',
+            'label': 'Badge binding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'bodyContent': {
+            'default': {
+              'children': [
+                {
+                  'align': 'center',
+                  'children': [
+                    {
+                      'align': 'center',
+                      'children': [
+                        {
+                          'name': 'calendar',
+                          'type': 'icon',
+                        },
+                        {
+                          'content': '@config.title',
+                          'type': 'typography',
+                          'variant': 'h2',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'sm',
+                      'type': 'stack',
+                    },
+                    {
+                      'onSelect': 'SELECT_DAY',
+                      'selected': '@entity.selectedRange',
+                      'type': 'date-range-selector',
+                    },
+                  ],
+                  'direction': 'horizontal',
+                  'gap': 'md',
+                  'justify': 'between',
+                  'type': 'stack',
+                },
+                {
+                  'type': 'divider',
+                },
+                {
+                  'events': '@payload.data',
+                  'onEventClick': '@config.onEventClick',
+                  'renderItem': [
+                    'fn',
+                    'item',
+                    {
+                      'content': '@config.titleBinding',
+                      'type': 'typography',
+                      'variant': 'small',
+                    },
+                  ],
+                  'startField': '@config.startField',
+                  'type': 'calendar-grid',
+                },
+                {
+                  'type': 'divider',
+                },
+                {
+                  'content': 'Upcoming Events',
+                  'type': 'typography',
+                  'variant': 'h4',
+                },
+                {
+                  'entity': '@payload.data',
+                  'fields': [
+                    {
+                      'icon': 'calendar',
+                      'label': 'Event',
+                      'name': 'name',
+                      'variant': 'h4',
+                    },
+                    {
+                      'label': 'Time',
+                      'name': 'time',
+                      'variant': 'badge',
+                    },
+                    {
+                      'format': 'date',
+                      'label': 'Date',
+                      'name': 'date',
+                      'variant': 'caption',
+                    },
+                    {
+                      'label': 'Status',
+                      'name': 'status',
+                      'variant': 'badge',
+                    },
+                  ],
+                  'itemActions': [
+                    {
+                      'event': 'SELECT_DAY',
+                      'icon': 'eye',
+                      'label': 'View',
+                    },
+                  ],
+                  'look': '@config.tableLook',
+                  'type': 'data-list',
+                },
+              ],
+              'direction': 'vertical',
+              'gap': 'lg',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered after events load for calendarLook=\'month\' — the month-grid + upcoming-events list. calendarLook=\'agenda-list\' / \'week-timeline\' render agendaListBodyContent / weekTimelineBodyContent instead; all three share this trait\'s state machine, emits, and listens.',
+            'label': 'Body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'calendarLook': {
+            'default': 'month',
+            'description': 'Layer 3 body layout: default month-grid + upcoming-events list (\'month\'), day-grouped agenda list (\'agenda-list\'), or 7-column week timeline (\'week-timeline\').',
+            'label': 'Calendar look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'month',
+              'agenda-list',
+              'week-timeline',
+            ],
+          },
+          'descriptionBinding': {
+            'default': '@item.description',
+            'description': 'Per-row binding for the event description slot.',
+            'label': 'Description binding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'onEventClick': {
+            'default': '',
+            'description': 'Event emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row. Empty means chips are not clickable.',
+            'label': 'On Event Click',
+            'synonyms': 'open event, event click, select event, chip click',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'startField': {
+            'default': 'date',
+            'description': 'Row column holding the timestamp the calendar grid places each chip by. Rebound hosts point this at their own column (e.g. startTime, startsAt, dueAt); the chip\'s LABEL comes from titleBinding, not from here.',
+            'label': 'Start field',
+            'synonyms': 'start column, date column, when field, timestamp field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'timeBinding': {
+            'default': '@item.time',
+            'description': 'Per-row binding for the event time slot.',
+            'label': 'Time binding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'title': {
+            'default': 'Calendar',
+            'description': 'Header text shown above the calendar body.',
+            'label': 'Title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'titleBinding': {
+            'default': '@item.name',
+            'description': 'Per-row binding for the event title slot.',
+            'label': 'Title binding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'weekTimelineBodyContent': {
+            'default': {
+              'children': [
+                {
+                  'align': 'center',
+                  'children': [
+                    {
+                      'align': 'center',
+                      'children': [
+                        {
+                          'name': 'calendar',
+                          'type': 'icon',
+                        },
+                        {
+                          'content': 'Week',
+                          'type': 'typography',
+                          'variant': 'h2',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'sm',
+                      'type': 'stack',
+                    },
+                    {
+                      'align': 'center',
+                      'children': [
+                        {
+                          'action': 'CALENDAR_PREV_WEEK',
+                          'icon': 'chevron-left',
+                          'label': 'Previous week',
+                          'type': 'button',
+                          'variant': 'ghost',
+                        },
+                        {
+                          'color': 'muted',
+                          'content': [
+                            'time/format',
+                            '@entity.weekAnchor',
+                            'MMM D, YYYY',
+                          ],
+                          'type': 'typography',
+                          'variant': 'caption',
+                        },
+                        {
+                          'action': 'CALENDAR_NEXT_WEEK',
+                          'icon': 'chevron-right',
+                          'label': 'Next week',
+                          'type': 'button',
+                          'variant': 'ghost',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'xs',
+                      'type': 'stack',
+                    },
+                    {
+                      'onSelect': 'SELECT_DAY',
+                      'selected': '@entity.selectedRange',
+                      'type': 'date-range-selector',
+                    },
+                  ],
+                  'direction': 'horizontal',
+                  'gap': 'md',
+                  'justify': 'between',
+                  'type': 'stack',
+                },
+                {
+                  'type': 'divider',
+                },
+                {
+                  'className': 'w-full',
+                  'dayWindow': 7,
+                  'events': '@payload.data',
+                  'onEventClick': '@config.onEventClick',
+                  'renderItem': [
+                    'fn',
+                    'item',
+                    {
+                      'content': '@config.titleBinding',
+                      'type': 'typography',
+                      'variant': 'small',
+                    },
+                  ],
+                  'startField': '@config.startField',
+                  'swipeLeftEvent': 'CALENDAR_NEXT_WEEK',
+                  'swipeRightEvent': 'CALENDAR_PREV_WEEK',
+                  'type': 'calendar-grid',
+                  'weekStart': '@entity.weekAnchor',
+                },
+              ],
+              'direction': 'vertical',
+              'gap': 'md',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr for calendarLook=\'week-timeline\' — events grouped by weekday in a 7-column timeline window.',
+            'label': 'Week timeline body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates that calendar events have been successfully retrieved.',
+            'event': 'CalendarEventLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[CalendarEvent]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved, populated',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load calendar events.',
+            'event': 'CalendarEventLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'error, failed, problem, loading issue',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.',
+            'event': '@config.onEventClick',
+            'payloadSchema': [
+              {
+                'name': 'event',
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'presentation',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'selectedRange',
+            'weekAnchor',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'CalendarEvent',
+        'name': 'CalendarEventCalendar',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates that calendar events have been successfully retrieved.',
+              'key': 'CalendarEventLoaded',
+              'name': 'CalendarEvent loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[CalendarEvent]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved, populated',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load calendar events.',
+              'key': 'CalendarEventLoadFailed',
+              'name': 'CalendarEvent load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failed, problem, loading issue',
+              'tier': 'internal',
+            },
+            {
+              'description': 'A day has been chosen within the calendar view.',
+              'key': 'SELECT_DAY',
+              'name': 'Select Day',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'choose, pick, set, highlight',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Move the week timeline one week earlier.',
+              'key': 'CALENDAR_PREV_WEEK',
+              'name': 'Calendar Prev Week',
+              'synonyms': 'previous week, back a week, earlier week, last week',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Move the week timeline one week later.',
+              'key': 'CALENDAR_NEXT_WEEK',
+              'name': 'Calendar Next Week',
+              'synonyms': 'next week, forward a week, later week, following week',
+              'tier': 'domain',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'description': 'Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.',
+              'key': '@config.onEventClick',
+              'name': '@config.on event click',
+              'payloadSchema': [
+                {
+                  'name': 'event',
+                  'type': 'object',
+                },
+              ],
+              'tier': 'presentation',
+            },
+            {
+              'description': 'A time slot has been chosen for an event.',
+              'key': 'SELECT_SLOT',
+              'name': 'Select Slot',
+              'payloadSchema': [
+                {
+                  'name': 'time',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'choose, pick, schedule, book',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'month-view',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.weekAnchor',
+                  [
+                    'time/now',
+                  ],
+                ],
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading calendar…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.calendarLook',
+                    'agenda-list',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    '@config.agendaListBodyContent',
+                  ],
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@config.calendarLook',
+                      'week-timeline',
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      '@config.weekTimelineBodyContent',
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      '@config.bodyContent',
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'CalendarEventLoaded',
+              'from': 'loading',
+              'to': 'month-view',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'color': 'error',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to load',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@payload.error',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'action': 'RETRY',
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
+                        'type': 'button',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CalendarEventLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'month-view',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.selectedRange',
+                  '@payload.value',
+                ],
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                    'filter': [
+                      'time/isAfter',
+                      [
+                        'time/parse',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.startField',
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '=',
+                          '@payload.value',
+                          'week',
+                        ],
+                        [
+                          'time/subtract',
+                          [
+                            'time/now',
+                          ],
+                          1,
+                          'week',
+                        ],
+                        [
+                          'if',
+                          [
+                            '=',
+                            '@payload.value',
+                            '3months',
+                          ],
+                          [
+                            'time/subtract',
+                            [
+                              'time/now',
+                            ],
+                            3,
+                            'month',
+                          ],
+                          [
+                            'if',
+                            [
+                              '=',
+                              '@payload.value',
+                              'year',
+                            ],
+                            [
+                              'time/subtract',
+                              [
+                                'time/now',
+                              ],
+                              1,
+                              'year',
+                            ],
+                            [
+                              'time/subtract',
+                              [
+                                'time/now',
+                              ],
+                              1,
+                              'month',
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'SELECT_DAY',
+              'from': 'month-view',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.weekAnchor',
+                  [
+                    'time/subtract',
+                    '@entity.weekAnchor',
+                    1,
+                    'week',
+                  ],
+                ],
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'CALENDAR_PREV_WEEK',
+              'from': 'month-view',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.weekAnchor',
+                  [
+                    'time/add',
+                    '@entity.weekAnchor',
+                    1,
+                    'week',
+                  ],
+                ],
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'CALENDAR_NEXT_WEEK',
+              'from': 'month-view',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'RETRY',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'CalendarEventCalendarPage',
+        'path': '/calendarevents/calendar',
+        'traits': [
+          {
+            'ref': 'CalendarEventCalendar',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdCalendarCalendarEventOrbital. */
+export const StdCalendarCalendarEventOrbitalManifest = {
+  organism: 'std-calendar',
+  orbitalName: 'CalendarEventOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'CalendarEventCalendar',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdCalendarCalendarEventOrbitalParams keys. */
+export function isStdCalendarCalendarEventOrbitalParams(p: object): p is StdCalendarCalendarEventOrbitalParams {
+  type _OverrideRecord = NonNullable<StdCalendarCalendarEventOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdCalendarCalendarEventOrbitalManifest.traitNames,
+      ...StdCalendarCalendarEventOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

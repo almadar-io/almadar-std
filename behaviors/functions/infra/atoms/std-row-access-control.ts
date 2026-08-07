@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -125,4 +125,409 @@ export function stdRowAccessControl(params: StdRowAccessControlParams): OrbitalD
       stdRowAccessControlPage(params),
     ],
   });
+}
+
+type _StdRowAccessControlEntityName = 'RowAccessGateView';
+type _StdRowAccessControlListenTraitName = 'RowAccessGate';
+
+/**
+ * Tunable params for the RowAccessControlOrbital orbital.
+ *
+ * Canonical entity: RowAccessGateView — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdRowAccessControlRowAccessControlOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'RowAccessGate',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait RowAccessControlOrbital's `uses[]` exports. */
+type _StdRowAccessControlRowAccessControlOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the RowAccessControlOrbital orbital with consumer params. */
+export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessControlRowAccessControlOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'RowAccessControlOrbital',
+    uses: [],
+    expects: [
+      {
+        'kind': 'identity',
+      },
+    ],
+    entity: {
+      name: 'RowAccessGateView',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'description': 'The data returned after applying access control filters.',
+            'items': {
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'filteredData',
+            'synonyms': 'filtered items, processed data, results, output',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'description': 'The number of records processed by the access control.',
+            'name': 'inputCount',
+            'synonyms': 'record count, item count, total records',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'The number of records that passed the access control filter.',
+            'name': 'outputCount',
+            'synonyms': 'count, size, length',
+            'type': 'number',
+          },
+          {
+            'default': false,
+            'description': 'Indicates whether access is denied based on configured rules.',
+            'name': 'accessDenied',
+            'synonyms': 'denied, restricted, unauthorized, access-denied',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'capabilities': [
+          'access',
+          'privacy',
+        ],
+        'category': 'lifecycle',
+        'config': {
+          'enabled': {
+            'default': false,
+            'description': 'Only let people see records they own, or that match an allowed role. Off by default.',
+            'label': 'Restrict who sees records',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+          'ownerField': {
+            'default': '',
+            'description': 'Row field holding the owning user id (blank disables owner filter)',
+            'label': 'Owner field',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'visibleRoles': {
+            'default': [],
+            'description': 'Roles permitted to see any row (empty = no role gate)',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Allowed roles',
+            'tier': 'policy',
+            'type': '[string]',
+          },
+        },
+        'emits': [
+          {
+            'event': 'RowsFiltered',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ObjectSpec]',
+              },
+              {
+                'name': 'filteredCount',
+                'type': 'number',
+              },
+            ],
+            'scope': 'external',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'accessDenied',
+            'filteredData',
+            'inputCount',
+            'outputCount',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'RowAccessGateView',
+        'name': 'RowAccessGate',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'RowsLoaded',
+              'name': 'Rows loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ObjectSpec]',
+                },
+              ],
+            },
+            {
+              'key': 'RowsFiltered',
+              'name': 'Rows filtered',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ObjectSpec]',
+                },
+                {
+                  'name': 'filteredCount',
+                  'type': 'number',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.inputCount',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.accessDenied',
+                  [
+                    'and',
+                    [
+                      'not',
+                      [
+                        '=',
+                        [
+                          'array/len',
+                          '@config.visibleRoles',
+                        ],
+                        0,
+                      ],
+                    ],
+                    [
+                      'not',
+                      [
+                        'array/includes',
+                        '@config.visibleRoles',
+                        '@user.role',
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.filteredData',
+                  [
+                    'if',
+                    '@entity.accessDenied',
+                    [],
+                    [
+                      'if',
+                      [
+                        'not',
+                        [
+                          '=',
+                          '@config.ownerField',
+                          '',
+                        ],
+                      ],
+                      [
+                        'array/filter',
+                        '@payload.data',
+                        [
+                          'fn',
+                          'row',
+                          [
+                            '=',
+                            [
+                              'object/get',
+                              '@row',
+                              '@config.ownerField',
+                            ],
+                            '@user.id',
+                          ],
+                        ],
+                      ],
+                      '@payload.data',
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.outputCount',
+                  [
+                    'array/len',
+                    '@entity.filteredData',
+                  ],
+                ],
+                [
+                  'emit',
+                  'RowsFiltered',
+                  {
+                    'data': '@entity.filteredData',
+                    'filteredCount': '@entity.outputCount',
+                  },
+                ],
+              ],
+              'event': 'RowsLoaded',
+              'from': 'idle',
+              'guard': '@config.enabled',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'RowAccessControlPage',
+        'path': '/row-access-control',
+        'traits': [
+          {
+            'ref': 'RowAccessGate',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdRowAccessControlRowAccessControlOrbital. */
+export const StdRowAccessControlRowAccessControlOrbitalManifest = {
+  organism: 'std-row-access-control',
+  orbitalName: 'RowAccessControlOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'RowAccessGate',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdRowAccessControlRowAccessControlOrbitalParams keys. */
+export function isStdRowAccessControlRowAccessControlOrbitalParams(p: object): p is StdRowAccessControlRowAccessControlOrbitalParams {
+  type _OverrideRecord = NonNullable<StdRowAccessControlRowAccessControlOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdRowAccessControlRowAccessControlOrbitalManifest.traitNames,
+      ...StdRowAccessControlRowAccessControlOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

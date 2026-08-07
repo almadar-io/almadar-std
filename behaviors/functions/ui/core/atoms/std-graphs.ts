@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -149,4 +149,695 @@ export function stdGraphs(params: StdGraphsParams): OrbitalDefinition {
       stdGraphsPage(params),
     ],
   });
+}
+
+type _StdGraphsEntityName = 'GraphItem';
+type _StdGraphsListenTraitName = 'GraphItemGraph';
+
+/**
+ * Tunable params for the GraphItemOrbital orbital.
+ *
+ * Canonical entity: GraphItem — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdGraphsGraphItemOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'GraphItemGraph',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait GraphItemOrbital's `uses[]` exports. */
+type _StdGraphsGraphItemOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the GraphItemOrbital orbital with consumer params. */
+export function stdGraphsGraphItemOrbital(params: StdGraphsGraphItemOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'GraphItemOrbital',
+    uses: [],
+    entity: {
+      name: 'GraphItem',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'description': 'The data points used to render the chart.',
+            'items': {
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'chartData',
+            'synonyms': 'data, values, points',
+            'type': 'array',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'aggregation': {
+            'default': 'count',
+            'description': 'How values within a bucket combine into one number',
+            'label': 'Aggregation',
+            'synonyms': 'user phrases: \'count\' / \'how many\' -> count; \'total\' / \'sum of\' -> sum; \'average\' / \'mean\' -> avg; \'minimum\' / \'lowest\' -> min; \'maximum\' / \'highest\' -> max',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'count',
+              'sum',
+              'avg',
+              'min',
+              'max',
+            ],
+          },
+          'categoryField': {
+            'default': 'status',
+            'description': 'Entity field whose values become the chart\'s category buckets. Set this when the user voices \'group by X\' / \'categorize by X\' / \'bucket by X\' / \'split by X\' / \'break down by X\' for any non-time field X (for time-units, set period + timeAxis=true instead).',
+            'label': 'Group / categorize / bucket / split by field',
+            'synonyms': 'regroup / rebucket / categorize / breakdown by / split by / segment by. user phrases: \'group by status\' -> categoryField=status; \'group by region\' / \'by region\' -> categoryField=region; \'group by category\' / \'by category\' -> categoryField=category; \'group by product\' / \'by product\' -> categoryField=product; \'group by month\' / \'by month\' -> categoryField=month (when explicitly requested as a category, not a time bucket); \'split by X\' / \'break down by X\' / \'segment by X\' / \'bucket by X\' -> categoryField=X',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'chartType': {
+            'default': 'bar',
+            'description': 'Visual format for the rendered chart',
+            'label': 'Chart type',
+            'synonyms': 'bar = vertical bars, line = connected line, pie = pie chart, donut = pie with hole, area = filled area chart, histogram = frequency distribution, scatter = XY scatter. user phrases: \'switch to donut\' / \'make it a donut\' / \'as a donut chart\' -> donut; \'use a pie chart\' -> pie; \'show as line\' / \'line chart\' -> line; \'as bars\' / \'bar chart\' -> bar',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'bar',
+              'line',
+              'pie',
+              'area',
+              'donut',
+              'histogram',
+              'scatter',
+            ],
+          },
+          'drillEvent': {
+            'default': '',
+            'description': 'Event emitted when a user clicks a chart point',
+            'label': 'Drill event',
+            'synonyms': 'click-through navigation event. user phrases: \'on click navigate to X\' / \'drill into X\' / \'when clicked open X\' -> X event name',
+            'tier': 'internal',
+            'type': 'string',
+          },
+          'height': {
+            'default': 280,
+            'description': 'Pixel height of the rendered chart',
+            'label': 'Chart height',
+            'synonyms': 'vertical size in pixels. user phrases: \'taller\' / \'make it taller\' / \'increase height\' / \'bigger vertically\' -> larger number (e.g. 300, 400); \'shorter\' / \'smaller\' -> smaller; \'set height to 300\' / \'300px tall\' -> 300',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'limit': {
+            'default': 0,
+            'description': 'Keep only the first N points after sorting (0 = all)',
+            'label': 'Top N',
+            'synonyms': 'user phrases: \'top 5\' -> 5; \'top 10\' -> 10; \'first 3\' -> 3; \'all\' / \'no limit\' -> 0; \'show all\' -> 0',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'period': {
+            'default': 'month',
+            'description': 'Group by month, quarter, week, day, or year — the calendar bucket the chart groups data into. Set ALONGSIDE timeAxis=true whenever the user says \'group by <time-unit>\' or \'by <time-unit>\' or \'rebucket to <time-unit>\' or \'instead of <other-time-unit>\'.',
+            'label': 'Group by month / quarter / week / day / year',
+            'synonyms': 'regroup / rebucket / change bucket / group differently. user phrases: \'group by month\' / \'by month\' / \'monthly\' / \'monthly buckets\' / \'switch to monthly\' / \'instead of quarter\' -> month; \'group by quarter\' / \'by quarter\' / \'quarterly\' -> quarter; \'group by week\' / \'by week\' / \'weekly\' / \'weekly buckets\' -> week; \'group by day\' / \'by day\' / \'daily\' / \'daily buckets\' -> day; \'group by year\' / \'by year\' / \'yearly\' / \'annually\' -> year. Whenever the user voices \'group by <time-unit>\' BOTH period AND timeAxis=true should be set.',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'day',
+              'week',
+              'month',
+              'quarter',
+              'year',
+            ],
+          },
+          'series': {
+            'default': [],
+            'description': 'Pre-formatted multi-series spec for stacked or layered charts',
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'dashed': {
+                  'name': 'dashed',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'data': {
+                  'items': {
+                    'properties': {
+                      'label': {
+                        'name': 'label',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'value': {
+                        'name': 'value',
+                        'required': true,
+                        'type': 'number',
+                      },
+                    },
+                    'type': 'object',
+                  },
+                  'name': 'data',
+                  'required': true,
+                  'type': 'array',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Series',
+            'synonyms': 'multiple lines / bars per category. user phrases: \'compare X and Y\' -> add two series entries',
+            'tier': 'presentation',
+            'type': '[SeriesSpec]',
+          },
+          'showLegend': {
+            'default': true,
+            'description': 'Display the series legend',
+            'label': 'Show legend',
+            'synonyms': 'true shows the color key. user phrases: \'show legend\' / \'show the legend\' / \'show key\' / \'with legend\' / \'with a legend\' -> true; \'hide legend\' / \'no legend\' / \'without legend\' / \'remove legend\' -> false',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'showValues': {
+            'default': false,
+            'description': 'Render the numeric value on top of each data point',
+            'label': 'Show values',
+            'synonyms': 'user phrases: \'show values\' / \'show numbers on bars\' / \'with data labels\' / \'label the bars\' -> true; \'hide values\' / \'no labels\' -> false',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'sortDir': {
+            'default': 'desc',
+            'description': 'Ascending or descending order for the sort field',
+            'label': 'Sort direction',
+            'synonyms': 'asc = ascending = lowest-to-highest = low-to-high = smallest-first. desc = descending = highest-to-lowest = high-to-low = largest-first. user phrases: \'highest to lowest\' / \'largest first\' / \'descending\' -> desc; \'lowest to highest\' / \'smallest first\' / \'ascending\' -> asc',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'sortField': {
+            'default': 'none',
+            'description': 'Order points by value, label, or leave unsorted',
+            'label': 'Sort by',
+            'synonyms': 'user phrases: \'sort by value\' / \'order by amount\' -> value; \'sort alphabetically\' / \'sort by name\' -> label; \'no sort\' / \'leave order\' -> none',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'value',
+              'label',
+              'none',
+            ],
+          },
+          'stack': {
+            'default': 'none',
+            'description': 'Stack bars, normalize to 100%, or render side-by-side',
+            'label': 'Stacking',
+            'synonyms': 'user phrases: \'side by side\' / \'grouped\' -> none; \'stacked\' / \'stack the bars\' -> stack; \'percent stacked\' / \'100% stacked\' / \'normalized\' -> normalize',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'stack',
+              'normalize',
+            ],
+          },
+          'subtitle': {
+            'default': 'Counts per category',
+            'description': 'Secondary line below the title',
+            'label': 'Subtitle',
+            'synonyms': 'secondary header below the title. user phrases: \'with subtitle X\' / \'set subtitle to X\' -> X',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'timeAxis': {
+            'default': false,
+            'description': 'Group by timeField bucketed by period instead of categoryField',
+            'label': 'Time axis',
+            'synonyms': 'true means group by date / month / time. user phrases: \'group by month / week / year / date\' -> set timeAxis=true; \'group by status / category\' -> timeAxis=false',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'timeField': {
+            'default': 'date',
+            'description': 'Entity field used as the time axis when timeAxis is on',
+            'label': 'Date field',
+            'synonyms': 'the date / timestamp / created-at column. set when timeAxis=true',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'title': {
+            'default': 'Distribution',
+            'description': 'Heading shown above the chart',
+            'label': 'Title',
+            'synonyms': 'the chart\'s header text. user phrases: \'rename to X\' / \'title it X\' / \'change the title to X\' / \'call it X\' -> X',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'valueField': {
+            'default': '',
+            'description': 'Numeric field aggregated per bucket (blank = row count)',
+            'label': 'Value field',
+            'synonyms': 'the numeric column to aggregate. empty string counts rows. user phrases: \'sum revenue\' -> valueField=revenue + aggregation=sum',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewPattern': {
+            'default': 'chart',
+            'description': 'UI pattern used to draw the chart',
+            'label': 'Render pattern',
+            'synonyms': 'internal pattern selector. user prompts rarely target this directly — pattern selection is upstream',
+            'tier': 'internal',
+            'type': 'pattern',
+          },
+        },
+        'entityContract': {
+          'provides': [
+            'chartData',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'GraphItem',
+        'name': 'GraphItemGraph',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Data has been retrieved and processed for display.',
+              'key': 'ITEMS_LOADED',
+              'name': 'Items Loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ObjectSpec]',
+                },
+                {
+                  'name': 'totalCount',
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'data ready, update, refresh, loaded',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.chartData',
+                  [
+                    {
+                      'label': 'Active',
+                      'value': 6,
+                    },
+                    {
+                      'label': 'Pending',
+                      'value': 3,
+                    },
+                    {
+                      'label': 'Inactive',
+                      'value': 1,
+                    },
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'chartType': '@config.chartType',
+                    'data': '@entity.chartData',
+                    'drillEvent': '@config.drillEvent',
+                    'height': '@config.height',
+                    'series': '@config.series',
+                    'showLegend': '@config.showLegend',
+                    'showValues': '@config.showValues',
+                    'stack': '@config.stack',
+                    'subtitle': '@config.subtitle',
+                    'timeAxis': '@config.timeAxis',
+                    'title': '@config.title',
+                    'type': '@config.viewPattern',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.chartData',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@config.chartType',
+                      'histogram',
+                    ],
+                    [
+                      'array/map',
+                      '@payload.data',
+                      [
+                        'fn',
+                        'p',
+                        {
+                          'label': [
+                            'object/get',
+                            '@p',
+                            'label',
+                          ],
+                          'value': [
+                            'object/get',
+                            '@p',
+                            'value',
+                          ],
+                        },
+                      ],
+                    ],
+                    [
+                      'array/map',
+                      [
+                        'object/entries',
+                        [
+                          'array/groupBy',
+                          '@payload.data',
+                          [
+                            'if',
+                            '@config.timeAxis',
+                            '@config.timeField',
+                            '@config.categoryField',
+                          ],
+                        ],
+                      ],
+                      [
+                        'fn',
+                        'entry',
+                        {
+                          'label': [
+                            'object/get',
+                            '@entry',
+                            '0',
+                          ],
+                          'value': [
+                            'if',
+                            [
+                              '=',
+                              '@config.aggregation',
+                              'sum',
+                            ],
+                            [
+                              'array/sum',
+                              [
+                                'object/get',
+                                '@entry',
+                                '1',
+                              ],
+                              '@config.valueField',
+                            ],
+                            [
+                              'if',
+                              [
+                                '=',
+                                '@config.aggregation',
+                                'avg',
+                              ],
+                              [
+                                'array/avg',
+                                [
+                                  'object/get',
+                                  '@entry',
+                                  '1',
+                                ],
+                                '@config.valueField',
+                              ],
+                              [
+                                'if',
+                                [
+                                  '=',
+                                  '@config.aggregation',
+                                  'min',
+                                ],
+                                [
+                                  'array/min',
+                                  [
+                                    'object/get',
+                                    '@entry',
+                                    '1',
+                                  ],
+                                  '@config.valueField',
+                                ],
+                                [
+                                  'if',
+                                  [
+                                    '=',
+                                    '@config.aggregation',
+                                    'max',
+                                  ],
+                                  [
+                                    'array/max',
+                                    [
+                                      'object/get',
+                                      '@entry',
+                                      '1',
+                                    ],
+                                    '@config.valueField',
+                                  ],
+                                  [
+                                    'array/len',
+                                    [
+                                      'object/get',
+                                      '@entry',
+                                      '1',
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                        },
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.chartData',
+                  [
+                    'if',
+                    [
+                      '!=',
+                      '@config.sortField',
+                      'none',
+                    ],
+                    [
+                      'array/sort',
+                      '@entity.chartData',
+                      '@config.sortField',
+                      '@config.sortDir',
+                    ],
+                    '@entity.chartData',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.chartData',
+                  [
+                    'if',
+                    [
+                      '>',
+                      '@config.limit',
+                      0,
+                    ],
+                    [
+                      'array/take',
+                      '@entity.chartData',
+                      '@config.limit',
+                    ],
+                    '@entity.chartData',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'chartType': '@config.chartType',
+                    'data': '@entity.chartData',
+                    'drillEvent': '@config.drillEvent',
+                    'height': '@config.height',
+                    'series': '@config.series',
+                    'showLegend': '@config.showLegend',
+                    'showValues': '@config.showValues',
+                    'stack': '@config.stack',
+                    'subtitle': '@config.subtitle',
+                    'timeAxis': '@config.timeAxis',
+                    'title': '@config.title',
+                    'type': '@config.viewPattern',
+                  },
+                ],
+              ],
+              'event': 'ITEMS_LOADED',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'GraphItemGraphPage',
+        'path': '/graphitems',
+        'traits': [
+          {
+            'ref': 'GraphItemGraph',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdGraphsGraphItemOrbital. */
+export const StdGraphsGraphItemOrbitalManifest = {
+  organism: 'std-graphs',
+  orbitalName: 'GraphItemOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'GraphItemGraph',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdGraphsGraphItemOrbitalParams keys. */
+export function isStdGraphsGraphItemOrbitalParams(p: object): p is StdGraphsGraphItemOrbitalParams {
+  type _OverrideRecord = NonNullable<StdGraphsGraphItemOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdGraphsGraphItemOrbitalManifest.traitNames,
+      ...StdGraphsGraphItemOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

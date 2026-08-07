@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -238,4 +238,762 @@ export function stdGallery(params: StdGalleryParams): OrbitalDefinition {
       stdGalleryPage(params),
     ],
   });
+}
+
+type _StdGalleryEntityName = 'GalleryItem';
+type _StdGalleryListenTraitName = 'LoadingSpinner' | 'LoadingCaption' | 'GalleryIcon' | 'TitleDivider' | 'MediaGalleryGrid' | 'ErrorAlert' | 'ReloadSpinner' | 'ReloadCaption' | 'RetrySpinner' | 'GalleryItemGallery';
+
+/**
+ * Tunable params for the GalleryItemOrbital orbital.
+ *
+ * Canonical entity: GalleryItem — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdGalleryGalleryItemOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'LoadingSpinner' | 'LoadingCaption' | 'GalleryIcon' | 'TitleDivider' | 'MediaGalleryGrid' | 'ErrorAlert' | 'ReloadSpinner' | 'ReloadCaption' | 'RetrySpinner' | 'GalleryItemGallery',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait GalleryItemOrbital's `uses[]` exports. */
+type _StdGalleryGalleryItemOrbitalUsesRef = 'Spinner.traits.SpinnerRender' | 'Typography.traits.TypographyRender' | 'Icon.traits.IconRender' | 'Divider.traits.DividerRender' | 'MediaGallery.traits.MediaGalleryRender' | 'Alert.traits.AlertRender';
+
+/** Per-orbital factory: builds the GalleryItemOrbital orbital with consumer params. */
+export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'GalleryItemOrbital',
+    uses: [
+      {
+        'as': 'Spinner',
+        'from': 'std/behaviors/ui-spinner',
+      },
+      {
+        'as': 'Typography',
+        'from': 'std/behaviors/ui-typography',
+      },
+      {
+        'as': 'Icon',
+        'from': 'std/behaviors/ui-icon',
+      },
+      {
+        'as': 'Divider',
+        'from': 'std/behaviors/ui-divider',
+      },
+      {
+        'as': 'MediaGallery',
+        'from': 'std/behaviors/ui-media-gallery',
+      },
+      {
+        'as': 'Alert',
+        'from': 'std/behaviors/ui-alert',
+      },
+    ],
+    entity: {
+      name: 'GalleryItem',
+      persistence: 'runtime',
+      shared: true,
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'A user-friendly identifier for the item.',
+            'name': 'name',
+            'required': true,
+            'synonyms': 'title, label, identifier',
+            'type': 'string',
+          },
+          {
+            'description': 'A brief textual summary of the item\'s content.',
+            'name': 'description',
+            'synonyms': 'caption, summary, details, notes',
+            'type': 'string',
+          },
+          {
+            'default': 'active',
+            'description': 'Indicates the current state of the item.',
+            'name': 'status',
+            'synonyms': 'state, condition, flag',
+            'type': 'string',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'default': 'https://picsum.photos/seed/gallery/800/600',
+            'description': 'The URL pointing to the image resource.',
+            'name': 'imageUrl',
+            'synonyms': 'image, src, path',
+            'type': 'image',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'linkedEntity': 'GalleryItem',
+        'name': 'LoadingSpinner',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'color': {
+            'default': 'muted',
+            'type': 'unknown',
+          },
+          'content': {
+            'default': 'Loading gallery…',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'caption',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'GalleryItem',
+        'name': 'LoadingCaption',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'image',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'GalleryItem',
+        'name': 'GalleryIcon',
+        'ref': ('Icon.traits.IconRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'GalleryItem',
+        'name': 'TitleDivider',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'GalleryItem',
+        'name': 'MediaGalleryGrid',
+        'ref': ('MediaGallery.traits.MediaGalleryRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'message': {
+            'default': 'Failed to load gallery items',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'error',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'GalleryItem',
+        'name': 'ErrorAlert',
+        'ref': ('Alert.traits.AlertRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'size': {
+            'default': 'sm',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'GalleryItem',
+        'name': 'ReloadSpinner',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'color': {
+            'default': 'muted',
+            'type': 'unknown',
+          },
+          'content': {
+            'default': 'Loading gallery…',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'caption',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'GalleryItem',
+        'name': 'ReloadCaption',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'size': {
+            'default': 'sm',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'GalleryItem',
+        'name': 'RetrySpinner',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+      }),
+      {
+        'category': 'interaction',
+        'config': {
+          'imageField': {
+            'default': 'imageUrl',
+            'description': 'Entity field holding the image URL shown in the lightbox for the selected item',
+            'label': 'Image field',
+            'synonyms': 'image url field, thumbnail field, src field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'nameField': {
+            'default': 'name',
+            'description': 'Entity field providing the lightbox alt text and caption for the selected item',
+            'label': 'Name field',
+            'synonyms': 'title field, label field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'title': {
+            'default': 'Gallery',
+            'description': 'Heading shown above the image gallery',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Signals an item has been selected for viewing.',
+            'event': 'VIEW',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'imageUrl',
+                    'type': 'image',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'select, choose, display',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a GalleryItem has finished loading.',
+            'event': 'GalleryItemLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[GalleryItem]',
+              },
+            ],
+            'synonyms': 'loaded, ready, available',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Indicates a GalleryItem failed to load.',
+            'event': 'GalleryItemLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure, problem, load error',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'GalleryItem',
+        'name': 'GalleryItemGallery',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates a GalleryItem has finished loading.',
+              'key': 'GalleryItemLoaded',
+              'name': 'GalleryItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[GalleryItem]',
+                },
+              ],
+              'synonyms': 'loaded, ready, available',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a GalleryItem failed to load.',
+              'key': 'GalleryItemLoadFailed',
+              'name': 'GalleryItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, load error',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals an item has been selected for viewing.',
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'GalleryItem',
+                },
+              ],
+              'synonyms': 'select, choose, display',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates the gallery or lightbox has been dismissed.',
+              'key': 'CLOSE',
+              'name': 'Close',
+              'synonyms': 'dismiss, hide, close, cancel',
+              'tier': 'domain',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'viewing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'GalleryItemLoadFailed',
+                      'success': 'GalleryItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      '@trait.LoadingSpinner',
+                      '@trait.LoadingCaption',
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          '@trait.GalleryIcon',
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      '@trait.TitleDivider',
+                      '@trait.MediaGalleryGrid',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'GalleryItemLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.ErrorAlert',
+                    ],
+                    'type': 'box',
+                  },
+                ],
+              ],
+              'event': 'GalleryItemLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'GalleryItemLoadFailed',
+                      'success': 'GalleryItemLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'children': [
+                      {
+                        'closeAction': 'CLOSE',
+                        'currentIndex': 0,
+                        'images': [
+                          {
+                            'alt': [
+                              'object/get',
+                              '@payload.row',
+                              '@config.nameField',
+                            ],
+                            'caption': [
+                              'object/get',
+                              '@payload.row',
+                              '@config.nameField',
+                            ],
+                            'src': [
+                              'object/get',
+                              '@payload.row',
+                              '@config.imageField',
+                            ],
+                          },
+                        ],
+                        'isOpen': true,
+                        'showCounter': true,
+                        'type': 'lightbox',
+                      },
+                    ],
+                    'type': 'box',
+                  },
+                ],
+              ],
+              'event': 'VIEW',
+              'from': 'browsing',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'GalleryItemLoadFailed',
+                      'success': 'GalleryItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      '@trait.ReloadSpinner',
+                      '@trait.ReloadCaption',
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'CLOSE',
+              'from': 'viewing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'GalleryItemLoadFailed',
+                      'success': 'GalleryItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      '@trait.RetrySpinner',
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'GalleryItemGalleryPage',
+        'path': '/galleryitems/gallery',
+        'traits': [
+          {
+            'ref': 'GalleryItemGallery',
+          },
+          {
+            'ref': 'LoadingSpinner',
+          },
+          {
+            'ref': 'LoadingCaption',
+          },
+          {
+            'ref': 'GalleryIcon',
+          },
+          {
+            'ref': 'TitleDivider',
+          },
+          {
+            'ref': 'MediaGalleryGrid',
+          },
+          {
+            'ref': 'ErrorAlert',
+          },
+          {
+            'ref': 'ReloadSpinner',
+          },
+          {
+            'ref': 'ReloadCaption',
+          },
+          {
+            'ref': 'RetrySpinner',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdGalleryGalleryItemOrbital. */
+export const StdGalleryGalleryItemOrbitalManifest = {
+  organism: 'std-gallery',
+  orbitalName: 'GalleryItemOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'LoadingSpinner',
+    'LoadingCaption',
+    'GalleryIcon',
+    'TitleDivider',
+    'MediaGalleryGrid',
+    'ErrorAlert',
+    'ReloadSpinner',
+    'ReloadCaption',
+    'RetrySpinner',
+  ] as const,
+  inlineTraitNames: [
+    'GalleryItemGallery',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdGalleryGalleryItemOrbitalParams keys. */
+export function isStdGalleryGalleryItemOrbitalParams(p: object): p is StdGalleryGalleryItemOrbitalParams {
+  type _OverrideRecord = NonNullable<StdGalleryGalleryItemOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdGalleryGalleryItemOrbitalManifest.traitNames,
+      ...StdGalleryGalleryItemOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

@@ -1,0 +1,375 @@
+app std-astro-stellar "1.0.0"
+"Stellar life-cycle simulator — the learner picks a starting mass via slider or preset buttons and steps through the star's evolutionary stages from nebula to its predicted end state (white dwarf, neutron star, or black hole), on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital AstroStellarOrbital {
+  type AstroStellarShapePoint = {
+    x : number!
+    y : number!
+  }
+  type AstroStellarShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [AstroStellarShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type AstroStellarStage = {
+    label : string!
+    description : string
+    color : string
+    radius : number
+  }
+  type AstroStellarPath = {
+    maxMass : number!
+    endLabel : string
+    stages : [AstroStellarStage]!
+  }
+
+  entity AstroStellarScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    initialMass : number
+    pathEndLabel : string
+    stages : [AstroStellarStage]
+    currentStageIndex : number
+    stageLabel : string
+    stageDescription : string
+    starShapes : [AstroStellarShape]
+  }
+
+  trait AstroStellarSim -> @rebindable AstroStellarScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+          (mass @config.initialMass)
+          (matched (array/first (array/filter @config.stellarPaths (fn p (<= @mass (object/get @p maxMass))))))
+          (selectedPath (if (== @matched null) (array/last @config.stellarPaths) @matched))
+          (stage0 (array/nth (object/get @selectedPath stages) 0))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.initialMass @mass)
+          (set @entity.pathEndLabel (object/get @selectedPath endLabel))
+          (set @entity.stages (object/get @selectedPath stages))
+          (set @entity.currentStageIndex 0)
+          (set @entity.stageLabel (object/get @stage0 label))
+          (set @entity.stageDescription (object/get @stage0 description))
+          (set @entity.starShapes [
+            { type: "circle", id: "star", x: @cx, y: @cy, radius: (object/get @stage0 radius), color: (object/get @stage0 color), fill: (object/get @stage0 color) },
+            { type: "text", id: "stageText", x: @cx, y: (+ @cy (object/get @stage0 radius) 30), text: @entity.stageLabel, fontSize: 18, align: "center", color: "#f8fafc" }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.starShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Initial mass: " @entity.initialMass " solar masses") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.massPresets (fn m { type: button, action: SET_MASS, actionPayload: { value: @m }, label: (str/concat @m " M☉"), variant: (if (== @entity.initialMass @m) "primary" "ghost"), size: sm })) },
+                { type: range-slider, min: 0.1, max: 25, step: 0.1, value: @entity.initialMass, showTooltip: true, onChange: SET_MASS },
+                { type: typography, variant: h4, content: @entity.stageLabel },
+                { type: typography, variant: body, content: @entity.stageDescription },
+                { type: typography, variant: caption, content: (str/concat "Predicted end state: " @entity.pathEndLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP_STAGE, label: "Next Stage", variant: primary },
+                  { type: button, action: RESET_STAGE, label: "Reset Lifecycle", variant: ghost }
+                ] }
+              ] }
+            ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+          (mass @config.initialMass)
+          (matched (array/first (array/filter @config.stellarPaths (fn p (<= @mass (object/get @p maxMass))))))
+          (selectedPath (if (== @matched null) (array/last @config.stellarPaths) @matched))
+          (stage0 (array/nth (object/get @selectedPath stages) 0))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.initialMass @mass)
+          (set @entity.pathEndLabel (object/get @selectedPath endLabel))
+          (set @entity.stages (object/get @selectedPath stages))
+          (set @entity.currentStageIndex 0)
+          (set @entity.stageLabel (object/get @stage0 label))
+          (set @entity.stageDescription (object/get @stage0 description))
+          (set @entity.starShapes [
+            { type: "circle", id: "star", x: @cx, y: @cy, radius: (object/get @stage0 radius), color: (object/get @stage0 color), fill: (object/get @stage0 color) },
+            { type: "text", id: "stageText", x: @cx, y: (+ @cy (object/get @stage0 radius) 30), text: @entity.stageLabel, fontSize: 18, align: "center", color: "#f8fafc" }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.starShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Initial mass: " @entity.initialMass " solar masses") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.massPresets (fn m { type: button, action: SET_MASS, actionPayload: { value: @m }, label: (str/concat @m " M☉"), variant: (if (== @entity.initialMass @m) "primary" "ghost"), size: sm })) },
+                { type: range-slider, min: 0.1, max: 25, step: 0.1, value: @entity.initialMass, showTooltip: true, onChange: SET_MASS },
+                { type: typography, variant: h4, content: @entity.stageLabel },
+                { type: typography, variant: body, content: @entity.stageDescription },
+                { type: typography, variant: caption, content: (str/concat "Predicted end state: " @entity.pathEndLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP_STAGE, label: "Next Stage", variant: primary },
+                  { type: button, action: RESET_STAGE, label: "Reset Lifecycle", variant: ghost }
+                ] }
+              ] }
+            ] }
+          ]
+        })
+
+      SET_MASS -> idle when (== @entity.active true)
+        (let (
+          (matched (array/first (array/filter @config.stellarPaths (fn p (<= ?value (object/get @p maxMass))))))
+          (selectedPath (if (== @matched null) (array/last @config.stellarPaths) @matched))
+          (stage0 (array/nth (object/get @selectedPath stages) 0))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.initialMass ?value)
+          (set @entity.pathEndLabel (object/get @selectedPath endLabel))
+          (set @entity.stages (object/get @selectedPath stages))
+          (set @entity.currentStageIndex 0)
+          (set @entity.stageLabel (object/get @stage0 label))
+          (set @entity.stageDescription (object/get @stage0 description))
+          (set @entity.starShapes [
+            { type: "circle", id: "star", x: @cx, y: @cy, radius: (object/get @stage0 radius), color: (object/get @stage0 color), fill: (object/get @stage0 color) },
+            { type: "text", id: "stageText", x: @cx, y: (+ @cy (object/get @stage0 radius) 30), text: @entity.stageLabel, fontSize: 18, align: "center", color: "#f8fafc" }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.starShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Initial mass: " @entity.initialMass " solar masses") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.massPresets (fn m { type: button, action: SET_MASS, actionPayload: { value: @m }, label: (str/concat @m " M☉"), variant: (if (== @entity.initialMass @m) "primary" "ghost"), size: sm })) },
+                { type: range-slider, min: 0.1, max: 25, step: 0.1, value: @entity.initialMass, showTooltip: true, onChange: SET_MASS },
+                { type: typography, variant: h4, content: @entity.stageLabel },
+                { type: typography, variant: body, content: @entity.stageDescription },
+                { type: typography, variant: caption, content: (str/concat "Predicted end state: " @entity.pathEndLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP_STAGE, label: "Next Stage", variant: primary },
+                  { type: button, action: RESET_STAGE, label: "Reset Lifecycle", variant: ghost }
+                ] }
+              ] }
+            ] }
+          ]
+        })
+        (emit STELLAR_UPDATED { initialMass: @entity.initialMass, currentStageIndex: @entity.currentStageIndex, stageLabel: @entity.stageLabel, pathEndLabel: @entity.pathEndLabel })
+
+      STEP_STAGE -> idle when (== @entity.active true)
+        (let (
+          (nextIndex (if (< @entity.currentStageIndex (- (array/len @entity.stages) 1)) (+ @entity.currentStageIndex 1) @entity.currentStageIndex))
+          (stage (array/nth @entity.stages @nextIndex))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.currentStageIndex @nextIndex)
+          (set @entity.stageLabel (object/get @stage label))
+          (set @entity.stageDescription (object/get @stage description))
+          (set @entity.starShapes [
+            { type: "circle", id: "star", x: @cx, y: @cy, radius: (object/get @stage radius), color: (object/get @stage color), fill: (object/get @stage color) },
+            { type: "text", id: "stageText", x: @cx, y: (+ @cy (object/get @stage radius) 30), text: @entity.stageLabel, fontSize: 18, align: "center", color: "#f8fafc" }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.starShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Initial mass: " @entity.initialMass " solar masses") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.massPresets (fn m { type: button, action: SET_MASS, actionPayload: { value: @m }, label: (str/concat @m " M☉"), variant: (if (== @entity.initialMass @m) "primary" "ghost"), size: sm })) },
+                { type: range-slider, min: 0.1, max: 25, step: 0.1, value: @entity.initialMass, showTooltip: true, onChange: SET_MASS },
+                { type: typography, variant: h4, content: @entity.stageLabel },
+                { type: typography, variant: body, content: @entity.stageDescription },
+                { type: typography, variant: caption, content: (str/concat "Predicted end state: " @entity.pathEndLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP_STAGE, label: "Next Stage", variant: primary },
+                  { type: button, action: RESET_STAGE, label: "Reset Lifecycle", variant: ghost }
+                ] }
+              ] }
+            ] }
+          ]
+        })
+        (emit STELLAR_UPDATED { initialMass: @entity.initialMass, currentStageIndex: @entity.currentStageIndex, stageLabel: @entity.stageLabel, pathEndLabel: @entity.pathEndLabel })
+
+      RESET_STAGE -> idle when (== @entity.active true)
+        (let (
+          (stage0 (array/nth @entity.stages 0))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.currentStageIndex 0)
+          (set @entity.stageLabel (object/get @stage0 label))
+          (set @entity.stageDescription (object/get @stage0 description))
+          (set @entity.starShapes [
+            { type: "circle", id: "star", x: @cx, y: @cy, radius: (object/get @stage0 radius), color: (object/get @stage0 color), fill: (object/get @stage0 color) },
+            { type: "text", id: "stageText", x: @cx, y: (+ @cy (object/get @stage0 radius) 30), text: @entity.stageLabel, fontSize: 18, align: "center", color: "#f8fafc" }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.starShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Initial mass: " @entity.initialMass " solar masses") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.massPresets (fn m { type: button, action: SET_MASS, actionPayload: { value: @m }, label: (str/concat @m " M☉"), variant: (if (== @entity.initialMass @m) "primary" "ghost"), size: sm })) },
+                { type: range-slider, min: 0.1, max: 25, step: 0.1, value: @entity.initialMass, showTooltip: true, onChange: SET_MASS },
+                { type: typography, variant: h4, content: @entity.stageLabel },
+                { type: typography, variant: body, content: @entity.stageDescription },
+                { type: typography, variant: caption, content: (str/concat "Predicted end state: " @entity.pathEndLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP_STAGE, label: "Next Stage", variant: primary },
+                  { type: button, action: RESET_STAGE, label: "Reset Lifecycle", variant: ghost }
+                ] }
+              ] }
+            ] }
+          ]
+        })
+        (emit STELLAR_UPDATED { initialMass: @entity.initialMass, currentStageIndex: @entity.currentStageIndex, stageLabel: @entity.stageLabel, pathEndLabel: @entity.pathEndLabel })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_MASS {
+        value : number
+      }
+        @description "Learner set the initial stellar mass, via slider or a preset button."
+        @tier "domain"
+      STEP_STAGE {
+      }
+        @description "Learner pressed Next Stage to advance the star to its next life-cycle stage."
+        @tier "domain"
+      RESET_STAGE {
+      }
+        @description "Learner pressed Reset Lifecycle to return the star to its first stage."
+        @tier "domain"
+    }
+
+    emits {
+      STELLAR_UPDATED -> external {
+        initialMass : number
+        currentStageIndex : number
+        stageLabel : string
+        pathEndLabel : string
+      }
+        @description "The star's life-cycle state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "stellar update, life-cycle stage, star mass change, stage advance"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Star Life-Cycle Simulator"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 460
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#0f172a"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      initialMass : number = 1
+        @label "Initial Stellar Mass"
+        @description "Starting stellar mass in solar masses; determines which life-cycle path the star follows."
+        @synonyms "solar mass, star mass, initial mass"
+        @tier "domain"
+      massPresets : [number] = [0.5, 1, 8, 20]
+        @label "Mass Presets"
+        @description "Quick-pick starting masses, in solar masses, shown as preset buttons."
+        @tier "domain"
+      stellarPaths : [AstroStellarPath] = [
+        { maxMass: 7.9, endLabel: "White Dwarf", stages: [
+            { label: "Nebula", description: "A vast cloud of gas and dust collapses under its own gravity, and a protostar begins to glow at its center.", color: "#94a3b8", radius: 95 },
+            { label: "Main Sequence", description: "Hydrogen fuses into helium in the core, and the star shines steadily for billions of years — this is where our Sun is now.", color: "#facc15", radius: 42 },
+            { label: "Red Giant", description: "The core runs out of hydrogen and contracts while the outer layers swell and cool into a huge red envelope.", color: "#f97316", radius: 100 },
+            { label: "White Dwarf", description: "The outer layers drift away as a planetary nebula, leaving behind a hot, dense stellar remnant that slowly cools and fades.", color: "#e0f2fe", radius: 16 }
+          ] },
+        { maxMass: 19.9, endLabel: "Neutron Star", stages: [
+            { label: "Nebula", description: "A vast cloud of gas and dust collapses under its own gravity, forming a protostar far more massive than the Sun.", color: "#94a3b8", radius: 110 },
+            { label: "Main Sequence", description: "The star burns through hydrogen far faster than a Sun-like star, shining bright blue-white.", color: "#93c5fd", radius: 55 },
+            { label: "Red Supergiant", description: "Heavier elements fuse in shells around an iron core, until fusion can no longer release energy.", color: "#dc2626", radius: 130 },
+            { label: "Supernova", description: "The core collapses in an instant and rebounds, blasting the star's outer layers into space in a brilliant explosion.", color: "#fef08a", radius: 150 },
+            { label: "Neutron Star", description: "The crushed core survives as an ultra-dense sphere of neutrons, often spinning rapidly as a pulsar.", color: "#a78bfa", radius: 10 }
+          ] },
+        { maxMass: 999, endLabel: "Black Hole", stages: [
+            { label: "Nebula", description: "A vast cloud of gas and dust collapses under its own gravity, forming an extremely massive protostar.", color: "#94a3b8", radius: 130 },
+            { label: "Main Sequence", description: "The star burns its fuel at a furious rate, glowing intensely blue and living only a few million years.", color: "#60a5fa", radius: 65 },
+            { label: "Blue Supergiant", description: "The star swells into an enormous, luminous supergiant while fusing progressively heavier elements in its core.", color: "#3b82f6", radius: 150 },
+            { label: "Supernova", description: "The iron core collapses catastrophically and the star detonates, briefly outshining an entire galaxy.", color: "#fef08a", radius: 170 },
+            { label: "Black Hole", description: "Gravity overwhelms every other force, and the collapsed core forms a black hole from which not even light can escape.", color: "#020617", radius: 14 }
+          ] }
+      ]
+        @label "Stellar Life-cycle Paths"
+        @description "Mass-threshold roster of life-cycle paths; the path whose maxMass first covers the initial mass is used. Each path supplies its own ordered stage list (label/description/color/radius) so fill_params can re-theme or extend the life-cycle."
+        @tier "domain"
+    }
+  }
+
+  page "/astro-stellar" as AstroStellarPage -> AstroStellarSim
+}

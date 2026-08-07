@@ -1,0 +1,660 @@
+app std-chem-titration "1.0.0"
+"Acid-base titration engine — the learner adds titrant in large or small increments and watches the pH curve and indicator color evolve toward (and past) the equivalence point, on a chemistry-canvas plus a pH line-chart. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital ChemTitrationOrbital {
+  type ChemTitrationAtom = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+  }
+  type ChemTitrationBond = {
+    from : string!
+    to : string!
+    type : "single" | "double" | "triple"
+    color : string
+  }
+  type ChemTitrationArrow = {
+    x : number!
+    y : number!
+    angle : number
+    length : number
+    color : string
+    label : string
+  }
+  type ChemTitrationShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [ChemTitrationShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type ChemTitrationShapePoint = {
+    x : number!
+    y : number!
+  }
+  type ChemTitrationCurvePoint = {
+    value : number!
+    label : string
+  }
+
+  entity ChemTitrationScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    atoms : [ChemTitrationAtom]
+    bonds : [ChemTitrationBond]
+    arrows : [ChemTitrationArrow]
+    shapes : [ChemTitrationShape]
+    titrationAcidStrength : string = "strong"
+    titrationAcidKa : number = 0.000018
+    titrationAcidConcentration : number = 0.1
+    titrationAcidVolume : number = 25
+    titrationBaseConcentration : number = 0.1
+    titrationIndicatorMidpoint : number = 8.2
+    titrationIndicatorAcidColor : string = "#fde68a"
+    titrationIndicatorBaseColor : string = "#ec4899"
+    titrantVolumeAdded : number = 0
+    ph : number = 0
+    equivalenceVolume : number = 0
+    overshoot : boolean = false
+    indicatorColor : string = "#fde68a"
+    statusText : string = ""
+    curvePoints : [ChemTitrationCurvePoint] = []
+  }
+
+  trait ChemTitrationSim -> @rebindable ChemTitrationScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.titrationAcidStrength @config.titrationAcidStrength)
+        (set @entity.titrationAcidKa @config.titrationAcidKa)
+        (set @entity.titrationAcidConcentration @config.titrationAcidConcentration)
+        (set @entity.titrationAcidVolume @config.titrationAcidVolume)
+        (set @entity.titrationBaseConcentration @config.titrationBaseConcentration)
+        (set @entity.titrationIndicatorMidpoint @config.titrationIndicatorMidpoint)
+        (set @entity.titrationIndicatorAcidColor @config.titrationIndicatorAcidColor)
+        (set @entity.titrationIndicatorBaseColor @config.titrationIndicatorBaseColor)
+        (set @entity.titrantVolumeAdded 0)
+        (set @entity.ph (let (
+          (totalVolumeL (/ (+ @entity.titrationAcidVolume @entity.titrantVolumeAdded) 1000))
+          (acidMolesInit (/ (* @entity.titrationAcidConcentration @entity.titrationAcidVolume) 1000))
+          (baseMolesAdded (/ (* @entity.titrationBaseConcentration @entity.titrantVolumeAdded) 1000))
+          (isWeak (== @entity.titrationAcidStrength "weak"))
+          (noTitrantYet (<= @entity.titrantVolumeAdded 0))
+        )
+        (let (
+          (netMoles (- @acidMolesInit @baseMolesAdded))
+          (epsilon (* @acidMolesInit 0.0005))
+        )
+        (let (
+          (atEquivalence (< (math/abs @netMoles) @epsilon))
+          (preEq (> @netMoles 0))
+        )
+        (let (
+          (logArg (if @atEquivalence
+            (if @isWeak (/ (* 0.00000000000001 (/ @acidMolesInit @totalVolumeL)) @entity.titrationAcidKa) 1)
+            (if @preEq
+              (if @isWeak
+                (if @noTitrantYet
+                  (* @entity.titrationAcidKa (/ @acidMolesInit @totalVolumeL))
+                  (/ @baseMolesAdded (* @netMoles @entity.titrationAcidKa)))
+                (/ @netMoles @totalVolumeL))
+              (/ (math/abs @netMoles) @totalVolumeL))))
+          (logOffset (if @atEquivalence (if @isWeak 14 7) (if @preEq 0 14)))
+          (logScale (if @atEquivalence (if @isWeak 0.5 0)
+            (if @preEq (if @isWeak (if @noTitrantYet -0.5 1) -1) 1)))
+        )
+        (let ((s1 (math/sqrt @logArg)))
+        (let ((s2 (math/sqrt @s1)))
+        (let ((s3 (math/sqrt @s2)))
+        (let ((s4 (math/sqrt @s3)))
+        (let ((s5 (math/sqrt @s4)))
+        (let ((s6 (math/sqrt @s5)))
+        (let ((s7 (math/sqrt @s6)))
+        (let ((s8 (math/sqrt @s7)))
+        (let ((s9 (math/sqrt @s8)))
+        (let ((s10 (math/sqrt @s9)))
+        (let ((lnArg (* (- @s10 1) 1024)))
+        (let ((log10Arg (/ @lnArg 2.302585093)))
+          (+ @logOffset (* @logScale @log10Arg))
+        )))))))))))))))))
+        (set @entity.equivalenceVolume (/ (* @config.titrationAcidConcentration @config.titrationAcidVolume) @config.titrationBaseConcentration))
+        (set @entity.overshoot false)
+        (set @entity.indicatorColor (if (< @entity.ph @entity.titrationIndicatorMidpoint) @entity.titrationIndicatorAcidColor @entity.titrationIndicatorBaseColor))
+        (set @entity.statusText (str/concat "Titrant added: 0 mL  |  pH " (str/concat (math/round @entity.ph 2)(str/concat "  |  equivalence at ~" (str/concat @entity.equivalenceVolume " mL")))))
+        (set @entity.curvePoints [{ value: @entity.ph, label: "0.0 mL" }])
+        (set @entity.atoms [{ id: "flask", x: (/ @config.width 2), y: (/ @config.height 2), element: "", radius: (math/min (* @config.width 0.32) (* @config.height 0.32)), color: @entity.indicatorColor }])
+        (set @entity.bonds [])
+        (set @entity.arrows [])
+        (set @entity.shapes [
+          { type: text, id: "phLabel", x: (/ @config.width 2), y: (/ @config.height 2), text: (str/concat "pH " (math/round @entity.ph 2)), fontSize: 20, align: center, color: "#111827" },
+          { type: text, id: "volLabel", x: (/ @config.width 2), y: (+ (/ @config.height 2) 28), text: (str/concat @entity.titrantVolumeAdded " mL added"), fontSize: 13, align: center, color: "#374151" }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            {
+              type: stack
+              direction: vertical
+              gap: md
+              children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.statusText },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: sm
+                  children: [
+                    { type: button, action: ADD_TITRANT_LARGE, label: (str/concat "+ " (str/concat @config.titrationIncrementLarge " mL")), variant: primary },
+                    { type: button, action: ADD_TITRANT_SMALL, label: (str/concat "+ " (str/concat @config.titrationIncrementSmall " mL")), variant: secondary },
+                    { type: button, action: RESET_TITRATION, label: "Reset", variant: ghost }
+                  ]
+                },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: md
+                  children: [
+                    { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, atoms: @entity.atoms, bonds: @entity.bonds, arrows: @entity.arrows, shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                    { type: line-chart, data: @entity.curvePoints, width: @config.width, height: @config.height, showGrid: true, showValues: false, showArea: false, lineColor: "#2563eb", areaColor: "#2563eb" }
+                  ]
+                }
+              ]
+            }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.titrationAcidStrength @config.titrationAcidStrength)
+        (set @entity.titrationAcidKa @config.titrationAcidKa)
+        (set @entity.titrationAcidConcentration @config.titrationAcidConcentration)
+        (set @entity.titrationAcidVolume @config.titrationAcidVolume)
+        (set @entity.titrationBaseConcentration @config.titrationBaseConcentration)
+        (set @entity.titrationIndicatorMidpoint @config.titrationIndicatorMidpoint)
+        (set @entity.titrationIndicatorAcidColor @config.titrationIndicatorAcidColor)
+        (set @entity.titrationIndicatorBaseColor @config.titrationIndicatorBaseColor)
+        (set @entity.titrantVolumeAdded 0)
+        (set @entity.ph (let (
+          (totalVolumeL (/ (+ @entity.titrationAcidVolume @entity.titrantVolumeAdded) 1000))
+          (acidMolesInit (/ (* @entity.titrationAcidConcentration @entity.titrationAcidVolume) 1000))
+          (baseMolesAdded (/ (* @entity.titrationBaseConcentration @entity.titrantVolumeAdded) 1000))
+          (isWeak (== @entity.titrationAcidStrength "weak"))
+          (noTitrantYet (<= @entity.titrantVolumeAdded 0))
+        )
+        (let (
+          (netMoles (- @acidMolesInit @baseMolesAdded))
+          (epsilon (* @acidMolesInit 0.0005))
+        )
+        (let (
+          (atEquivalence (< (math/abs @netMoles) @epsilon))
+          (preEq (> @netMoles 0))
+        )
+        (let (
+          (logArg (if @atEquivalence
+            (if @isWeak (/ (* 0.00000000000001 (/ @acidMolesInit @totalVolumeL)) @entity.titrationAcidKa) 1)
+            (if @preEq
+              (if @isWeak
+                (if @noTitrantYet
+                  (* @entity.titrationAcidKa (/ @acidMolesInit @totalVolumeL))
+                  (/ @baseMolesAdded (* @netMoles @entity.titrationAcidKa)))
+                (/ @netMoles @totalVolumeL))
+              (/ (math/abs @netMoles) @totalVolumeL))))
+          (logOffset (if @atEquivalence (if @isWeak 14 7) (if @preEq 0 14)))
+          (logScale (if @atEquivalence (if @isWeak 0.5 0)
+            (if @preEq (if @isWeak (if @noTitrantYet -0.5 1) -1) 1)))
+        )
+        (let ((s1 (math/sqrt @logArg)))
+        (let ((s2 (math/sqrt @s1)))
+        (let ((s3 (math/sqrt @s2)))
+        (let ((s4 (math/sqrt @s3)))
+        (let ((s5 (math/sqrt @s4)))
+        (let ((s6 (math/sqrt @s5)))
+        (let ((s7 (math/sqrt @s6)))
+        (let ((s8 (math/sqrt @s7)))
+        (let ((s9 (math/sqrt @s8)))
+        (let ((s10 (math/sqrt @s9)))
+        (let ((lnArg (* (- @s10 1) 1024)))
+        (let ((log10Arg (/ @lnArg 2.302585093)))
+          (+ @logOffset (* @logScale @log10Arg))
+        )))))))))))))))))
+        (set @entity.equivalenceVolume (/ (* @config.titrationAcidConcentration @config.titrationAcidVolume) @config.titrationBaseConcentration))
+        (set @entity.overshoot false)
+        (set @entity.indicatorColor (if (< @entity.ph @entity.titrationIndicatorMidpoint) @entity.titrationIndicatorAcidColor @entity.titrationIndicatorBaseColor))
+        (set @entity.statusText (str/concat "Titrant added: 0 mL  |  pH " (str/concat (math/round @entity.ph 2)(str/concat "  |  equivalence at ~" (str/concat @entity.equivalenceVolume " mL")))))
+        (set @entity.curvePoints [{ value: @entity.ph, label: "0.0 mL" }])
+        (set @entity.atoms [{ id: "flask", x: (/ @config.width 2), y: (/ @config.height 2), element: "", radius: (math/min (* @config.width 0.32) (* @config.height 0.32)), color: @entity.indicatorColor }])
+        (set @entity.bonds [])
+        (set @entity.arrows [])
+        (set @entity.shapes [
+          { type: text, id: "phLabel", x: (/ @config.width 2), y: (/ @config.height 2), text: (str/concat "pH " (math/round @entity.ph 2)), fontSize: 20, align: center, color: "#111827" },
+          { type: text, id: "volLabel", x: (/ @config.width 2), y: (+ (/ @config.height 2) 28), text: (str/concat @entity.titrantVolumeAdded " mL added"), fontSize: 13, align: center, color: "#374151" }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            {
+              type: stack
+              direction: vertical
+              gap: md
+              children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.statusText },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: sm
+                  children: [
+                    { type: button, action: ADD_TITRANT_LARGE, label: (str/concat "+ " (str/concat @config.titrationIncrementLarge " mL")), variant: primary },
+                    { type: button, action: ADD_TITRANT_SMALL, label: (str/concat "+ " (str/concat @config.titrationIncrementSmall " mL")), variant: secondary },
+                    { type: button, action: RESET_TITRATION, label: "Reset", variant: ghost }
+                  ]
+                },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: md
+                  children: [
+                    { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, atoms: @entity.atoms, bonds: @entity.bonds, arrows: @entity.arrows, shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                    { type: line-chart, data: @entity.curvePoints, width: @config.width, height: @config.height, showGrid: true, showValues: false, showArea: false, lineColor: "#2563eb", areaColor: "#2563eb" }
+                  ]
+                }
+              ]
+            }
+          ]
+        })
+
+      ADD_TITRANT_LARGE -> idle when (== @entity.active true)
+        (set @entity.titrantVolumeAdded (+ @entity.titrantVolumeAdded @config.titrationIncrementLarge))
+        (set @entity.ph (let (
+          (totalVolumeL (/ (+ @entity.titrationAcidVolume @entity.titrantVolumeAdded) 1000))
+          (acidMolesInit (/ (* @entity.titrationAcidConcentration @entity.titrationAcidVolume) 1000))
+          (baseMolesAdded (/ (* @entity.titrationBaseConcentration @entity.titrantVolumeAdded) 1000))
+          (isWeak (== @entity.titrationAcidStrength "weak"))
+          (noTitrantYet (<= @entity.titrantVolumeAdded 0))
+        )
+        (let (
+          (netMoles (- @acidMolesInit @baseMolesAdded))
+          (epsilon (* @acidMolesInit 0.0005))
+        )
+        (let (
+          (atEquivalence (< (math/abs @netMoles) @epsilon))
+          (preEq (> @netMoles 0))
+        )
+        (let (
+          (logArg (if @atEquivalence
+            (if @isWeak (/ (* 0.00000000000001 (/ @acidMolesInit @totalVolumeL)) @entity.titrationAcidKa) 1)
+            (if @preEq
+              (if @isWeak
+                (if @noTitrantYet
+                  (* @entity.titrationAcidKa (/ @acidMolesInit @totalVolumeL))
+                  (/ @baseMolesAdded (* @netMoles @entity.titrationAcidKa)))
+                (/ @netMoles @totalVolumeL))
+              (/ (math/abs @netMoles) @totalVolumeL))))
+          (logOffset (if @atEquivalence (if @isWeak 14 7) (if @preEq 0 14)))
+          (logScale (if @atEquivalence (if @isWeak 0.5 0)
+            (if @preEq (if @isWeak (if @noTitrantYet -0.5 1) -1) 1)))
+        )
+        (let ((s1 (math/sqrt @logArg)))
+        (let ((s2 (math/sqrt @s1)))
+        (let ((s3 (math/sqrt @s2)))
+        (let ((s4 (math/sqrt @s3)))
+        (let ((s5 (math/sqrt @s4)))
+        (let ((s6 (math/sqrt @s5)))
+        (let ((s7 (math/sqrt @s6)))
+        (let ((s8 (math/sqrt @s7)))
+        (let ((s9 (math/sqrt @s8)))
+        (let ((s10 (math/sqrt @s9)))
+        (let ((lnArg (* (- @s10 1) 1024)))
+        (let ((log10Arg (/ @lnArg 2.302585093)))
+          (+ @logOffset (* @logScale @log10Arg))
+        )))))))))))))))))
+        (set @entity.overshoot (> @entity.titrantVolumeAdded (+ @entity.equivalenceVolume 0.01)))
+        (set @entity.indicatorColor (if (< @entity.ph @entity.titrationIndicatorMidpoint) @entity.titrationIndicatorAcidColor @entity.titrationIndicatorBaseColor))
+        (set @entity.statusText (str/concat "Titrant added: " (str/concat @entity.titrantVolumeAdded (str/concat " mL  |  pH " (str/concat (math/round @entity.ph 2)(if @entity.overshoot "  |  past equivalence — overshoot" (str/concat "  |  equivalence at ~" (str/concat @entity.equivalenceVolume " mL"))))))))
+        (set @entity.curvePoints (array/append @entity.curvePoints { value: @entity.ph, label: (str/concat @entity.titrantVolumeAdded " mL") }))
+        (set @entity.atoms [{ id: "flask", x: (/ @config.width 2), y: (/ @config.height 2), element: "", radius: (math/min (* @config.width 0.32) (* @config.height 0.32)), color: @entity.indicatorColor }])
+        (set @entity.shapes [
+          { type: text, id: "phLabel", x: (/ @config.width 2), y: (/ @config.height 2), text: (str/concat "pH " (math/round @entity.ph 2)), fontSize: 20, align: center, color: "#111827" },
+          { type: text, id: "volLabel", x: (/ @config.width 2), y: (+ (/ @config.height 2) 28), text: (str/concat @entity.titrantVolumeAdded " mL added"), fontSize: 13, align: center, color: "#374151" }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            {
+              type: stack
+              direction: vertical
+              gap: md
+              children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.statusText },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: sm
+                  children: [
+                    { type: button, action: ADD_TITRANT_LARGE, label: (str/concat "+ " (str/concat @config.titrationIncrementLarge " mL")), variant: primary },
+                    { type: button, action: ADD_TITRANT_SMALL, label: (str/concat "+ " (str/concat @config.titrationIncrementSmall " mL")), variant: secondary },
+                    { type: button, action: RESET_TITRATION, label: "Reset", variant: ghost }
+                  ]
+                },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: md
+                  children: [
+                    { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, atoms: @entity.atoms, bonds: @entity.bonds, arrows: @entity.arrows, shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                    { type: line-chart, data: @entity.curvePoints, width: @config.width, height: @config.height, showGrid: true, showValues: false, showArea: false, lineColor: "#2563eb", areaColor: "#2563eb" }
+                  ]
+                }
+              ]
+            }
+          ]
+        })
+        (emit TITRATION_UPDATED { titrantVolumeAdded: @entity.titrantVolumeAdded, ph: @entity.ph, overshoot: @entity.overshoot, equivalenceVolume: @entity.equivalenceVolume, statusText: @entity.statusText })
+
+      ADD_TITRANT_SMALL -> idle when (== @entity.active true)
+        (set @entity.titrantVolumeAdded (+ @entity.titrantVolumeAdded @config.titrationIncrementSmall))
+        (set @entity.ph (let (
+          (totalVolumeL (/ (+ @entity.titrationAcidVolume @entity.titrantVolumeAdded) 1000))
+          (acidMolesInit (/ (* @entity.titrationAcidConcentration @entity.titrationAcidVolume) 1000))
+          (baseMolesAdded (/ (* @entity.titrationBaseConcentration @entity.titrantVolumeAdded) 1000))
+          (isWeak (== @entity.titrationAcidStrength "weak"))
+          (noTitrantYet (<= @entity.titrantVolumeAdded 0))
+        )
+        (let (
+          (netMoles (- @acidMolesInit @baseMolesAdded))
+          (epsilon (* @acidMolesInit 0.0005))
+        )
+        (let (
+          (atEquivalence (< (math/abs @netMoles) @epsilon))
+          (preEq (> @netMoles 0))
+        )
+        (let (
+          (logArg (if @atEquivalence
+            (if @isWeak (/ (* 0.00000000000001 (/ @acidMolesInit @totalVolumeL)) @entity.titrationAcidKa) 1)
+            (if @preEq
+              (if @isWeak
+                (if @noTitrantYet
+                  (* @entity.titrationAcidKa (/ @acidMolesInit @totalVolumeL))
+                  (/ @baseMolesAdded (* @netMoles @entity.titrationAcidKa)))
+                (/ @netMoles @totalVolumeL))
+              (/ (math/abs @netMoles) @totalVolumeL))))
+          (logOffset (if @atEquivalence (if @isWeak 14 7) (if @preEq 0 14)))
+          (logScale (if @atEquivalence (if @isWeak 0.5 0)
+            (if @preEq (if @isWeak (if @noTitrantYet -0.5 1) -1) 1)))
+        )
+        (let ((s1 (math/sqrt @logArg)))
+        (let ((s2 (math/sqrt @s1)))
+        (let ((s3 (math/sqrt @s2)))
+        (let ((s4 (math/sqrt @s3)))
+        (let ((s5 (math/sqrt @s4)))
+        (let ((s6 (math/sqrt @s5)))
+        (let ((s7 (math/sqrt @s6)))
+        (let ((s8 (math/sqrt @s7)))
+        (let ((s9 (math/sqrt @s8)))
+        (let ((s10 (math/sqrt @s9)))
+        (let ((lnArg (* (- @s10 1) 1024)))
+        (let ((log10Arg (/ @lnArg 2.302585093)))
+          (+ @logOffset (* @logScale @log10Arg))
+        )))))))))))))))))
+        (set @entity.overshoot (> @entity.titrantVolumeAdded (+ @entity.equivalenceVolume 0.01)))
+        (set @entity.indicatorColor (if (< @entity.ph @entity.titrationIndicatorMidpoint) @entity.titrationIndicatorAcidColor @entity.titrationIndicatorBaseColor))
+        (set @entity.statusText (str/concat "Titrant added: " (str/concat @entity.titrantVolumeAdded (str/concat " mL  |  pH " (str/concat (math/round @entity.ph 2)(if @entity.overshoot "  |  past equivalence — overshoot" (str/concat "  |  equivalence at ~" (str/concat @entity.equivalenceVolume " mL"))))))))
+        (set @entity.curvePoints (array/append @entity.curvePoints { value: @entity.ph, label: (str/concat @entity.titrantVolumeAdded " mL") }))
+        (set @entity.atoms [{ id: "flask", x: (/ @config.width 2), y: (/ @config.height 2), element: "", radius: (math/min (* @config.width 0.32) (* @config.height 0.32)), color: @entity.indicatorColor }])
+        (set @entity.shapes [
+          { type: text, id: "phLabel", x: (/ @config.width 2), y: (/ @config.height 2), text: (str/concat "pH " (math/round @entity.ph 2)), fontSize: 20, align: center, color: "#111827" },
+          { type: text, id: "volLabel", x: (/ @config.width 2), y: (+ (/ @config.height 2) 28), text: (str/concat @entity.titrantVolumeAdded " mL added"), fontSize: 13, align: center, color: "#374151" }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            {
+              type: stack
+              direction: vertical
+              gap: md
+              children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.statusText },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: sm
+                  children: [
+                    { type: button, action: ADD_TITRANT_LARGE, label: (str/concat "+ " (str/concat @config.titrationIncrementLarge " mL")), variant: primary },
+                    { type: button, action: ADD_TITRANT_SMALL, label: (str/concat "+ " (str/concat @config.titrationIncrementSmall " mL")), variant: secondary },
+                    { type: button, action: RESET_TITRATION, label: "Reset", variant: ghost }
+                  ]
+                },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: md
+                  children: [
+                    { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, atoms: @entity.atoms, bonds: @entity.bonds, arrows: @entity.arrows, shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                    { type: line-chart, data: @entity.curvePoints, width: @config.width, height: @config.height, showGrid: true, showValues: false, showArea: false, lineColor: "#2563eb", areaColor: "#2563eb" }
+                  ]
+                }
+              ]
+            }
+          ]
+        })
+        (emit TITRATION_UPDATED { titrantVolumeAdded: @entity.titrantVolumeAdded, ph: @entity.ph, overshoot: @entity.overshoot, equivalenceVolume: @entity.equivalenceVolume, statusText: @entity.statusText })
+
+      RESET_TITRATION -> idle when (== @entity.active true)
+        (set @entity.titrantVolumeAdded 0)
+        (set @entity.ph (let (
+          (totalVolumeL (/ (+ @entity.titrationAcidVolume @entity.titrantVolumeAdded) 1000))
+          (acidMolesInit (/ (* @entity.titrationAcidConcentration @entity.titrationAcidVolume) 1000))
+          (baseMolesAdded (/ (* @entity.titrationBaseConcentration @entity.titrantVolumeAdded) 1000))
+          (isWeak (== @entity.titrationAcidStrength "weak"))
+          (noTitrantYet (<= @entity.titrantVolumeAdded 0))
+        )
+        (let (
+          (netMoles (- @acidMolesInit @baseMolesAdded))
+          (epsilon (* @acidMolesInit 0.0005))
+        )
+        (let (
+          (atEquivalence (< (math/abs @netMoles) @epsilon))
+          (preEq (> @netMoles 0))
+        )
+        (let (
+          (logArg (if @atEquivalence
+            (if @isWeak (/ (* 0.00000000000001 (/ @acidMolesInit @totalVolumeL)) @entity.titrationAcidKa) 1)
+            (if @preEq
+              (if @isWeak
+                (if @noTitrantYet
+                  (* @entity.titrationAcidKa (/ @acidMolesInit @totalVolumeL))
+                  (/ @baseMolesAdded (* @netMoles @entity.titrationAcidKa)))
+                (/ @netMoles @totalVolumeL))
+              (/ (math/abs @netMoles) @totalVolumeL))))
+          (logOffset (if @atEquivalence (if @isWeak 14 7) (if @preEq 0 14)))
+          (logScale (if @atEquivalence (if @isWeak 0.5 0)
+            (if @preEq (if @isWeak (if @noTitrantYet -0.5 1) -1) 1)))
+        )
+        (let ((s1 (math/sqrt @logArg)))
+        (let ((s2 (math/sqrt @s1)))
+        (let ((s3 (math/sqrt @s2)))
+        (let ((s4 (math/sqrt @s3)))
+        (let ((s5 (math/sqrt @s4)))
+        (let ((s6 (math/sqrt @s5)))
+        (let ((s7 (math/sqrt @s6)))
+        (let ((s8 (math/sqrt @s7)))
+        (let ((s9 (math/sqrt @s8)))
+        (let ((s10 (math/sqrt @s9)))
+        (let ((lnArg (* (- @s10 1) 1024)))
+        (let ((log10Arg (/ @lnArg 2.302585093)))
+          (+ @logOffset (* @logScale @log10Arg))
+        )))))))))))))))))
+        (set @entity.overshoot false)
+        (set @entity.indicatorColor (if (< @entity.ph @entity.titrationIndicatorMidpoint) @entity.titrationIndicatorAcidColor @entity.titrationIndicatorBaseColor))
+        (set @entity.statusText (str/concat "Titrant added: 0 mL  |  pH " (str/concat (math/round @entity.ph 2)(str/concat "  |  equivalence at ~" (str/concat @entity.equivalenceVolume " mL")))))
+        (set @entity.curvePoints [{ value: @entity.ph, label: "0.0 mL" }])
+        (set @entity.atoms [{ id: "flask", x: (/ @config.width 2), y: (/ @config.height 2), element: "", radius: (math/min (* @config.width 0.32) (* @config.height 0.32)), color: @entity.indicatorColor }])
+        (set @entity.shapes [
+          { type: text, id: "phLabel", x: (/ @config.width 2), y: (/ @config.height 2), text: (str/concat "pH " (math/round @entity.ph 2)), fontSize: 20, align: center, color: "#111827" },
+          { type: text, id: "volLabel", x: (/ @config.width 2), y: (+ (/ @config.height 2) 28), text: (str/concat @entity.titrantVolumeAdded " mL added"), fontSize: 13, align: center, color: "#374151" }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            {
+              type: stack
+              direction: vertical
+              gap: md
+              children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @entity.statusText },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: sm
+                  children: [
+                    { type: button, action: ADD_TITRANT_LARGE, label: (str/concat "+ " (str/concat @config.titrationIncrementLarge " mL")), variant: primary },
+                    { type: button, action: ADD_TITRANT_SMALL, label: (str/concat "+ " (str/concat @config.titrationIncrementSmall " mL")), variant: secondary },
+                    { type: button, action: RESET_TITRATION, label: "Reset", variant: ghost }
+                  ]
+                },
+                {
+                  type: stack
+                  direction: horizontal
+                  gap: md
+                  children: [
+                    { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, atoms: @entity.atoms, bonds: @entity.bonds, arrows: @entity.arrows, shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                    { type: line-chart, data: @entity.curvePoints, width: @config.width, height: @config.height, showGrid: true, showValues: false, showArea: false, lineColor: "#2563eb", areaColor: "#2563eb" }
+                  ]
+                }
+              ]
+            }
+          ]
+        })
+        (emit TITRATION_UPDATED { titrantVolumeAdded: @entity.titrantVolumeAdded, ph: @entity.ph, overshoot: @entity.overshoot, equivalenceVolume: @entity.equivalenceVolume, statusText: @entity.statusText })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+    }
+
+    emits {
+      TITRATION_UPDATED -> external {
+        titrantVolumeAdded : number
+        ph : number
+        overshoot : boolean
+        equivalenceVolume : number
+        statusText : string
+      }
+        @description "The titration state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "titration update, pH change, equivalence point, overshoot, titrant added"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Chemistry Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      backgroundColor : string = "#fafafa"
+        @label "Background Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      titrationAcidStrength : "strong" | "weak" = strong
+        @label "Acid Strength"
+        @description "Strong acids (e.g. HCl) fully dissociate; weak acids (e.g. acetic acid) partially dissociate per their Ka. Shapes the curve (sharp strong-strong jump vs a buffered weak-strong region)."
+        @synonyms "strong acid, weak acid, dissociation, Ka, acid dissociation constant, HCl, acetic acid"
+        @tier "domain"
+      titrationAcidKa : number = 0.000018
+        @label "Acid Ka"
+        @description "Acid dissociation constant, used only when Acid Strength is weak (default 1.8e-5, acetic acid)."
+        @tier "domain"
+      titrationAcidConcentration : number = 0.1
+        @label "Acid Concentration (mol/L)"
+        @description "Initial molar concentration of the acid analyte in the flask."
+        @tier "domain"
+      titrationAcidVolume : number = 25
+        @label "Acid Volume (mL)"
+        @description "Initial volume of acid analyte in the flask, before any titrant is added."
+        @tier "domain"
+      titrationBaseConcentration : number = 0.1
+        @label "Titrant (Base) Concentration (mol/L)"
+        @description "Molar concentration of the base titrant in the burette."
+        @tier "domain"
+      titrationIncrementLarge : number = 1
+        @label "Large Increment (mL)"
+        @description "Titrant volume added per press of the coarse add button."
+        @tier "domain"
+      titrationIncrementSmall : number = 0.1
+        @label "Small Increment (mL)"
+        @description "Titrant volume added per press of the fine add button, for precise control near the equivalence point."
+        @tier "domain"
+      titrationIndicatorMidpoint : number = 8.2
+        @label "Indicator Flip pH"
+        @description "pH at which the indicator color flips from acidic to basic (default 8.2, phenolphthalein)."
+        @tier "domain"
+      titrationIndicatorAcidColor : string = "#fde68a"
+        @label "Indicator Color (Acidic)"
+        @description "Flask color below the indicator flip pH."
+        @tier "presentation"
+      titrationIndicatorBaseColor : string = "#ec4899"
+        @label "Indicator Color (Basic)"
+        @description "Flask color at/above the indicator flip pH."
+        @tier "presentation"
+    }
+  }
+
+  page "/chem-titration" as ChemTitrationPage -> ChemTitrationSim
+}

@@ -1,0 +1,579 @@
+[
+  {
+    "organism": "std-ling-syntaxtree",
+    "orbital": "LingSyntaxtreeOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-ling-syntaxtree.ts",
+    "entities": [
+      {
+        "name": "LingSyntaxtreeScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "renderChildren",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "sentenceIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stepIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "syntaxFeedback",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LingSyntaxtreeSim",
+        "emittedEvents": [
+          "SYNTAXTREE_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SYNTAXTREE_UPDATED",
+            "direction": "emit",
+            "description": "The parse-tree state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "syntax tree update, constituent attached, parse progress, derivation step",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ATTACH",
+            "direction": "listen",
+            "description": "Learner pressed a constituent-category button to attach the next bottom-up derivation step to the parse tree.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET_TREE",
+            "direction": "listen",
+            "description": "Learner reset the current sentence's parse tree back to just the words, clearing all built constituents.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT_SENTENCE",
+            "direction": "listen",
+            "description": "Learner advanced to the next sentence in the roster, resetting the parse tree.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "bottomMargin",
+            "type": "number",
+            "default": 60,
+            "label": "Bottom Margin (px)",
+            "description": "Vertical offset of the word row from the bottom of the canvas, in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "bracketColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Bracket Line Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "bracketLabelColor",
+            "type": "string",
+            "default": "#1d4ed8",
+            "label": "Bracket Label Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "constituentOptions",
+            "type": "[LingSyntaxtreeConstituentOption]",
+            "default": [
+              {
+                "key": "NP",
+                "label": "NP — Noun Phrase"
+              },
+              {
+                "key": "VP",
+                "label": "VP — Verb Phrase"
+              },
+              {
+                "key": "PP",
+                "label": "PP — Prepositional Phrase"
+              },
+              {
+                "key": "S",
+                "label": "S — Sentence"
+              }
+            ],
+            "label": "Constituent Options",
+            "description": "The four constituent-category buttons offered to the learner; pressing one attempts to attach it as the next derivation step.",
+            "synonyms": "constituent category, phrase category, noun phrase button, verb phrase button",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "NP",
+                    "VP",
+                    "PP",
+                    "S"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "fontSize",
+            "type": "number",
+            "default": 16,
+            "label": "Word / Bracket Font Size",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 420,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "leftMargin",
+            "type": "number",
+            "default": 50,
+            "label": "Left Margin (px)",
+            "description": "Horizontal offset of the first word node from the canvas edge, in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "levelHeight",
+            "type": "number",
+            "default": 60,
+            "label": "Tree Level Height (px)",
+            "description": "Vertical distance between successive constituent levels in the growing tree, in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodeWidth",
+            "type": "number",
+            "default": 64,
+            "label": "Word Node Width (px)",
+            "description": "Width of each word's background box, in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "posColor",
+            "type": "string",
+            "default": "#64748b",
+            "label": "Part-of-Speech Text Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "posFontSize",
+            "type": "number",
+            "default": 12,
+            "label": "Part-of-Speech Font Size",
+            "tier": "presentation"
+          },
+          {
+            "key": "sentences",
+            "type": "[LingSyntaxtreeSentence]",
+            "default": [
+              {
+                "derivation": [
+                  {
+                    "constituent": "NP",
+                    "endIndex": 1,
+                    "evidence": "A determiner (Det) and a noun (N) combine into a Noun Phrase — here the subject \"The cat\".",
+                    "level": 0,
+                    "startIndex": 0
+                  },
+                  {
+                    "constituent": "NP",
+                    "endIndex": 4,
+                    "evidence": "A determiner (Det) and a noun (N) combine into a Noun Phrase — here the object \"the mouse\".",
+                    "level": 0,
+                    "startIndex": 3
+                  },
+                  {
+                    "constituent": "VP",
+                    "endIndex": 4,
+                    "evidence": "A verb (V) and its object Noun Phrase combine into a Verb Phrase — \"chased the mouse\".",
+                    "level": 1,
+                    "startIndex": 2
+                  },
+                  {
+                    "constituent": "S",
+                    "endIndex": 4,
+                    "evidence": "The subject Noun Phrase and the Verb Phrase combine into the full Sentence.",
+                    "level": 2,
+                    "startIndex": 0
+                  }
+                ],
+                "id": "s1",
+                "label": "The cat chased the mouse.",
+                "words": [
+                  {
+                    "pos": "Det",
+                    "text": "The"
+                  },
+                  {
+                    "pos": "N",
+                    "text": "cat"
+                  },
+                  {
+                    "pos": "V",
+                    "text": "chased"
+                  },
+                  {
+                    "pos": "Det",
+                    "text": "the"
+                  },
+                  {
+                    "pos": "N",
+                    "text": "mouse"
+                  }
+                ]
+              },
+              {
+                "derivation": [
+                  {
+                    "constituent": "NP",
+                    "endIndex": 1,
+                    "evidence": "A determiner (Det) and a noun (N) combine into a Noun Phrase — here the subject \"A dog\".",
+                    "level": 0,
+                    "startIndex": 0
+                  },
+                  {
+                    "constituent": "NP",
+                    "endIndex": 5,
+                    "evidence": "A determiner (Det) and a noun (N) combine into a Noun Phrase — here the object of the preposition, \"the mat\".",
+                    "level": 0,
+                    "startIndex": 4
+                  },
+                  {
+                    "constituent": "PP",
+                    "endIndex": 5,
+                    "evidence": "A preposition (P) and its Noun Phrase combine into a Prepositional Phrase — \"on the mat\".",
+                    "level": 1,
+                    "startIndex": 3
+                  },
+                  {
+                    "constituent": "VP",
+                    "endIndex": 5,
+                    "evidence": "A verb (V) and its Prepositional Phrase combine into a Verb Phrase — \"sat on the mat\".",
+                    "level": 2,
+                    "startIndex": 2
+                  },
+                  {
+                    "constituent": "S",
+                    "endIndex": 5,
+                    "evidence": "The subject Noun Phrase and the Verb Phrase combine into the full Sentence.",
+                    "level": 3,
+                    "startIndex": 0
+                  }
+                ],
+                "id": "s2",
+                "label": "A dog sat on the mat.",
+                "words": [
+                  {
+                    "pos": "Det",
+                    "text": "A"
+                  },
+                  {
+                    "pos": "N",
+                    "text": "dog"
+                  },
+                  {
+                    "pos": "V",
+                    "text": "sat"
+                  },
+                  {
+                    "pos": "P",
+                    "text": "on"
+                  },
+                  {
+                    "pos": "Det",
+                    "text": "the"
+                  },
+                  {
+                    "pos": "N",
+                    "text": "mat"
+                  }
+                ]
+              },
+              {
+                "derivation": [
+                  {
+                    "constituent": "NP",
+                    "endIndex": 0,
+                    "evidence": "A bare noun (N) alone forms a Noun Phrase — the subject \"Birds\".",
+                    "level": 0,
+                    "startIndex": 0
+                  },
+                  {
+                    "constituent": "VP",
+                    "endIndex": 1,
+                    "evidence": "A single intransitive verb (V) with no object still forms a Verb Phrase — \"sing\".",
+                    "level": 0,
+                    "startIndex": 1
+                  },
+                  {
+                    "constituent": "S",
+                    "endIndex": 1,
+                    "evidence": "The subject Noun Phrase and the Verb Phrase combine into the full Sentence.",
+                    "level": 1,
+                    "startIndex": 0
+                  }
+                ],
+                "id": "s3",
+                "label": "Birds sing.",
+                "words": [
+                  {
+                    "pos": "N",
+                    "text": "Birds"
+                  },
+                  {
+                    "pos": "V",
+                    "text": "sing"
+                  }
+                ]
+              }
+            ],
+            "label": "Sentences",
+            "description": "Roster of sentences the learner parses. Each sentence carries its words (text + part-of-speech tag) and an ORDERED bottom-up derivation: each step names the constituent category built, the word-index span it covers, the tree level it renders at, and the evidence text shown when the learner attaches it (correctly or not).",
+            "synonyms": "sentence roster, derivation, bottom-up derivation, constituent span, part of speech, phrase structure rule",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "derivation": {
+                  "name": "derivation",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "constituent": {
+                        "name": "constituent",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "NP",
+                          "VP",
+                          "PP",
+                          "S"
+                        ]
+                      },
+                      "endIndex": {
+                        "name": "endIndex",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "evidence": {
+                        "name": "evidence",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "level": {
+                        "name": "level",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "startIndex": {
+                        "name": "startIndex",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "words": {
+                  "name": "words",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "pos": {
+                        "name": "pos",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "text": {
+                        "name": "text",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Syntax Tree Builder",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "wordLabelGap",
+            "type": "number",
+            "default": 30,
+            "label": "Word Label Gap (px)",
+            "description": "Vertical gap between the word row and the first constituent level above it, in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "wordNodeColor",
+            "type": "string",
+            "default": "#1e293b",
+            "label": "Word Node Border Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "wordNodeFill",
+            "type": "string",
+            "default": "#e2e8f0",
+            "label": "Word Node Fill Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "wordSpacing",
+            "type": "number",
+            "default": 90,
+            "label": "Word Spacing (px)",
+            "description": "Horizontal distance between successive word nodes, in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "wordTextColor",
+            "type": "string",
+            "default": "#0f172a",
+            "label": "Word Text Color",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LingSyntaxtreeScene",
+        "transitionEvents": [
+          "ATTACH",
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT_SENTENCE",
+          "RESET_TREE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "renderChildren",
+            "sentenceIndex",
+            "shapes",
+            "stepIndex",
+            "syntaxFeedback",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LingSyntaxtreePage",
+        "defaultPath": "/ling-syntaxtree",
+        "primaryEntity": "LingSyntaxtreeScene"
+      }
+    ],
+    "emittedEvents": [
+      "SYNTAXTREE_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

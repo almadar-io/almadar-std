@@ -1,0 +1,464 @@
+app std-astro-orbit "1.0.0"
+"Kepler orbit simulator — the learner drags eccentricity and semi-major-axis sliders and steps the planet along its ellipse, watching equal-area sweeps confirm Kepler's second law, on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital AstroOrbitOrbital {
+  type AstroOrbitShapePoint = {
+    x : number!
+    y : number!
+  }
+  type AstroOrbitShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [AstroOrbitShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+
+  entity AstroOrbitScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    eccentricity : number
+    semiMajorAxis : number
+    stepsPerOrbit : number
+    theta : number
+    stepIndex : number
+    currentR : number
+    sweptAreaPerStep : number
+    orbitShapes : [AstroOrbitShape]
+  }
+
+  trait AstroOrbitSim -> @rebindable AstroOrbitScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+          (a @config.semiMajorAxis)
+          (e @config.initialEccentricity)
+          (b (* @a (math/sqrt (- 1 (* @e @e)))))
+          (totalArea (* 3.14159265 (* @a @b)))
+          (sweptArea (/ @totalArea @config.stepsPerOrbit))
+          (r0 (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos 0)))))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.eccentricity @e)
+          (set @entity.semiMajorAxis @a)
+          (set @entity.stepsPerOrbit @config.stepsPerOrbit)
+          (set @entity.theta 0)
+          (set @entity.stepIndex 0)
+          (set @entity.sweptAreaPerStep @sweptArea)
+          (set @entity.currentR @r0)
+          (set @entity.orbitShapes [
+            { type: "polygon", id: "ellipse", points: (array/map (array/range 49) (fn i (let (
+                  (t (* (/ @i 48) 6.2831853))
+                  (rr (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos @t)))))
+                )
+                { x: (+ @cx (* @rr (math/cos @t))), y: (+ @cy (* @rr (math/sin @t))) }))),
+              color: @config.orbitColor, lineWidth: 1.5, opacity: 0.8 },
+            { type: "circle", id: "sun", x: @cx, y: @cy, radius: @config.sunRadius, color: @config.sunColor, fill: @config.sunColor },
+            { type: "circle", id: "planet", x: (+ @cx @r0), y: @cy, radius: @config.planetRadius, color: @config.planetColor, fill: @config.planetColor }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.orbitShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Eccentricity: " @entity.eccentricity) },
+                { type: range-slider, min: 0, max: 0.85, step: 0.05, value: @entity.eccentricity, showTooltip: true, onChange: SET_ECCENTRICITY },
+                { type: typography, variant: caption, content: (str/concat "Semi-major axis: " @entity.semiMajorAxis " px") },
+                { type: range-slider, min: 60, max: 160, step: 5, value: @entity.semiMajorAxis, showTooltip: true, onChange: SET_SEMI_MAJOR_AXIS },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP, label: "Step Orbit", variant: primary },
+                  { type: button, action: RESET_ORBIT, label: "Reset Orbit", variant: ghost }
+                ] },
+                { type: typography, variant: body, content: (str/concat "Steps taken: " @entity.stepIndex " — area swept this step: " (math/round @entity.sweptAreaPerStep 0) " px² (equal every step — Kepler's 2nd law)") }
+              ] }
+            ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+          (a @config.semiMajorAxis)
+          (e @config.initialEccentricity)
+          (b (* @a (math/sqrt (- 1 (* @e @e)))))
+          (totalArea (* 3.14159265 (* @a @b)))
+          (sweptArea (/ @totalArea @config.stepsPerOrbit))
+          (r0 (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos 0)))))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.eccentricity @e)
+          (set @entity.semiMajorAxis @a)
+          (set @entity.stepsPerOrbit @config.stepsPerOrbit)
+          (set @entity.theta 0)
+          (set @entity.stepIndex 0)
+          (set @entity.sweptAreaPerStep @sweptArea)
+          (set @entity.currentR @r0)
+          (set @entity.orbitShapes [
+            { type: "polygon", id: "ellipse", points: (array/map (array/range 49) (fn i (let (
+                  (t (* (/ @i 48) 6.2831853))
+                  (rr (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos @t)))))
+                )
+                { x: (+ @cx (* @rr (math/cos @t))), y: (+ @cy (* @rr (math/sin @t))) }))),
+              color: @config.orbitColor, lineWidth: 1.5, opacity: 0.8 },
+            { type: "circle", id: "sun", x: @cx, y: @cy, radius: @config.sunRadius, color: @config.sunColor, fill: @config.sunColor },
+            { type: "circle", id: "planet", x: (+ @cx @r0), y: @cy, radius: @config.planetRadius, color: @config.planetColor, fill: @config.planetColor }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.orbitShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Eccentricity: " @entity.eccentricity) },
+                { type: range-slider, min: 0, max: 0.85, step: 0.05, value: @entity.eccentricity, showTooltip: true, onChange: SET_ECCENTRICITY },
+                { type: typography, variant: caption, content: (str/concat "Semi-major axis: " @entity.semiMajorAxis " px") },
+                { type: range-slider, min: 60, max: 160, step: 5, value: @entity.semiMajorAxis, showTooltip: true, onChange: SET_SEMI_MAJOR_AXIS },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP, label: "Step Orbit", variant: primary },
+                  { type: button, action: RESET_ORBIT, label: "Reset Orbit", variant: ghost }
+                ] },
+                { type: typography, variant: body, content: (str/concat "Steps taken: " @entity.stepIndex " — area swept this step: " (math/round @entity.sweptAreaPerStep 0) " px² (equal every step — Kepler's 2nd law)") }
+              ] }
+            ] }
+          ]
+        })
+
+      STEP -> idle when (== @entity.active true)
+        (let (
+          (a @entity.semiMajorAxis)
+          (e @entity.eccentricity)
+          (theta0 @entity.theta)
+          (r0 (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos @theta0)))))
+          (deltaTheta (/ (* 2 @entity.sweptAreaPerStep) (* @r0 @r0)))
+          (theta1 (+ @theta0 @deltaTheta))
+          (r1 (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos @theta1)))))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.theta @theta1)
+          (set @entity.currentR @r1)
+          (set @entity.stepIndex (+ @entity.stepIndex 1))
+          (set @entity.orbitShapes [
+            { type: "polygon", id: "ellipse", points: (array/map (array/range 49) (fn i (let (
+                  (t (* (/ @i 48) 6.2831853))
+                  (rr (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos @t)))))
+                )
+                { x: (+ @cx (* @rr (math/cos @t))), y: (+ @cy (* @rr (math/sin @t))) }))),
+              color: @config.orbitColor, lineWidth: 1.5, opacity: 0.8 },
+            { type: "polygon", id: "wedge", points: [
+                { x: @cx, y: @cy },
+                { x: (+ @cx (* @r0 (math/cos @theta0))), y: (+ @cy (* @r0 (math/sin @theta0))) },
+                { x: (+ @cx (* @r1 (math/cos @theta1))), y: (+ @cy (* @r1 (math/sin @theta1))) }
+              ], color: @config.sweepColor, fill: @config.sweepColor, opacity: 0.5, lineWidth: 0 },
+            { type: "circle", id: "sun", x: @cx, y: @cy, radius: @config.sunRadius, color: @config.sunColor, fill: @config.sunColor },
+            { type: "circle", id: "planet", x: (+ @cx (* @r1 (math/cos @theta1))), y: (+ @cy (* @r1 (math/sin @theta1))), radius: @config.planetRadius, color: @config.planetColor, fill: @config.planetColor }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.orbitShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Eccentricity: " @entity.eccentricity) },
+                { type: range-slider, min: 0, max: 0.85, step: 0.05, value: @entity.eccentricity, showTooltip: true, onChange: SET_ECCENTRICITY },
+                { type: typography, variant: caption, content: (str/concat "Semi-major axis: " @entity.semiMajorAxis " px") },
+                { type: range-slider, min: 60, max: 160, step: 5, value: @entity.semiMajorAxis, showTooltip: true, onChange: SET_SEMI_MAJOR_AXIS },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP, label: "Step Orbit", variant: primary },
+                  { type: button, action: RESET_ORBIT, label: "Reset Orbit", variant: ghost }
+                ] },
+                { type: typography, variant: body, content: (str/concat "Steps taken: " @entity.stepIndex " — area swept this step: " (math/round @entity.sweptAreaPerStep 0) " px² (equal every step — Kepler's 2nd law)") }
+              ] }
+            ] }
+          ]
+        })
+        (emit ORBIT_UPDATED { eccentricity: @entity.eccentricity, semiMajorAxis: @entity.semiMajorAxis, theta: @entity.theta, stepIndex: @entity.stepIndex, currentR: @entity.currentR, sweptAreaPerStep: @entity.sweptAreaPerStep })
+
+      RESET_ORBIT -> idle when (== @entity.active true)
+        (let (
+          (a @entity.semiMajorAxis)
+          (e @entity.eccentricity)
+          (r0 (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos 0)))))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.theta 0)
+          (set @entity.stepIndex 0)
+          (set @entity.currentR @r0)
+          (set @entity.orbitShapes [
+            { type: "polygon", id: "ellipse", points: (array/map (array/range 49) (fn i (let (
+                  (t (* (/ @i 48) 6.2831853))
+                  (rr (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos @t)))))
+                )
+                { x: (+ @cx (* @rr (math/cos @t))), y: (+ @cy (* @rr (math/sin @t))) }))),
+              color: @config.orbitColor, lineWidth: 1.5, opacity: 0.8 },
+            { type: "circle", id: "sun", x: @cx, y: @cy, radius: @config.sunRadius, color: @config.sunColor, fill: @config.sunColor },
+            { type: "circle", id: "planet", x: (+ @cx @r0), y: @cy, radius: @config.planetRadius, color: @config.planetColor, fill: @config.planetColor }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.orbitShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Eccentricity: " @entity.eccentricity) },
+                { type: range-slider, min: 0, max: 0.85, step: 0.05, value: @entity.eccentricity, showTooltip: true, onChange: SET_ECCENTRICITY },
+                { type: typography, variant: caption, content: (str/concat "Semi-major axis: " @entity.semiMajorAxis " px") },
+                { type: range-slider, min: 60, max: 160, step: 5, value: @entity.semiMajorAxis, showTooltip: true, onChange: SET_SEMI_MAJOR_AXIS },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP, label: "Step Orbit", variant: primary },
+                  { type: button, action: RESET_ORBIT, label: "Reset Orbit", variant: ghost }
+                ] },
+                { type: typography, variant: body, content: (str/concat "Steps taken: " @entity.stepIndex " — area swept this step: " (math/round @entity.sweptAreaPerStep 0) " px² (equal every step — Kepler's 2nd law)") }
+              ] }
+            ] }
+          ]
+        })
+        (emit ORBIT_UPDATED { eccentricity: @entity.eccentricity, semiMajorAxis: @entity.semiMajorAxis, theta: @entity.theta, stepIndex: @entity.stepIndex, currentR: @entity.currentR, sweptAreaPerStep: @entity.sweptAreaPerStep })
+
+      SET_ECCENTRICITY -> idle when (== @entity.active true)
+        (let (
+          (a @entity.semiMajorAxis)
+          (e ?value)
+          (b (* @a (math/sqrt (- 1 (* @e @e)))))
+          (totalArea (* 3.14159265 (* @a @b)))
+          (sweptArea (/ @totalArea @entity.stepsPerOrbit))
+          (r0 (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos 0)))))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.eccentricity @e)
+          (set @entity.sweptAreaPerStep @sweptArea)
+          (set @entity.theta 0)
+          (set @entity.stepIndex 0)
+          (set @entity.currentR @r0)
+          (set @entity.orbitShapes [
+            { type: "polygon", id: "ellipse", points: (array/map (array/range 49) (fn i (let (
+                  (t (* (/ @i 48) 6.2831853))
+                  (rr (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos @t)))))
+                )
+                { x: (+ @cx (* @rr (math/cos @t))), y: (+ @cy (* @rr (math/sin @t))) }))),
+              color: @config.orbitColor, lineWidth: 1.5, opacity: 0.8 },
+            { type: "circle", id: "sun", x: @cx, y: @cy, radius: @config.sunRadius, color: @config.sunColor, fill: @config.sunColor },
+            { type: "circle", id: "planet", x: (+ @cx @r0), y: @cy, radius: @config.planetRadius, color: @config.planetColor, fill: @config.planetColor }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.orbitShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Eccentricity: " @entity.eccentricity) },
+                { type: range-slider, min: 0, max: 0.85, step: 0.05, value: @entity.eccentricity, showTooltip: true, onChange: SET_ECCENTRICITY },
+                { type: typography, variant: caption, content: (str/concat "Semi-major axis: " @entity.semiMajorAxis " px") },
+                { type: range-slider, min: 60, max: 160, step: 5, value: @entity.semiMajorAxis, showTooltip: true, onChange: SET_SEMI_MAJOR_AXIS },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP, label: "Step Orbit", variant: primary },
+                  { type: button, action: RESET_ORBIT, label: "Reset Orbit", variant: ghost }
+                ] },
+                { type: typography, variant: body, content: (str/concat "Steps taken: " @entity.stepIndex " — area swept this step: " (math/round @entity.sweptAreaPerStep 0) " px² (equal every step — Kepler's 2nd law)") }
+              ] }
+            ] }
+          ]
+        })
+        (emit ORBIT_UPDATED { eccentricity: @entity.eccentricity, semiMajorAxis: @entity.semiMajorAxis, theta: @entity.theta, stepIndex: @entity.stepIndex, currentR: @entity.currentR, sweptAreaPerStep: @entity.sweptAreaPerStep })
+
+      SET_SEMI_MAJOR_AXIS -> idle when (== @entity.active true)
+        (let (
+          (a ?value)
+          (e @entity.eccentricity)
+          (b (* @a (math/sqrt (- 1 (* @e @e)))))
+          (totalArea (* 3.14159265 (* @a @b)))
+          (sweptArea (/ @totalArea @entity.stepsPerOrbit))
+          (r0 (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos 0)))))
+          (cx (/ @config.width 2))
+          (cy (/ @config.height 2))
+        )
+        (do
+          (set @entity.semiMajorAxis @a)
+          (set @entity.sweptAreaPerStep @sweptArea)
+          (set @entity.theta 0)
+          (set @entity.stepIndex 0)
+          (set @entity.currentR @r0)
+          (set @entity.orbitShapes [
+            { type: "polygon", id: "ellipse", points: (array/map (array/range 49) (fn i (let (
+                  (t (* (/ @i 48) 6.2831853))
+                  (rr (/ (* @a (- 1 (* @e @e))) (+ 1 (* @e (math/cos @t)))))
+                )
+                { x: (+ @cx (* @rr (math/cos @t))), y: (+ @cy (* @rr (math/sin @t))) }))),
+              color: @config.orbitColor, lineWidth: 1.5, opacity: 0.8 },
+            { type: "circle", id: "sun", x: @cx, y: @cy, radius: @config.sunRadius, color: @config.sunColor, fill: @config.sunColor },
+            { type: "circle", id: "planet", x: (+ @cx @r0), y: @cy, radius: @config.planetRadius, color: @config.planetColor, fill: @config.planetColor }
+          ])
+        ))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.orbitShapes, interactive: @config.interactive, animate: false },
+              { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: caption, content: (str/concat "Eccentricity: " @entity.eccentricity) },
+                { type: range-slider, min: 0, max: 0.85, step: 0.05, value: @entity.eccentricity, showTooltip: true, onChange: SET_ECCENTRICITY },
+                { type: typography, variant: caption, content: (str/concat "Semi-major axis: " @entity.semiMajorAxis " px") },
+                { type: range-slider, min: 60, max: 160, step: 5, value: @entity.semiMajorAxis, showTooltip: true, onChange: SET_SEMI_MAJOR_AXIS },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: STEP, label: "Step Orbit", variant: primary },
+                  { type: button, action: RESET_ORBIT, label: "Reset Orbit", variant: ghost }
+                ] },
+                { type: typography, variant: body, content: (str/concat "Steps taken: " @entity.stepIndex " — area swept this step: " (math/round @entity.sweptAreaPerStep 0) " px² (equal every step — Kepler's 2nd law)") }
+              ] }
+            ] }
+          ]
+        })
+        (emit ORBIT_UPDATED { eccentricity: @entity.eccentricity, semiMajorAxis: @entity.semiMajorAxis, theta: @entity.theta, stepIndex: @entity.stepIndex, currentR: @entity.currentR, sweptAreaPerStep: @entity.sweptAreaPerStep })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      STEP {
+      }
+        @description "Learner pressed Step Orbit to advance the planet by one equal-time, equal-area interval."
+        @tier "domain"
+      RESET_ORBIT {
+      }
+        @description "Learner pressed Reset Orbit to return the planet to perihelion (theta = 0)."
+        @tier "domain"
+      SET_ECCENTRICITY {
+        value : number
+      }
+        @description "Learner dragged the eccentricity slider."
+        @tier "domain"
+      SET_SEMI_MAJOR_AXIS {
+        value : number
+      }
+        @description "Learner dragged the semi-major-axis slider."
+        @tier "domain"
+    }
+
+    emits {
+      ORBIT_UPDATED -> external {
+        eccentricity : number
+        semiMajorAxis : number
+        theta : number
+        stepIndex : number
+        currentR : number
+        sweptAreaPerStep : number
+      }
+        @description "The orbit state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "orbit update, Kepler sweep, equal areas, step complete"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Kepler Orbit Simulator"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 460
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#0f172a"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      initialEccentricity : number = 0.5
+        @label "Initial Eccentricity"
+        @description "Starting orbital eccentricity (0 = circle, closer to 1 = more elongated)."
+        @tier "domain"
+      semiMajorAxis : number = 150
+        @label "Semi-major Axis"
+        @description "Starting semi-major axis of the ellipse, in pixels."
+        @tier "domain"
+      stepsPerOrbit : number = 24
+        @label "Steps Per Orbit"
+        @description "Number of equal-time steps that divide one full orbital period; each Step press advances the planet by one such interval and sweeps an equal area every time (Kepler's second law)."
+        @tier "domain"
+      sunColor : string = "#facc15"
+        @label "Sun Color"
+        @tier "presentation"
+      sunRadius : number = 14
+        @label "Sun Radius"
+        @tier "presentation"
+      planetColor : string = "#38bdf8"
+        @label "Planet Color"
+        @tier "presentation"
+      planetRadius : number = 8
+        @label "Planet Radius"
+        @tier "presentation"
+      orbitColor : string = "#64748b"
+        @label "Orbit Path Color"
+        @tier "presentation"
+      sweepColor : string = "#f97316"
+        @label "Swept-area Wedge Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/astro-orbit" as AstroOrbitPage -> AstroOrbitSim
+}

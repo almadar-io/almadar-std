@@ -1,0 +1,4108 @@
+{
+  "description": "Generic staged-sequence instrument — the learner moves a Next/Prev cursor across an ordered roster of stages, each revealing its label and description plus a running per-category tally, and can filter the timeline to a single category lens. Stage and category vocabulary is entirely config-declared, so the same mechanism serves any ordered-sequence domain (periodization timelines, phase cycles, stellar evolution, and beyond) on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01KZEGGJW7H0SM4BH3NN7W7E79": {
+        "bakedName": "LearnStepperScene",
+        "curName": "LearnStepperScene",
+        "id": "ent_01KZEGGJW7H0SM4BH3NN7W7E79",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KZEGGJW7F31JWGP1148MMK40": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KZEGGJW7F31JWGP1148MMK40",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+        "renames": []
+      },
+      "evt_01KZEGGJW80PPN30WQ5XJ6SRMW": {
+        "bakedName": "FILTER_CATEGORY",
+        "curName": "FILTER_CATEGORY",
+        "id": "evt_01KZEGGJW80PPN30WQ5XJ6SRMW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+        "renames": []
+      },
+      "evt_01KZEGGJW83JTAV27XQVF5AJWG": {
+        "bakedName": "STEPPER_ADVANCED",
+        "curName": "STEPPER_ADVANCED",
+        "id": "evt_01KZEGGJW83JTAV27XQVF5AJWG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+        "renames": []
+      },
+      "evt_01KZEGGJW852WBQYT4ZG09MC4J": {
+        "bakedName": "PREV",
+        "curName": "PREV",
+        "id": "evt_01KZEGGJW852WBQYT4ZG09MC4J",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+        "renames": []
+      },
+      "evt_01KZEGGJW88WQHCE7RE0PT7Q02": {
+        "bakedName": "NEXT",
+        "curName": "NEXT",
+        "id": "evt_01KZEGGJW88WQHCE7RE0PT7Q02",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+        "renames": []
+      },
+      "evt_01KZEGGJW89GS6HN8CC3SMVV3J": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEGGJW89GS6HN8CC3SMVV3J",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+        "renames": []
+      },
+      "evt_01KZEGGJW8HSHWA1S2KAPRSY5G": {
+        "bakedName": "RESET_STEPPER",
+        "curName": "RESET_STEPPER",
+        "id": "evt_01KZEGGJW8HSHWA1S2KAPRSY5G",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+        "renames": []
+      },
+      "orb_01KZEGGJW7JZ9XH6D4WC34QFPB": {
+        "bakedName": "LearnStepperOrbital",
+        "curName": "LearnStepperOrbital",
+        "id": "orb_01KZEGGJW7JZ9XH6D4WC34QFPB",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KZEGGJW82EJZJZ967XG8MND8": {
+        "bakedName": "LearnStepperPage",
+        "curName": "LearnStepperPage",
+        "id": "pag_01KZEGGJW82EJZJZ967XG8MND8",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZEGGJW7BME4VCXC8XCGQ55R": {
+        "bakedName": "LearnStepperSim",
+        "curName": "LearnStepperSim",
+        "id": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-learn-stepper",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "cursorIndex",
+            "type": "number"
+          },
+          {
+            "name": "activeFilter",
+            "type": "string"
+          },
+          {
+            "name": "narration",
+            "type": "string"
+          },
+          {
+            "name": "categoryTally",
+            "type": "string"
+          },
+          {
+            "name": "visibleThreadNote",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "points",
+                  "required": false,
+                  "type": "array"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "shapes",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "object"
+            },
+            "name": "filterButtons",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01KZEGGJW7H0SM4BH3NN7W7E79",
+        "name": "LearnStepperScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KZEGGJW7JZ9XH6D4WC34QFPB",
+      "name": "LearnStepperOrbital",
+      "pages": [
+        {
+          "id": "pag_01KZEGGJW82EJZJZ967XG8MND8",
+          "name": "LearnStepperPage",
+          "path": "/learn-stepper",
+          "traits": [
+            {
+              "ref": "LearnStepperSim",
+              "refId": "trt_01KZEGGJW7BME4VCXC8XCGQ55R"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "allLabel": {
+              "default": "All",
+              "label": "All Filter Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "allSummary": {
+              "default": "Taken together, every stage contributes to the full sequence. No single category tells the whole story.",
+              "description": "Narrative summary shown when no category filter is applied — the full, multi-category picture.",
+              "label": "All-Lens Summary",
+              "synonyms": "multi-causal, full picture, no single lens",
+              "tier": "domain",
+              "type": "string"
+            },
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "axisMarginLeft": {
+              "default": 60.0,
+              "label": "Axis Left Margin",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "axisMarginRight": {
+              "default": 60.0,
+              "label": "Axis Right Margin",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "axisY": {
+              "default": 220.0,
+              "description": "Canvas y-position of the horizontal axis.",
+              "label": "Axis Y",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "categories": {
+              "default": [
+                {
+                  "category": "a",
+                  "color": "#7c3aed",
+                  "label": "Category A"
+                },
+                {
+                  "category": "b",
+                  "color": "#15803d",
+                  "label": "Category B"
+                }
+              ],
+              "description": "Marker color and button label per stage category, used for both the axis dots and the FILTER_CATEGORY buttons, and for the running per-category tally.",
+              "items": {
+                "properties": {
+                  "category": {
+                    "name": "category",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Categories",
+              "synonyms": "category color, category legend, stage category, filter lens",
+              "tier": "domain",
+              "type": "[LearnStepperCategory]"
+            },
+            "categorySummaries": {
+              "default": [
+                {
+                  "category": "a",
+                  "summary": "Viewed through Category A alone, only the stages tagged A are highlighted."
+                },
+                {
+                  "category": "b",
+                  "summary": "Viewed through Category B alone, only the stages tagged B are highlighted."
+                }
+              ],
+              "description": "Narrative summary shown when the learner filters the sequence to a single category — how the sequence reads through that lens alone.",
+              "items": {
+                "properties": {
+                  "category": {
+                    "name": "category",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "summary": {
+                    "name": "summary",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Category Summaries",
+              "synonyms": "historiographical lens, primary source lens, single-cause narrative, category narrative, visible thread",
+              "tier": "domain",
+              "type": "[LearnStepperCategorySummary]"
+            },
+            "height": {
+              "default": 420.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "markerHighlightRadius": {
+              "default": 14.0,
+              "description": "Radius of the current step's marker, larger than an ordinary stage marker.",
+              "label": "Marker Highlight Radius",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "markerRadius": {
+              "default": 8.0,
+              "label": "Marker Radius",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "maxPosition": {
+              "default": 4.0,
+              "description": "Latest position on the axis (after the last stage).",
+              "label": "Max Position",
+              "tier": "domain",
+              "type": "number"
+            },
+            "minPosition": {
+              "default": 0.0,
+              "description": "Earliest position on the axis (before the first stage).",
+              "label": "Min Position",
+              "tier": "domain",
+              "type": "number"
+            },
+            "stages": {
+              "default": [
+                {
+                  "category": "a",
+                  "description": "First stage in the sequence.",
+                  "id": "stage-1",
+                  "label": "Stage One",
+                  "position": 1.0
+                },
+                {
+                  "category": "b",
+                  "description": "Second stage in the sequence.",
+                  "id": "stage-2",
+                  "label": "Stage Two",
+                  "position": 2.0
+                },
+                {
+                  "category": "a",
+                  "description": "Third stage in the sequence.",
+                  "id": "stage-3",
+                  "label": "Stage Three",
+                  "position": 3.0
+                }
+              ],
+              "description": "Ordered roster of stages (position, label, category, description) stepped through by NEXT/PREV and filtered by FILTER_CATEGORY. Sorted ascending by position.",
+              "items": {
+                "properties": {
+                  "category": {
+                    "name": "category",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "position": {
+                    "name": "position",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Stages",
+              "synonyms": "stage roster, sequence, timeline, cycle, phase, event roster, ordered stages",
+              "tier": "domain",
+              "type": "[LearnStepperStage]"
+            },
+            "startPrompt": {
+              "default": "Press Next to begin.",
+              "description": "Narration shown before the learner has advanced past the first stage.",
+              "label": "Start Prompt",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Stepper",
+              "description": "Title shown above the instrument.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "unreachedColor": {
+              "default": "#d6d3d1",
+              "description": "Color of stage markers the learner has not yet stepped to.",
+              "label": "Unreached Marker Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "width": {
+              "default": 640.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The cursor/filter state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "STEPPER_ADVANCED",
+              "eventId": "evt_01KZEGGJW83JTAV27XQVF5AJWG",
+              "payloadSchema": [
+                {
+                  "name": "cursorIndex",
+                  "type": "number"
+                },
+                {
+                  "name": "activeFilter",
+                  "type": "string"
+                },
+                {
+                  "name": "currentLabel",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "stepper update, cursor advance, stage reveal, timeline step",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "activeFilter",
+              "categoryTally",
+              "cursorIndex",
+              "filterButtons",
+              "narration",
+              "shapes",
+              "title",
+              "visibleThreadNote"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "LearnStepperScene": "ent_01KZEGGJW7H0SM4BH3NN7W7E79"
+          },
+          "id": "trt_01KZEGGJW7BME4VCXC8XCGQ55R",
+          "linkedEntity": "LearnStepperScene",
+          "linkedEntityId": "ent_01KZEGGJW7H0SM4BH3NN7W7E79",
+          "name": "LearnStepperSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KZEGGJW7F31JWGP1148MMK40",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZEGGJW89GS6HN8CC3SMVV3J",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner advanced the cursor to the next stage in the ordered roster.",
+                "id": "evt_01KZEGGJW88WQHCE7RE0PT7Q02",
+                "key": "NEXT",
+                "name": "Next",
+                "tier": "domain"
+              },
+              {
+                "description": "Learner moved the cursor back to the previous stage in the ordered roster.",
+                "id": "evt_01KZEGGJW852WBQYT4ZG09MC4J",
+                "key": "PREV",
+                "name": "Prev",
+                "tier": "domain"
+              },
+              {
+                "description": "Learner picked a category lens (or all) to filter which stage markers are visible on the axis.",
+                "id": "evt_01KZEGGJW80PPN30WQ5XJ6SRMW",
+                "key": "FILTER_CATEGORY",
+                "name": "Filter Category",
+                "payloadSchema": [
+                  {
+                    "name": "category",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner reset the cursor to before the first stage and cleared the category filter.",
+                "id": "evt_01KZEGGJW8HSHWA1S2KAPRSY5G",
+                "key": "RESET_STEPPER",
+                "name": "Reset Stepper",
+                "tier": "domain"
+              },
+              {
+                "description": "The cursor/filter state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01KZEGGJW83JTAV27XQVF5AJWG",
+                "key": "STEPPER_ADVANCED",
+                "name": "Stepper Advanced",
+                "payloadSchema": [
+                  {
+                    "name": "cursorIndex",
+                    "type": "number"
+                  },
+                  {
+                    "name": "activeFilter",
+                    "type": "string"
+                  },
+                  {
+                    "name": "currentLabel",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "stepper update, cursor advance, stage reveal, timeline step",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.cursorIndex",
+                    -1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.activeFilter",
+                    "all"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "narration",
+                        "@config.startPrompt"
+                      ],
+                      [
+                        "tallyParts",
+                        [
+                          "array/map",
+                          "@config.categories",
+                          [
+                            "fn",
+                            "cc",
+                            [
+                              "str/concat",
+                              [
+                                "object/get",
+                                "@cc",
+                                "label"
+                              ],
+                              ": ",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@config.stages",
+                                  [
+                                    "fn",
+                                    "s",
+                                    [
+                                      "and",
+                                      [
+                                        "<=",
+                                        "@s.position",
+                                        [
+                                          "-",
+                                          "@config.minPosition",
+                                          1.0
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        "@s.category",
+                                        [
+                                          "object/get",
+                                          "@cc",
+                                          "category"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "categoryTally",
+                        [
+                          "str/join",
+                          "@tallyParts",
+                          " · "
+                        ]
+                      ],
+                      [
+                        "visibleThreadNote",
+                        "@config.allSummary"
+                      ],
+                      [
+                        "axisWidth",
+                        [
+                          "-",
+                          "@config.width",
+                          [
+                            "+",
+                            "@config.axisMarginLeft",
+                            "@config.axisMarginRight"
+                          ]
+                        ]
+                      ],
+                      [
+                        "baseShapes",
+                        [
+                          {
+                            "color": "#78716c",
+                            "id": "axis",
+                            "lineWidth": 2.0,
+                            "opacity": 1.0,
+                            "type": "line",
+                            "x1": "@config.axisMarginLeft",
+                            "x2": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y1": "@config.axisY",
+                            "y2": "@config.axisY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "minPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.minPosition"
+                            ],
+                            "type": "text",
+                            "x": "@config.axisMarginLeft",
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          },
+                          {
+                            "align": "right",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "maxPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.maxPosition"
+                            ],
+                            "type": "text",
+                            "x": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          }
+                        ]
+                      ],
+                      [
+                        "markerShapes",
+                        [
+                          "array/map",
+                          "@config.stages",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "let",
+                              [
+                                [
+                                  "xPos",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "-",
+                                          "@s.position",
+                                          "@config.minPosition"
+                                        ],
+                                        [
+                                          "-",
+                                          "@config.maxPosition",
+                                          "@config.minPosition"
+                                        ]
+                                      ],
+                                      "@axisWidth"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": "@config.unreachedColor",
+                                "fill": "@config.unreachedColor",
+                                "id": [
+                                  "str/concat",
+                                  "marker-",
+                                  "@s.position"
+                                ],
+                                "opacity": 0.35,
+                                "radius": "@config.markerRadius",
+                                "type": "circle",
+                                "x": "@xPos",
+                                "y": "@config.axisY"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "shapes",
+                        [
+                          "array/concat",
+                          "@baseShapes",
+                          "@markerShapes"
+                        ]
+                      ],
+                      [
+                        "filterButtons",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "action": "FILTER_CATEGORY",
+                              "actionPayload": {
+                                "category": "all"
+                              },
+                              "label": "@config.allLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "primary",
+                                "ghost"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              "fn",
+                              "cc",
+                              {
+                                "action": "FILTER_CATEGORY",
+                                "actionPayload": {
+                                  "category": [
+                                    "object/get",
+                                    "@cc",
+                                    "category"
+                                  ]
+                                },
+                                "label": [
+                                  "object/get",
+                                  "@cc",
+                                  "label"
+                                ],
+                                "size": "sm",
+                                "type": "button",
+                                "variant": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "primary",
+                                  "ghost"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.narration",
+                        "@narration"
+                      ],
+                      [
+                        "set",
+                        "@entity.categoryTally",
+                        "@categoryTally"
+                      ],
+                      [
+                        "set",
+                        "@entity.visibleThreadNote",
+                        "@visibleThreadNote"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@shapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.filterButtons",
+                        "@filterButtons"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": "@entity.filterButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      "@entity.cursorIndex",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": "@entity.categoryTally",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.visibleThreadNote",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KZEGGJW7F31JWGP1148MMK40",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.cursorIndex",
+                    -1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.activeFilter",
+                    "all"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "narration",
+                        "@config.startPrompt"
+                      ],
+                      [
+                        "tallyParts",
+                        [
+                          "array/map",
+                          "@config.categories",
+                          [
+                            "fn",
+                            "cc",
+                            [
+                              "str/concat",
+                              [
+                                "object/get",
+                                "@cc",
+                                "label"
+                              ],
+                              ": ",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@config.stages",
+                                  [
+                                    "fn",
+                                    "s",
+                                    [
+                                      "and",
+                                      [
+                                        "<=",
+                                        "@s.position",
+                                        [
+                                          "-",
+                                          "@config.minPosition",
+                                          1.0
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        "@s.category",
+                                        [
+                                          "object/get",
+                                          "@cc",
+                                          "category"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "categoryTally",
+                        [
+                          "str/join",
+                          "@tallyParts",
+                          " · "
+                        ]
+                      ],
+                      [
+                        "visibleThreadNote",
+                        "@config.allSummary"
+                      ],
+                      [
+                        "axisWidth",
+                        [
+                          "-",
+                          "@config.width",
+                          [
+                            "+",
+                            "@config.axisMarginLeft",
+                            "@config.axisMarginRight"
+                          ]
+                        ]
+                      ],
+                      [
+                        "baseShapes",
+                        [
+                          {
+                            "color": "#78716c",
+                            "id": "axis",
+                            "lineWidth": 2.0,
+                            "opacity": 1.0,
+                            "type": "line",
+                            "x1": "@config.axisMarginLeft",
+                            "x2": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y1": "@config.axisY",
+                            "y2": "@config.axisY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "minPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.minPosition"
+                            ],
+                            "type": "text",
+                            "x": "@config.axisMarginLeft",
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          },
+                          {
+                            "align": "right",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "maxPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.maxPosition"
+                            ],
+                            "type": "text",
+                            "x": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          }
+                        ]
+                      ],
+                      [
+                        "markerShapes",
+                        [
+                          "array/map",
+                          "@config.stages",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "let",
+                              [
+                                [
+                                  "xPos",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "-",
+                                          "@s.position",
+                                          "@config.minPosition"
+                                        ],
+                                        [
+                                          "-",
+                                          "@config.maxPosition",
+                                          "@config.minPosition"
+                                        ]
+                                      ],
+                                      "@axisWidth"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": "@config.unreachedColor",
+                                "fill": "@config.unreachedColor",
+                                "id": [
+                                  "str/concat",
+                                  "marker-",
+                                  "@s.position"
+                                ],
+                                "opacity": 0.35,
+                                "radius": "@config.markerRadius",
+                                "type": "circle",
+                                "x": "@xPos",
+                                "y": "@config.axisY"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "shapes",
+                        [
+                          "array/concat",
+                          "@baseShapes",
+                          "@markerShapes"
+                        ]
+                      ],
+                      [
+                        "filterButtons",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "action": "FILTER_CATEGORY",
+                              "actionPayload": {
+                                "category": "all"
+                              },
+                              "label": "@config.allLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "primary",
+                                "ghost"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              "fn",
+                              "cc",
+                              {
+                                "action": "FILTER_CATEGORY",
+                                "actionPayload": {
+                                  "category": [
+                                    "object/get",
+                                    "@cc",
+                                    "category"
+                                  ]
+                                },
+                                "label": [
+                                  "object/get",
+                                  "@cc",
+                                  "label"
+                                ],
+                                "size": "sm",
+                                "type": "button",
+                                "variant": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "primary",
+                                  "ghost"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.narration",
+                        "@narration"
+                      ],
+                      [
+                        "set",
+                        "@entity.categoryTally",
+                        "@categoryTally"
+                      ],
+                      [
+                        "set",
+                        "@entity.visibleThreadNote",
+                        "@visibleThreadNote"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@shapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.filterButtons",
+                        "@filterButtons"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": "@entity.filterButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      "@entity.cursorIndex",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": "@entity.categoryTally",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.visibleThreadNote",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEGGJW89GS6HN8CC3SMVV3J",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cursorIndex",
+                    [
+                      "math/min",
+                      [
+                        "+",
+                        "@entity.cursorIndex",
+                        1.0
+                      ],
+                      [
+                        "-",
+                        [
+                          "array/len",
+                          "@config.stages"
+                        ],
+                        1.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "currentPosition",
+                        [
+                          "if",
+                          [
+                            ">=",
+                            "@entity.cursorIndex",
+                            0.0
+                          ],
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@config.stages",
+                              "@entity.cursorIndex"
+                            ],
+                            "position"
+                          ],
+                          [
+                            "-",
+                            "@config.minPosition",
+                            1.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "currentStage",
+                        [
+                          "if",
+                          [
+                            ">=",
+                            "@entity.cursorIndex",
+                            0.0
+                          ],
+                          [
+                            "array/nth",
+                            "@config.stages",
+                            "@entity.cursorIndex"
+                          ],
+                          null
+                        ]
+                      ],
+                      [
+                        "narration",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@currentStage",
+                            null
+                          ],
+                          [
+                            "str/concat",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "position"
+                            ],
+                            " — ",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "label"
+                            ],
+                            ". ",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "description"
+                            ]
+                          ],
+                          "@config.startPrompt"
+                        ]
+                      ],
+                      [
+                        "tallyParts",
+                        [
+                          "array/map",
+                          "@config.categories",
+                          [
+                            "fn",
+                            "cc",
+                            [
+                              "str/concat",
+                              [
+                                "object/get",
+                                "@cc",
+                                "label"
+                              ],
+                              ": ",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@config.stages",
+                                  [
+                                    "fn",
+                                    "s",
+                                    [
+                                      "and",
+                                      [
+                                        "<=",
+                                        "@s.position",
+                                        "@currentPosition"
+                                      ],
+                                      [
+                                        "==",
+                                        "@s.category",
+                                        [
+                                          "object/get",
+                                          "@cc",
+                                          "category"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "categoryTally",
+                        [
+                          "str/join",
+                          "@tallyParts",
+                          " · "
+                        ]
+                      ],
+                      [
+                        "visibleThreadNote",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.activeFilter",
+                            "all"
+                          ],
+                          "@config.allSummary",
+                          [
+                            "object/get",
+                            [
+                              "array/first",
+                              [
+                                "array/filter",
+                                "@config.categorySummaries",
+                                [
+                                  "fn",
+                                  "cs",
+                                  [
+                                    "==",
+                                    "@cs.category",
+                                    "@entity.activeFilter"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "summary"
+                          ]
+                        ]
+                      ],
+                      [
+                        "visibleStages",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.activeFilter",
+                            "all"
+                          ],
+                          "@config.stages",
+                          [
+                            "array/filter",
+                            "@config.stages",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "==",
+                                "@s.category",
+                                "@entity.activeFilter"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "axisWidth",
+                        [
+                          "-",
+                          "@config.width",
+                          [
+                            "+",
+                            "@config.axisMarginLeft",
+                            "@config.axisMarginRight"
+                          ]
+                        ]
+                      ],
+                      [
+                        "baseShapes",
+                        [
+                          {
+                            "color": "#78716c",
+                            "id": "axis",
+                            "lineWidth": 2.0,
+                            "opacity": 1.0,
+                            "type": "line",
+                            "x1": "@config.axisMarginLeft",
+                            "x2": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y1": "@config.axisY",
+                            "y2": "@config.axisY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "minPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.minPosition"
+                            ],
+                            "type": "text",
+                            "x": "@config.axisMarginLeft",
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          },
+                          {
+                            "align": "right",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "maxPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.maxPosition"
+                            ],
+                            "type": "text",
+                            "x": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          }
+                        ]
+                      ],
+                      [
+                        "markerShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@visibleStages",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "isRevealed",
+                                    [
+                                      "<=",
+                                      "@s.position",
+                                      "@currentPosition"
+                                    ]
+                                  ],
+                                  [
+                                    "isCurrent",
+                                    [
+                                      "==",
+                                      "@s.position",
+                                      "@currentPosition"
+                                    ]
+                                  ],
+                                  [
+                                    "catColorObj",
+                                    [
+                                      "array/first",
+                                      [
+                                        "array/filter",
+                                        "@config.categories",
+                                        [
+                                          "fn",
+                                          "cc",
+                                          [
+                                            "==",
+                                            "@cc.category",
+                                            "@s.category"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "catColor",
+                                    [
+                                      "object/get",
+                                      "@catColorObj",
+                                      "color"
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "if",
+                                      "@isRevealed",
+                                      "@catColor",
+                                      "@config.unreachedColor"
+                                    ]
+                                  ],
+                                  [
+                                    "xPos",
+                                    [
+                                      "+",
+                                      "@config.axisMarginLeft",
+                                      [
+                                        "*",
+                                        [
+                                          "/",
+                                          [
+                                            "-",
+                                            "@s.position",
+                                            "@config.minPosition"
+                                          ],
+                                          [
+                                            "-",
+                                            "@config.maxPosition",
+                                            "@config.minPosition"
+                                          ]
+                                        ],
+                                        "@axisWidth"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "rad",
+                                    [
+                                      "if",
+                                      "@isCurrent",
+                                      "@config.markerHighlightRadius",
+                                      "@config.markerRadius"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  "@isCurrent",
+                                  [
+                                    {
+                                      "color": "@catColor",
+                                      "fill": "transparent",
+                                      "id": [
+                                        "str/concat",
+                                        "ring-",
+                                        "@s.position"
+                                      ],
+                                      "lineWidth": 3.0,
+                                      "opacity": 1.0,
+                                      "radius": [
+                                        "+",
+                                        "@rad",
+                                        5.0
+                                      ],
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    },
+                                    {
+                                      "color": "@col",
+                                      "fill": "@col",
+                                      "id": [
+                                        "str/concat",
+                                        "marker-",
+                                        "@s.position"
+                                      ],
+                                      "opacity": 1.0,
+                                      "radius": "@rad",
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    }
+                                  ],
+                                  [
+                                    {
+                                      "color": "@col",
+                                      "fill": "@col",
+                                      "id": [
+                                        "str/concat",
+                                        "marker-",
+                                        "@s.position"
+                                      ],
+                                      "opacity": [
+                                        "if",
+                                        "@isRevealed",
+                                        0.9,
+                                        0.35
+                                      ],
+                                      "radius": "@rad",
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "allShapes",
+                        [
+                          "array/concat",
+                          "@baseShapes",
+                          "@markerShapes"
+                        ]
+                      ],
+                      [
+                        "filterButtons",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "action": "FILTER_CATEGORY",
+                              "actionPayload": {
+                                "category": "all"
+                              },
+                              "label": "@config.allLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "primary",
+                                "ghost"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              "fn",
+                              "cc",
+                              {
+                                "action": "FILTER_CATEGORY",
+                                "actionPayload": {
+                                  "category": [
+                                    "object/get",
+                                    "@cc",
+                                    "category"
+                                  ]
+                                },
+                                "label": [
+                                  "object/get",
+                                  "@cc",
+                                  "label"
+                                ],
+                                "size": "sm",
+                                "type": "button",
+                                "variant": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "primary",
+                                  "ghost"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.narration",
+                        "@narration"
+                      ],
+                      [
+                        "set",
+                        "@entity.categoryTally",
+                        "@categoryTally"
+                      ],
+                      [
+                        "set",
+                        "@entity.visibleThreadNote",
+                        "@visibleThreadNote"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@allShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.filterButtons",
+                        "@filterButtons"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": "@entity.filterButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      "@entity.cursorIndex",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": "@entity.categoryTally",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.visibleThreadNote",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "STEPPER_ADVANCED",
+                    {
+                      "activeFilter": "@entity.activeFilter",
+                      "currentLabel": "@entity.narration",
+                      "cursorIndex": "@entity.cursorIndex"
+                    }
+                  ]
+                ],
+                "event": "NEXT",
+                "eventId": "evt_01KZEGGJW88WQHCE7RE0PT7Q02",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cursorIndex",
+                    [
+                      "math/max",
+                      [
+                        "-",
+                        "@entity.cursorIndex",
+                        1.0
+                      ],
+                      -1.0
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "currentPosition",
+                        [
+                          "if",
+                          [
+                            ">=",
+                            "@entity.cursorIndex",
+                            0.0
+                          ],
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@config.stages",
+                              "@entity.cursorIndex"
+                            ],
+                            "position"
+                          ],
+                          [
+                            "-",
+                            "@config.minPosition",
+                            1.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "currentStage",
+                        [
+                          "if",
+                          [
+                            ">=",
+                            "@entity.cursorIndex",
+                            0.0
+                          ],
+                          [
+                            "array/nth",
+                            "@config.stages",
+                            "@entity.cursorIndex"
+                          ],
+                          null
+                        ]
+                      ],
+                      [
+                        "narration",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@currentStage",
+                            null
+                          ],
+                          [
+                            "str/concat",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "position"
+                            ],
+                            " — ",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "label"
+                            ],
+                            ". ",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "description"
+                            ]
+                          ],
+                          "@config.startPrompt"
+                        ]
+                      ],
+                      [
+                        "tallyParts",
+                        [
+                          "array/map",
+                          "@config.categories",
+                          [
+                            "fn",
+                            "cc",
+                            [
+                              "str/concat",
+                              [
+                                "object/get",
+                                "@cc",
+                                "label"
+                              ],
+                              ": ",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@config.stages",
+                                  [
+                                    "fn",
+                                    "s",
+                                    [
+                                      "and",
+                                      [
+                                        "<=",
+                                        "@s.position",
+                                        "@currentPosition"
+                                      ],
+                                      [
+                                        "==",
+                                        "@s.category",
+                                        [
+                                          "object/get",
+                                          "@cc",
+                                          "category"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "categoryTally",
+                        [
+                          "str/join",
+                          "@tallyParts",
+                          " · "
+                        ]
+                      ],
+                      [
+                        "visibleThreadNote",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.activeFilter",
+                            "all"
+                          ],
+                          "@config.allSummary",
+                          [
+                            "object/get",
+                            [
+                              "array/first",
+                              [
+                                "array/filter",
+                                "@config.categorySummaries",
+                                [
+                                  "fn",
+                                  "cs",
+                                  [
+                                    "==",
+                                    "@cs.category",
+                                    "@entity.activeFilter"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "summary"
+                          ]
+                        ]
+                      ],
+                      [
+                        "visibleStages",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.activeFilter",
+                            "all"
+                          ],
+                          "@config.stages",
+                          [
+                            "array/filter",
+                            "@config.stages",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "==",
+                                "@s.category",
+                                "@entity.activeFilter"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "axisWidth",
+                        [
+                          "-",
+                          "@config.width",
+                          [
+                            "+",
+                            "@config.axisMarginLeft",
+                            "@config.axisMarginRight"
+                          ]
+                        ]
+                      ],
+                      [
+                        "baseShapes",
+                        [
+                          {
+                            "color": "#78716c",
+                            "id": "axis",
+                            "lineWidth": 2.0,
+                            "opacity": 1.0,
+                            "type": "line",
+                            "x1": "@config.axisMarginLeft",
+                            "x2": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y1": "@config.axisY",
+                            "y2": "@config.axisY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "minPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.minPosition"
+                            ],
+                            "type": "text",
+                            "x": "@config.axisMarginLeft",
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          },
+                          {
+                            "align": "right",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "maxPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.maxPosition"
+                            ],
+                            "type": "text",
+                            "x": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          }
+                        ]
+                      ],
+                      [
+                        "markerShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@visibleStages",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "isRevealed",
+                                    [
+                                      "<=",
+                                      "@s.position",
+                                      "@currentPosition"
+                                    ]
+                                  ],
+                                  [
+                                    "isCurrent",
+                                    [
+                                      "==",
+                                      "@s.position",
+                                      "@currentPosition"
+                                    ]
+                                  ],
+                                  [
+                                    "catColorObj",
+                                    [
+                                      "array/first",
+                                      [
+                                        "array/filter",
+                                        "@config.categories",
+                                        [
+                                          "fn",
+                                          "cc",
+                                          [
+                                            "==",
+                                            "@cc.category",
+                                            "@s.category"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "catColor",
+                                    [
+                                      "object/get",
+                                      "@catColorObj",
+                                      "color"
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "if",
+                                      "@isRevealed",
+                                      "@catColor",
+                                      "@config.unreachedColor"
+                                    ]
+                                  ],
+                                  [
+                                    "xPos",
+                                    [
+                                      "+",
+                                      "@config.axisMarginLeft",
+                                      [
+                                        "*",
+                                        [
+                                          "/",
+                                          [
+                                            "-",
+                                            "@s.position",
+                                            "@config.minPosition"
+                                          ],
+                                          [
+                                            "-",
+                                            "@config.maxPosition",
+                                            "@config.minPosition"
+                                          ]
+                                        ],
+                                        "@axisWidth"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "rad",
+                                    [
+                                      "if",
+                                      "@isCurrent",
+                                      "@config.markerHighlightRadius",
+                                      "@config.markerRadius"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  "@isCurrent",
+                                  [
+                                    {
+                                      "color": "@catColor",
+                                      "fill": "transparent",
+                                      "id": [
+                                        "str/concat",
+                                        "ring-",
+                                        "@s.position"
+                                      ],
+                                      "lineWidth": 3.0,
+                                      "opacity": 1.0,
+                                      "radius": [
+                                        "+",
+                                        "@rad",
+                                        5.0
+                                      ],
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    },
+                                    {
+                                      "color": "@col",
+                                      "fill": "@col",
+                                      "id": [
+                                        "str/concat",
+                                        "marker-",
+                                        "@s.position"
+                                      ],
+                                      "opacity": 1.0,
+                                      "radius": "@rad",
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    }
+                                  ],
+                                  [
+                                    {
+                                      "color": "@col",
+                                      "fill": "@col",
+                                      "id": [
+                                        "str/concat",
+                                        "marker-",
+                                        "@s.position"
+                                      ],
+                                      "opacity": [
+                                        "if",
+                                        "@isRevealed",
+                                        0.9,
+                                        0.35
+                                      ],
+                                      "radius": "@rad",
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "allShapes",
+                        [
+                          "array/concat",
+                          "@baseShapes",
+                          "@markerShapes"
+                        ]
+                      ],
+                      [
+                        "filterButtons",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "action": "FILTER_CATEGORY",
+                              "actionPayload": {
+                                "category": "all"
+                              },
+                              "label": "@config.allLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "primary",
+                                "ghost"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              "fn",
+                              "cc",
+                              {
+                                "action": "FILTER_CATEGORY",
+                                "actionPayload": {
+                                  "category": [
+                                    "object/get",
+                                    "@cc",
+                                    "category"
+                                  ]
+                                },
+                                "label": [
+                                  "object/get",
+                                  "@cc",
+                                  "label"
+                                ],
+                                "size": "sm",
+                                "type": "button",
+                                "variant": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "primary",
+                                  "ghost"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.narration",
+                        "@narration"
+                      ],
+                      [
+                        "set",
+                        "@entity.categoryTally",
+                        "@categoryTally"
+                      ],
+                      [
+                        "set",
+                        "@entity.visibleThreadNote",
+                        "@visibleThreadNote"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@allShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.filterButtons",
+                        "@filterButtons"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": "@entity.filterButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      "@entity.cursorIndex",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": "@entity.categoryTally",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.visibleThreadNote",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "STEPPER_ADVANCED",
+                    {
+                      "activeFilter": "@entity.activeFilter",
+                      "currentLabel": "@entity.narration",
+                      "cursorIndex": "@entity.cursorIndex"
+                    }
+                  ]
+                ],
+                "event": "PREV",
+                "eventId": "evt_01KZEGGJW852WBQYT4ZG09MC4J",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.activeFilter",
+                    "@payload.category"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "currentPosition",
+                        [
+                          "if",
+                          [
+                            ">=",
+                            "@entity.cursorIndex",
+                            0.0
+                          ],
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@config.stages",
+                              "@entity.cursorIndex"
+                            ],
+                            "position"
+                          ],
+                          [
+                            "-",
+                            "@config.minPosition",
+                            1.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "currentStage",
+                        [
+                          "if",
+                          [
+                            ">=",
+                            "@entity.cursorIndex",
+                            0.0
+                          ],
+                          [
+                            "array/nth",
+                            "@config.stages",
+                            "@entity.cursorIndex"
+                          ],
+                          null
+                        ]
+                      ],
+                      [
+                        "narration",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@currentStage",
+                            null
+                          ],
+                          [
+                            "str/concat",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "position"
+                            ],
+                            " — ",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "label"
+                            ],
+                            ". ",
+                            [
+                              "object/get",
+                              "@currentStage",
+                              "description"
+                            ]
+                          ],
+                          "@config.startPrompt"
+                        ]
+                      ],
+                      [
+                        "tallyParts",
+                        [
+                          "array/map",
+                          "@config.categories",
+                          [
+                            "fn",
+                            "cc",
+                            [
+                              "str/concat",
+                              [
+                                "object/get",
+                                "@cc",
+                                "label"
+                              ],
+                              ": ",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@config.stages",
+                                  [
+                                    "fn",
+                                    "s",
+                                    [
+                                      "and",
+                                      [
+                                        "<=",
+                                        "@s.position",
+                                        "@currentPosition"
+                                      ],
+                                      [
+                                        "==",
+                                        "@s.category",
+                                        [
+                                          "object/get",
+                                          "@cc",
+                                          "category"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "categoryTally",
+                        [
+                          "str/join",
+                          "@tallyParts",
+                          " · "
+                        ]
+                      ],
+                      [
+                        "visibleThreadNote",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.activeFilter",
+                            "all"
+                          ],
+                          "@config.allSummary",
+                          [
+                            "object/get",
+                            [
+                              "array/first",
+                              [
+                                "array/filter",
+                                "@config.categorySummaries",
+                                [
+                                  "fn",
+                                  "cs",
+                                  [
+                                    "==",
+                                    "@cs.category",
+                                    "@entity.activeFilter"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "summary"
+                          ]
+                        ]
+                      ],
+                      [
+                        "visibleStages",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.activeFilter",
+                            "all"
+                          ],
+                          "@config.stages",
+                          [
+                            "array/filter",
+                            "@config.stages",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "==",
+                                "@s.category",
+                                "@entity.activeFilter"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "axisWidth",
+                        [
+                          "-",
+                          "@config.width",
+                          [
+                            "+",
+                            "@config.axisMarginLeft",
+                            "@config.axisMarginRight"
+                          ]
+                        ]
+                      ],
+                      [
+                        "baseShapes",
+                        [
+                          {
+                            "color": "#78716c",
+                            "id": "axis",
+                            "lineWidth": 2.0,
+                            "opacity": 1.0,
+                            "type": "line",
+                            "x1": "@config.axisMarginLeft",
+                            "x2": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y1": "@config.axisY",
+                            "y2": "@config.axisY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "minPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.minPosition"
+                            ],
+                            "type": "text",
+                            "x": "@config.axisMarginLeft",
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          },
+                          {
+                            "align": "right",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "maxPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.maxPosition"
+                            ],
+                            "type": "text",
+                            "x": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          }
+                        ]
+                      ],
+                      [
+                        "markerShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@visibleStages",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "isRevealed",
+                                    [
+                                      "<=",
+                                      "@s.position",
+                                      "@currentPosition"
+                                    ]
+                                  ],
+                                  [
+                                    "isCurrent",
+                                    [
+                                      "==",
+                                      "@s.position",
+                                      "@currentPosition"
+                                    ]
+                                  ],
+                                  [
+                                    "catColorObj",
+                                    [
+                                      "array/first",
+                                      [
+                                        "array/filter",
+                                        "@config.categories",
+                                        [
+                                          "fn",
+                                          "cc",
+                                          [
+                                            "==",
+                                            "@cc.category",
+                                            "@s.category"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "catColor",
+                                    [
+                                      "object/get",
+                                      "@catColorObj",
+                                      "color"
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "if",
+                                      "@isRevealed",
+                                      "@catColor",
+                                      "@config.unreachedColor"
+                                    ]
+                                  ],
+                                  [
+                                    "xPos",
+                                    [
+                                      "+",
+                                      "@config.axisMarginLeft",
+                                      [
+                                        "*",
+                                        [
+                                          "/",
+                                          [
+                                            "-",
+                                            "@s.position",
+                                            "@config.minPosition"
+                                          ],
+                                          [
+                                            "-",
+                                            "@config.maxPosition",
+                                            "@config.minPosition"
+                                          ]
+                                        ],
+                                        "@axisWidth"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "rad",
+                                    [
+                                      "if",
+                                      "@isCurrent",
+                                      "@config.markerHighlightRadius",
+                                      "@config.markerRadius"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  "@isCurrent",
+                                  [
+                                    {
+                                      "color": "@catColor",
+                                      "fill": "transparent",
+                                      "id": [
+                                        "str/concat",
+                                        "ring-",
+                                        "@s.position"
+                                      ],
+                                      "lineWidth": 3.0,
+                                      "opacity": 1.0,
+                                      "radius": [
+                                        "+",
+                                        "@rad",
+                                        5.0
+                                      ],
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    },
+                                    {
+                                      "color": "@col",
+                                      "fill": "@col",
+                                      "id": [
+                                        "str/concat",
+                                        "marker-",
+                                        "@s.position"
+                                      ],
+                                      "opacity": 1.0,
+                                      "radius": "@rad",
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    }
+                                  ],
+                                  [
+                                    {
+                                      "color": "@col",
+                                      "fill": "@col",
+                                      "id": [
+                                        "str/concat",
+                                        "marker-",
+                                        "@s.position"
+                                      ],
+                                      "opacity": [
+                                        "if",
+                                        "@isRevealed",
+                                        0.9,
+                                        0.35
+                                      ],
+                                      "radius": "@rad",
+                                      "type": "circle",
+                                      "x": "@xPos",
+                                      "y": "@config.axisY"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "allShapes",
+                        [
+                          "array/concat",
+                          "@baseShapes",
+                          "@markerShapes"
+                        ]
+                      ],
+                      [
+                        "filterButtons",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "action": "FILTER_CATEGORY",
+                              "actionPayload": {
+                                "category": "all"
+                              },
+                              "label": "@config.allLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "primary",
+                                "ghost"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              "fn",
+                              "cc",
+                              {
+                                "action": "FILTER_CATEGORY",
+                                "actionPayload": {
+                                  "category": [
+                                    "object/get",
+                                    "@cc",
+                                    "category"
+                                  ]
+                                },
+                                "label": [
+                                  "object/get",
+                                  "@cc",
+                                  "label"
+                                ],
+                                "size": "sm",
+                                "type": "button",
+                                "variant": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "primary",
+                                  "ghost"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.narration",
+                        "@narration"
+                      ],
+                      [
+                        "set",
+                        "@entity.categoryTally",
+                        "@categoryTally"
+                      ],
+                      [
+                        "set",
+                        "@entity.visibleThreadNote",
+                        "@visibleThreadNote"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@allShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.filterButtons",
+                        "@filterButtons"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": "@entity.filterButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      "@entity.cursorIndex",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": "@entity.categoryTally",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.visibleThreadNote",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "STEPPER_ADVANCED",
+                    {
+                      "activeFilter": "@entity.activeFilter",
+                      "currentLabel": "@entity.narration",
+                      "cursorIndex": "@entity.cursorIndex"
+                    }
+                  ]
+                ],
+                "event": "FILTER_CATEGORY",
+                "eventId": "evt_01KZEGGJW80PPN30WQ5XJ6SRMW",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cursorIndex",
+                    -1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.activeFilter",
+                    "all"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "narration",
+                        "@config.startPrompt"
+                      ],
+                      [
+                        "tallyParts",
+                        [
+                          "array/map",
+                          "@config.categories",
+                          [
+                            "fn",
+                            "cc",
+                            [
+                              "str/concat",
+                              [
+                                "object/get",
+                                "@cc",
+                                "label"
+                              ],
+                              ": ",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@config.stages",
+                                  [
+                                    "fn",
+                                    "s",
+                                    [
+                                      "and",
+                                      [
+                                        "<=",
+                                        "@s.position",
+                                        [
+                                          "-",
+                                          "@config.minPosition",
+                                          1.0
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        "@s.category",
+                                        [
+                                          "object/get",
+                                          "@cc",
+                                          "category"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "categoryTally",
+                        [
+                          "str/join",
+                          "@tallyParts",
+                          " · "
+                        ]
+                      ],
+                      [
+                        "visibleThreadNote",
+                        "@config.allSummary"
+                      ],
+                      [
+                        "axisWidth",
+                        [
+                          "-",
+                          "@config.width",
+                          [
+                            "+",
+                            "@config.axisMarginLeft",
+                            "@config.axisMarginRight"
+                          ]
+                        ]
+                      ],
+                      [
+                        "baseShapes",
+                        [
+                          {
+                            "color": "#78716c",
+                            "id": "axis",
+                            "lineWidth": 2.0,
+                            "opacity": 1.0,
+                            "type": "line",
+                            "x1": "@config.axisMarginLeft",
+                            "x2": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y1": "@config.axisY",
+                            "y2": "@config.axisY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "minPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.minPosition"
+                            ],
+                            "type": "text",
+                            "x": "@config.axisMarginLeft",
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          },
+                          {
+                            "align": "right",
+                            "color": "#78716c",
+                            "fontSize": 11.0,
+                            "id": "maxPositionLabel",
+                            "text": [
+                              "str/concat",
+                              "",
+                              "@config.maxPosition"
+                            ],
+                            "type": "text",
+                            "x": [
+                              "-",
+                              "@config.width",
+                              "@config.axisMarginRight"
+                            ],
+                            "y": [
+                              "+",
+                              "@config.axisY",
+                              26.0
+                            ]
+                          }
+                        ]
+                      ],
+                      [
+                        "markerShapes",
+                        [
+                          "array/map",
+                          "@config.stages",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "let",
+                              [
+                                [
+                                  "xPos",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "-",
+                                          "@s.position",
+                                          "@config.minPosition"
+                                        ],
+                                        [
+                                          "-",
+                                          "@config.maxPosition",
+                                          "@config.minPosition"
+                                        ]
+                                      ],
+                                      "@axisWidth"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": "@config.unreachedColor",
+                                "fill": "@config.unreachedColor",
+                                "id": [
+                                  "str/concat",
+                                  "marker-",
+                                  "@s.position"
+                                ],
+                                "opacity": 0.35,
+                                "radius": "@config.markerRadius",
+                                "type": "circle",
+                                "x": "@xPos",
+                                "y": "@config.axisY"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "allShapes",
+                        [
+                          "array/concat",
+                          "@baseShapes",
+                          "@markerShapes"
+                        ]
+                      ],
+                      [
+                        "filterButtons",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "action": "FILTER_CATEGORY",
+                              "actionPayload": {
+                                "category": "all"
+                              },
+                              "label": "@config.allLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "primary",
+                                "ghost"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              "fn",
+                              "cc",
+                              {
+                                "action": "FILTER_CATEGORY",
+                                "actionPayload": {
+                                  "category": [
+                                    "object/get",
+                                    "@cc",
+                                    "category"
+                                  ]
+                                },
+                                "label": [
+                                  "object/get",
+                                  "@cc",
+                                  "label"
+                                ],
+                                "size": "sm",
+                                "type": "button",
+                                "variant": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "primary",
+                                  "ghost"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.narration",
+                        "@narration"
+                      ],
+                      [
+                        "set",
+                        "@entity.categoryTally",
+                        "@categoryTally"
+                      ],
+                      [
+                        "set",
+                        "@entity.visibleThreadNote",
+                        "@visibleThreadNote"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@allShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.filterButtons",
+                        "@filterButtons"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": "@entity.filterButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      "@entity.cursorIndex",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    true,
+                                    false
+                                  ],
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": "@entity.categoryTally",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.visibleThreadNote",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "STEPPER_ADVANCED",
+                    {
+                      "activeFilter": "@entity.activeFilter",
+                      "currentLabel": "@entity.narration",
+                      "cursorIndex": "@entity.cursorIndex"
+                    }
+                  ]
+                ],
+                "event": "RESET_STEPPER",
+                "eventId": "evt_01KZEGGJW8HSHWA1S2KAPRSY5G",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -140,4 +140,683 @@ export function stdAgentToolLoop(params: StdAgentToolLoopParams): OrbitalDefinit
       stdAgentToolLoopPage(params),
     ],
   });
+}
+
+type _StdAgentToolLoopEntityName = 'ToolLoop';
+type _StdAgentToolLoopListenTraitName = 'ToolLoopExecution' | 'ToolLoopListener';
+
+/**
+ * Tunable params for the AgentToolLoopOrbital orbital.
+ *
+ * Canonical entity: ToolLoop — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdAgentToolLoopAgentToolLoopOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ToolLoopExecution' | 'ToolLoopListener',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait AgentToolLoopOrbital's `uses[]` exports. */
+type _StdAgentToolLoopAgentToolLoopOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the AgentToolLoopOrbital orbital with consumer params. */
+export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAgentToolLoopOrbitalParams = {}): OrbitalDefinition {
+  const built = makeOrbitalWithUses({
+    name: 'AgentToolLoopOrbital',
+    uses: [],
+    entity: {
+      name: 'ToolLoop',
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'required': true,
+                  'type': 'string',
+                },
+                'role': {
+                  'name': 'role',
+                  'required': true,
+                  'type': 'string',
+                },
+                'toolCallId': {
+                  'name': 'toolCallId',
+                  'required': false,
+                  'type': 'string',
+                },
+                'toolCalls': {
+                  'items': {
+                    'type': 'object',
+                  },
+                  'name': 'toolCalls',
+                  'required': false,
+                  'type': 'array',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'messages',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'description': {
+                  'name': 'description',
+                  'required': true,
+                  'type': 'string',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'schema': {
+                  'name': 'schema',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'tools',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'name': 'response',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'iterations',
+            'type': 'number',
+          },
+          {
+            'default': 'idle',
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'idle',
+              'calling',
+              'done',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'lifecycle',
+        'emits': [
+          {
+            'event': 'LOOP_STEP',
+            'payloadSchema': [
+              {
+                'name': 'response',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'iteration',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'TOOLS_CALLED_1',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TOOLS_CALLED_2',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'linkedEntity': 'ToolLoop',
+        'name': 'ToolLoopExecution',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EXECUTE',
+              'name': 'Execute',
+              'payloadSchema': [
+                {
+                  'name': 'messages',
+                  'required': true,
+                  'type': '[LlmMessage]',
+                },
+                {
+                  'name': 'tools',
+                  'required': true,
+                  'type': '[LlmToolDef]',
+                },
+              ],
+            },
+            {
+              'key': 'TOOLS_CALLED_1',
+              'name': 'Tools Called 1',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TOOLS_FAILED_1',
+              'name': 'Tools Failed 1',
+            },
+            {
+              'key': 'TOOLS_CALLED_2',
+              'name': 'Tools Called 2',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TOOLS_FAILED_2',
+              'name': 'Tools Failed 2',
+            },
+            {
+              'key': 'CONTINUE',
+              'name': 'Continue',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'LOOP_STEP',
+              'name': 'Loop Step',
+              'payloadSchema': [
+                {
+                  'name': 'response',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'iteration',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+            {
+              'name': 'calling',
+            },
+            {
+              'name': 'done',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.messages',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.tools',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.response',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.iterations',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.messages',
+                  '@payload.messages',
+                ],
+                [
+                  'set',
+                  '@entity.tools',
+                  '@payload.tools',
+                ],
+                [
+                  'llm/call-tools',
+                  '@entity.messages',
+                  '@entity.tools',
+                  {
+                    'emit': {
+                      'failure': 'TOOLS_FAILED_1',
+                      'success': 'TOOLS_CALLED_1',
+                    },
+                  },
+                ],
+              ],
+              'event': 'EXECUTE',
+              'from': 'idle',
+              'to': 'calling',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.response',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.iterations',
+                  [
+                    '+',
+                    '@entity.iterations',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+                [
+                  'emit',
+                  'LOOP_STEP',
+                  {
+                    'iteration': '@entity.iterations',
+                    'response': '@entity.response',
+                  },
+                ],
+              ],
+              'event': 'TOOLS_CALLED_1',
+              'from': 'calling',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.response',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+              ],
+              'event': 'TOOLS_FAILED_1',
+              'from': 'calling',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.response',
+                  '@payload.result',
+                ],
+                [
+                  'set',
+                  '@entity.iterations',
+                  [
+                    '+',
+                    '@entity.iterations',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+                [
+                  'emit',
+                  'LOOP_STEP',
+                  {
+                    'iteration': '@entity.iterations',
+                    'response': '@entity.response',
+                  },
+                ],
+              ],
+              'event': 'TOOLS_CALLED_2',
+              'from': 'calling',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.response',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+              ],
+              'event': 'TOOLS_FAILED_2',
+              'from': 'calling',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'done',
+              'to': 'done',
+            },
+            {
+              'effects': [
+                [
+                  'llm/call-tools',
+                  '@entity.messages',
+                  '@entity.tools',
+                  {
+                    'emit': {
+                      'failure': 'TOOLS_FAILED_2',
+                      'success': 'TOOLS_CALLED_2',
+                    },
+                  },
+                ],
+              ],
+              'event': 'CONTINUE',
+              'from': 'done',
+              'to': 'calling',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.messages',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.tools',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.response',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.iterations',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'done',
+              'to': 'idle',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
+        'category': 'lifecycle',
+        'linkedEntity': 'ToolLoop',
+        'listens': [
+          {
+            'event': 'LOOP_STEP',
+            'source': {
+              'kind': 'trait',
+              'trait': ('ToolLoopExecution' satisfies _StdAgentToolLoopListenTraitName),
+            },
+            'triggers': 'LOOP_STEP',
+          },
+        ],
+        'name': 'ToolLoopListener',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'LOOP_STEP',
+              'name': 'Loop Step',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'waiting',
+            },
+            {
+              'name': 'active',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'waiting',
+              'to': 'waiting',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+              ],
+              'event': 'LOOP_STEP',
+              'from': 'waiting',
+              'to': 'active',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'active',
+              'to': 'active',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'RESET',
+              'from': 'active',
+              'to': 'waiting',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'AgentToolLoopPage',
+        'path': '/agent-tool-loop',
+        'traits': [
+          {
+            'ref': 'ToolLoopExecution',
+          },
+          {
+            'ref': 'ToolLoopListener',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAgentToolLoopAgentToolLoopOrbital. */
+export const StdAgentToolLoopAgentToolLoopOrbitalManifest = {
+  organism: 'std-agent-tool-loop',
+  orbitalName: 'AgentToolLoopOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'ToolLoopExecution',
+    'ToolLoopListener',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAgentToolLoopAgentToolLoopOrbitalParams keys. */
+export function isStdAgentToolLoopAgentToolLoopOrbitalParams(p: object): p is StdAgentToolLoopAgentToolLoopOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAgentToolLoopAgentToolLoopOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdAgentToolLoopAgentToolLoopOrbitalManifest.traitNames,
+      ...StdAgentToolLoopAgentToolLoopOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

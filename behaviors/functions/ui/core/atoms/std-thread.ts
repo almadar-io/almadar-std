@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -213,4 +213,1174 @@ export function stdThread(params: StdThreadParams): OrbitalDefinition {
       stdThreadPage(params),
     ],
   });
+}
+
+type _StdThreadEntityName = 'ThreadPost';
+type _StdThreadListenTraitName = 'ThreadPostBrowse';
+
+/**
+ * Tunable params for the ThreadPostOrbital orbital.
+ *
+ * Canonical entity: ThreadPost — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdThreadThreadPostOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ThreadPostBrowse',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** `'Alias.traits.TraitName'` literal union of every trait ThreadPostOrbital's `uses[]` exports. */
+type _StdThreadThreadPostOrbitalUsesRef = never;
+
+/** Per-orbital factory: builds the ThreadPostOrbital orbital with consumer params. */
+export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalParams = {}): OrbitalDefinition {
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'threadposts');
+  const built = makeOrbitalWithUses({
+    name: 'ThreadPostOrbital',
+    uses: [],
+    entity: {
+      name: 'ThreadPost',
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'description': 'Identifier of the parent ThreadPost in a nested thread.',
+            'name': 'parentId',
+            'synonyms': 'parent, ancestor, source',
+            'type': 'string',
+          },
+          {
+            'description': 'Identifier of the top-level thread this post belongs to.',
+            'name': 'threadRootId',
+            'required': true,
+            'synonyms': 'rootId, topLevelId, parentThreadId',
+            'type': 'string',
+          },
+          {
+            'description': 'Unique identifier for the post\'s author.',
+            'name': 'authorId',
+            'required': true,
+            'synonyms': 'user id, creator id, author',
+            'type': 'string',
+          },
+          {
+            'description': 'The name of the post\'s author.',
+            'name': 'authorName',
+            'required': true,
+            'synonyms': 'author, username, poster',
+            'type': 'string',
+          },
+          {
+            'description': 'The main text content of the post.',
+            'name': 'content',
+            'required': true,
+            'synonyms': 'text, message, body',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'description': 'The number of votes associated with this item.',
+            'name': 'voteCount',
+            'synonyms': 'votes, rating, score',
+            'type': 'number',
+          },
+          {
+            'default': 0,
+            'description': 'The number of replies to this post.',
+            'name': 'replyCount',
+            'synonyms': 'count, number of replies, child posts',
+            'type': 'number',
+          },
+          {
+            'description': 'A list of child ThreadPost entities.',
+            'name': 'replies',
+            'relation': {
+              'cardinality': 'many',
+              'entity': 'ThreadPost',
+            },
+            'synonyms': 'children, descendants, sub-posts',
+            'type': 'relation',
+          },
+          {
+            'default': {},
+            'description': 'The currently selected or active row within the thread.',
+            'name': 'focusedRow',
+            'synonyms': 'selection, active, current',
+            'type': 'object',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      {
+        'category': 'interaction',
+        'config': {
+          'bodyContent': {
+            'default': {
+              'children': [
+                {
+                  'entity': '@payload.data',
+                  'fields': [
+                    {
+                      'label': 'Author',
+                      'name': 'authorName',
+                      'variant': 'h4',
+                    },
+                    {
+                      'label': '',
+                      'name': 'content',
+                      'variant': 'body',
+                    },
+                    {
+                      'label': 'Votes',
+                      'name': 'voteCount',
+                      'variant': 'caption',
+                    },
+                  ],
+                  'gap': 'sm',
+                  'itemActions': [
+                    {
+                      'event': 'REPLY',
+                      'icon': 'message-square',
+                      'label': 'Reply',
+                    },
+                  ],
+                  'look': '@config.tableLook',
+                  'type': 'data-list',
+                  'variant': 'card',
+                },
+              ],
+              'direction': 'vertical',
+              'gap': 'md',
+              'type': 'stack',
+            },
+            'description': 'Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.',
+            'label': 'Body content tree',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'detailAuthorBinding': {
+            'default': '@entity.focusedRow.authorName',
+            'description': 'Detail-pane binding for the focused message author.',
+            'label': 'detailAuthorBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'detailContentBinding': {
+            'default': '@entity.focusedRow.content',
+            'description': 'Detail-pane binding for the message body.',
+            'label': 'detailContentBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'detailDateBinding': {
+            'default': '@entity.focusedRow.createdAt',
+            'description': 'Detail-pane binding for the timestamp.',
+            'label': 'detailDateBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'detailFromBinding': {
+            'default': '@entity.focusedRow.fromAddress',
+            'description': 'Detail-pane binding for the From address.',
+            'label': 'detailFromBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'detailSubjectBinding': {
+            'default': '@entity.focusedRow.subject',
+            'description': 'Detail-pane binding for the focused message subject.',
+            'label': 'detailSubjectBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'detailToBinding': {
+            'default': '@entity.focusedRow.toAddress',
+            'description': 'Detail-pane binding for the To address.',
+            'label': 'detailToBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'emailAuthorBinding': {
+            'default': '@item.authorName',
+            'description': 'List-pane binding for the message author.',
+            'label': 'emailAuthorBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'emailPreviewBinding': {
+            'default': '@item.preview',
+            'description': 'List-pane binding for the message preview text.',
+            'label': 'emailPreviewBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'emailSubjectBinding': {
+            'default': '@item.subject',
+            'description': 'List-pane binding for the message subject.',
+            'label': 'emailSubjectBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'flat': {
+            'default': false,
+            'description': 'Render replies as a linear list instead of nested tree',
+            'label': 'Flat thread',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'recipientName': {
+            'default': 'Conversation',
+            'description': 'Header/recipient label for chat-style threads.',
+            'label': 'recipientName',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'replyAuthorBinding': {
+            'default': '@reply.authorName',
+            'description': 'Reply binding for the reply author.',
+            'label': 'replyAuthorBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'replyContentBinding': {
+            'default': '@reply.content',
+            'description': 'Reply binding for the reply body.',
+            'label': 'replyContentBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'replyDateBinding': {
+            'default': '@reply.createdAt',
+            'description': 'Reply binding for the reply timestamp.',
+            'label': 'replyDateBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'replyFromBinding': {
+            'default': '@reply.fromAddress',
+            'description': 'Reply binding for the reply From address.',
+            'label': 'replyFromBinding',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'sectionTitle': {
+            'default': 'Discussion',
+            'description': 'Section header for linear-comment threads.',
+            'label': 'sectionTitle',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'tableLook': {
+            'default': 'dense',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'label': 'Table look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'threadRootId': {
+            'default': '',
+            'description': 'Top-level post whose descendants are loaded (blank = all roots)',
+            'label': 'Root post id',
+            'tier': 'domain',
+            'type': 'string',
+          },
+        },
+        'emits': [
+          {
+            'description': 'Indicates a post or reply has been chosen for interaction.',
+            'event': 'SELECT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'choose, highlight, focus, activate',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a new reply has been created and added to the thread.',
+            'event': 'REPLY',
+            'payloadSchema': [
+              {
+                'name': 'parentId',
+                'type': 'string',
+              },
+              {
+                'name': 'parentNodeId',
+                'type': 'string',
+              },
+              {
+                'name': 'content',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'add, post, respond, submit',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a reply has been modified.',
+            'event': 'EDIT_REPLY',
+            'payloadSchema': [
+              {
+                'name': 'value',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'update, change, modify',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals a new reply has been successfully submitted.',
+            'event': 'SUBMIT_REPLY',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'required': true,
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'post, send, add, publish',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a reply creation was aborted by the user.',
+            'event': 'CANCEL_REPLY',
+            'synonyms': 'abort, dismiss, undo, cancel',
+            'tier': 'presentation',
+          },
+          {
+            'description': 'Signals a thread post has been successfully retrieved.',
+            'event': 'ThreadPostLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ThreadPost]',
+              },
+            ],
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to load a thread post.',
+            'event': 'ThreadPostLoadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'load error, fetch failed, retrieval failed',
+            'tier': 'internal',
+          },
+          {
+            'description': 'A new post has been added to the thread.',
+            'event': 'ThreadPostCreated',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'threadRootId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'voteCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'replyCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'replies',
+                    'type': '[ThreadPost]',
+                  },
+                  {
+                    'name': 'focusedRow',
+                    'type': 'object',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'new post, added, created',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Indicates a failure to create a new thread post.',
+            'event': 'ThreadPostCreateFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failed, creation failed',
+            'tier': 'internal',
+          },
+        ],
+        'entityContract': {
+          'provides': [
+            'content',
+            'focusedRow',
+            'parentId',
+          ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ThreadPost',
+        'name': 'ThreadPostBrowse',
+        'scope': 'collection',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Signals a thread post has been successfully retrieved.',
+              'key': 'ThreadPostLoaded',
+              'name': 'ThreadPost loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ThreadPost]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to load a thread post.',
+              'key': 'ThreadPostLoadFailed',
+              'name': 'ThreadPost load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, fetch failed, retrieval failed',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a new reply has been created and added to the thread.',
+              'key': 'REPLY',
+              'name': 'Reply',
+              'payloadSchema': [
+                {
+                  'name': 'parentId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'parentNodeId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'content',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'add, post, respond, submit',
+              'tier': 'domain',
+            },
+            {
+              'description': 'A new post has been added to the thread.',
+              'key': 'ThreadPostCreated',
+              'name': 'ThreadPost created',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'ThreadPost',
+                },
+              ],
+              'synonyms': 'new post, added, created',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a post or reply has been chosen for interaction.',
+              'key': 'SELECT',
+              'name': 'Select',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'choose, highlight, focus, activate',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a failure to create a new thread post.',
+              'key': 'ThreadPostCreateFailed',
+              'name': 'ThreadPost create failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failed, creation failed',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Indicates a reply has been modified.',
+              'key': 'EDIT_REPLY',
+              'name': 'Edit Reply',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'update, change, modify',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Signals a new reply has been successfully submitted.',
+              'key': 'SUBMIT_REPLY',
+              'name': 'Submit Reply',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'post, send, add, publish',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Indicates a reply creation was aborted by the user.',
+              'key': 'CANCEL_REPLY',
+              'name': 'Cancel Reply',
+              'synonyms': 'abort, dismiss, undo, cancel',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'replying',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
+                    'include': [
+                      'replies',
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  '@config.bodyContent',
+                ],
+              ],
+              'event': 'ThreadPostLoaded',
+              'from': 'loading',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ThreadPostLoadFailed',
+              'from': 'loading',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
+                    'include': [
+                      'replies',
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  '@config.bodyContent',
+                ],
+              ],
+              'event': 'ThreadPostLoaded',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'authorId': 'me',
+                    'authorName': 'You',
+                    'content': '@payload.content',
+                    'parentId': [
+                      'str/default',
+                      '@payload.parentNodeId',
+                      '@payload.parentId',
+                    ],
+                    'threadRootId': [
+                      'str/default',
+                      '@payload.parentNodeId',
+                      'root',
+                    ],
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostCreateFailed',
+                      'success': 'ThreadPostCreated',
+                    },
+                  },
+                ],
+              ],
+              'event': 'REPLY',
+              'from': 'browsing',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  [
+                    'str/default',
+                    '@payload.content',
+                    '',
+                  ],
+                  '',
+                ],
+              ],
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.parentId',
+                  [
+                    'str/default',
+                    '@payload.parentNodeId',
+                    '@payload.parentId',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': 'Write a reply',
+                        'type': 'typography',
+                        'variant': 'h4',
+                      },
+                      {
+                        'action': 'EDIT_REPLY',
+                        'placeholder': 'Your reply…',
+                        'type': 'textarea',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'SUBMIT_REPLY',
+                            'icon': 'send',
+                            'label': 'Submit',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                          {
+                            'action': 'CANCEL_REPLY',
+                            'label': 'Cancel',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'REPLY',
+              'from': 'browsing',
+              'guard': [
+                '=',
+                [
+                  'str/default',
+                  '@payload.content',
+                  '',
+                ],
+                '',
+              ],
+              'to': 'replying',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
+                    'include': [
+                      'replies',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'ThreadPostCreated',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.focusedRow',
+                  '@payload.row',
+                ],
+                [
+                  'fetch',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
+                    'include': [
+                      'replies',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'SELECT',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ThreadPostCreateFailed',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ThreadPostLoadFailed',
+              'from': 'browsing',
+              'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.content',
+                  '@payload.value',
+                ],
+              ],
+              'event': 'EDIT_REPLY',
+              'from': 'replying',
+              'to': 'replying',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostCreateFailed',
+                      'success': 'ThreadPostCreated',
+                    },
+                  },
+                ],
+              ],
+              'event': 'SUBMIT_REPLY',
+              'from': 'replying',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.content',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.parentId',
+                  '',
+                ],
+              ],
+              'event': 'CANCEL_REPLY',
+              'from': 'replying',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.content',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.parentId',
+                  '',
+                ],
+                [
+                  'fetch',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
+                    'include': [
+                      'replies',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'ThreadPostCreated',
+              'from': 'replying',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ThreadPostCreateFailed',
+              'from': 'replying',
+              'to': 'replying',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
+                    'include': [
+                      'replies',
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'size': 'sm',
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
+            },
+          ],
+        },
+      } satisfies Trait,
+    ],
+    pages: [
+      {
+        'name': 'ThreadPostBrowsePage',
+        'path': '/threadposts',
+        'traits': [
+          {
+            'ref': 'ThreadPostBrowse',
+          },
+        ],
+      } satisfies Page,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdThreadThreadPostOrbital. */
+export const StdThreadThreadPostOrbitalManifest = {
+  organism: 'std-thread',
+  orbitalName: 'ThreadPostOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+  ] as const,
+  inlineTraitNames: [
+    'ThreadPostBrowse',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdThreadThreadPostOrbitalParams keys. */
+export function isStdThreadThreadPostOrbitalParams(p: object): p is StdThreadThreadPostOrbitalParams {
+  type _OverrideRecord = NonNullable<StdThreadThreadPostOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdThreadThreadPostOrbitalManifest.traitNames,
+      ...StdThreadThreadPostOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }

@@ -1,0 +1,298 @@
+[
+  {
+    "organism": "std-learn-classify",
+    "orbital": "LearnClassifyOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-classify.ts",
+    "entities": [
+      {
+        "name": "LearnClassifyScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "itemIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "itemText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "correctCategory",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "selectedCategory",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "correctCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "attemptedCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "backdropShapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnClassifySim",
+        "emittedEvents": [
+          "CLASSIFY_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CLASSIFY_UPDATED",
+            "direction": "emit",
+            "description": "The classification state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "classify update, pick result, score, running score, verdict",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "PICK",
+            "direction": "listen",
+            "description": "Learner picked a category for the current item; verdicted against the item's declared correct category.",
+            "tier": "domain"
+          },
+          {
+            "name": "ADVANCE",
+            "direction": "listen",
+            "description": "Learner advanced to the next item, clearing the pick and feedback for the new item.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "advanceLabel",
+            "type": "string",
+            "default": "Next",
+            "label": "Advance Button Label",
+            "description": "Label text for the button that advances to the next item.",
+            "tier": "presentation"
+          },
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "categories",
+            "type": "[LearnClassifyOption]",
+            "default": [
+              {
+                "color": "#94a3b8",
+                "label": "Category A",
+                "value": "a"
+              },
+              {
+                "color": "#64748b",
+                "label": "Category B",
+                "value": "b"
+              }
+            ],
+            "label": "Categories",
+            "description": "Ordered bottom-to-top roster of category buckets (value/label/color) used to render the stacked backdrop and the pick buttons; order determines the backdrop's stacking, widest at the bottom to narrowest at the top.",
+            "synonyms": "category, bucket, class, tier, level, classification, roster",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "correctColor",
+            "type": "string",
+            "default": "#16a34a",
+            "label": "Correct Highlight Color",
+            "description": "Fill color for the correct category once the learner has picked.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 420,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "incorrectColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Incorrect Highlight Color",
+            "description": "Fill color for the learner's picked category when it does not match the correct category.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "items",
+            "type": "[LearnClassifyItem]",
+            "default": [
+              {
+                "category": "a",
+                "text": "Example item one."
+              },
+              {
+                "category": "b",
+                "text": "Example item two."
+              }
+            ],
+            "label": "Items",
+            "description": "Roster of items the learner classifies; each carries its prompt text and the value of its correct category.",
+            "synonyms": "item, prompt, scenario, situation, case, example, question",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": true,
+                  "type": "string"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Classify",
+            "label": "Title",
+            "description": "Title shown above the instrument.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LearnClassifyScene",
+        "transitionEvents": [
+          "ADVANCE",
+          "INIT",
+          "MODE_SELECTED",
+          "PICK"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "attemptedCount",
+            "backdropShapes",
+            "correctCategory",
+            "correctCount",
+            "feedback",
+            "itemIndex",
+            "itemText",
+            "selectedCategory",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnClassifyPage",
+        "defaultPath": "/learn-classify",
+        "primaryEntity": "LearnClassifyScene"
+      }
+    ],
+    "emittedEvents": [
+      "CLASSIFY_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

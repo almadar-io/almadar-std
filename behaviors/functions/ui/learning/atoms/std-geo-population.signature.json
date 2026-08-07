@@ -1,0 +1,528 @@
+[
+  {
+    "organism": "std-geo-population",
+    "orbital": "GeoPopulationOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-geo-population.ts",
+    "entities": [
+      {
+        "name": "GeoPopulationScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "birthRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "deathRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "migrationRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "decadeStep",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c0Male",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c0Female",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c1Male",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c1Female",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c2Male",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c2Female",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c3Male",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c3Female",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c4Male",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c4Female",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "totalPopulation",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "dependencyRatio",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "baseSharePercent",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "pyramidClassCode",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pyramidClassLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pyramidClassReadout",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pyramidShapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GeoPopulationSim",
+        "emittedEvents": [
+          "POPULATION_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "POPULATION_UPDATED",
+            "direction": "emit",
+            "description": "The population pyramid state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "population update, cohort projection, decade step, dependency ratio, pyramid shape",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_BIRTH_RATE",
+            "direction": "listen",
+            "description": "Learner dragged the birth-rate dial.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_DEATH_RATE",
+            "direction": "listen",
+            "description": "Learner dragged the death-rate dial.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_MIGRATION",
+            "direction": "listen",
+            "description": "Learner dragged the net-migration dial.",
+            "tier": "domain"
+          },
+          {
+            "name": "STEP_DECADE",
+            "direction": "listen",
+            "description": "Learner pressed Step Decade to advance the cohort-component projection by one generation.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "axisColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Axis Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "birthRate",
+            "type": "number",
+            "default": 20,
+            "label": "Birth Rate",
+            "description": "Starting birth-rate dial (0-50), driving how many births the 20-39 cohort produces on each Step Decade.",
+            "synonyms": "birth rate, fertility rate, natality",
+            "tier": "domain"
+          },
+          {
+            "key": "birthRateCoefficient",
+            "type": "number",
+            "default": 0.4,
+            "label": "Birth Rate Coefficient",
+            "description": "Scales the birth-rate dial into actual births: births = (birthRate/100) x this coefficient x the 20-39 cohort size.",
+            "tier": "domain"
+          },
+          {
+            "key": "cohortSeeds",
+            "type": "[GeoPopulationCohortSeed]",
+            "default": [
+              {
+                "baseSurvivalRate": 0.97,
+                "deathSensitivity": 0.15,
+                "femaleShare": 125,
+                "id": "c0",
+                "label": "0–19",
+                "maleShare": 130,
+                "order": 0
+              },
+              {
+                "baseSurvivalRate": 0.96,
+                "deathSensitivity": 0.2,
+                "femaleShare": 118,
+                "id": "c1",
+                "label": "20–39",
+                "maleShare": 120,
+                "order": 1
+              },
+              {
+                "baseSurvivalRate": 0.93,
+                "deathSensitivity": 0.3,
+                "femaleShare": 97,
+                "id": "c2",
+                "label": "40–59",
+                "maleShare": 95,
+                "order": 2
+              },
+              {
+                "baseSurvivalRate": 0.85,
+                "deathSensitivity": 0.5,
+                "femaleShare": 60,
+                "id": "c3",
+                "label": "60–79",
+                "maleShare": 55,
+                "order": 3
+              },
+              {
+                "baseSurvivalRate": 0.7,
+                "deathSensitivity": 0.6,
+                "femaleShare": 20,
+                "id": "c4",
+                "label": "80+",
+                "maleShare": 15,
+                "order": 4
+              }
+            ],
+            "label": "Cohort Seeds",
+            "description": "Roster of the five age cohorts (0–19 through 80+) seeding the starting population pyramid: id/label/order plus starting male/female shares, each cohort's baseline decade survival rate, and its death-rate sensitivity used by the cohort-component Step Decade.",
+            "synonyms": "age cohort, population cohort, age-sex structure, cohort seed, survival rate, mortality sensitivity",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "baseSurvivalRate": {
+                  "name": "baseSurvivalRate",
+                  "required": true,
+                  "type": "number"
+                },
+                "deathSensitivity": {
+                  "name": "deathSensitivity",
+                  "required": true,
+                  "type": "number"
+                },
+                "femaleShare": {
+                  "name": "femaleShare",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "maleShare": {
+                  "name": "maleShare",
+                  "required": true,
+                  "type": "number"
+                },
+                "order": {
+                  "name": "order",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "deathRate",
+            "type": "number",
+            "default": 15,
+            "label": "Death Rate",
+            "description": "Starting death-rate dial (0-50), reducing each cohort's decade survival on each Step Decade.",
+            "synonyms": "death rate, mortality rate",
+            "tier": "domain"
+          },
+          {
+            "key": "femaleColor",
+            "type": "string",
+            "default": "#db2777",
+            "label": "Female Bar Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 460,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "maleColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Male Bar Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "migrationCoefficient",
+            "type": "number",
+            "default": 0.3,
+            "label": "Migration Coefficient",
+            "description": "Scales the migration dial into a population delta: delta = (migrationRate/100) x this coefficient x the working-age total, split across the two working-age cohorts.",
+            "tier": "domain"
+          },
+          {
+            "key": "migrationRate",
+            "type": "number",
+            "default": 0,
+            "label": "Net Migration Rate",
+            "description": "Starting net-migration dial (-30 to 30), adding or removing working-age share on each Step Decade.",
+            "synonyms": "migration, net migration, immigration, emigration",
+            "tier": "domain"
+          },
+          {
+            "key": "pyramidClassRules",
+            "type": "[GeoPopulationClassRule]",
+            "default": [
+              {
+                "code": "expansive",
+                "description": "Wide base — youngest cohort's share of total population is at or above the expansive threshold, signalling a young, fast-growing population.",
+                "label": "Expansive",
+                "minBaseSharePercent": 32
+              },
+              {
+                "code": "stationary",
+                "description": "Youngest cohort's share is at or above the stationary threshold but below the expansive one, signalling a population near replacement level.",
+                "label": "Stationary",
+                "minBaseSharePercent": 18
+              },
+              {
+                "code": "constrictive",
+                "description": "Youngest cohort's share is below the stationary threshold, signalling a narrowing base and an aging population.",
+                "label": "Constrictive",
+                "minBaseSharePercent": 0
+              }
+            ],
+            "label": "Pyramid Shape Classification Rules",
+            "description": "Ordered thresholds (highest first) on the youngest cohort's percent share of total population; the first rule the share meets or exceeds classifies the pyramid as expansive, stationary, or constrictive.",
+            "synonyms": "expansive pyramid, constrictive pyramid, stationary pyramid, pyramid shape, base share",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": true,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "minBaseSharePercent": {
+                  "name": "minBaseSharePercent",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "pyramidScaleMaxPercent",
+            "type": "number",
+            "default": 40,
+            "label": "Pyramid Bar Scale Max",
+            "description": "The cohort percent-of-total-population that maps to a full-length pyramid bar; larger shares are clamped to full length.",
+            "tier": "presentation"
+          },
+          {
+            "key": "sexRatioAtBirth",
+            "type": "number",
+            "default": 0.512,
+            "label": "Sex Ratio At Birth",
+            "description": "Male share of newborns on each Step Decade; the remainder is female.",
+            "tier": "domain"
+          },
+          {
+            "key": "textColor",
+            "type": "string",
+            "default": "#1e293b",
+            "label": "Text Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Geography Lab",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GeoPopulationScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "SET_BIRTH_RATE",
+          "SET_DEATH_RATE",
+          "SET_MIGRATION",
+          "STEP_DECADE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "baseSharePercent",
+            "birthRate",
+            "c0Female",
+            "c0Male",
+            "c1Female",
+            "c1Male",
+            "c2Female",
+            "c2Male",
+            "c3Female",
+            "c3Male",
+            "c4Female",
+            "c4Male",
+            "deathRate",
+            "decadeStep",
+            "dependencyRatio",
+            "migrationRate",
+            "pyramidClassCode",
+            "pyramidClassLabel",
+            "pyramidClassReadout",
+            "pyramidShapes",
+            "title",
+            "totalPopulation"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GeoPopulationPage",
+        "defaultPath": "/geo-population",
+        "primaryEntity": "GeoPopulationScene"
+      }
+    ],
+    "emittedEvents": [
+      "POPULATION_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]
