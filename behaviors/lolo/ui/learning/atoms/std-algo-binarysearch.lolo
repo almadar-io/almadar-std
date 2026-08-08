@@ -1,5 +1,5 @@
 app std-algo-binarysearch "1.0.0"
-"Algorithm-animation engine (algorithm-canvas): Binary-search engine — one lo/hi/mid narrowing step per tick over a sorted bar array on algorithm-canvas; composed via `uses`."
+"Algorithm-animation engine (algorithm-canvas): Binary-search engine — efficiently finds a target value in a sorted array by repeatedly halving the search interval; composed by a learning orbital via `uses`."
 orbital BinarySearchEngineOrbital {
   type AlgoBar = {
     value : number!
@@ -7,20 +7,12 @@ orbital BinarySearchEngineOrbital {
     label : string
   }
 
-  type AlgoPointer = {
-    index : number!
-    label : string
-    color : string
-  }
-
   entity BinarySearchScene [runtime] {
     id : string!
     bars : [AlgoBar]
-    pointers : [AlgoPointer]
-    lo : number = 0
-    hi : number = 0
-    mid : number = 0
-    cur : number = 0
+    low : number = 0
+    high : number = 0
+    target : number = 0
     found : boolean = false
     done : boolean = false
     running : boolean = true
@@ -32,103 +24,106 @@ orbital BinarySearchEngineOrbital {
     state idle {
       INIT -> idle
         (set @entity.bars @config.bars)
-        (set @entity.lo 0)
-        (set @entity.hi (- (array/len @config.bars) 1))
-        (set @entity.mid (math/floor (/ (- (array/len @config.bars) 1) 2)))
+        (set @entity.low 0)
+        (set @entity.high (- (array/len @config.bars) 1))
+        (set @entity.target @config.target)
         (set @entity.running @config.running)
-        (set @entity.pointers [
-          { index: @entity.lo, label: "lo", color: "#2563eb" },
-          { index: @entity.hi, label: "hi", color: "#dc2626" },
-          { index: @entity.mid, label: "mid", color: "#f59e0b" }
-        ])
+        (set @entity.done false)
+        (set @entity.found false)
         (render-ui main {
           type: algorithm-canvas
           width: @config.width
           height: @config.height
           backgroundColor: @config.backgroundColor
           bars: @entity.bars
-          pointers: @entity.pointers
         })
-        (emit RANGE_UPDATED { bars: @entity.bars pointers: @entity.pointers })
+        (emit BARS_UPDATED { bars: @entity.bars })
     }
 
     ticks {
-      binaryTick every 350ms
+      searchTick every 800ms
         when (and @entity.running (not @entity.done))
-        (set @entity.cur (object/get (array/nth @entity.bars @entity.mid) value))
-        (set @entity.lo (if (< @entity.cur @config.target) (+ @entity.mid 1) @entity.lo))
-        (set @entity.hi (if (> @entity.cur @config.target) (- @entity.mid 1) @entity.hi))
-        (set @entity.found (== @entity.cur @config.target))
-        (set @entity.done (or @entity.found (> @entity.lo @entity.hi)))
-        (set @entity.mid (if @entity.done @entity.mid (math/floor (/ (+ @entity.lo @entity.hi) 2))))
-        (set @entity.bars
-          (array/map @entity.bars
+        (let (
+          (mid (math/floor (/ (+ @entity.low @entity.high) 2)))
+          (mid_val (object/get (array/nth @entity.bars @mid) value))
+        )
+        (let (
+          (is_equal (== @mid_val @entity.target))
+          (is_too_low (< @entity.target @mid_val))
+          (is_too_high (> @entity.target @mid_val))
+        )
+        (do
+          (if @is_equal
+            (do
+              (set @entity.found true)
+              (set @entity.done true))
+            (if (<= @entity.low @entity.high)
+              (do
+                (if @is_too_low
+                  (set @entity.high (- @mid 1))
+                  (set @entity.low (+ @mid 1)))
+                (if (not (and (<= @entity.low @entity.high) (not @is_equal)))
+                  (set @entity.done true)
+                  (set @entity.done false)))
+              (set @entity.done true)))
+          (set @entity.bars (array/map @entity.bars
             (object/merge @item {
-              color: (if (or (< @index @entity.lo) (> @index @entity.hi)) "#cbd5e1"
-                       (if (== @index @entity.mid) (if @entity.found "#22c55e" "#f59e0b")
+              color: (if @entity.found "#22c55e"
+                       (if (and (>= @index @entity.low) (<= @index @entity.high)) "#f59e0b"
                          "#3b82f6"))
             })))
-        (set @entity.pointers [
-          { index: @entity.lo, label: "lo", color: "#2563eb" },
-          { index: @entity.hi, label: "hi", color: "#dc2626" },
-          { index: @entity.mid, label: "mid", color: "#f59e0b" }
-        ])
-        (render-ui main {
-          type: algorithm-canvas
-          width: @config.width
-          height: @config.height
-          backgroundColor: @config.backgroundColor
-          bars: @entity.bars
-          pointers: @entity.pointers
-        })
-        (emit RANGE_UPDATED { bars: @entity.bars pointers: @entity.pointers })
+          (render-ui main {
+            type: algorithm-canvas
+            width: @config.width
+            height: @config.height
+            backgroundColor: @config.backgroundColor
+            bars: @entity.bars
+          })
+          (emit BARS_UPDATED { bars: @entity.bars })
+        )))
     }
 
     emits {
-      RANGE_UPDATED -> external {
+      BARS_UPDATED -> external {
         bars : [AlgoBar]
-        pointers : [AlgoPointer]
       }
-        @description "The current bars + lo/hi/mid cursors each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone."
-        @synonyms "tick, frame, step, narrow, compare, search"
+        @description "The current bar array each step."
+        @synonyms "tick, frame, step, redraw, compare, swap"
         @tier "domain"
     }
 
     config {
       running : boolean = true
         @label "Running"
-        @description "When true the tick performs one narrowing step; toggle to start/pause the search."
+        @description "Toggle to start/pause the search."
+        @tier "domain"
+      target : number = 5
+        @label "Target Value"
+        @description "The value to search for in the sorted array."
         @tier "domain"
       width : number = 600
         @label "Width"
-        @description "Canvas width in pixels."
         @tier "presentation"
       height : number = 400
         @label "Height"
-        @description "Canvas height in pixels."
         @tier "presentation"
       backgroundColor : string = "#f8fafc"
         @label "Background Color"
         @description "Canvas background color."
         @tier "presentation"
-      target : number = 15
-        @label "Target"
-        @description "The value being searched for in the sorted array."
-        @tier "domain"
       bars : [AlgoBar] = [
         { value: 1, color: "#3b82f6", label: "1" },
+        { value: 2, color: "#3b82f6", label: "2" },
         { value: 3, color: "#3b82f6", label: "3" },
+        { value: 4, color: "#3b82f6", label: "4" },
         { value: 5, color: "#3b82f6", label: "5" },
+        { value: 6, color: "#3b82f6", label: "6" },
         { value: 7, color: "#3b82f6", label: "7" },
-        { value: 9, color: "#3b82f6", label: "9" },
-        { value: 11, color: "#3b82f6", label: "11" },
-        { value: 13, color: "#3b82f6", label: "13" },
-        { value: 15, color: "#3b82f6", label: "15" },
-        { value: 17, color: "#3b82f6", label: "17" },
-        { value: 19, color: "#3b82f6", label: "19" }
+        { value: 8, color: "#3b82f6", label: "8" },
+        { value: 9, color: "#3b82f6", label: "9" }
       ]
         @label "Bars"
-        @description "Initial sorted array; each bar's height is proportional to its value."
+        @description "A sorted array of values."
         @tier "presentation"
     }
   }
