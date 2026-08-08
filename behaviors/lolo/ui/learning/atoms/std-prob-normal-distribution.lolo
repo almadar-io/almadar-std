@@ -1,0 +1,156 @@
+app std-prob-normal-distribution "1.0.0"
+"Probability engine (math-canvas): Normal distribution engine — visualizes the Gaussian bell curve, allowing users to explore the impact of mean and standard deviation on the curve shape; composed by a learning orbital via `uses`."
+orbital NormalDistributionEngineOrbital {
+  type MathCanvasCurvesItem = {
+    label : string
+    color : string
+    samples : [MathCanvasCurvesItemSamplesItem]!
+  }
+  type MathCanvasCurvesItemSamplesItem = {
+    x : number!
+    y : number!
+  }
+
+  entity NormalDistributionScene [runtime] {
+    id : string!
+    mean : number = 0
+    stdDev : number = 1
+    curves : [MathCanvasCurvesItem]
+    running : boolean = true
+  }
+
+  trait NormalDistributionSim -> @rebindable NormalDistributionScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.mean @config.mean)
+        (set @entity.stdDev @config.stdDev)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: math-canvas
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          xMin: @config.xMin
+          xMax: @config.xMax
+          yMin: @config.yMin
+          yMax: @config.yMax
+          showAxes: @config.showAxes
+          showGrid: @config.showGrid
+          gridStep: @config.gridStep
+          curves: @entity.curves
+          interactive: @config.interactive
+          animate: @config.animate
+          type: math-canvas
+        })
+    }
+
+    ticks {
+      distributionTick every 1000ms
+        when @entity.running
+        (do
+          (set @entity.curves (array/map (array/range -4 4) (fn x_val
+            (let (
+              (mu @entity.mean)
+              (sigma @entity.stdDev)
+            )
+            (let (
+              (samples (array/map (array/range -4 4) (fn x_val_inner
+                (let (
+                  (diff (- @x_val_inner @mu))
+                  (exponent (* -0.5 (/ (* @diff @diff) (* 2 (* @sigma @sigma)))))
+                  (coeff (/ 1 (* @sigma (math/sqrt 6.283185))))
+                )
+                (object/merge @item { x: @x_val_inner, y: (* @coeff (exp @exponent)) })
+              ))))
+            )
+            (object/merge @item {
+              label: "normal-dist"
+              color: @config.color
+              samples: @samples
+            }))))
+          (render-ui main {
+            type: math-canvas
+            width: @config.width
+            height: @config.height
+            title: @config.title
+            xMin: @config.xMin
+            xMax: @config.xMax
+            yMin: @config.yMin
+            yMax: @config.yMax
+            showAxes: @config.showAxes
+            showGrid: @config.showGrid
+            gridStep: @config.gridStep
+            curves: @entity.curves
+            interactive: @config.interactive
+            animate: @config.animate
+            type: math-canvas
+          })
+        )
+    }
+    emits {
+      DIST_UPDATED -> external {
+        curves : [MathCanvasCurvesItem]
+      }
+        @description "The current curves each tick."
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "Toggle simulation."
+        @tier "domain"
+      mean : number = 0
+        @label "Mean"
+        @description "The center of the distribution."
+        @tier "domain"
+      stdDev : number = 1
+        @label "Standard Deviation"
+        @description "The spread of the distribution."
+        @tier "domain"
+      color : string = "#3b82f6"
+        @label "Curve Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @tier "presentation"
+      title : string = "Normal Distribution"
+        @label "Title"
+        @tier "presentation"
+      xMin : number = -4
+        @label "X Min"
+        @tier "presentation"
+      xMax : number = 4
+        @label "X Max"
+        @tier "presentation"
+      yMin : number = 0
+        @label "Y Min"
+        @tier "presentation"
+      yMax : number = 1
+        @label "Y Max"
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @tier "presentation"
+    }
+  }
+
+  page "/prob-normal-dist" as NormalDistributionEnginePage -> NormalDistributionSim
+}
